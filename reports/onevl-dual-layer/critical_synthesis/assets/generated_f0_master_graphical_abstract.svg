@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="F0 主图：OneVL 机制全景">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4B5565"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+<text x="54" y="48" font-family="Microsoft YaHei, Arial, sans-serif" font-size="23" font-weight="700" fill="#172033">F0 主图：OneVL 机制全景</text>
+<text x="54" y="76" font-family="Microsoft YaHei, Arial, sans-serif" font-size="13" font-weight="500" fill="#596579">完整上下文：架构、训练、评测、代码证据共同决定图结构</text>
+<rect x="54" y="114" width="250" height="430" rx="14" fill="#F7F9FC" stroke="#AEB8C6" stroke-width="1"/>
+<text x="70" y="140" font-family="Microsoft YaHei, Arial, sans-serif" font-size="14" font-weight="700" fill="#596579">输入层</text>
+<rect x="330" y="114" width="250" height="430" rx="14" fill="#F7F9FC" stroke="#AEB8C6" stroke-width="1"/>
+<text x="346" y="140" font-family="Microsoft YaHei, Arial, sans-serif" font-size="14" font-weight="700" fill="#596579">latent 瓶颈</text>
+<rect x="650" y="114" width="250" height="430" rx="14" fill="#F7F9FC" stroke="#AEB8C6" stroke-width="1"/>
+<text x="666" y="140" font-family="Microsoft YaHei, Arial, sans-serif" font-size="14" font-weight="700" fill="#596579">训练读出器</text>
+<rect x="970" y="114" width="250" height="430" rx="14" fill="#F7F9FC" stroke="#AEB8C6" stroke-width="1"/>
+<text x="986" y="140" font-family="Microsoft YaHei, Arial, sans-serif" font-size="14" font-weight="700" fill="#596579">部署路径</text>
+<rect x="78" y="166" width="200" height="86" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="94" y="194" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">多模态输入</text>
+<text x="94" y="220" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="94" dy="0">图像帧</tspan>
+<tspan x="94" dy="17">ego 状态</tspan>
+<tspan x="94" dy="17">指令/历史轨迹</tspan>
+</text>
+<rect x="78" y="360" width="200" height="86" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="94" y="388" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">规划目标</text>
+<text x="94" y="414" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="94" dy="0">轨迹 answer</tspan>
+<tspan x="94" dy="17">PDM/ADE/FDE</tspan>
+</text>
+<rect x="362" y="156" width="220" height="90" rx="10" fill="#FFF3DF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="378" y="184" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">Z_v 视觉 latent</text>
+<text x="378" y="210" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="378" dy="0">未来几何</tspan>
+<tspan x="378" dy="17">运动趋势</tspan>
+<tspan x="378" dy="17">4 slots</tspan>
+</text>
+<rect x="362" y="348" width="220" height="90" rx="10" fill="#FFF3DF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="378" y="376" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">Z_l 语言 latent</text>
+<text x="378" y="402" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="378" dy="0">语义解释</tspan>
+<tspan x="378" dy="17">动作原因</tspan>
+<tspan x="378" dy="17">2 slots</tspan>
+</text>
+<rect x="690" y="156" width="202" height="90" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="706" y="184" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">视觉读出器</text>
+<text x="706" y="210" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="706" dy="0">预测未来 token</tspan>
+<tspan x="706" dy="17">训练期使用</tspan>
+</text>
+<rect x="690" y="348" width="202" height="90" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="706" y="376" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">语言读出器</text>
+<text x="706" y="402" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="706" dy="0">重构 CoT 文本</tspan>
+<tspan x="706" dy="17">调试期可读</tspan>
+</text>
+<rect x="1000" y="162" width="190" height="86" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="1016" y="190" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">Prefill 推理</text>
+<text x="1016" y="216" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="1016" dy="0">不生成长 CoT</tspan>
+<tspan x="1016" dy="17">只输出答案</tspan>
+</text>
+<rect x="1000" y="356" width="190" height="86" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="1016" y="384" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">MLP 快速头</text>
+<text x="1016" y="410" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="1016" dy="0">0.24s 变体</tspan>
+<tspan x="1016" dy="17">精度有折中</tspan>
+</text>
+<path d="M278,209 L362,209 L362,201" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="368" y="201" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">hidden</text>
+<path d="M278,403 L362,403 L362,393" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="368" y="395" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">loss</text>
+<path d="M582,201 L690,201" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="696" y="193" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">读出</text>
+<path d="M582,393 L690,393" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="696" y="385" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">读出</text>
+<path d="M892,201 L1000,201 L1000,205" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="1006" y="193" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">训练后丢弃</text>
+<path d="M892,393 L1000,393 L1000,399" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="1006" y="385" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">可选</text>
+<rect x="128" y="522" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="142" y="543" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">NAVSIM</text>
+<text x="142" y="565" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">88.84 PDM</text>
+<rect x="462" y="522" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="476" y="543" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">消融</text>
+<text x="476" y="565" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">无阶段 67.13</text>
+<rect x="804" y="522" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="818" y="543" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">延迟</text>
+<text x="818" y="565" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">4.46s / 0.24s</text>
+<line x1="54" y1="660" x2="1226" y2="660" stroke="#AEB8C6" stroke-width="1"/>
+<text x="54" y="686" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">主线：未来视觉监督塑形 latent，语言读出提供可审计性，部署热路径只保留 prefill/答案。</text>
+</svg>

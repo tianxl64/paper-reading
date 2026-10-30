@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>π0 论文深度解读 HTML 报告</title>
+<script>
+    window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] }, svg: { fontCache: 'global' } };
+  </script>
+<script async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root {
+  --bg: #f6f7f4;
+  --paper: #fffefa;
+  --ink: #23252a;
+  --muted: #667085;
+  --line: #dadbd2;
+  --accent: #0f766e;
+  --accent-2: #8a1c44;
+  --soft: #e8f3f0;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--bg);
+  font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  line-height: 1.72;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.shell { display: grid; grid-template-columns: minmax(250px, 19vw) minmax(0, 1fr); min-height: 100vh; }
+.toc {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  padding: 22px 18px;
+  border-right: 1px solid var(--line);
+  background: #eef1ec;
+}
+.toc strong { display: block; font-size: 17px; line-height: 1.25; }
+.toc span { display: block; margin: 6px 0 14px; color: var(--muted); font-size: 12px; }
+.toc a { display: block; padding: 6px 8px; border-radius: 6px; color: #3d4653; font-size: 13px; }
+.toc .toc-h3 { padding-left: 18px; font-size: 12px; }
+.toc a:hover { background: #e0ebe7; text-decoration: none; }
+main { width: min(100%, 1260px); justify-self: center; padding: clamp(24px, 3vw, 42px) clamp(20px, 4vw, 64px) 80px; }
+.hero { min-height: 48vh; display: grid; align-content: end; border-bottom: 1px solid var(--line); padding-bottom: 28px; }
+.eyebrow { display: inline-flex; width: max-content; padding: 4px 10px; border-radius: 999px; background: var(--soft); color: var(--accent); font-size: 13px; font-weight: 800; }
+h1 { max-width: 980px; margin: 16px 0 14px; font-size: clamp(34px, 6vw, 56px); line-height: 1.08; letter-spacing: 0; }
+.subtitle { max-width: 930px; color: #3f4652; font-size: 18px; }
+.meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.meta span { padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: #475467; font-size: 13px; }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 12px; margin: 24px 0; }
+.metric { border: 1px solid var(--line); border-radius: 8px; background: var(--paper); padding: 14px; }
+.metric b { display: block; font-size: 24px; color: var(--accent); }
+.metric span { color: var(--muted); font-size: 13px; }
+h2 { margin: 48px 0 16px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 29px; line-height: 1.25; }
+h3 { margin: 28px 0 10px; font-size: 21px; }
+p { margin: 12px 0; }
+ul { padding-left: 24px; }
+li { margin: 6px 0; }
+.callout, blockquote { border-left: 4px solid var(--accent); background: var(--soft); padding: 14px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+.warning { border-left-color: var(--accent-2); background: #fdeff4; }
+.table-wrap { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+table { width: 100%; border-collapse: collapse; min-width: 720px; }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+th { background: #eef2ee; font-size: 13px; }
+td { font-size: 14px; }
+code { padding: 2px 5px; border-radius: 5px; background: #eef0ea; }
+.formula { overflow-x: auto; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.figure-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(430px, 100%), 1fr)); gap: 18px; margin: 18px 0; }
+.figure-block { margin: 18px 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--paper); }
+.figure-block img { display: block; width: 100%; height: auto; }
+figcaption { padding: 10px 12px; color: #3f4652; font-size: 13px; border-top: 1px solid var(--line); }
+figcaption span { display: inline-block; margin-right: 8px; color: var(--accent); font-weight: 800; }
+details { margin: 12px 0; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); padding: 10px 14px; }
+summary { cursor: pointer; font-weight: 800; color: #344054; }
+.code-block, pre { overflow-x: auto; padding: 12px; border-radius: 8px; background: #1f2937; color: #f3f4f6; }
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 1fr; }
+  .toc { position: relative; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  main { padding-inline: 18px; }
+  h1 { font-size: 34px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<nav class="toc">
+<strong>π0 深度解析</strong>
+<span>arXiv 2410.24164 · deep HTML v2</span>
+<a class="toc-h2" href="#0-结论先读">0. 结论先读</a>
+<a class="toc-h2" href="#1-前置概念-5-分钟速查表">1. 前置概念 5 分钟速查表</a>
+<a class="toc-h2" href="#2-论文主张与贡献边界">2. 论文主张与贡献边界</a>
+<a class="toc-h2" href="#3-方法解剖-从观测到动作块">3. 方法解剖：从观测到动作块</a>
+<a class="toc-h3" href="#3-1-输入输出定义">3.1 输入输出定义</a>
+<a class="toc-h3" href="#3-2-模型结构">3.2 模型结构</a>
+<a class="toc-h3" href="#3-3-flow-matching-目标">3.3 Flow matching 目标</a>
+<a class="toc-h3" href="#3-4-推理过程">3.4 推理过程</a>
+<a class="toc-h2" href="#4-数据与训练-recipe">4. 数据与训练 recipe</a>
+<a class="toc-h2" href="#5-实验设计与证据审查">5. 实验设计与证据审查</a>
+<a class="toc-h2" href="#6-横向对比">6. 横向对比</a>
+<a class="toc-h2" href="#7-理论反驳与局限">7. 理论反驳与局限</a>
+<a class="toc-h2" href="#8-代码与复现-openpi-对照">8. 代码与复现：openpi 对照</a>
+<a class="toc-h2" href="#9-论文图像清单与解读">9. 论文图像清单与解读</a>
+<a class="toc-h2" href="#10-与已有飞书文档的交叉对比">10. 与已有飞书文档的交叉对比</a>
+<a class="toc-h2" href="#11-最终判断">11. 最终判断</a>
+<a class="toc-h2" href="#12-来源与证据">12. 来源与证据</a>
+<a class="toc-h2" href="#13-workflow-自评">13. Workflow 自评</a>
+<a class="toc-h2" href="#html-deep-extension">14. HTML 深读增补：为什么这不是一个简单 flow head</a>
+<a class="toc-h3" href="#14-1">14.1 机制链路逐步拆解</a>
+<a class="toc-h3" href="#14-2">14.2 数学目标的直觉和边界</a>
+<a class="toc-h3" href="#14-3">14.3 数据混合不是背景信息</a>
+<a class="toc-h3" href="#14-4">14.4 实验结果应该怎样读</a>
+<a class="toc-h3" href="#14-5">14.5 Paper vs Code</a>
+<a class="toc-h3" href="#14-6">14.6 五个严肃反驳问题</a>
+<a class="toc-h3" href="#14-7">14.7 读者实践路线</a>
+<a class="toc-h2" href="#figure-inventory">15. 原论文图像清单 / Figure Inventory</a>
+<a class="toc-h2" href="#site-delivery">16. 网站与右侧持久问答交付</a>
+<a class="toc-h2" href="#delivery-sentinel">17. Delivery Sentinel</a>
+</nav>
+<main>
+<header class="hero">
+<span class="eyebrow">Vision-Language-Action Flow Model</span>
+<h1>π0 论文深度解读：通用机器人控制的 VLM + 连续动作流模型</h1>
+<p class="subtitle">这版修复了前一版 HTML 过短的问题：保留飞书完整长文，并额外补上机制链路、数学目标、实验审查、代码复现、反驳问题和网站问答交付证据。</p>
+<div class="meta">
+<span>arXiv: 2410.24164</span>
+<span>Feishu: https://mi.feishu.cn/docx/SBTFdekStoaW9kxW9uFcm7xsnNg</span>
+<span>Sentinel: P_PI0_HTML_REPORT_20260618_SENTINEL_DEEP_V2</span>
+</div>
+</header>
+<div class="metric-grid">
+<div class="metric"><b>3.3B</b><span>约总参数规模：PaliGemma + action expert</span></div>
+<div class="metric"><b>H=50</b><span>动作块长度，openpi 中 action_horizon=50</span></div>
+<div class="metric"><b>903M</b><span>PI 私有机器人 timesteps，复现边界核心</span></div>
+<div class="metric"><b>14</b><span>原论文图像资产进入 HTML</span></div>
+</div>
+<article class="paper-body">
+<p>本文档由 paper-learning-workflow 生成，工作缓存位于 <code>C:\Users\tianxl\.cache\arxiv_papers\2410.24164</code>。</p>
+<p>Sentinel: <code>P_PI0_PAPER_LEARN_DOC_20260617_SENTINEL_7F3C92</code></p>
+<h2 id="0-结论先读">0. 结论先读</h2>
+<p>这篇论文的核心不是“把 diffusion/flow matching 用到机器人动作”这么简单。它真正的主张是：一个面向通用机器人控制的基础模型，需要同时解决四件事：从互联网 VLM 继承语义和视觉先验；把离散语言模型改造成连续动作生成器；用跨机器人、跨任务的数据混合学习共享物理技能；再通过高质量 post-training 把基础能力压到复杂、长时程、灵巧任务上。</p>
+<p>我对论文的判断是：π0 是 VLA 方向里很重要的一篇系统性论文，强项在工程整合、真实机器人覆盖面和 post-training 叙事；弱项在可复现性和可证伪性，因为最关键的 903M 私有机器人 timesteps、机器人硬件分布、任务采样细节和部分训练 recipe 不完全开放。它比“一个算法模块”更像“机器人基础模型路线图的一次可运行样机”。</p>
+<p>阅读时需要避免两个误解。第一，π0 不是纯 prompt 机器人，也不是让 VLM 直接输出动作 token；它在 VLM 旁边接入 action expert，用 flow matching 生成连续动作块。第二，π0 的泛化证据不是标准公开 benchmark 上的单一数字，而是由多机器人 out-of-box、语言跟随、fine-tuning 新任务和复杂多阶段任务共同组成的证据链。</p>
+<h2 id="1-前置概念-5-分钟速查表">1. 前置概念 5 分钟速查表</h2>
+<div class="table-wrap"><table><thead><tr><th>术语</th><th>全称与含义</th><th>在本文中的作用</th></tr></thead><tbody><tr><td>VLA</td><td>Vision-Language-Action，视觉-语言-动作模型</td><td>把图像、语言指令和机器人状态映射到动作，是 π0 的模型范式</td></tr><tr><td>VLM</td><td>Vision-Language Model，视觉语言模型</td><td>π0 从 PaliGemma 初始化，继承互联网图文语义先验</td></tr><tr><td>PaliGemma</td><td>Google 的开放 VLM 系列</td><td>π0 的主干 VLM，论文中约 3B 级别</td></tr><tr><td>Action expert</td><td>动作专家网络</td><td>接收机器人状态、带噪动作和时间，负责连续动作生成</td></tr><tr><td>Flow matching</td><td>流匹配生成建模</td><td>π0 的动作头训练目标，用向量场从噪声流向动作</td></tr><tr><td>Action chunking</td><td>动作块预测</td><td>一次预测未来 H 个动作，π0 使用 H=50</td></tr><tr><td>Post-training</td><td>后训练/任务专门化</td><td>用高质量数据把基础模型适配到洗衣、装盒等复杂任务</td></tr><tr><td>Cross-embodiment</td><td>跨本体</td><td>同一个模型覆盖单臂、双臂、移动操作等不同机器人形态</td></tr><tr><td>OXE</td><td>Open X-Embodiment</td><td>开源机器人数据来源之一</td></tr><tr><td>DROID</td><td>Distributed Robot Interaction Dataset</td><td>开源真实机器人数据来源之一，也出现在 openpi 复现实例里</td></tr><tr><td>Bridge v2</td><td>机器人操作数据集</td><td>开源训练混合的一部分</td></tr><tr><td>OpenVLA</td><td>7B 参数开放 VLA baseline</td><td>论文 out-of-box 对照方法之一</td></tr><tr><td>Octo</td><td>93M 机器人策略模型</td><td>非 VLA，但支持动作块，是重要 baseline</td></tr><tr><td>Euler integration</td><td>欧拉积分</td><td>π0 推理时用有限步积分把噪声动作更新为动作</td></tr></tbody></table></div>
+<h2 id="2-论文主张与贡献边界">2. 论文主张与贡献边界</h2>
+<p>论文标题里有三个关键词：Vision、Language、Action。Vision 和 Language 来自 PaliGemma 的图文预训练；Action 不是语言 token，而是机器人控制需要的连续控制向量。论文认为，真正的机器人基础模型不能只在语义层面“理解任务”，还必须在 20-50Hz 级别输出稳定动作，并能跨机器人形态复用技能。</p>
+<p>作者给出的贡献可以拆成四层。</p>
+<div class="table-wrap"><table><thead><tr><th>层次</th><th>论文实际做法</th><th>贡献性质</th><th>需要保留的边界</th></tr></thead><tbody><tr><td>模型结构</td><td>PaliGemma VLM + 约 300M action expert</td><td>把互联网图文先验和连续动作生成接起来</td><td>不是从零训练的机器人 Transformer</td></tr><tr><td>生成目标</td><td>Conditional flow matching 预测动作向量场</td><td>相比自回归 action token 更自然地建模连续动作</td><td>不是证明 flow matching 在所有控制任务上优于 diffusion/ACT</td></tr><tr><td>数据混合</td><td>开源数据 + 大规模 PI 私有数据，覆盖多机器人和 68 任务</td><td>真实机器人规模和多样性是主要壁垒</td><td>关键私有数据无法外部完全复现</td></tr><tr><td>训练流程</td><td>pre-training 后按任务 post-training</td><td>把 LLM 式 pretrain/posttrain 迁移到机器人</td><td>后训练仍依赖高质量真实机器人数据</td></tr></tbody></table></div>
+<p>这篇论文的创新更偏“系统架构 + 数据规模 + 训练 recipe”。如果只看数学，flow matching 本身不是本文原创；如果只看 VLM，PaliGemma 也不是本文原创。π0 的价值在于把这些组件组合成一个能在真实机器人上跑复杂任务的策略模型。</p>
+<h2 id="3-方法解剖-从观测到动作块">3. 方法解剖：从观测到动作块</h2>
+<h3 id="3-1-输入输出定义">3.1 输入输出定义</h3>
+<p>π0 在每个时刻读取机器人观测，观测包含多视角图像、语言指令和本体状态。模型不是输出单步动作，而是输出未来动作块。论文设定动作块长度 H=50，这一点在 openpi 代码中也能对上：<code>Pi0Config.action_horizon = 50</code>。</p>
+<p>动作块预测的工程意义很直接：机器人控制需要高频动作，但完整 VLM 每个控制周期都从头生成会太慢；动作 chunk 让模型一次规划一小段未来，再由执行端逐步消费。代价是模型需要学会预测短期连续控制轨迹，并处理预测块与现实反馈之间的偏差。</p>
+<h3 id="3-2-模型结构">3.2 模型结构</h3>
+<p>π0 的结构可以理解为“语义主干 + 动作专家”。</p>
+<div class="table-wrap"><table><thead><tr><th>模块</th><th>作用</th><th>证据</th></tr></thead><tbody><tr><td>PaliGemma VLM</td><td>处理图像和语言 token，提供语义上下文</td><td>论文方法部分和 openpi <code>pi0_config.py</code></td></tr><tr><td>State projection</td><td>把机器人状态投影到 action expert 宽度</td><td>openpi <code>pi0.py</code> 中 <code>state_proj</code></td></tr><tr><td>Action/time embedding</td><td>把带噪动作与时间步编码给动作专家</td><td>openpi <code>action_in_proj</code>、<code>time_mlp_*</code></td></tr><tr><td>Action output projection</td><td>输出动作向量场</td><td>openpi <code>action_out_proj</code></td></tr></tbody></table></div>
+<p>论文中说模型总规模约 3.3B，其中 action expert 约 300M。openpi 默认配置也对应这个设计：<code>paligemma_variant=&amp;quot;gemma_2b&amp;quot;</code>、<code>action_expert_variant=&amp;quot;gemma_300m&amp;quot;</code>、<code>dtype=&amp;quot;bfloat16&amp;quot;</code>、<code>action_horizon=50</code>、<code>action_dim=32</code>。这里要注意一个差异：论文正文按机器人最大动作维度讨论时提到的动作维度和 openpi 默认 <code>action_dim=32</code> 不完全等同，后者是开源实现为多平台 padding/接口统一保留的配置。</p>
+<h3 id="3-3-flow-matching-目标">3.3 Flow matching 目标</h3>
+<p>论文把真实动作块记为 A，把高斯噪声记为 epsilon，并在 0 到 1 的连续时间 tau 上构造插值动作。</p>
+<div class="formula">$$
+A^\tau = \tau A + (1-\tau)\epsilon
+$$</div>
+<p>目标向量场可以写成从噪声点走向真实动作点的方向。</p>
+<div class="formula">$$
+u = A - \epsilon
+$$</div>
+<p>训练时模型接收观测、时间和带噪动作，预测向量场，并用均方误差拟合。</p>
+<div class="formula">$$
+\mathcal{L} = \mathbb{E}[\mathrm{MSE}(v_\theta(o, A^\tau, \tau), u)]
+$$</div>
+<p>openpi 代码采用了等价但时间方向相反的约定：<code>x_t = time * noise + (1 - time) * actions</code>，<code>u_t = noise - actions</code>，推理时 <code>dt = -1.0 / num_steps</code> 从噪声端往动作端积分。论文写法和代码写法不是矛盾，而是坐标方向不同。关键点是：模型学习的是连接噪声动作和真实动作的速度场，而不是逐 token 生成动作。</p>
+<h3 id="3-4-推理过程">3.4 推理过程</h3>
+<p>推理从随机噪声动作块开始，使用模型预测的向量场做 Euler 更新。论文和 openpi 默认都使用 10 个 integration steps。openpi 的 <code>sample_actions</code> 中 <code>num_steps=10</code>、<code>dt=-1.0/num_steps</code>，并循环更新 <code>x_t + dt * v_t</code>。这意味着 π0 的推理成本主要由一次 prefix 编码和 10 次 action expert 相关前向构成。</p>
+<p>论文附录给出了实测延迟拆分：图像编码约 14ms，观测前向约 32ms，10 次动作前向约 27ms，若 off-board 还有约 13ms 网络延迟，合计 onboard 约 73ms、offboard 约 86ms，测试硬件为 RTX 4090。这个延迟解释了为什么动作 chunking 对高频控制很重要。</p>
+<h2 id="4-数据与训练-recipe">4. 数据与训练 recipe</h2>
+<p>论文的数据故事比模型公式更重要。公开数据只占训练混合的一部分：论文报告 9.1% 来自开源数据，包括 OXE、Bridge v2 和 DROID。更大的部分是 PI 自己收集的数据：903M timesteps，其中 106M 来自单臂机器人，797M 来自双臂机器人，覆盖 7 个机器人配置和 68 个任务。</p>
+<div class="table-wrap"><table><thead><tr><th>数据来源</th><th>规模/角色</th><th>价值</th><th>风险</th></tr></thead><tbody><tr><td>OXE / Bridge v2 / DROID</td><td>开源数据，约占 9.1%</td><td>提供可外部理解的数据基底</td><td>与论文最强结果的数据分布仍有差距</td></tr><tr><td>PI 私有单臂数据</td><td>106M timesteps</td><td>扩展单臂操作技能</td><td>不公开，外部难以复验</td></tr><tr><td>PI 私有双臂数据</td><td>797M timesteps</td><td>支撑洗衣、装盒、整理等复杂双臂技能</td><td>是论文壁垒的核心部分</td></tr><tr><td>多机器人任务混合</td><td>7 配置、68 任务</td><td>提供 cross-embodiment 训练信号</td><td>采样策略和任务质量影响巨大</td></tr></tbody></table></div>
+<p>作者还使用任务-机器人组合的采样重加权：样本数为 n 的组合按 n 的 0.43 次方加权。这类小于 1 的幂次采样会压低大数据任务的支配性，让小数据任务仍能被模型看到。对机器人数据混合来说，这是一个实际工程选择：数据量最大的不一定是最有价值或最稀缺的任务。</p>
+<p>训练流程可以概括为三步。第一，继承 PaliGemma 初始化，保留互联网语义和视觉知识。第二，在大规模机器人混合上预训练，学到跨机器人动作先验。第三，对复杂任务用高质量数据 post-training，例如洗衣折叠、多阶段装配和长时程整理。</p>
+<h2 id="5-实验设计与证据审查">5. 实验设计与证据审查</h2>
+<p>论文实验不是一个单 benchmark 数字，而是多类真实机器人评测。</p>
+<div class="table-wrap"><table><thead><tr><th>实验类型</th><th>问题</th><th>对照/设置</th><th>我对证据强度的判断</th></tr></thead><tbody><tr><td>Out-of-box 预训练评测</td><td>不做任务专门训练能否直接做多任务</td><td>5 类任务，每方法每任务 10 episodes；对 OpenVLA、Octo、π0-small 等</td><td>强，体现基础模型价值，但任务仍由作者体系定义</td></tr><tr><td>语言跟随</td><td>能否按自然语言或高层 VLM 指令改变行为</td><td>flat / human / high-level VLM 指令设置</td><td>中强，证明语义接口有用，但 prompt 敏感性仍需外部评估</td></tr><tr><td>新灵巧任务 fine-tuning</td><td>少量新任务数据能否快速适配</td><td>学习新 dexterous tasks</td><td>强，说明 post-training 路线有效</td></tr><tr><td>复杂多阶段任务</td><td>能否做长时程真实任务</td><td>10 trials，使用 partial score rubric</td><td>强但非标准化，依赖 rubric 和环境</td></tr><tr><td>与 baseline 对比</td><td>是否超过 OpenVLA/Octo/小模型</td><td>训练步数和计算做了部分公平性处理</td><td>有价值，但数据和架构能力并不完全可分离</td></tr></tbody></table></div>
+<p>最强证据来自真实机器人上复杂任务的视频和多机器人任务覆盖；最弱证据是外部可重复的公开 benchmark。论文没有把 π0 还原为“只换 flow matching 头”的受控消融，因为它的核心能力来自模型、数据、训练和硬件系统共同作用。</p>
+<h2 id="6-横向对比">6. 横向对比</h2>
+<div class="table-wrap"><table><thead><tr><th>方法</th><th>动作表示</th><th>语义来源</th><th>机器人数据</th><th>π0 相对位置</th></tr></thead><tbody><tr><td>OpenVLA</td><td>自回归动作 token/离散化路线</td><td>VLM</td><td>开源机器人数据为主</td><td>π0 更强调连续动作流和 action chunk</td></tr><tr><td>Octo</td><td>机器人策略模型，支持动作块</td><td>不以大 VLM 语义为核心</td><td>大规模机器人数据</td><td>π0 引入 VLM 语义先验和更强跨任务设定</td></tr><tr><td>Diffusion Policy</td><td>条件扩散生成动作</td><td>通常不依赖 VLM 主干</td><td>单任务/少任务更常见</td><td>π0 把扩散/flow 类生成头推到 VLA 基础模型规模</td></tr><tr><td>RT 系列</td><td>大规模机器人策略/语言条件控制</td><td>语言/视觉模型</td><td>Google 机器人数据</td><td>π0 的特色是公开论文中明确的 flow matching action expert</td></tr><tr><td>π0-small</td><td>小模型，不用 VLM 初始化</td><td>无互联网 VLM 先验</td><td>同类机器人数据</td><td>用来隔离 VLM 初始化和模型规模的重要 baseline</td></tr></tbody></table></div>
+<p>π0 的路线和 Diffusion Policy 有亲缘关系：都把动作看成连续轨迹生成问题。但 π0 更接近“VLM + continuous action generation”的基础模型路线，而不是单任务模仿学习策略。与 OpenVLA 相比，π0 更少把动作语言化，更强调高频连续控制。</p>
+<h2 id="7-理论反驳与局限">7. 理论反驳与局限</h2>
+<p>第一，论文还不能证明“flow matching 是通用机器人控制的唯一正确生成范式”。它证明的是，在作者的数据规模、模型结构和训练系统下，flow matching 作为连续动作头是有效的。要单独证明 flow matching 优于 autoregressive、diffusion policy、ACT 或其他轨迹头，需要更细粒度的受控实验。</p>
+<p>第二，跨本体泛化仍然受动作空间定义和归一化强烈影响。openpi 的 <code>docs/norm_stats.md</code> 明确要求根据目标机器人选择复用预训练 norm stats 或重新计算 norm stats，并强调动作空间定义必须匹配。也就是说，π0 并不是把任意机器人接上就能稳跑；机器人接口、频率、动作维度、夹爪定义和数据过滤都可能成为失败点。</p>
+<p>第三，论文中最具说服力的数据来自私有机器人数据。外部研究者可以使用 openpi 的 checkpoint 和 fine-tuning recipe，但很难重建论文的 full pretraining mixture。因此可复现目标应当设为“复现 openpi fine-tuning / inference 行为”，而不是“完全复现论文基础模型训练”。</p>
+<p>第四，真实世界评测的 partial credit rubric 很有必要，但也降低了横向可比性。对复杂任务来说，0/1 成败过于粗糙；但 partial score 如何定义，会直接影响不同模型之间的比较。</p>
+<h2 id="8-代码与复现-openpi-对照">8. 代码与复现：openpi 对照</h2>
+<p>本次工作克隆并检查了官方 openpi 仓库，本地路径为 <code>C:\Users\tianxl\.cache\arxiv_papers\2410.24164\openpi</code>。仓库当前公开了 π0、π0-FAST 和 π0.5 相关模型、checkpoint、推理和 fine-tuning 示例。</p>
+<div class="table-wrap"><table><thead><tr><th>论文声明/概念</th><th>openpi 证据</th><th>复现含义</th></tr></thead><tbody><tr><td>PaliGemma + action expert</td><td><code>src/openpi/models/pi0_config.py</code> 中 <code>paligemma_variant</code> 和 <code>action_expert_variant</code></td><td>可以直接看到结构配置</td></tr><tr><td>动作块 H=50</td><td><code>Pi0Config.action_horizon=50</code></td><td>与论文设定一致</td></tr><tr><td>默认 action_dim=32</td><td><code>Pi0Config.action_dim=32</code></td><td>开源接口为多机器人 padding/统一动作空间服务</td></tr><tr><td>Flow matching loss</td><td><code>src/openpi/models/pi0.py</code> 中 <code>x_t</code>、<code>u_t</code>、<code>v_t</code> 和 MSE</td><td>论文核心训练目标可代码定位</td></tr><tr><td>10 步推理积分</td><td><code>sample_actions(..., num_steps=10)</code></td><td>与论文推理成本对应</td></tr><tr><td>checkpoint</td><td>README 列出 <code>gs://openpi-assets/checkpoints/pi0_base</code> 等</td><td>可做 fine-tuning 起点</td></tr><tr><td>norm stats</td><td><code>docs/norm_stats.md</code></td><td>复现时必须处理动作/状态归一化</td></tr><tr><td>DROID full training</td><td><code>examples/droid/README_train.md</code></td><td>全量 DROID 约 1.8TB，100k iterations，8x H100 约 2 天</td></tr></tbody></table></div>
+<p>复现路线建议分三档。</p>
+<div class="table-wrap"><table><thead><tr><th>档位</th><th>目标</th><th>资源</th><th>是否能验证论文核心</th></tr></thead><tbody><tr><td>A. 读代码 + 跑 checkpoint inference</td><td>确认模型接口、动作输出和推理服务</td><td>单 GPU 或调用服务</td><td>只能验证工程路径</td></tr><tr><td>B. 小数据 fine-tuning</td><td>在 LIBERO/ALOHA/DROID 子集上适配</td><td>A100/H100 更稳，需要 norm stats</td><td>可验证 post-training 机制</td></tr><tr><td>C. 大规模 DROID/full robot training</td><td>近似复现开源 pipeline</td><td>1.8TB 数据、8x H100 级别</td><td>可验证一部分 scaling，但仍不是论文私有混合</td></tr></tbody></table></div>
+<p>关键复现提醒：如果目标机器人和预训练统计相似，可以尝试复用 openpi 提供的 norm stats；如果不相似，应重新计算并对照。DROID 数据还需要 idle transition filtering，否则大量静止片段会污染动作学习。</p>
+<h2 id="9-论文图像清单与解读">9. 论文图像清单与解读</h2>
+<p>本次已从 TeX/PDF 中抽取并整理原论文图片，位于 <code>upload_figures</code> 目录。飞书文档创建后将上传核心原图和生成解释图。</p>
+<div class="table-wrap"><table><thead><tr><th>文件</th><th>类型</th><th>解读</th></tr></thead><tbody><tr><td><code>teaser_fig.png</code></td><td>原论文 teaser</td><td>展示 π0 在多任务真实机器人中的总体能力，是论文叙事入口</td></tr><tr><td><code>fig2_final.jpeg</code></td><td>原论文方法图</td><td>概括 VLM、机器人数据和动作输出的组合</td></tr><tr><td><code>overview.png</code></td><td>原论文概览图</td><td>适合理解 pretrain/posttrain 与多机器人数据混合</td></tr><tr><td><code>combined-robot-allocation-chart.png</code></td><td>原论文数据图</td><td>展示机器人/任务数据分布，是判断数据壁垒的重要图</td></tr><tr><td><code>robots_compressed.png</code></td><td>原论文机器人图</td><td>展示跨本体机器人平台</td></tr><tr><td><code>pretrain_filmstrip_compressed.png</code></td><td>原论文视频帧</td><td>支撑 out-of-box 任务评测的直观证据</td></tr><tr><td><code>language_guided_filmstrip_compressed.png</code></td><td>原论文视频帧</td><td>支撑语言跟随能力</td></tr><tr><td><code>learning_dexterous_tasks_filmstrip_compressed.png</code></td><td>原论文视频帧</td><td>支撑 post-training 灵巧任务</td></tr><tr><td><code>multi_stage_filmstrip_compressed.png</code></td><td>原论文视频帧</td><td>支撑复杂多阶段任务</td></tr><tr><td><code>complex_finetune.png</code></td><td>原论文任务图</td><td>展示复杂 fine-tuning 任务集合</td></tr><tr><td><code>timestep_sampling.png</code></td><td>原论文/附录图</td><td>对理解训练时间采样有帮助</td></tr></tbody></table></div>
+<p>此外生成了 3 张解释图：<code>generated_mechanism.png</code> 用于解释 π0 的机制链路，<code>generated_evidence_audit.png</code> 用于证据强度审查，<code>generated_repro_surface.png</code> 用于复现风险面梳理。这些图是解释性图像，不是论文原图。</p>
+<h2 id="10-与已有飞书文档的交叉对比">10. 与已有飞书文档的交叉对比</h2>
+<p>本次在用户飞书中命中两份相关文档。</p>
+<div class="table-wrap"><table><thead><tr><th>文档</th><th>URL</th><th>与本文关系</th></tr></thead><tbody><tr><td><code>[2024-12-4]π0论文分享</code></td><td><code>https://mi.feishu.cn/docx/GJjjdl5VZoU9PVxm1Xocr5fanff</code></td><td>已有 π0 分享材料，可作为概念导读；本文补充 paper-learning-workflow 的公式、代码、复现和证据审查</td></tr><tr><td><code>DiffVLA 论文深度解析</code></td><td><code>https://mi.feishu.cn/wiki/Eimvwd4YkiBDmPktEuPcll7inuh</code></td><td>同属 VLA/动作生成路线，可用于比较 diffusion/flow/action token 等动作建模范式</td></tr></tbody></table></div>
+<p>与 DiffVLA 类路线相比，π0 的重心不是单一 diffusion 模块，而是将 VLM 语义主干、连续动作生成和跨机器人数据混合做成基础模型。与已有 π0 分享相比，本文更强调三个“可落地问题”：代码如何对上论文、哪些结果不可完全复现、复现实验应从哪个资源档位开始。</p>
+<h2 id="11-最终判断">11. 最终判断</h2>
+<p>π0 可以看作“机器人领域 GPT-3 时刻”之前的一块关键拼图：它还不是通用机器人智能，但展示了通用策略模型需要的基本形状。它把机器人学习从“每个任务训练一个策略”推进到“一个基础模型通过 prompt 和 post-training 覆盖多个机器人和任务”。论文最有价值的不是某个单点算法，而是证明了 VLM 初始化、连续动作 flow head、大规模真实机器人数据和后训练 recipe 可以组成一个现实可运行的系统。</p>
+<p>对研究者来说，应该从三个角度吸收这篇论文。方法上，连续动作生成头比动作 token 化更贴近高频控制；数据上，跨本体数据混合和采样权重不是附属细节，而是核心机制；工程上，norm stats、动作空间定义、idle filtering、延迟预算和推理服务同样决定模型能否跑在真实机器人上。</p>
+<p>对复现者来说，合理目标不是完整重训 π0，而是使用 openpi 做可控的小规模验证：先跑 checkpoint inference，再做 LIBERO/ALOHA/DROID 子集 fine-tuning，最后才考虑全量 DROID 或自采机器人数据。任何“复现 π0 论文结果”的计划如果没有机器人硬件、动作接口和高质量数据采集流程，都只能复现模型接口，不能复现论文的系统能力。</p>
+<h2 id="12-来源与证据">12. 来源与证据</h2>
+<div class="table-wrap"><table><thead><tr><th>来源</th><th>用途</th></tr></thead><tbody><tr><td>arXiv <code>https://arxiv.org/abs/2410.24164</code></td><td>论文版本、摘要、作者、PDF/TeX 来源；当前版本为 v4，2026-01-08</td></tr><tr><td>官方博客 <code>https://www.pi.website/blog/pi0</code></td><td>项目叙事、任务视频、跨机器人训练混合说明</td></tr><tr><td>官方 openpi <code>https://github.com/Physical-Intelligence/openpi</code></td><td>代码、checkpoint、fine-tuning、norm stats 和 DROID 训练说明</td></tr><tr><td>本地 <code>pdf_parsed.md</code></td><td>论文正文解析</td></tr><tr><td>本地 TeX extracts</td><td>方法、数据、实验和附录细节核对</td></tr><tr><td>飞书搜索命中文档</td><td>与用户已有材料做交叉对比</td></tr></tbody></table></div>
+<h2 id="13-workflow-自评">13. Workflow 自评</h2>
+<p>已完成的 workflow 环节包括：arXiv PDF/TeX 拉取、本地解析、任务计划与进度文件、飞书内部关联搜索、外部官方资源核对、openpi 代码克隆和 paper-vs-code 对照、原论文图像提取、解释图生成、公式写入前消毒准备、飞书写入与 sentinel/read-back 验证准备。</p>
+<p>本次最主要的过程问题是 Windows PowerShell 与 Bash/Python 多行字符串混用导致多次异常中断。后续已改为文件级补丁、小命令验证和 MCP 写入，避免再用复杂 here-string 拼接长文档。</p>
+<h2 id="html-deep-extension">14. HTML 深读增补：为什么这不是一个简单 flow head</h2>
+<p>这一节是 HTML 版补充的深度展开，用来修复上一版过短的问题。核心判断是：π0 的能力不是由 flow matching 单点产生，而是由语义主干、动作专家、动作块、数据混合、post-training 和真实机器人评测共同支撑。只讲“VLM + flow matching”会把论文读浅。</p>
+<div class="figure-grid">
+<figure class="figure-block">
+<img alt="Teaser: π0 在多类真实机器人任务上的能力展示。" loading="lazy" src="assets/paper_fig01_teaser.png"/>
+<figcaption><span>Original paper figure</span>Teaser: π0 在多类真实机器人任务上的能力展示。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="方法图: VLM 主干、机器人观测和动作输出的组合。" loading="lazy" src="assets/paper_fig02_method.jpeg"/>
+<figcaption><span>Original paper figure</span>方法图: VLM 主干、机器人观测和动作输出的组合。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="π0 机制链路：VLM、action expert 和 flow matching 的关系。" loading="lazy" src="assets/generated_mechanism.png"/>
+<figcaption><span>Generated explanatory visual</span>π0 机制链路：VLM、action expert 和 flow matching 的关系。</figcaption>
+</figure>
+</div>
+<h3>14.1 机制链路逐步拆解</h3>
+<div class="table-wrap"><table><thead><tr><th>步骤</th><th>输入/状态</th><th>模型处理</th><th>输出/风险</th></tr></thead><tbody><tr><td>Prefix 编码</td><td>多视角图像、语言指令、token mask</td><td>PaliGemma 图像编码器和 LLM 形成上下文</td><td>得到可被 action expert 查询的语义/视觉前缀</td></tr>
+<tr><td>Suffix 构造</td><td>机器人 state、noisy actions、timestep</td><td>state/action/time 投影到 action expert token 空间</td><td>形成要预测向量场的动作序列</td></tr>
+<tr><td>训练前向</td><td>prefix + suffix</td><td>joint attention 让动作 token 查询上下文</td><td>输出每个动作步的速度向量</td></tr>
+<tr><td>Loss</td><td>预测向量场 v_t 与目标 u_t</td><td>逐动作维度 MSE</td><td>训练稳定性取决于时间采样、动作尺度和 norm stats</td></tr>
+<tr><td>推理</td><td>初始高斯噪声动作块</td><td>10 次 Euler 更新</td><td>得到 H=50 连续动作块</td></tr></tbody></table></div>
+<details><summary>代码证据：pi0.py 中真正发生了什么</summary>
+<p><code>compute_loss</code> 里先采样高斯噪声和 Beta 分布时间，再构造 <code>x_t = time * noise + (1 - time) * actions</code>，目标是 <code>u_t = noise - actions</code>。随后模型前向得到 <code>v_t</code>，返回 <code>mean(square(v_t - u_t))</code>。</p>
+<p><code>sample_actions</code> 里先对 prefix 建 KV cache，再循环调用 suffix/action expert，使用 <code>dt=-1/num_steps</code> 从 t=1 积分到 t=0。这解释了为什么论文附录会把 10 次动作前向列入延迟预算。</p>
+</details>
+<h3>14.2 数学目标的直觉和边界</h3>
+<p>flow matching 的直觉是：不要让模型一步直接猜动作，而是学习“从噪声动作块走到真实动作块”的速度场。对连续控制来说，这比把动作离散成 token 更自然，因为关节、夹爪、末端位姿本来就是连续量。</p>
+<div class="formula">$$x_t = t\epsilon + (1-t)a, \quad u_t = \epsilon-a, \quad \mathcal{L}=\lVert v_\theta(o,x_t,t)-u_t\rVert_2^2$$</div>
+<p>但这个目标本身不能单独解释 π0 的全部能力。若没有 PaliGemma 初始化，它缺少语义和视觉先验；若没有私有机器人数据，它缺少跨任务物理覆盖；若没有 post-training，它很难压到洗衣、装盒、多阶段操作这样的复杂任务。</p>
+<figure class="figure-block">
+<img alt="Timestep sampling: flow matching 时间采样细节。" loading="lazy" src="assets/paper_fig09_timestep_sampling.png"/>
+<figcaption><span>Original paper figure</span>Timestep sampling: flow matching 时间采样细节。</figcaption>
+</figure>
+<h3>14.3 数据混合不是背景信息，而是论文的核心机制</h3>
+<p>π0 的数据分布决定它是否真的“通用”。论文报告开源数据只占 9.1%，PI 私有数据达到 903M timesteps，且双臂数据远大于单臂数据。这个事实直接改变论文结论的解释方式：外部复现可以验证 openpi 的模型接口和 fine-tuning recipe，但不能完整复现论文的基础模型能力。</p>
+<div class="figure-grid">
+<figure class="figure-block">
+<img alt="Overview: pre-training、post-training 与多机器人数据混合。" loading="lazy" src="assets/paper_fig03_overview.png"/>
+<figcaption><span>Original paper figure</span>Overview: pre-training、post-training 与多机器人数据混合。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="数据分布: 机器人/任务 allocation，是复现边界的核心证据。" loading="lazy" src="assets/paper_fig04_data_mix.png"/>
+<figcaption><span>Original paper figure</span>数据分布: 机器人/任务 allocation，是复现边界的核心证据。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="机器人平台: 跨本体训练和评测所覆盖的硬件形态。" loading="lazy" src="assets/paper_fig05_robots.png"/>
+<figcaption><span>Original paper figure</span>机器人平台: 跨本体训练和评测所覆盖的硬件形态。</figcaption>
+</figure>
+</div>
+<div class="table-wrap"><table><thead><tr><th>读图问题</th><th>应该看到什么</th><th>为什么重要</th></tr></thead><tbody><tr><td>数据 allocation chart</td><td>机器人/任务分布不是均匀的</td><td>通用能力来自数据覆盖和重加权，不只是模型规模</td></tr>
+<tr><td>机器人平台图</td><td>不同本体的传感器和动作空间不同</td><td>跨本体泛化依赖接口规范化与动作空间 padding</td></tr>
+<tr><td>overview 图</td><td>pre-training 与 post-training 是两段式</td><td>基础能力和复杂任务能力不能混为一谈</td></tr></tbody></table></div>
+<h3>14.4 实验结果应该怎样读</h3>
+<p>π0 的实验不是传统“一个表格秒杀 baseline”。它更像一个系统能力谱：out-of-box 说明基础技能覆盖，语言任务说明语义条件控制，dexterous fine-tuning 说明后训练有效，多阶段 filmstrip 说明真实世界闭环能跑起来。</p>
+<div class="figure-grid">
+<figure class="figure-block">
+<img alt="预训练任务集合: out-of-box 评测覆盖面。" loading="lazy" src="assets/paper_fig06_pretrain_tasks.png"/>
+<figcaption><span>Original paper figure</span>预训练任务集合: out-of-box 评测覆盖面。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="语言跟随任务集合: 语言条件控制能力。" loading="lazy" src="assets/paper_fig07_language_tasks.png"/>
+<figcaption><span>Original paper figure</span>语言跟随任务集合: 语言条件控制能力。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="复杂 fine-tuning 任务集合。" loading="lazy" src="assets/paper_fig08_complex_finetune.png"/>
+<figcaption><span>Original paper figure</span>复杂 fine-tuning 任务集合。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="预训练任务 filmstrip: 真实机器人执行片段。" loading="lazy" src="assets/paper_fig10_pretrain_filmstrip.png"/>
+<figcaption><span>Original paper figure</span>预训练任务 filmstrip: 真实机器人执行片段。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="语言引导 filmstrip: 指令条件下的行为变化。" loading="lazy" src="assets/paper_fig11_language_filmstrip.png"/>
+<figcaption><span>Original paper figure</span>语言引导 filmstrip: 指令条件下的行为变化。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="灵巧任务 filmstrip: post-training 让基础策略压到新任务。" loading="lazy" src="assets/paper_fig12_dexterous_filmstrip.png"/>
+<figcaption><span>Original paper figure</span>灵巧任务 filmstrip: post-training 让基础策略压到新任务。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="多阶段任务 filmstrip: 长时程任务证据。" loading="lazy" src="assets/paper_fig13_multistage_filmstrip.png"/>
+<figcaption><span>Original paper figure</span>多阶段任务 filmstrip: 长时程任务证据。</figcaption>
+</figure>
+<figure class="figure-block">
+<img alt="Fine-tune tasks over time: post-training 任务谱随时间扩展。" loading="lazy" src="assets/paper_fig14_finetune_tasks_over_time.png"/>
+<figcaption><span>Original paper figure</span>Fine-tune tasks over time: post-training 任务谱随时间扩展。</figcaption>
+</figure>
+</div>
+<div class="table-wrap"><table><thead><tr><th>证据</th><th>支持的主张</th><th>不能支持的主张</th></tr></thead><tbody><tr><td>预训练任务图/filmstrip</td><td>模型有跨任务 out-of-box 能力</td><td>不能证明任意新机器人零样本成功</td></tr>
+<tr><td>语言任务图/filmstrip</td><td>语言条件确实影响动作</td><td>不能证明长指令规划完全由模型内部完成</td></tr>
+<tr><td>灵巧任务/fine-tune 图</td><td>post-training 能把基础能力压到复杂任务</td><td>不能说明少量数据总是足够</td></tr>
+<tr><td>多阶段 filmstrip</td><td>系统可以执行长时程任务</td><td>不能提供公开 benchmark 式可复验数字</td></tr></tbody></table></div>
+<h3>14.5 Paper vs Code：复现时真正会踩的坑</h3>
+<div class="table-wrap"><table><thead><tr><th>坑</th><th>论文读者容易忽略的点</th><th>openpi 证据/处理</th></tr></thead><tbody><tr><td>时间方向相反</td><td>论文公式和代码里的 t 方向不同</td><td><code>sample_actions</code> 注释明确说明 t=1 是噪声、t=0 是目标</td></tr>
+<tr><td>action_dim=32</td><td>不是每台机器人都有 32 维动作</td><td><code>Pi0Config.action_dim=32</code> 是统一接口，低维动作需要 padding/mask/定义一致</td></tr>
+<tr><td>norm stats</td><td>动作尺度不是无关预处理</td><td><code>docs/norm_stats.md</code> 要求决定复用或重算统计</td></tr>
+<tr><td>DROID action type</td><td>joint velocity 与模拟评测不兼容</td><td>DROID 训练文档建议使用 joint position action</td></tr>
+<tr><td>idle filtering</td><td>真实机器人数据有大量静止片段</td><td>DROID recipe 预计算 non-idle ranges</td></tr>
+<tr><td>资源预算</td><td>fine-tune 和 full training 不是一个量级</td><td>full DROID 1.8TB，8x H100 约 2 天；PaliGemma 起训约 5 天</td></tr></tbody></table></div>
+<figure class="figure-block">
+<img alt="复现风险面：数据、norm stats、硬件和训练成本。" loading="lazy" src="assets/generated_repro_surface.png"/>
+<figcaption><span>Generated explanatory visual</span>复现风险面：数据、norm stats、硬件和训练成本。</figcaption>
+</figure>
+<h3>14.6 五个严肃反驳问题</h3>
+<details><summary>Q1：是不是只要 flow matching 就能得到 π0？</summary><p>不能。flow matching 是动作建模头，π0 的系统能力还依赖 PaliGemma 初始化、大规模机器人数据、post-training、动作归一化和实时推理工程。</p></details>
+<details><summary>Q2：私有数据占比这么高，论文是否可复现？</summary><p>完整基础模型不可完全复现；但 openpi 使 checkpoint inference、部分 fine-tuning 和代码级机制复现成为可能。复现目标必须分层定义。</p></details>
+<details><summary>Q3：跨机器人能力是不是被夸大？</summary><p>论文展示了多本体覆盖，但跨本体成功依赖动作空间定义、norm stats 和任务数据质量。把任意新机器人接上并不自动成立。</p></details>
+<details><summary>Q4：语言能力是否等同于规划能力？</summary><p>语言指令提供条件，但真实长时程任务仍依赖动作闭环、环境反馈和 post-training 数据。不能把语言跟随成功直接等同于通用规划。</p></details>
+<details><summary>Q5：实验视频是否足够科学？</summary><p>视频和 filmstrip 对真实机器人论文很重要，但公开 benchmark、失败率分布、环境随机性和第三方复验仍然不足。这是系统论文常见的证据边界。</p></details>
+<h3>14.7 读者实践路线</h3>
+<div class="table-wrap"><table><thead><tr><th>目标</th><th>推荐动作</th><th>停止条件</th></tr></thead><tbody><tr><td>快速理解</td><td>读本 HTML 的 0/3/5/8/14 节，再看 Figure Inventory</td><td>能解释 action expert 与 flow matching 的区别</td></tr>
+<tr><td>代码复现</td><td>定位 <code>pi0_config.py</code>、<code>pi0.py</code>、<code>norm_stats.md</code></td><td>能跑通 checkpoint 或小数据 fine-tune</td></tr>
+<tr><td>研究比较</td><td>对比 OpenVLA、Octo、Diffusion Policy、RT 系列</td><td>能说清动作 token/动作块/flow head 的取舍</td></tr>
+<tr><td>项目落地</td><td>先定义机器人 action/state space，再处理 norm stats 和数据过滤</td><td>不要在动作空间未对齐时训练</td></tr></tbody></table></div>
+<h2 id="figure-inventory">15. 原论文图像清单 / Figure Inventory</h2>
+<p>本 HTML 版采用原论文图像优先策略。原论文图像是证据，生成图只用于解释机制和复现风险。上一版 π0 HTML 太短的一个原因，就是只把图片放进页面，而没有把每张图的证据角色讲透。</p>
+<div class="table-wrap"><table><thead><tr><th>编号</th><th>本地文件</th><th>证据角色</th></tr></thead><tbody><tr><td>1</td><td><code>teaser_fig.png</code></td><td>Teaser: π0 在多类真实机器人任务上的能力展示。</td></tr>
+<tr><td>2</td><td><code>fig2_final.jpeg</code></td><td>方法图: VLM 主干、机器人观测和动作输出的组合。</td></tr>
+<tr><td>3</td><td><code>overview.png</code></td><td>Overview: pre-training、post-training 与多机器人数据混合。</td></tr>
+<tr><td>4</td><td><code>combined-robot-allocation-chart.png</code></td><td>数据分布: 机器人/任务 allocation，是复现边界的核心证据。</td></tr>
+<tr><td>5</td><td><code>robots_compressed.png</code></td><td>机器人平台: 跨本体训练和评测所覆盖的硬件形态。</td></tr>
+<tr><td>6</td><td><code>pretrain_tasks.png</code></td><td>预训练任务集合: out-of-box 评测覆盖面。</td></tr>
+<tr><td>7</td><td><code>language_tasks.png</code></td><td>语言跟随任务集合: 语言条件控制能力。</td></tr>
+<tr><td>8</td><td><code>complex_finetune.png</code></td><td>复杂 fine-tuning 任务集合。</td></tr>
+<tr><td>9</td><td><code>timestep_sampling.png</code></td><td>Timestep sampling: flow matching 时间采样细节。</td></tr>
+<tr><td>10</td><td><code>pretrain_filmstrip_compressed.png</code></td><td>预训练任务 filmstrip: 真实机器人执行片段。</td></tr>
+<tr><td>11</td><td><code>language_guided_filmstrip_compressed.png</code></td><td>语言引导 filmstrip: 指令条件下的行为变化。</td></tr>
+<tr><td>12</td><td><code>learning_dexterous_tasks_filmstrip_compressed.png</code></td><td>灵巧任务 filmstrip: post-training 让基础策略压到新任务。</td></tr>
+<tr><td>13</td><td><code>multi_stage_filmstrip_compressed.png</code></td><td>多阶段任务 filmstrip: 长时程任务证据。</td></tr>
+<tr><td>14</td><td><code>finetune_tasks_over_time.png</code></td><td>Fine-tune tasks over time: post-training 任务谱随时间扩展。</td></tr></tbody></table></div>
+<pre class="code-block">{
+  "original_paper_figures": [
+    "teaser_fig.png",
+    "fig2_final.jpeg",
+    "overview.png",
+    "combined-robot-allocation-chart.png",
+    "robots_compressed.png",
+    "pretrain_tasks.png",
+    "language_tasks.png",
+    "complex_finetune.png",
+    "timestep_sampling.png",
+    "pretrain_filmstrip_compressed.png",
+    "language_guided_filmstrip_compressed.png",
+    "learning_dexterous_tasks_filmstrip_compressed.png",
+    "multi_stage_filmstrip_compressed.png",
+    "finetune_tasks_over_time.png"
+  ],
+  "generated_concept_images": [
+    "generated_mechanism.png",
+    "generated_evidence_audit.png",
+    "generated_repro_surface.png"
+  ],
+  "omitted_data_visualizations": [],
+  "missing_local_images": 0
+}</pre>
+<h2 id="site-delivery">16. 网站与右侧持久问答交付</h2>
+<p>本报告会导入 <code>C:\Users\tianxl\paper-html-site</code>，由左侧论文库管理，由右侧 Q&amp;A 面板提供持久问答。技术交付不能替代内容深度；这也是本次修复的核心：HTML/site 验证通过，只说明网页能用，不说明解读足够深入。</p>
+<div class="table-wrap"><table><thead><tr><th>项目</th><th>当前状态</th><th>验证方式</th></tr></thead><tbody><tr><td>HTML 文件</td><td><code>C:\Users\tianxl\.cache\arxiv_papers\2410.24164\html_report\pi0-deep-analysis.html</code></td><td>文件存在、无 raw equation、图片引用可解析</td></tr>
+<tr><td>论文库导入</td><td><code>0-html</code></td><td>SQLite paper 记录 + reader URL</td></tr>
+<tr><td>右侧 Q&amp;A</td><td>结构化快答 + 持久化记录</td><td>messages 表 + 页面历史建议</td></tr>
+<tr><td>测试</td><td>17/17 pass</td><td><code>npm test</code> + <code>node --check</code></td></tr></tbody></table></div>
+<h2 id="delivery-sentinel">17. Delivery Sentinel</h2>
+<p>Sentinel: <code>P_PI0_HTML_REPORT_20260618_SENTINEL_DEEP_V2</code></p>
+</article>
+</main>
+</div>
+</body>
+</html>

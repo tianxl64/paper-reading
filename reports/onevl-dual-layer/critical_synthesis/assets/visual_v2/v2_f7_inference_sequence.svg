@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#556376"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="760" fill="#FFFFFF"/>
+<text x="42" y="42" font-size="22" font-weight="700" fill="#172033">推理调用序列：从 prompt 到 trajectory</text>
+<text x="42" y="70" font-size="13" font-weight="500" text-anchor="start" fill="#596579">code call sequence；按时间顺序展示分支</text>
+<rect x="90" y="110" width="150" height="50" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="106" y="138" font-size="13" font-weight="700" text-anchor="start" fill="#172033">prompt</text>
+<line x1="165" y1="170" x2="165" y2="330" stroke="#CBD3DF" stroke-width="1.5"/>
+<line x1="165" y1="520" x2="165" y2="610" stroke="#CBD3DF" stroke-width="1.5"/>
+<rect x="285" y="110" width="150" height="50" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="301" y="138" font-size="13" font-weight="700" text-anchor="start" fill="#172033">tokenizer</text>
+<line x1="360" y1="170" x2="360" y2="330" stroke="#CBD3DF" stroke-width="1.5"/>
+<line x1="360" y1="520" x2="360" y2="610" stroke="#CBD3DF" stroke-width="1.5"/>
+<rect x="500" y="110" width="150" height="50" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="516" y="138" font-size="13" font-weight="700" text-anchor="start" fill="#172033">VLM forward</text>
+<line x1="575" y1="170" x2="575" y2="330" stroke="#CBD3DF" stroke-width="1.5"/>
+<line x1="575" y1="520" x2="575" y2="610" stroke="#CBD3DF" stroke-width="1.5"/>
+<rect x="730" y="110" width="150" height="50" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="746" y="138" font-size="13" font-weight="700" text-anchor="start" fill="#172033">aux readout</text>
+<line x1="805" y1="170" x2="805" y2="330" stroke="#CBD3DF" stroke-width="1.5"/>
+<line x1="805" y1="520" x2="805" y2="610" stroke="#CBD3DF" stroke-width="1.5"/>
+<rect x="990" y="110" width="150" height="50" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="1006" y="138" font-size="13" font-weight="700" text-anchor="start" fill="#172033">trajectory</text>
+<line x1="1065" y1="170" x2="1065" y2="330" stroke="#CBD3DF" stroke-width="1.5"/>
+<line x1="1065" y1="520" x2="1065" y2="610" stroke="#CBD3DF" stroke-width="1.5"/>
+<path d="M 165 205 L 285 205" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 360 285 L 500 285" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 575 365 L 730 365" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 575 485 L 990 485" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="205" y="178" width="104" height="30" rx="15" fill="#FFFFFF" stroke="#AEB8C6"/>
+<text x="257" y="198" font-size="12" font-weight="600" text-anchor="middle" fill="#172033">ids</text>
+<rect x="410" y="258" width="104" height="30" rx="15" fill="#FFFFFF" stroke="#AEB8C6"/>
+<text x="462" y="278" font-size="12" font-weight="600" text-anchor="middle" fill="#172033">states</text>
+<rect x="630" y="338" width="98" height="30" rx="15" fill="#FFFFFF" stroke="#AEB8C6"/>
+<text x="679" y="358" font-size="12" font-weight="600" text-anchor="middle" fill="#172033">解释</text>
+<rect x="760" y="458" width="108" height="30" rx="15" fill="#FFFFFF" stroke="#AEB8C6"/>
+<text x="814" y="478" font-size="12" font-weight="600" text-anchor="middle" fill="#172033">decode</text>
+<rect x="645" y="402" width="195" height="68" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="661" y="430" font-size="15" font-weight="700" text-anchor="start" fill="#172033">decoder_explain</text>
+<text x="661" y="456" font-size="12" font-weight="500" text-anchor="start" fill="#596579">调试打开</text>
+<text x="661" y="477" font-size="12" font-weight="500" text-anchor="start" fill="#596579">热路径跳过</text>
+<rect x="900" y="532" width="230" height="58" rx="10" fill="#FFFFFF" stroke="#1F6FEB" stroke-width="1.3"/>
+<text x="916" y="560" font-size="15" font-weight="700" text-anchor="start" fill="#172033">轨迹输出</text>
+<text x="916" y="586" font-size="12" font-weight="500" text-anchor="start" fill="#596579">waypoints tokens</text>
+<rect x="260" y="640" width="760" height="52" rx="10" fill="#FFF8D8" stroke="#B76E00" stroke-width="1.3"/>
+<text x="276" y="668" font-size="13" font-weight="700" text-anchor="start" fill="#172033">关键边界：prefill latent 不是免费解释文本；解释读出是可选分析路径。</text>
+</svg>

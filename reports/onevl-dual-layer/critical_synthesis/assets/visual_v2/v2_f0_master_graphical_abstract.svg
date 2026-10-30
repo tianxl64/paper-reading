@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#556376"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="760" fill="#FFFFFF"/>
+<text x="42" y="42" font-size="22" font-weight="700" fill="#172033">主图：训练期三重监督，推理期低延迟</text>
+<text x="42" y="70" font-size="13" font-weight="500" text-anchor="start" fill="#596579">闭环反馈 + 方法总览；突出训练/推理路径分离</text>
+<rect x="42" y="104" width="260" height="210" rx="12" fill="#EAF2FF" stroke="#D8DEE8"/>
+<text x="58" y="129" font-size="13" font-weight="700" text-anchor="start" fill="#596579">输入与场景</text>
+<rect x="70" y="150" width="200" height="110" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="86" y="178" font-size="15" font-weight="700" text-anchor="start" fill="#172033">多模态输入</text>
+<text x="86" y="204" font-size="12" font-weight="500" text-anchor="start" fill="#596579">图像 / ego state</text>
+<text x="86" y="225" font-size="12" font-weight="500" text-anchor="start" fill="#596579">指令 / 历史轨迹</text>
+<text x="86" y="246" font-size="12" font-weight="500" text-anchor="start" fill="#596579">NAVSIM 场景</text>
+<rect x="360" y="94" width="310" height="250" rx="12" fill="#FFF2DE" stroke="#D8DEE8"/>
+<text x="376" y="119" font-size="13" font-weight="700" text-anchor="start" fill="#596579">OneVL latent bottleneck</text>
+<rect x="390" y="145" width="115" height="86" rx="10" fill="#FFFFFF" stroke="#B76E00" stroke-width="1.3"/>
+<text x="406" y="173" font-size="15" font-weight="700" text-anchor="start" fill="#172033">Z_v</text>
+<text x="406" y="199" font-size="12" font-weight="500" text-anchor="start" fill="#596579">未来视觉</text>
+<text x="406" y="220" font-size="12" font-weight="500" text-anchor="start" fill="#596579">token 约束</text>
+<rect x="525" y="145" width="115" height="86" rx="10" fill="#FFFFFF" stroke="#B76E00" stroke-width="1.3"/>
+<text x="541" y="173" font-size="15" font-weight="700" text-anchor="start" fill="#172033">Z_l</text>
+<text x="541" y="199" font-size="12" font-weight="500" text-anchor="start" fill="#596579">语言解释</text>
+<text x="541" y="220" font-size="12" font-weight="500" text-anchor="start" fill="#596579">CoT 读出</text>
+<rect x="425" y="250" width="180" height="58" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="441" y="278" font-size="15" font-weight="700" text-anchor="start" fill="#172033">trajectory answer</text>
+<text x="441" y="304" font-size="12" font-weight="500" text-anchor="start" fill="#596579">最终规划输出</text>
+<rect x="735" y="104" width="250" height="210" rx="12" fill="#ECF8F1" stroke="#D8DEE8"/>
+<text x="751" y="129" font-size="13" font-weight="700" text-anchor="start" fill="#596579">训练期辅助读出</text>
+<rect x="760" y="146" width="190" height="68" rx="10" fill="#FFFFFF" stroke="#168A52" stroke-width="1.3"/>
+<text x="776" y="174" font-size="15" font-weight="700" text-anchor="start" fill="#172033">visual decoder</text>
+<text x="776" y="200" font-size="12" font-weight="500" text-anchor="start" fill="#596579">t+0.5 / t+1.0 token</text>
+<rect x="760" y="232" width="190" height="58" rx="10" fill="#FFFFFF" stroke="#168A52" stroke-width="1.3"/>
+<text x="776" y="260" font-size="15" font-weight="700" text-anchor="start" fill="#172033">language decoder</text>
+<text x="776" y="286" font-size="12" font-weight="500" text-anchor="start" fill="#596579">解释文本监督</text>
+<rect x="1030" y="104" width="205" height="210" rx="12" fill="#F2EDFF" stroke="#D8DEE8"/>
+<text x="1046" y="129" font-size="13" font-weight="700" text-anchor="start" fill="#596579">推理期热路径</text>
+<rect x="1052" y="158" width="160" height="80" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="1068" y="186" font-size="15" font-weight="700" text-anchor="start" fill="#172033">decoder bypass</text>
+<text x="1068" y="212" font-size="12" font-weight="500" text-anchor="start" fill="#596579">只保留 prefill</text>
+<text x="1068" y="233" font-size="12" font-weight="500" text-anchor="start" fill="#596579">不生成长 CoT</text>
+<rect x="1052" y="252" width="160" height="42" rx="10" fill="#FFFFFF" stroke="#1F6FEB" stroke-width="1.3"/>
+<text x="1068" y="280" font-size="15" font-weight="700" text-anchor="start" fill="#172033">4.46s / 88.84</text>
+<path d="M 270 205 L 340 205 L 340 250 L 425 250" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 640 185 L 710 185 L 710 180 L 760 180" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 640 300 L 710 300 L 710 262 L 760 262" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 605 310 L 980 310 L 980 280 L 1052 280" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 1130 158 L 1130 88 L 160 88 L 160 150" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="398" y="560" width="430" height="78" rx="10" fill="#FFF8D8" stroke="#B76E00" stroke-width="1.3"/>
+<text x="414" y="588" font-size="15" font-weight="700" text-anchor="start" fill="#172033">核心读法</text>
+<text x="414" y="614" font-size="12" font-weight="500" text-anchor="start" fill="#596579">压缩不是目的：未来视觉监督把 latent 约束到可行动世界状态</text>
+<text x="414" y="635" font-size="12" font-weight="500" text-anchor="start" fill="#596579">训练期可解释，推理期低延迟</text>
+</svg>

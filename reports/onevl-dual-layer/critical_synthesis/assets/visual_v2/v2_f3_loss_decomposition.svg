@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#556376"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="760" fill="#FFFFFF"/>
+<text x="42" y="42" font-size="22" font-weight="700" fill="#172033">目标函数分解：三条梯度路径塑形同一瓶颈</text>
+<text x="42" y="70" font-size="13" font-weight="500" text-anchor="start" fill="#596579">loss computation graph；公式进入结构，不塞长段文字</text>
+<rect x="78" y="170" width="210" height="80" rx="10" fill="#FFF2DE" stroke="#B76E00" stroke-width="1.3"/>
+<text x="94" y="198" font-size="15" font-weight="700" text-anchor="start" fill="#172033">H_v / H_l</text>
+<text x="94" y="224" font-size="12" font-weight="500" text-anchor="start" fill="#596579">latent positions</text>
+<text x="94" y="245" font-size="12" font-weight="500" text-anchor="start" fill="#596579">主 VLM hidden states</text>
+<rect x="420" y="120" width="260" height="90" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="436" y="148" font-size="15" font-weight="700" text-anchor="start" fill="#172033">轨迹 CE</text>
+<text x="436" y="174" font-size="12" font-weight="500" text-anchor="start" fill="#596579">L_traj</text>
+<text x="436" y="195" font-size="12" font-weight="500" text-anchor="start" fill="#596579">answer tokens</text>
+<path d="M 288 210 L 360 210 L 360 165 L 420 165" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="362" y="137" width="38" height="24" rx="6" fill="#FFFFFF" stroke="#AEB8C6"/>
+<text x="370" y="155" font-size="12" font-weight="500" text-anchor="start" fill="#596579">梯度</text>
+<rect x="420" y="280" width="260" height="90" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="436" y="308" font-size="15" font-weight="700" text-anchor="start" fill="#172033">语言解释</text>
+<text x="436" y="334" font-size="12" font-weight="500" text-anchor="start" fill="#596579">λ_l L_lang</text>
+<text x="436" y="355" font-size="12" font-weight="500" text-anchor="start" fill="#596579">D_l(H_l) → CoT</text>
+<path d="M 288 210 L 360 210 L 360 325 L 420 325" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="362" y="297" width="38" height="24" rx="6" fill="#FFFFFF" stroke="#AEB8C6"/>
+<text x="370" y="315" font-size="12" font-weight="500" text-anchor="start" fill="#596579">梯度</text>
+<rect x="420" y="440" width="260" height="90" rx="10" fill="#ECF8F1" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="436" y="468" font-size="15" font-weight="700" text-anchor="start" fill="#172033">未来视觉</text>
+<text x="436" y="494" font-size="12" font-weight="500" text-anchor="start" fill="#596579">λ_v L_vis</text>
+<text x="436" y="515" font-size="12" font-weight="500" text-anchor="start" fill="#596579">D_v(H_v,V) → token</text>
+<path d="M 288 210 L 360 210 L 360 485 L 420 485" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="362" y="457" width="38" height="24" rx="6" fill="#FFFFFF" stroke="#AEB8C6"/>
+<text x="370" y="475" font-size="12" font-weight="500" text-anchor="start" fill="#596579">梯度</text>
+<rect x="825" y="180" width="300" height="85" rx="10" fill="#FFF8D8" stroke="#B76E00" stroke-width="1.3"/>
+<text x="841" y="208" font-size="15" font-weight="700" text-anchor="start" fill="#172033">总目标</text>
+<text x="841" y="234" font-size="12" font-weight="500" text-anchor="start" fill="#596579">L = L_traj + λ_l L_lang + λ_v L_vis</text>
+<rect x="825" y="360" width="300" height="90" rx="10" fill="#FCEDEA" stroke="#C2412D" stroke-width="1.3"/>
+<text x="841" y="388" font-size="15" font-weight="700" text-anchor="start" fill="#172033">失败条件</text>
+<text x="841" y="414" font-size="12" font-weight="500" text-anchor="start" fill="#596579">λ_v=0：退回语言压缩</text>
+<text x="841" y="435" font-size="12" font-weight="500" text-anchor="start" fill="#596579">无 Stage：decoder 与主模型共漂移</text>
+<path d="M 680 165 L 760 165 L 760 222 L 825 222" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 680 325 L 760 325 L 760 222 L 825 222" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 680 485 L 760 485 L 760 222 L 825 222" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 975 265 L 975 360" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="977" y="332" width="38" height="24" rx="6" fill="#FFFFFF" stroke="#AEB8C6"/>
+<text x="985" y="350" font-size="12" font-weight="500" text-anchor="start" fill="#596579">审计</text>
+</svg>

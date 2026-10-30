@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="F1 核心 claim 对比">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4B5565"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+<text x="54" y="48" font-family="Microsoft YaHei, Arial, sans-serif" font-size="23" font-weight="700" fill="#172033">F1 核心 claim 对比</text>
+<text x="54" y="76" font-family="Microsoft YaHei, Arial, sans-serif" font-size="13" font-weight="500" fill="#596579">不是把 CoT 隐藏起来，而是改变 latent 的监督来源</text>
+<rect x="70" y="164" width="280" height="148" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="86" y="192" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">显式 CoT</text>
+<text x="86" y="218" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="86" dy="0">长文本链</tspan>
+<tspan x="86" dy="17">串行生成</tspan>
+<tspan x="86" dy="17">6.58s 级延迟</tspan>
+</text>
+<rect x="70" y="392" width="280" height="96" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="86" y="420" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">证据</text>
+<text x="86" y="446" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="86" dy="0">表格/消融/延迟</tspan>
+<tspan x="86" dy="17">代码锚点可查</tspan>
+</text>
+<rect x="500" y="164" width="280" height="148" rx="10" fill="#FFF3DF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="516" y="192" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">普通 latent CoT</text>
+<text x="516" y="218" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="516" dy="0">压缩语言链</tspan>
+<tspan x="516" dy="17">几何信息弱</tspan>
+<tspan x="516" dy="17">驾驶表下降</tspan>
+</text>
+<rect x="500" y="392" width="280" height="96" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="516" y="420" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">证据</text>
+<text x="516" y="446" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="516" dy="0">表格/消融/延迟</tspan>
+<tspan x="516" dy="17">代码锚点可查</tspan>
+</text>
+<rect x="930" y="164" width="280" height="148" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="946" y="192" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">OneVL</text>
+<text x="946" y="218" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="946" dy="0">视觉未来监督</tspan>
+<tspan x="946" dy="17">双 latent 分工</tspan>
+<tspan x="946" dy="17">接近 answer-only</tspan>
+</text>
+<rect x="930" y="392" width="280" height="96" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="946" y="420" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">证据</text>
+<text x="946" y="446" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="946" dy="0">表格/消融/延迟</tspan>
+<tspan x="946" dy="17">代码锚点可查</tspan>
+</text>
+<path d="M350,238 L500,238" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="506" y="230" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">压缩</text>
+<path d="M780,238 L930,238" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="936" y="230" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">任务化监督</text>
+<rect x="160" y="540" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="174" y="561" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">AR CoT</text>
+<text x="174" y="583" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">88.29</text>
+<rect x="590" y="540" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="604" y="561" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">latent baseline</text>
+<text x="604" y="583" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">低于 AR</text>
+<rect x="1020" y="540" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="1034" y="561" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">OneVL</text>
+<text x="1034" y="583" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">88.84</text>
+<line x1="54" y1="660" x2="1226" y2="660" stroke="#AEB8C6" stroke-width="1"/>
+<text x="54" y="686" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">结论写法：低延迟 latent planning Pareto 成立；不要写成所有指标无条件第一。</text>
+</svg>

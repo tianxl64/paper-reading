@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1400" height="760" fill="#ffffff"/>
+  <text x="42" y="48" font-size="24" font-weight="800" font-family="Arial, Microsoft YaHei, sans-serif" fill="#0f172a">External Evidence: Agreement and Negative Evidence</text>
+  
+  <rect x="76" y="126" width="1240" height="478" rx="16" fill="#f8fafc" stroke="#d9dee8" stroke-width="1"/><text text-anchor="start" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#334155"><tspan x="94" y="154.0">Evidence synthesis</tspan></text>
+<rect x="120" y="204" width="205" height="86" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="222.5" y="240.1">arXiv source</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="222.5" y="264.2">paper + TeX</tspan></text>
+<rect x="120" y="348" width="205" height="86" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="222.5" y="384.1">GitHub repos</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="222.5" y="408.2">inference + training</tspan></text>
+<rect x="440" y="178" width="230" height="100" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="555.0" y="220.0">Agreement</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="555.0" y="240.1">paper, README and code</tspan><tspan x="555.0" y="255.9">describe the same...</tspan></text>
+<rect x="440" y="366" width="230" height="100" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="555.0" y="408.0">Boundary</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="555.0" y="428.1">project/HF pages timed</tspan><tspan x="555.0" y="443.9">out, so no weight claim...</tspan></text>
+<rect x="812" y="260" width="255" height="128" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="939.5" y="313.8">Use in report</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="939.5" y="341.7">source evidence supports</tspan><tspan x="939.5" y="357.5">interpretation; network...</tspan></text>
+<rect x="1130" y="260" width="130" height="128" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="1195.0" y="313.8">Old run</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="1195.0" y="341.7">read-only</tspan><tspan x="1195.0" y="357.5">comparison only</tspan></text>
+<polyline points="325,247 440,228" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="325,391 440,416" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="670,228 812,300" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="670,416 812,348" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="1067,324 1130,324" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/><text text-anchor="middle" font-size="12" font-weight="600" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="1130" y="312.0">not source</tspan></text>
+</svg>

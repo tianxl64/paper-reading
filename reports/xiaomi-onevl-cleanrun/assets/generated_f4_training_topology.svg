@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1400" height="760" fill="#ffffff"/>
+  <text x="42" y="48" font-size="24" font-weight="800" font-family="Arial, Microsoft YaHei, sans-serif" fill="#0f172a">Training Topology: Curriculum as a Stability Device</text>
+  
+  <rect x="66" y="124" width="1268" height="500" rx="16" fill="#f8fafc" stroke="#d9dee8" stroke-width="1"/><text text-anchor="start" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#334155"><tspan x="84" y="152.0">Training topology: stabiliz...</tspan></text>
+<rect x="100" y="190" width="210" height="96" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="205.0" y="230.3">Preliminary</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="205.0" y="257.2">visual decoder prior</tspan></text>
+<rect x="385" y="190" width="210" height="96" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="490.0" y="230.3">Stage 0</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="490.0" y="257.2">latent warmup</tspan></text>
+<rect x="670" y="190" width="210" height="96" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="775.0" y="230.3">Stage 1</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="775.0" y="249.3">freeze trunk, train</tspan><tspan x="775.0" y="265.1">readers</tspan></text>
+<rect x="955" y="190" width="210" height="96" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="1060.0" y="230.3">Stage 2</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="1060.0" y="257.2">joint finetune</tspan></text>
+<polyline points="310,238 385,238" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="595,238 670,238" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="880,238 955,238" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<rect x="132" y="386" width="195" height="86" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="229.5" y="422.1">Avoids</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="229.5" y="438.3">ill-posed future</tspan><tspan x="229.5" y="454.1">prediction</tspan></text>
+<rect x="455" y="386" width="195" height="86" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="552.5" y="422.1">Builds</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="552.5" y="438.3">latent information</tspan><tspan x="552.5" y="454.1">route</tspan></text>
+<rect x="780" y="386" width="240" height="86" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="900.0" y="422.1">Calibrates</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="900.0" y="438.3">readers on stable</tspan><tspan x="900.0" y="454.1">hidden states</tspan></text>
+<rect x="1070" y="386" width="190" height="86" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="1165.0" y="422.1">Backpropagates</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="1165.0" y="446.2">world-model signal</tspan></text>
+<polyline points="205,286 225,386" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="490,286 552,386" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="775,286 900,386" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="1060,286 1165,386" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<rect x="280" y="536" width="820" height="54" rx="10" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="690.0" y="558.7">Ablation anchor</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="690.0" y="565.9">Without staged training: NAVSIM PDM 88.84 -&gt; 67.13; curriculum is an</tspan><tspan x="690.0" y="581.7">optimization precondition.</tspan></text>
+</svg>

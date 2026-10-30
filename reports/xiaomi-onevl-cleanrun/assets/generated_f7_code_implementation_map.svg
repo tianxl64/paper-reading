@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1400" height="760" fill="#ffffff"/>
+  <text x="42" y="48" font-size="24" font-weight="800" font-family="Arial, Microsoft YaHei, sans-serif" fill="#0f172a">Code Implementation Map: Two Repos, One Mechanism</text>
+  
+  <rect x="70" y="120" width="570" height="500" rx="16" fill="#f8fafc" stroke="#d9dee8" stroke-width="1"/><text text-anchor="start" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#334155"><tspan x="88" y="148.0">Inference repository</tspan></text>
+<rect x="720" y="120" width="610" height="500" rx="16" fill="#f8fafc" stroke="#d9dee8" stroke-width="1"/><text text-anchor="start" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#334155"><tspan x="738" y="148.0">Training repository</tspan></text>
+<rect x="112" y="198" width="220" height="84" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="222.0" y="233.3">run_infer.sh</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="222.0" y="248.9">latent counts and CLI</tspan><tspan x="222.0" y="264.7">defaults</tspan></text>
+<rect x="380" y="198" width="220" height="84" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="490.0" y="233.3">infer_onevl.py</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="490.0" y="248.9">marker parser +</tspan><tspan x="490.0" y="264.7">generation</tspan></text>
+<rect x="380" y="356" width="220" height="84" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="490.0" y="391.3">visual tokenizer</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="490.0" y="406.9">decode visual-token</tspan><tspan x="490.0" y="422.7">strings</tspan></text>
+<rect x="112" y="356" width="220" height="84" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="222.0" y="391.3">eval_results.py</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="222.0" y="406.9">task metrics</tspan><tspan x="222.0" y="422.7">entrypoint</tspan></text>
+<rect x="772" y="198" width="220" height="84" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="882.0" y="233.3">stage scripts</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="882.0" y="256.8">Stage 0/1/2 curriculum</tspan></text>
+<rect x="1042" y="198" width="220" height="84" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="1152.0" y="233.3">latent_cot model</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="1152.0" y="256.8">SWIFT integration</tspan></text>
+<rect x="772" y="356" width="220" height="84" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="882.0" y="391.3">latent_cot loss</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="882.0" y="414.8">CE + aux losses</tspan></text>
+<rect x="1042" y="356" width="220" height="84" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="1152.0" y="391.3">demo data</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="1152.0" y="414.8">small evidence surface</tspan></text>
+<polyline points="332,240 380,240" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="490,282 490,356" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="380,398 332,398" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="992,240 1042,240" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="882,282 882,356" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="992,398 1042,398" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<rect x="346" y="506" width="725" height="56" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="708.5" y="529.5">Code-reading focus</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="708.5" y="537.3">The report explains implementation logic and file/function roles; it does</tspan><tspan x="708.5" y="553.1">not attempt project reproduction.</tspan></text>
+</svg>

@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#556376"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="760" fill="#FFFFFF"/>
+<text x="42" y="42" font-size="22" font-weight="700" fill="#172033">证据矩阵：claim 强弱与来源边界</text>
+<text x="42" y="70" font-size="13" font-weight="500" text-anchor="start" fill="#596579">evidence matrix；不是流程图，而是审计表</text>
+<rect x="220" y="110" width="150" height="46" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="236" y="138" font-size="13" font-weight="700" text-anchor="start" fill="#172033">论文</text>
+<rect x="405" y="110" width="150" height="46" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="421" y="138" font-size="13" font-weight="700" text-anchor="start" fill="#172033">代码</text>
+<rect x="590" y="110" width="150" height="46" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="606" y="138" font-size="13" font-weight="700" text-anchor="start" fill="#172033">issue/PR</text>
+<rect x="775" y="110" width="150" height="46" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="791" y="138" font-size="13" font-weight="700" text-anchor="start" fill="#172033">外部源</text>
+<rect x="960" y="110" width="150" height="46" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="976" y="138" font-size="13" font-weight="700" text-anchor="start" fill="#172033">本地复现</text>
+<rect x="52" y="135" width="130" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="68" y="163" font-size="13" font-weight="700" text-anchor="start" fill="#172033">低延迟</text>
+<rect x="52" y="223" width="130" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="68" y="251" font-size="13" font-weight="700" text-anchor="start" fill="#172033">双 latent</text>
+<rect x="52" y="311" width="130" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="68" y="339" font-size="13" font-weight="700" text-anchor="start" fill="#172033">Stage 必要</text>
+<rect x="52" y="399" width="130" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="68" y="427" font-size="13" font-weight="700" text-anchor="start" fill="#172033">MLP 取舍</text>
+<rect x="52" y="487" width="130" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="68" y="515" font-size="13" font-weight="700" text-anchor="start" fill="#172033">完整 benchmark</text>
+<rect x="220" y="135" width="150" height="46" rx="10" fill="#ECF8F1" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="236" y="163" font-size="13" font-weight="700" text-anchor="start" fill="#172033">强</text>
+<rect x="405" y="135" width="150" height="46" rx="10" fill="#FFF8D8" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="421" y="163" font-size="13" font-weight="700" text-anchor="start" fill="#172033">中</text>
+<rect x="590" y="135" width="150" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="606" y="163" font-size="13" font-weight="700" text-anchor="start" fill="#172033">弱</text>
+<rect x="775" y="135" width="150" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="791" y="163" font-size="13" font-weight="700" text-anchor="start" fill="#172033">弱</text>
+<rect x="960" y="135" width="150" height="46" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="976" y="163" font-size="13" font-weight="700" text-anchor="start" fill="#172033">无</text>
+<rect x="220" y="223" width="150" height="46" rx="10" fill="#ECF8F1" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="236" y="251" font-size="13" font-weight="700" text-anchor="start" fill="#172033">强</text>
+<rect x="405" y="223" width="150" height="46" rx="10" fill="#FFF8D8" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="421" y="251" font-size="13" font-weight="700" text-anchor="start" fill="#172033">中</text>
+<rect x="590" y="223" width="150" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="606" y="251" font-size="13" font-weight="700" text-anchor="start" fill="#172033">弱</text>
+<rect x="775" y="223" width="150" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="791" y="251" font-size="13" font-weight="700" text-anchor="start" fill="#172033">弱</text>
+<rect x="960" y="223" width="150" height="46" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="976" y="251" font-size="13" font-weight="700" text-anchor="start" fill="#172033">无</text>
+<rect x="220" y="311" width="150" height="46" rx="10" fill="#ECF8F1" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="236" y="339" font-size="13" font-weight="700" text-anchor="start" fill="#172033">强</text>
+<rect x="405" y="311" width="150" height="46" rx="10" fill="#FFF8D8" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="421" y="339" font-size="13" font-weight="700" text-anchor="start" fill="#172033">中</text>
+<rect x="590" y="311" width="150" height="46" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="606" y="339" font-size="13" font-weight="700" text-anchor="start" fill="#172033">无</text>
+<rect x="775" y="311" width="150" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="791" y="339" font-size="13" font-weight="700" text-anchor="start" fill="#172033">弱</text>
+<rect x="960" y="311" width="150" height="46" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="976" y="339" font-size="13" font-weight="700" text-anchor="start" fill="#172033">无</text>
+<rect x="220" y="399" width="150" height="46" rx="10" fill="#ECF8F1" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="236" y="427" font-size="13" font-weight="700" text-anchor="start" fill="#172033">强</text>
+<rect x="405" y="399" width="150" height="46" rx="10" fill="#FFF8D8" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="421" y="427" font-size="13" font-weight="700" text-anchor="start" fill="#172033">中</text>
+<rect x="590" y="399" width="150" height="46" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="606" y="427" font-size="13" font-weight="700" text-anchor="start" fill="#172033">无</text>
+<rect x="775" y="399" width="150" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="791" y="427" font-size="13" font-weight="700" text-anchor="start" fill="#172033">弱</text>
+<rect x="960" y="399" width="150" height="46" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="976" y="427" font-size="13" font-weight="700" text-anchor="start" fill="#172033">无</text>
+<rect x="220" y="487" width="150" height="46" rx="10" fill="#FFF8D8" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="236" y="515" font-size="13" font-weight="700" text-anchor="start" fill="#172033">作者</text>
+<rect x="405" y="487" width="150" height="46" rx="10" fill="#FFF8D8" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="421" y="515" font-size="13" font-weight="700" text-anchor="start" fill="#172033">脚本</text>
+<rect x="590" y="487" width="150" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="606" y="515" font-size="13" font-weight="700" text-anchor="start" fill="#172033">弱</text>
+<rect x="775" y="487" width="150" height="46" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="791" y="515" font-size="13" font-weight="700" text-anchor="start" fill="#172033">弱</text>
+<rect x="960" y="487" width="150" height="46" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="976" y="515" font-size="13" font-weight="700" text-anchor="start" fill="#172033">缺</text>
+<rect x="720" y="625" width="420" height="58" rx="10" fill="#FFF8D8" stroke="#B76E00" stroke-width="1.3"/>
+<text x="736" y="653" font-size="15" font-weight="700" text-anchor="start" fill="#172033">读法</text>
+<text x="736" y="679" font-size="12" font-weight="500" text-anchor="start" fill="#596579">强证据支持机制理解；本地 benchmark 仍需权重、数据、torch/CUDA。</text>
+</svg>

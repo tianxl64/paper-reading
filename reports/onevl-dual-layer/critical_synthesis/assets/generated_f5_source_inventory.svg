@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="F5 证据来源与上下文">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4B5565"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+<text x="54" y="48" font-family="Microsoft YaHei, Arial, sans-serif" font-size="23" font-weight="700" fill="#172033">F5 证据来源与上下文</text>
+<text x="54" y="76" font-family="Microsoft YaHei, Arial, sans-serif" font-size="13" font-weight="500" fill="#596579">画图前读取完整论文、实验、代码与负证据</text>
+<rect x="78" y="150" width="230" height="108" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="94" y="178" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">论文源</text>
+<text x="94" y="204" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="94" dy="0">TeX/PDF/HTML</tspan>
+<tspan x="94" dy="17">架构+公式+表格</tspan>
+</text>
+<rect x="372" y="150" width="230" height="108" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="388" y="178" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">推理 repo</text>
+<text x="388" y="204" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="388" dy="0">run_infer.sh</tspan>
+<tspan x="388" dy="17">infer_onevl.py</tspan>
+</text>
+<rect x="666" y="150" width="230" height="108" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="682" y="178" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">训练 repo</text>
+<text x="682" y="204" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="682" dy="0">Stage scripts</tspan>
+<tspan x="682" dy="17">latent_cot loss</tspan>
+</text>
+<rect x="960" y="150" width="230" height="108" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="976" y="178" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">外部/负证据</text>
+<text x="976" y="204" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="976" dy="0">GitHub API</tspan>
+<tspan x="976" dy="17">HF/项目页失败</tspan>
+</text>
+<rect x="420" y="410" width="430" height="110" rx="10" fill="#FFF3DF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="436" y="438" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">图示设计输入</text>
+<text x="436" y="464" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="436" dy="0">每张图绑定章节上下文</tspan>
+<tspan x="436" dy="17">不是摘要生图</tspan>
+</text>
+<path d="M193,258 L635,258 L635,410" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M487,258 L635,258 L635,410" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M781,258 L635,258 L635,410" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1075,258 L635,258 L635,410" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="130" y="545" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="144" y="566" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">代码证据</text>
+<text x="144" y="588" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">18 entries</text>
+<rect x="535" y="545" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="549" y="566" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">原论文图</text>
+<text x="549" y="588" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">22 figures</text>
+<rect x="920" y="545" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="934" y="566" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">规则</text>
+<text x="934" y="588" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">只读 corpus</text>
+<line x1="54" y1="660" x2="1226" y2="660" stroke="#AEB8C6" stroke-width="1"/>
+<text x="54" y="686" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">此图固化规则：生图必须先读取对应完整上下文，不能只用摘要或 caption。</text>
+</svg>

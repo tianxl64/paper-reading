@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1400" height="760" fill="#ffffff"/>
+  <text x="42" y="48" font-size="24" font-weight="800" font-family="Arial, Microsoft YaHei, sans-serif" fill="#0f172a">Cross-Source Matrix: What Is Supported, What Is Not</text>
+  
+  <rect x="70" y="126" width="1248" height="478" rx="16" fill="#f8fafc" stroke="#d9dee8" stroke-width="1"/><text text-anchor="start" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#334155"><tspan x="88" y="154.0">Cross-source conflict matrix</tspan></text>
+<rect x="120" y="192" width="210" height="84" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="225.0" y="227.3">Paper</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="225.0" y="242.9">4 visual + 2 language</tspan><tspan x="225.0" y="258.7">latents</tspan></text>
+<rect x="120" y="326" width="210" height="84" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="225.0" y="361.3">README</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="225.0" y="376.9">standalone inference</tspan><tspan x="225.0" y="392.7">and weights links</tspan></text>
+<rect x="430" y="192" width="230" height="84" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="545.0" y="227.3">Code</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="545.0" y="242.9">marker parser and aux</tspan><tspan x="545.0" y="258.7">decoder loaders</tspan></text>
+<rect x="430" y="326" width="230" height="84" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="545.0" y="361.3">API issues/PRs</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="545.0" y="376.9">maintenance evidence,</tspan><tspan x="545.0" y="392.7">not metric proof</tspan></text>
+<rect x="770" y="192" width="240" height="84" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="890.0" y="227.3">Consistent</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="890.0" y="242.9">architecture and</tspan><tspan x="890.0" y="258.7">training story</tspan></text>
+<rect x="770" y="326" width="240" height="84" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="890.0" y="361.3">Unverified</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="890.0" y="376.9">weights/data/network</tspan><tspan x="890.0" y="392.7">availability</tspan></text>
+<rect x="1110" y="258" width="148" height="110" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="1184.0" y="304.2">Conclusion</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="1184.0" y="327.1">method evidence yes;</tspan><tspan x="1184.0" y="342.9">metric reproducti...</tspan></text>
+<polyline points="330,234 430,234" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="330,368 430,368" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="660,234 770,234" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="660,368 770,368" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="1010,234 1110,300" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="1010,368 1110,326" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+</svg>

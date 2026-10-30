@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="F10 实现边界与失败模式">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4B5565"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+<text x="54" y="48" font-family="Microsoft YaHei, Arial, sans-serif" font-size="23" font-weight="700" fill="#172033">F10 实现边界与失败模式</text>
+<text x="54" y="76" font-family="Microsoft YaHei, Arial, sans-serif" font-size="13" font-weight="500" fill="#596579">代码细节阅读不等于项目复现</text>
+<rect x="100" y="168" width="310" height="116" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="116" y="196" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">已验证</text>
+<text x="116" y="222" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="116" dy="0">clone 成功</tspan>
+<tspan x="116" dy="17">18 个代码证据</tspan>
+<tspan x="116" dy="17">py_compile/smoke</tspan>
+</text>
+<rect x="100" y="420" width="310" height="116" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="116" y="448" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">不能声称</text>
+<text x="116" y="474" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="116" dy="0">完整 benchmark</tspan>
+<tspan x="116" dy="17">训练成功</tspan>
+<tspan x="116" dy="17">车端部署</tspan>
+</text>
+<rect x="740" y="168" width="330" height="116" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="756" y="196" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">复现需要</text>
+<text x="756" y="222" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="756" dy="0">torch/CUDA</tspan>
+<tspan x="756" dy="17">weights/data</tspan>
+<tspan x="756" dy="17">官方 evaluator</tspan>
+</text>
+<rect x="740" y="420" width="330" height="116" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="756" y="448" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">本报告重点</text>
+<text x="756" y="474" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="756" dy="0">代码对象</tspan>
+<tspan x="756" dy="17">claim mapping</tspan>
+<tspan x="756" dy="17">调试信号</tspan>
+</text>
+<path d="M410,226 L740,226" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="746" y="218" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">requires</text>
+<path d="M410,478 L740,478" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="746" y="470" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">instead</text>
+<polygon points="620,297 735,352 620,407 505,352" fill="#FFF3DF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="539" y="348" font-family="Microsoft YaHei, Arial, sans-serif" font-size="14" font-weight="700" fill="#172033">gate rule</text>
+<text x="547" y="372" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="547" dy="0">运行通过</tspan>
+<tspan x="547" dy="16">不等于指标正确</tspan>
+</text>
+<line x1="54" y1="660" x2="1226" y2="660" stroke="#AEB8C6" stroke-width="1"/>
+<text x="54" y="686" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">这张图防止把 smoke test 或 README 数字误写成本地复现完成。</text>
+</svg>

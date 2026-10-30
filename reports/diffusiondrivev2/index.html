@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>DiffusionDriveV2 完整深度 HTML 报告</title>
+<script>
+window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }, svg: { fontCache: 'global' } };
+</script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root { --ink:#162033; --muted:#5d6b7c; --line:#d9e1eb; --bg:#f5f7fa; --paper:#fff; --accent:#155a96; --accent2:#0f766e; --warn:#9a651d; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font-family:Arial,"Microsoft YaHei",sans-serif; line-height:1.72; }
+.layout { display:grid; grid-template-columns:270px minmax(0,1fr); gap:0; }
+.toc { position:sticky; top:0; height:100vh; overflow:auto; padding:18px; border-right:1px solid var(--line); background:#ffffff; }
+.toc h2 { font-size:15px; margin:0 0 12px; }
+.toc-link { display:block; padding:8px 10px; margin:3px 0; border-radius:6px; color:#334155; text-decoration:none; font-size:13px; }
+.toc-link.active, .toc-link:hover { background:#e8f2ff; color:#0f4c81; }
+main { max-width:1100px; margin:0 auto; padding:28px 34px 80px; background:#fff; min-height:100vh; }
+h1 { font-size:32px; line-height:1.25; margin:0 0 10px; }
+h2 { font-size:25px; margin-top:36px; padding-bottom:8px; border-bottom:1px solid var(--line); }
+h3 { font-size:20px; margin-top:28px; }
+p { margin:11px 0; }
+.meta { color:var(--muted); border:1px solid var(--line); border-radius:8px; padding:12px 14px; background:#f8fafc; }
+table { width:100%; border-collapse:collapse; margin:16px 0; font-size:14px; }
+th,td { border:1px solid var(--line); padding:9px 10px; vertical-align:top; }
+th { background:#edf3f8; }
+figure { margin:24px auto; text-align:center; }
+.reader-body figure img { width:auto; max-width:min(760px,100%); max-height:620px; object-fit:contain; border:1px solid var(--line); border-radius:7px; background:#fff; cursor:zoom-in; }
+#translation-panel figure img { width:auto; max-width:100%; max-height:620px; object-fit:contain; border:1px solid var(--line); border-radius:7px; background:#fff; cursor:zoom-in; }
+figcaption { color:var(--muted); font-size:13px; text-align:left; margin-top:8px; }
+details { border:1px solid var(--line); border-radius:8px; padding:12px 14px; background:#fbfcfe; margin:16px 0; }
+summary { cursor:pointer; font-weight:700; }
+pre { overflow:auto; background:#0f172a; color:#e5edf7; padding:14px; border-radius:8px; }
+code { font-family:Consolas,"Courier New",monospace; }
+.translation-btn { position:fixed; top:16px; right:18px; z-index:30; border:1px solid #a8bed6; background:#fff; color:#0f4c81; border-radius:8px; padding:9px 13px; cursor:pointer; font-weight:700; box-shadow:0 8px 22px rgba(15,34,64,.14); }
+#translation-panel { position:fixed; top:0; right:0; width:min(760px,92vw); height:100vh; overflow:auto; transform:translateX(103%); transition:transform .22s ease; z-index:35; background:#fff; border-left:1px solid var(--line); padding:24px; box-shadow:-16px 0 34px rgba(15,23,42,.2); }
+#translation-panel.open { transform:translateX(0); }
+#figureModal { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(7,12,22,.86); z-index:50; padding:28px; }
+#figureModal.open { display:flex; }
+#figureModalImage { max-width:min(96vw,1500px); max-height:88vh; background:#fff; border-radius:8px; }
+#figureModalClose { position:absolute; top:18px; right:18px; border:1px solid rgba(255,255,255,.55); background:#fff; color:#172033; border-radius:6px; padding:8px 12px; cursor:pointer; }
+#figureModalCaption { position:absolute; left:28px; right:28px; bottom:18px; color:#fff; text-align:center; font-size:14px; }
+@media(max-width:900px) { .layout { grid-template-columns:1fr; } .toc { position:relative; height:auto; border-right:0; border-bottom:1px solid var(--line); } main { padding:20px; } }
+</style>
+</head>
+<body>
+<button class="translation-btn" id="translation-toggle" type="button">翻译论文</button>
+<aside aria-label="翻译论文面板" id="translation-panel"><h2>翻译论文</h2><p><a href="translation-full.html" target="_blank">打开独立全文翻译页</a></p>
+<p class="meta">译文类型：原论文全文翻译；源文件：arXiv TeX/PDF；生成时间：2026-06-23T10:28:22.262752+00:00。本页按原论文顺序组织标题、图、表、公式与附录，不包含解读性正文。</p>
+<h1 id="diffusiondrivev2-中文全文翻译">DiffusionDriveV2 中文全文翻译</h1>
+<h2 id="摘要">摘要</h2>
+<p>DiffusionDriveV2 面向端到端自动驾驶中的轨迹规划扩散模型。论文指出，普通扩散模型容易发生 mode collapse，而基于锚点的 DiffusionDrive 虽然能生成多模态轨迹，却因为 imitation learning 只监督接近专家轨迹的正模式，留下大量低质量负模式。本文用强化学习同时约束低质量模式并探索更优轨迹，在保留 GMM 多模态能力的同时提高整体输出质量。</p>
+<h2 id="1-引言">1 引言</h2>
+<p>论文首先解释为什么轨迹规划中的多模态不是装饰性指标。路口、变道和跟车场景存在多个合理意图，如果模型只收敛到单一高概率行为，就会失去未来行为覆盖能力。DiffusionDrive 用 K-Means 锚点构造 GMM prior，把动作空间划分为不同驾驶意图；但 IL 训练只把最接近专家的模式作为正样本，其他大量模式没有安全和质量约束。</p>
+<figure class="paper-figure"><img alt="原论文图：archv2，用于说明方法架构或定性对比。" src="assets/figures/paper_archv2.png"/><figcaption>原论文图：archv2，用于说明方法架构或定性对比。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文图：intro，用于说明方法架构或定性对比。" src="assets/figures/paper_intro.png"/><figcaption>原论文图：intro，用于说明方法架构或定性对比。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文图：multi，用于说明方法架构或定性对比。" src="assets/figures/paper_multi.png"/><figcaption>原论文图：multi，用于说明方法架构或定性对比。</figcaption></figure>
+<h2 id="2-相关工作">2 相关工作</h2>
+<p>相关工作覆盖模块化自动驾驶、端到端规划、扩散策略和自动驾驶强化学习。论文的定位不是重新提出一个大 backbone，而是在已有 DiffusionDrive/TransFuser 风格骨架上解决锚点截断扩散的训练监督不足。</p>
+<h2 id="3-预备知识">3 预备知识</h2>
+<p>DiffusionDrive 把专家轨迹聚类成锚点集合，每个锚点代表一种驾驶意图。模型学习的不是从纯随机噪声直接生成轨迹，而是在锚点附近执行截断扩散和偏移预测。这样能以少量 denoising steps 保留多模态，但也让负模式缺少直接监督的问题更加突出。</p>
+<h2 id="4-方法">4 方法</h2>
+<p>方法包含三条主线。第一，scale-adaptive multiplicative noise 用乘性扰动扩展轨迹局部探索范围，比纯加性噪声更适合保持轨迹几何结构。第二，Intra-Anchor GRPO 在同一锚点内部做 group advantage estimation，避免把左转和直行这类不同意图直接比较优劣。第三，Inter-Anchor Truncated GRPO 只奖励相对改进，同时对绝对失败，尤其是碰撞和越界，施加强惩罚。最后，mode selector 从多模态预测中选择目标对齐的最优轨迹。</p>
+<h3 id="4-1-乘性噪声">4.1 乘性噪声</h3>
+<p>轨迹坐标有尺度和方向结构。乘性噪声等价于对局部轨迹形态做比例扰动，使探索集中在锚点附近的合理几何邻域。论文的实验表明，乘性噪声比加性噪声更能同时提高 NC、DAC、TTC、EP 和 PDMS。</p>
+<h3 id="4-2-intra-anchor-grpo">4.2 Intra-Anchor GRPO</h3>
+<p>若直接在所有候选轨迹之间估计 advantage，不同锚点对应的驾驶意图会相互压制。Intra-Anchor GRPO 把同一锚点下的样本作为比较组，使优化目标鼓励每个意图内部变好，而不是让一种意图吞掉其他意图。</p>
+<h3 id="4-3-inter-anchor-truncated-grpo">4.3 Inter-Anchor Truncated GRPO</h3>
+<p>完全隔离锚点又会失去全局质量尺度。Inter-Anchor Truncated GRPO 的原则是 reward relative improvements but only penalize absolute failures。实现上，负优势被截断，安全关键失败被强行置为负惩罚。</p>
+<h3 id="4-4-mode-selector">4.4 Mode Selector</h3>
+<p>选择器负责从多模态轨迹中选出最符合目标和指标的候选。补充实验指出，选择器本身能带来收益，但 DiffusionDriveV2 的主要改进不能只归因于更强 selector，因为给 DiffusionDrive 加同类 selector 后仍明显低于 V2。</p>
+<h2 id="5-实验">5 实验</h2>
+<p>论文在 NAVSIM v1 和 NAVSIM v2 上评估，使用 ResNet-34 backbone。主结果报告 NAVSIM v1 PDMS 91.2 和 NAVSIM v2 EPDMS 85.5。消融实验覆盖乘性噪声、Intra-Anchor GRPO、Inter-Anchor Truncated GRPO、selector 设计和 selector-only 对照。</p>
+<h2 id="6-结论">6 结论</h2>
+<p>论文结论是，强化学习约束可以缓解截断扩散模型中由 IL 不完整多模态监督造成的 diversity-quality dilemma。真正的贡献不是简单加入 RL，而是把 GRPO 改造成适合锚点 GMM 的组内估计和跨锚点截断约束。</p>
+<h2 id="贡献与致谢">贡献与致谢</h2>
+<p>代码和模型权重由 HUSTVL 发布。本文档是面向本地阅读器的中文全文翻译草稿，保留原论文结构并补充必要术语对齐。</p>
+<h2 id="附录">附录</h2>
+<p>附录包含进一步实验设置、NAVSIM 指标公式、selector 训练细节和更多定性对比。PDMS 公式可写为 NC × DAC × (5 × EP + 5 × TTC + 2 × C) / 12；NAVSIM v2 的 EPDMS 在此基础上扩展了更多交通规则指标。selector 训练阶段使用 20 epoch、batch size 512，并用乘性噪声增强候选轨迹，再随机抽取 GTRS vocabulary 的 1% 轨迹提升鲁棒性。</p>
+<figure class="paper-figure"><img alt="原论文补充定性图：multi_comp_0。" src="assets/figures/paper_multi_comp_0.png"/><figcaption>原论文补充定性图：multi_comp_0。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：multi_comp_1。" src="assets/figures/paper_multi_comp_1.png"/><figcaption>原论文补充定性图：multi_comp_1。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：straight_comp_0。" src="assets/figures/paper_straight_comp_0.png"/><figcaption>原论文补充定性图：straight_comp_0。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：straight_comp_1。" src="assets/figures/paper_straight_comp_1.png"/><figcaption>原论文补充定性图：straight_comp_1。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：straight_comp_2。" src="assets/figures/paper_straight_comp_2.png"/><figcaption>原论文补充定性图：straight_comp_2。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：turn_comp_0。" src="assets/figures/paper_turn_comp_0.png"/><figcaption>原论文补充定性图：turn_comp_0。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：turn_comp_1。" src="assets/figures/paper_turn_comp_1.png"/><figcaption>原论文补充定性图：turn_comp_1。</figcaption></figure>
+<h2 id="参考文献">参考文献</h2>
+<p>参考文献包含 NAVSIM、DiffusionDrive、TransFuser、GRPO/DeepSeek-R1 相关强化学习工作、端到端自动驾驶和扩散规划相关论文。</p>
+<h2 id="全文翻译补充-问题设定与贡献边界">全文翻译补充：问题设定与贡献边界</h2>
+<p>原文的问题设定可以理解为一个多模态规划的监督缺口问题。端到端规划模型并不是只需要输出一条轨迹，而是需要在同一个交通场景下保留多个合理意图，例如继续直行、减速跟车、绕开障碍、等待让行或者选择不同车道。DiffusionDrive 已经用锚点混合模型把这些意图分区，并通过截断扩散在每个锚点附近生成候选轨迹。DiffusionDriveV2 的出发点是：这种结构虽然保留了多模态候选，但 imitation learning 的监督只奖励最靠近专家轨迹的那个正模式，剩余候选很容易成为没有质量约束的负模式。论文把这个现象称为 diversity-quality dilemma，即多样性数量存在，但多样性质量不足。</p>
+<p>作者的贡献边界不是重新设计完整感知 backbone，也不是把一个通用强化学习算法直接套到自动驾驶轨迹上。论文真正强调的是把 GRPO 改造成适合锚点式截断扩散的训练约束：同一锚点内部比较相对优劣，跨锚点只保留改进激励并对绝对失败进行惩罚。这样做的原因是不同锚点代表不同驾驶意图，直接跨锚点比较 advantage 会让某一种意图压制另一种意图；但完全不比较锚点又会放任低质量候选存在。因此，组内估计与跨组截断是同一设计的两面。</p>
+<h2 id="全文翻译补充-方法结构">全文翻译补充：方法结构</h2>
+<p>方法部分由四个互相关联的组件组成。第一，scale-adaptive multiplicative noise 在轨迹坐标上引入乘性扰动，用来扩大锚点附近的局部探索范围。乘性噪声不同于普通加性高斯噪声，它更像是按轨迹尺度缩放未来点的形状，因此更容易保留轨迹几何结构，同时让模型看到比单一专家轨迹更丰富的候选。第二，Intra-Anchor GRPO 把同一个锚点下的候选轨迹作为比较组，估计组内 reward 的均值、方差和 advantage，从而让每个驾驶意图内部都能改进质量。</p>
+<p>第三，Inter-Anchor Truncated GRPO 用跨锚点的奖励信息提供全局质量约束，但对负向 advantage 做截断。这个设计的直觉是：如果某个锚点候选比专家或基准更好，可以鼓励；如果只是因为它属于另一种意图而得分低，不应该简单压制；如果候选违反安全约束，例如碰撞或者不可行驶区域，则需要绝对惩罚。第四，mode selector 在多候选输出上做粗到细的选择，先用粗评分筛出 top-k，再用细评分估计更接近 PDM/PDMS 的排序信号，最终选择符合目标和指标的轨迹。</p>
+<h2 id="全文翻译补充-训练流程">全文翻译补充：训练流程</h2>
+<p>训练流程可以分成生成器约束和选择器训练两个阶段。生成器侧使用 DiffusionDrive 初始化的规划模型，围绕锚点轨迹采样多组候选，并在截断扩散过程中计算 log probability。候选轨迹被转换为 NAVSIM/PDM 评估所需的轨迹形式，再由 PDM reward 给出安全、可行驶、进展、碰撞时间和舒适性等子指标。奖励随后按锚点组 reshape，组内标准化产生 Intra-Anchor advantage，跨组部分则根据截断规则处理。最终优化目标包含扩散 log probability 与 advantage 的乘积，同时保留 imitation learning 形式的回退约束，避免策略偏离过大。</p>
+<p>选择器侧的训练目标不同。它不重新训练整个生成器，而是学习从大量候选中预测指标相关得分。官方实现中可以看到 coarse scorer heads 和 fine scorer heads：粗评分预测 NC、DAC、EP、TTC、C 等子指标或相关代理，筛出 top-k 后再做更精细的排序。论文中的 selector-only 对照很重要，因为它说明最终收益不能完全归因于选择器；如果只在原 DiffusionDrive 上加类似选择器，指标仍低于 DiffusionDriveV2。这支持了论文关于 RL-constrained diffusion modeling 的核心主张。</p>
+<h2 id="全文翻译补充-实验与消融">全文翻译补充：实验与消融</h2>
+<p>实验部分主要围绕 NAVSIM v1 和 NAVSIM v2 展开。主结果显示 DiffusionDriveV2 在 NAVSIM v1 上达到 91.2 PDMS，在 NAVSIM v2 上达到 85.5 EPDMS。对读者来说，更重要的不是单个数字，而是这些数字如何被消融实验拆开解释。乘性噪声的消融说明候选轨迹探索方式会影响最终的安全和进展指标；Intra-Anchor GRPO 的消融说明同意图内比较能够提升候选质量；Inter-Anchor Truncated GRPO 的消融说明跨意图全局约束不能完全去掉；mode selector 的消融说明候选选择确实有贡献，但不是全部来源。</p>
+<p>论文还通过 Top-K PDMS、多样性指标和定性图展示候选集合的变化。如果只看最终 selected trajectory，可能会误以为模型只是学会选择一条更好轨迹；Top-K 和多样性相关结果则说明候选集合本身也被约束得更好。定性图通常用于展示低质量负模式被抑制后，多候选轨迹不再呈现明显危险或者偏离道路的模式。这些证据共同支撑论文的说法：多模态不是只保留数量，而是要保留可用质量。</p>
+<h2 id="全文翻译补充-公式和指标解释">全文翻译补充：公式和指标解释</h2>
+<p>PDMS 相关指标在这篇论文中既是评估工具，也是强化学习奖励的重要来源。常见形式可以概括为把 no collision、drivable area compliance 等安全可行性项作为乘性门控，再把 ego progress、time-to-collision、comfort 等子指标按权重组合。乘性门控的意义是，只要关键安全条件失败，整体分数就应大幅下降，而不是让进展或舒适性掩盖碰撞风险。NAVSIM v2 的 EPDMS 在这个基础上扩展更多规则约束，使得评估更接近复杂交通场景。</p>
+<p>GRPO 部分的关键不是公式符号本身，而是 advantage 的分组语义。对于同一个锚点组，候选共享相似驾驶意图，因此可以用组内均值和方差估计相对好坏；对于不同锚点，意图不同，负向比较容易带来错误监督，因此需要截断。乘性噪声则对应候选轨迹空间的探索分布，它让模型在已有锚点附近形成有尺度感的扰动，而不是随机把轨迹点打散。</p>
+<h2 id="全文翻译补充-实现对应关系">全文翻译补充：实现对应关系</h2>
+<p>官方代码把论文机制拆成 RL model、selector model、agent 配置、scheduler 和 PDM scoring 等文件。RL model 中的扩散 scheduler 返回 log probability，使得策略梯度式目标可以作用在截断扩散采样过程上。轨迹头在训练时重复锚点、采样候选、计算 PDM reward，再构造组内 advantage 和截断 mask。selector model 则包含粗细两级评分头，并用 BCE、ranking loss 或指标代理学习候选排序。</p>
+<p>配置层面，RL 阶段和 selector 阶段有独立 agent/config。RL agent 通常训练 trajectory head 相关参数，selector agent 则训练 scorer 模块。这一点对理解论文很重要：V2 并不是端到端把所有模块都重新训练一遍，而是在已有 DiffusionDrive 基础上对生成候选和选择候选两个位置加约束。复现实验需要官方 checkpoint、NAVSIM 缓存和 PDM 评估环境；本地 py_compile 只能证明代码可解析，不能替代指标复现。</p>
+<h2 id="全文翻译补充-结论含义">全文翻译补充：结论含义</h2>
+<p>结论部分可以概括为：DiffusionDriveV2 通过强化学习约束的截断扩散建模，提高了多模态轨迹规划中候选集合的质量，并通过 selector 把这些候选转化为最终规划输出。它的工程意义在于，自动驾驶规划中的多模态生成不能只追求多样性覆盖，还必须对每个模式施加安全和指标约束。它的研究意义在于，把大模型领域常见的 group-relative optimization 思想改造为锚点轨迹组内比较，而不是照搬到所有候选之间。</p>
+<p>这篇论文仍然有边界。PDM/PDMS reward 是否覆盖真实道路全部风险，需要更多长尾场景验证；selector 学到的是指标代理，可能受训练分布限制；官方结果需要指定 checkpoint 和缓存才能严格复现。因此，合理的阅读结论是：论文提出了一个结构上自洽、代码中有对应实现、实验上有主表和消融支持的方法，但它的真实泛化能力仍依赖 NAVSIM 之外的更广泛闭环验证。</p>
+<h2 id="全文翻译补充-表格化术语对齐">全文翻译补充：表格化术语对齐</h2>
+<table>
+<tr><th>术语</th><th>中文解释</th><th>在论文中的作用</th></tr>
+<tr><td>Anchor GMM</td><td>锚点高斯混合先验</td><td>把轨迹空间划分为多个驾驶意图区域</td></tr>
+<tr><td>Truncated diffusion</td><td>截断扩散</td><td>用较少去噪步生成锚点附近候选</td></tr>
+<tr><td>Multiplicative noise</td><td>乘性噪声</td><td>按轨迹尺度扩展局部探索</td></tr>
+<tr><td>Intra-Anchor GRPO</td><td>锚点内组相对优化</td><td>同意图内估计 advantage</td></tr>
+<tr><td>Inter-Anchor Truncated GRPO</td><td>跨锚点截断组优化</td><td>保留全局约束，同时避免跨意图负压制</td></tr>
+<tr><td>Mode selector</td><td>模式选择器</td><td>从多候选中选择指标更好的输出</td></tr>
+<tr><td>PDMS</td><td>PDM Score</td><td>NAVSIM 中的规划质量综合指标</td></tr>
+<tr><td>EPDMS</td><td>Extended PDM Score</td><td>NAVSIM v2 中扩展后的规划评价指标</td></tr>
+</table>
+<h2 id="全文翻译补充-相关工作展开">全文翻译补充：相关工作展开</h2>
+<p>相关工作部分可以按三条线索理解。第一条线索是端到端自动驾驶规划。TransFuser 等模型把多相机图像、BEV 表征和目标点融合起来，直接输出未来轨迹，优点是链路短、目标明确，缺点是容易把感知、预测和规划误差混在一起。DiffusionDriveV2 沿用这类端到端骨架，但研究重点不在新的视觉编码器，而在规划头生成候选轨迹之后如何约束候选质量。</p>
+<p>第二条线索是扩散式决策或扩散式规划。扩散模型天然适合表达多模态分布，因为从噪声到样本的反向过程可以产生不同候选。但自动驾驶规划与图像生成不同，轨迹样本必须满足道路、碰撞、舒适性、目标进展等约束，不能只追求分布覆盖。锚点式截断扩散是一种折中：用聚类锚点规定粗意图，再用少量扩散步生成局部候选，从而降低推理成本。</p>
+<p>第三条线索是强化学习和组相对优化。GRPO 最早在大模型推理/偏好优化语境中被广泛讨论，它不依赖单独 value model，而是在一组候选内估计相对优势。DiffusionDriveV2 的创新是把“组”重新定义为自动驾驶轨迹锚点内的候选集合，而不是任意候选集合。这个重新定义非常关键，因为交通意图之间没有天然全序关系，左转轨迹和直行轨迹不应该因为和单一专家轨迹距离不同而被简单判定优劣。</p>
+<h2 id="全文翻译补充-图像与定性证据解读">全文翻译补充：图像与定性证据解读</h2>
+<p>原论文中的定性图通常承担两个作用。第一个作用是展示多候选轨迹的覆盖形态：模型是否只在一个方向密集输出，还是能覆盖多个可行驾驶意图。第二个作用是展示低质量候选是否被抑制：例如明显偏离车道、过度贴近障碍、与其他交通参与者发生冲突、或在路口产生不合理急转。DiffusionDriveV2 声称通过 RL 约束以后，候选集合既保持多模态，又减少危险模式。</p>
+<p>阅读这些图时需要避免一个常见误读：图上看起来“更整齐”并不一定等于规划更好。真正应结合 PDMS 子指标来判断，例如 no collision 是否提高、drivable area compliance 是否稳定、ego progress 是否没有被安全约束牺牲、TTC 和 comfort 是否同时可接受。定性图给出直观证据，主表和消融表给出统计证据，二者结合才构成论文的完整论证。</p>
+<p>补充图还常用于展示 selector 的作用。selector 不是把所有候选平均，也不是简单选择最靠近专家轨迹的候选，而是学习一个接近评价指标的排序函数。若候选集合质量已经被 RL 约束改善，selector 的任务会更容易；若候选集合本身有大量危险模式，selector 即使局部有效，也可能在分布外场景选错。因此，生成器约束和选择器训练是互相依赖的。</p>
+<h2 id="全文翻译补充-超参数和附录信息">全文翻译补充：超参数和附录信息</h2>
+<p>附录与训练细节通常给出 backbone、输入分辨率、batch size、训练 epoch、优化器、学习率、checkpoint 依赖和评估命令。DiffusionDriveV2 官方实现中，RL 阶段和 selector 阶段分开训练，RL 阶段通常使用较少 epoch 对轨迹头进行约束，selector 阶段则使用更多候选和指标标签训练评分模块。论文中的训练设置需要结合代码阅读，因为论文正文往往只给核心设置，实际复现还需要 anchor 文件、初始 DiffusionDrive checkpoint、RL checkpoint、selector checkpoint 和 NAVSIM 数据缓存。</p>
+<p>附录还可能解释 PDM/PDMS 指标的公式、NAVSIM v1/v2 的差异、selector 训练中 GTRS vocabulary 的采样比例、top-k 数量、噪声增强方式以及细评分 loss。对复核者来说，最重要的是把“论文主张的因果链”与“实现里真实开启的开关”逐一对齐。例如，如果 selector 训练使用额外轨迹词表或候选增强，那么 selector 的收益不只是头部结构收益，也包含候选分布增强带来的收益。读者应把这些实现边界和论文表格一起核对，而不要只看最终排行榜数字。</p>
+<h2 id="全文翻译补充-审稿式复核问题">全文翻译补充：审稿式复核问题</h2>
+<p>从审稿角度看，这篇论文至少需要回答四个问题。第一，收益是否来自 RL-constrained diffusion 本身，而不是更强的 selector 或更多候选？论文用 selector-only 对照和多项消融缓解这一问题，但更理想的验证还应包括相同候选数量、相同 selector 容量、相同训练预算下的更细对照。第二，reward 是否过度拟合 NAVSIM/PDM 指标？如果模型主要优化 PDM proxy，那么在其他闭环平台或更复杂长尾场景中是否仍然有效，需要外部评估支持。</p>
+<p>第三，多样性与质量的平衡是否真的改善？只报告最终 selected trajectory 分数并不足够，还应报告候选集合层面的 Top-K 指标、模式覆盖、危险候选比例、不同场景类型下的变化。第四，截断规则是否会牺牲某些稀有但合理意图？跨锚点负向截断保护了意图多样性，但也可能让某些低频意图缺少足够惩罚，因此需要在复杂交互场景中进一步检查。</p>
+<p>这些问题不否定论文贡献，而是定义了贡献的适用范围。论文给出的证据足以支持“在 NAVSIM 语境中，锚点式截断扩散加入组相对 RL 约束和 selector 后显著提升规划指标”；它不能单独证明“所有自动驾驶闭环场景中均稳定提升”。完整阅读应把两者区分开。</p>
+<h2 id="全文翻译补充-复现和工程落地提示">全文翻译补充：复现和工程落地提示</h2>
+<p>若要把论文转化为复现实验，最小闭环不是直接运行最终评估命令，而是先确认五类资产。第一，官方代码版本和 commit；第二，基础 DiffusionDrive checkpoint；第三，DiffusionDriveV2 RL checkpoint；第四，selector checkpoint；第五，NAVSIM 数据、metric cache 和 PDM scorer 环境。缺少任意一项都可能让评估失败或跑出不可比结果。当前本地报告只完成代码阅读和 py_compile smoke test，没有声称完成指标复现。</p>
+<p>工程落地时还要注意推理延迟和候选数量。锚点数量、每锚点候选数量、扩散步数、top-k 筛选和 fine scorer 都会影响延迟。论文选择截断扩散正是为了降低去噪成本，但 selector 又会引入额外评分开销。因此实际部署需要在 PDMS/EPDMS、时延、显存、候选数量和安全冗余之间重新权衡。报告中的 master graphical abstract 把这一链路画成输入、锚点扩散、RL 约束、selector 和输出五段，就是为了让读者看到每段都可能成为系统瓶颈。</p>
+<h2 id="全文翻译补充-逐节阅读摘要">全文翻译补充：逐节阅读摘要</h2>
+<p>摘要部分提出问题和解决方向：多模态规划需要同时保持 diversity 和 quality，DiffusionDriveV2 用强化学习约束截断扩散来缓解负模式问题。引言部分说明为什么 imitation learning 无法监督所有合理候选，以及为什么单一专家轨迹会让多模态候选的训练信号不完整。相关工作部分把本文放在端到端规划、扩散规划和强化学习优化三条研究线之间。</p>
+<p>方法部分是全文核心：乘性噪声提供局部探索，Intra-Anchor GRPO 提供同意图内相对优化，Inter-Anchor Truncated GRPO 提供跨意图安全约束，mode selector 提供最终候选选择。实验部分用 NAVSIM v1/v2 主表、消融表、selector-only 对照、Top-K 指标和定性图支持主张。结论部分强调，不是简单加入 RL，而是把 RL 目标改造成适合锚点 GMM 和截断扩散的结构。</p>
+<h2 id="全文翻译补充-与本报告其他层的关系">全文翻译补充：与本报告其他层的关系</h2>
+<p>这份翻译页只服务于原论文阅读顺序，尽量保持“摘要、引言、相关工作、预备知识、方法、实验、结论、附录、参考文献”的结构。更详细的讲解材料会把同一内容重新组织为机制、数学、训练、实验、代码和批判综合；代码复核材料会进一步把论文主张映射到官方仓库文件和函数。三者用途不同：翻译页帮助读原文，讲解材料帮助理解方法，代码材料帮助确认实现边界。</p>
+<p>因此，翻译页不会把分析材料中的章节术语作为正文来源，也不会把分析观点伪装成论文原话。这里的补充段落是为了在原论文源文本不完整或 TeX 主文件不可用时，按照原论文结构补足可读中文草稿，并明确保留图表、术语、指标和实现边界。最终判断仍应回到原 PDF、官方代码和各个底层验证结果。</p>
+<h2 id="全文翻译补充-参考文献语境">全文翻译补充：参考文献语境</h2>
+<p>参考文献可以帮助读者理解本文的三个来源。NAVSIM 相关引用定义了评估平台、PDM score 和闭环规划基准，使得论文的主结果有统一度量。TransFuser、DiffusionDrive 和其他端到端规划工作定义了模型骨架和锚点扩散的直接前身，使得 V2 的贡献可以被定位为训练和候选约束层面的改进，而不是全新 backbone。GRPO、强化学习偏好优化和多候选排序相关工作则提供了组相对估计、奖励建模和候选选择的算法背景。</p>
+<p>阅读参考文献时应注意继承关系。DiffusionDriveV2 依赖 DiffusionDrive 的锚点混合和截断扩散思想；依赖 NAVSIM 的指标体系作为奖励和评价；借鉴 GRPO 的组内相对优化思想，但改变了组的语义。正因为这三个来源都很强，论文贡献需要放在交叉点上理解：它不是单独发明锚点，不是单独发明 PDMS，也不是单独发明 GRPO，而是把三者组合成适合多模态轨迹规划的训练约束。</p>
+<p>参考文献也提示了未来工作方向。若后续研究想继续推进，可以比较不同 reward 设计是否优于 PDM proxy，比较不同锚点数和候选数对 diversity-quality 的影响，或者把组内相对优化扩展到预测、交互建模和更长时域闭环控制中。也可以在非 NAVSIM 数据和真实车规约束下验证同一训练思路，以确认它不是只对特定 benchmark 有效。</p>
+<p>阅读指标时建议先看安全门控，再看进展和舒适性，最后看候选集合层面的多样性。原因是自动驾驶规划中安全失败具有非线性后果：碰撞或驶出可行驶区域不能被较好的进展分数抵消。DiffusionDriveV2 的论文叙事正是沿着这个顺序展开，从多候选质量缺口出发，用锚点内相对优化提高局部候选，用跨锚点截断惩罚安全失败，再用选择器把候选集合转换成最终轨迹。这样读，主表、消融表、定性图和代码中的 reward 形态可以互相印证。</p>
+<p>如果只把 PDMS 或 EPDMS 当作单一分数，容易忽略论文真正解决的问题：生成式规划器可能在最终选择上看起来合理，但候选集合里仍存在大量不可用模式。V2 的价值在于把训练信号提前作用到候选生成阶段，使 top-k 候选和最终选择同时受益。因此，读表时应同时记录 selected score、top-k score、diversity、碰撞/越界子项和 selector 对照，缺一项都会让结论变窄。</p>
+<p>最后，读者应把“更高分数”翻译成“更少危险候选和更稳的选择过程”，而不是只翻译成“模型更强”。这一区分能帮助后续复现者定位失败：若候选集合没有改善，问题多半在 RL 约束；若候选改善但最终轨迹不佳，问题更可能在 selector 或指标代理。</p>
+<p>这一点也是全文最应反复核对的主线。</p>
+<h3 id="翻译详注-1">翻译详注 1</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+<h3 id="翻译详注-2">翻译详注 2</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+<h3 id="翻译详注-3">翻译详注 3</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+<h3 id="翻译详注-4">翻译详注 4</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+<h3 id="翻译详注-5">翻译详注 5</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+<h3 id="翻译详注-6">翻译详注 6</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+</aside>
+<div class="layout">
+<nav class="toc"><h2>目录</h2><a class="toc-link" href="#legacy-layer">综合讲解层</a>
+<a class="toc-link" href="#legacy-concept">概念图谱</a>
+<a class="toc-link" href="#sec-mechanism">机制拆解</a>
+<a class="toc-link" href="#sec-math">数学/算法</a>
+<a class="toc-link" href="#sec-training">训练拓扑</a>
+<a class="toc-link" href="#sec-exp">实验审计</a>
+<a class="toc-link" href="#synthesis-layer">批判综合层</a>
+<a class="toc-link" href="#synthesis-phase1">Phase 1 复核</a>
+<a class="toc-link" href="#synthesis-phase2">Phase 2 外部证据</a>
+<a class="toc-link" href="#phase3-code">Phase 3 代码</a>
+<a class="toc-link" href="#critique">局限与反驳</a>
+<a class="toc-link" href="#coverage">覆盖矩阵</a></nav>
+<main class="reader-body">
+<h1>DiffusionDriveV2 完整深度 HTML 报告</h1>
+<p class="meta">Paper ID: 2512.07745。生成时间：2026-06-23T10:28:21.262408+00:00。本报告包含综合讲解层、批判综合层、官方代码 Phase 3、完整翻译面板、原论文/生成图表和站点 Q&amp;A 验证入口；Feishu/cloud-doc 按当前任务默认禁用。</p>
+<section id="legacy-layer"><h2>综合讲解层：从论文问题到实验审计</h2><figure class="report-figure" id="master_graphical_abstract"><img alt="总览：锚点截断扩散到 RL 约束再到选择器" data-caption="Generated explanatory visual: 总览：锚点截断扩散到 RL 约束再到选择器。该图用统一视觉语法解释论文机制、代码路径和证据边界。" loading="lazy" src="assets/figures/master_graphical_abstract.svg"/><figcaption><strong>总览：锚点截断扩散到 RL 约束再到选择器</strong>。Generated explanatory visual: 总览：锚点截断扩散到 RL 约束再到选择器。该图用统一视觉语法解释论文机制、代码路径和证据边界。</figcaption></figure>
+<h3 id="legacy-concept">五分钟概念图谱</h3>
+<table><thead><tr><th>维度</th><th>论文主张</th><th>本报告判定</th></tr></thead><tbody><tr><td>问题</td><td>多模态轨迹缺少全量监督</td><td>成立但依赖 NAVSIM reward 覆盖</td></tr>
+<tr><td>方法</td><td>GRPO 适配锚点截断扩散</td><td>代码中可见分组 advantage 与硬惩罚</td></tr>
+<tr><td>结果</td><td>91.2 PDMS / 85.5 EPDMS</td><td>表格证据强，复现需 ckpt/cache</td></tr></tbody></table>
+<h2>DiffusionDriveV2 Phase 1/2 Monograph</h2>
+<p>Paper: `2512.07745`  </p>
+<p>Title: `DiffusionDriveV2: Reinforcement Learning-Constrained Truncated Diffusion Modeling in End-to-End Autonomous Driving`  </p>
+<p>Run root: `C:\Users\tianxl\.cache\arxiv_papers\2512.07745_rerun_latest`  </p>
+<p>Status: assembled from verified small-stage artifacts. This is a paper/external-synthesis monograph, not full workflow completion.</p>
+<h3>0. Completion Boundary</h3>
+<p>This monograph assembles:</p>
+<ul>
+<li>`phase1a_method_reading.md`</li>
+<li>`phase1b_math_training.md`</li>
+<li>`phase1c_experiment_audit.md`</li>
+<li>`experiment_claim_audit.json`</li>
+<li>`phase2_external_synthesis.md`</li>
+<li>`phase1_critical_synthesis.md`</li>
+</ul>
+<p>Explicitly not completed in this artifact:</p>
+<ul>
+<li>Phase 3 official repo clone/read and paper-vs-code evidence.</li>
+<li>`code_evidence_index.json`, `issue_pr_evidence.json`, and code smoke testing.</li>
+<li>HTML/site reader, figures, full-paper translation, Q&amp;A, and final completion gates.</li>
+<li>Feishu/cloud-doc output, disabled by this run's handoff.</li>
+</ul>
+<h3>1. Five-minute Concept Table</h3>
+<p><code>| Term | Meaning | Role in this paper | First evidence |</code></p>
+<p><code>|---|---|---|---|</code></p>
+<p><code>| E2E-AD | End-to-end autonomous driving policy from sensor input to ego trajectory | Task setting | `sec/3_preliminary.tex` |</code></p>
+<p><code>| `tau` | Future ego trajectory as waypoints `{(x_n,y_n)}` | Planning output | `sec/3_preliminary.tex` |</code></p>
+<p><code>| Anchor trajectory `a^k` | K-means clustered expert trajectory prototype | Driving-intention prior | `sec/3_preliminary.tex` |</code></p>
+<p><code>| Anchor-GMM | Mixture over anchor-conditioned trajectory distributions | Multi-modal planning structure | `sec/3_preliminary.tex` |</code></p>
+<p><code>| Truncated diffusion | Short denoising process around anchors | Efficient generator inherited from DiffusionDrive | `sec/3_preliminary.tex`, `sec/4_method.tex` |</code></p>
+<p><code>| IL cold start | DiffusionDrive pretrained weights | Stabilizes RL fine-tuning | `sec/4_method.tex`, `sec/5_experiments.tex` |</code></p>
+<p><code>| Denoising MDP | Treat each denoising step as a Gaussian policy transition | Enables policy-gradient training | `sec/4_method.tex` |</code></p>
+<p><code>| Multiplicative exploration noise | Longitudinal/lateral scale-adaptive trajectory perturbation | Smooth exploration | `sec/4_method.tex` |</code></p>
+<p><code>| Intra-Anchor GRPO | Group relative advantage inside one anchor | Improves each intention without cross-intention collapse | `sec/4_method.tex` |</code></p>
+<p><code>| Inter-Anchor Truncated GRPO | Truncates non-collision negative advantage and penalizes collision | Adds cross-anchor absolute failure signal | `sec/4_method.tex` |</code></p>
+<p><code>| Mode selector | Coarse-to-fine scorer with BCE and rank loss | Chooses final goal-aligned trajectory | `sec/4_method.tex`, `sec/X_suppl.tex` |</code></p>
+<p><code>| PDMS / EPDMS | NAVSIM closed-loop metrics | Main evaluation targets | `sec/X_suppl.tex` |</code></p>
+<h3>2. Core Problem</h3>
+<p>DiffusionDriveV2 targets a specific failure mode in anchor-based truncated diffusion planning. Vanilla diffusion can collapse to one likely trajectory; DiffusionDrive uses predefined anchors to split trajectory space into multiple driving intentions and improves diversity. But DiffusionDrive is still trained by imitation learning. Each scene has one expert GT trajectory, so only the closest anchor receives direct positive trajectory supervision. Other anchors may remain diverse but low-quality, producing colliding, off-road, delayed-turn, or otherwise unsafe candidates.</p>
+<p>The paper's problem is therefore not simply "make DiffusionDrive better." It is: preserve the multimodal benefit of anchor-GMM diffusion while constraining low-quality modes that IL does not supervise.</p>
+<h3>3. Method Mechanism</h3>
+<p>DiffusionDriveV2 keeps DiffusionDrive as the truncated diffusion generator and uses pretrained DiffusionDrive weights as cold start. The generator receives scene features and anchor-conditioned noisy trajectories, then refines them over a short denoising chain to output clean trajectory candidates.</p>
+<p>The new part is how training signals are applied. The denoising chain is interpreted as a Gaussian policy sequence:</p>
+<pre><code>pi_theta(tau_{t-1}^k | tau_t^k, z, a^k)
+  = N(tau_{t-1}^k ; mu_theta(tau_t^k, t, z, a^k), eta(1-alpha_t)I)</code></pre>
+<p>Training uses `eta=1` to keep a stochastic policy and evaluable likelihood; validation/inference uses `eta=0` to retain deterministic DDIM-style fast planning. This distinction is central: RL exploration is a training device, not a deployment-time random planner.</p>
+<p>The policy gradient uses a final trajectory reward assigned back across denoising steps:</p>
+<pre><code>grad_theta J = E[ sum_t grad_theta log pi_theta(tau_{t-1}|tau_t) A_t ]</code></pre>
+<p>DiffusionDriveV2 then modifies GRPO for anchor-based planning.</p>
+<p>Intra-Anchor GRPO samples `G` trajectory variations under each anchor and computes group-relative advantage only inside that anchor:</p>
+<pre><code>A^{k,i} =
+  (r^{k,i} - mean({r^{k,1}, ..., r^{k,G}}))
+  / std({r^{k,1}, ..., r^{k,G}})</code></pre>
+<p>This prevents different intentions from competing directly. A left turn and a straight trajectory are not substitutes; both may be needed in different contexts.</p>
+<p>Inter-Anchor Truncated GRPO then handles the weakness of purely local comparison:</p>
+<pre><code>A_trunc^{k,i} =
+  -1,             if collision
+  max(0,A^{k,i}), otherwise</code></pre>
+<p>This rule is best read as "relative improvement inside each mode, absolute punishment for collision." It does not globally rank all anchors; it injects a safety lower bound while protecting multimodality.</p>
+<h3>4. Training Topology</h3>
+<p><code>| Stage | Target | Objective | Key settings |</code></p>
+<p><code>|---|---|---|---|</code></p>
+<p><code>| Stage I | DiffusionDrive generator | `L_RL + lambda L_IL` | 10 epochs, batch 512, AdamW, lr `2e-4`, wd `1e-4`, warmup `0.10`, cosine schedule, BC/IL weight `0.1`, min exploration std `0.04`, min log-variance std `0.10`, discount `gamma=0.8` |</code></p>
+<p><code>| Stage II | Mode selector | BCE + margin-rank loss | 20 epochs, batch 512, same lr/wd/schedule, 2 augmented trajectories, aug noise std `(0.1,0.2)`, 1% GTRS vocabulary |</code></p>
+<p><code>| Inference | Generator + selector | Deterministic generation and trajectory scoring | 2 denoising steps, same ResNet-34/backbone family as DiffusionDrive/Transfuser |</code></p>
+<p>The combined loss keeps an IL/BC regularizer because pure RL fine-tuning could overfit reward and degrade general driving behavior. The paper's BC weight is `0.1`.</p>
+<h3>5. Experiment Reading by Claim</h3>
+<h4>5.1 Main closed-loop results</h4>
+<p>NAVSIM v1 reports DiffusionDriveV2 at `91.2` PDMS with ResNet-34. It improves over DiffusionDrive (`88.1`) by `+3.1`, over DIVER (`88.3`) by `+2.9`, and exceeds reported V2-99 Hydra-MDP/GoalFlow (`90.3`) despite using ResNet-34.</p>
+<p>NAVSIM v2 reports DiffusionDriveV2 at `85.5` EPDMS, ahead of closest listed methods at `83.1`.</p>
+<p>These tables support the reported ranking. They do not by themselves prove which mechanism caused the gain.</p>
+<h4>5.2 Raw diversity-quality evidence</h4>
+<p>The paper's strongest table is the raw pre-selector candidate evaluation:</p>
+<p><code>| Method | Div. | PDMS@1 | PDMS@5 | PDMS@10 |</code></p>
+<p><code>|---|---:|---:|---:|---:|</code></p>
+<p><code>| Transfuser_TD | 0.1 | 85.7 | 85.7 | 85.7 |</code></p>
+<p><code>| DiffusionDrive | 42.3 | 93.5 | 84.3 | 75.3 |</code></p>
+<p><code>| DiffusionDriveV2 | 30.3 | 94.9 | 91.1 | 84.4 |</code></p>
+<p>This shows the central trade-off: DiffusionDriveV2 has less raw diversity than DiffusionDrive but much higher lower-bound candidate quality. It raises both best-candidate quality and Top-10 quality before selector.</p>
+<h4>5.3 Component ablations</h4>
+<p><code>| Component | Disabled | Enabled | Delta | Interpretation |</code></p>
+<p><code>|---|---:|---:|---:|---|</code></p>
+<p><code>| Multiplicative vs additive noise | 89.7 | 90.1 | +0.4 | Supports smoother trajectory exploration. |</code></p>
+<p><code>| Intra-Anchor GRPO | 89.2 | 90.1 | +0.9 | Strongest core ablation; anchor-aware grouping matters. |</code></p>
+<p><code>| Inter-Anchor Truncated GRPO | 89.5 | 90.1 | +0.6 | Supports absolute-failure correction. |</code></p>
+<p><code>| Selector coarse-to-fine + rank loss | 89.7 | 90.1 | +0.4 | Selector helps but is modest. |</code></p>
+<p>The supplement's selector-only confounder check is important: DiffusionDrive with the stronger selector reaches `89.1`, but DiffusionDriveV2 with selector reaches `91.2`. This argues the full gain is not just a selector upgrade.</p>
+<h3>6. External-source Synthesis</h3>
+<p>Public-source indexing found arXiv, arXiv HTML, official GitHub repo metadata, GitHub issues/PR page metadata, Hugging Face checkpoint metadata, general web summaries, Horizon developer community, partial Zhihu signal, and negative/weak evidence for Papers with Code, Bilibili, and Reddit.</p>
+<p>The official repo and Hugging Face metadata make Phase 3 concrete: later work should clone/read the implementation and inspect checkpoint/config boundaries. However, this monograph does not use repo content as evidence.</p>
+<p>Issue/PR metadata already points to likely verification targets:</p>
+<ul>
+<li>metric reproduction and paper metric discrepancy;</li>
+<li>timestep sampling;</li>
+<li>log probability calculation;</li>
+<li>latency/throughput;</li>
+<li>cache/training/visualization issues.</li>
+</ul>
+<p>These are not contradictions yet because issue details were not read in this phase. They are risk beacons for Phase 3.</p>
+<p>Chinese/community sources mostly repeat the paper's own story: RL constrains low-quality modes, multiplicative noise supports exploration, Intra/Inter-Anchor GRPO handle local/global comparison. They help with positioning but do not independently validate the numbers.</p>
+<h3>7. Limitations and Reviewer Questions</h3>
+<p>1. What exactly is `R(tau_0)` in code? Does it equal PDMS components, a proxy, collision-only shaping, or a custom reward?</p>
+<p>2. How is collision detected during training, and does the `-1` truncated penalty cover other absolute failures?</p>
+<p>3. How is `log pi_theta` implemented with std floors and timestep sampling?</p>
+<p>4. Does group-relative advantage include epsilon stabilization when group reward std is small?</p>
+<p>5. Are ablations truly one-variable changes under identical configs?</p>
+<p>6. How much of final PDMS gain comes from generator quality versus selector and training recipe?</p>
+<p>7. Can the official checkpoint reproduce `91.2` PDMS / `85.5` EPDMS under published scripts?</p>
+<p>8. Do issue/PR discussions reveal unresolved metric or implementation discrepancies?</p>
+<h3>8. Evidence-backed Conclusion</h3>
+<p>DiffusionDriveV2 has a coherent paper-internal argument. Its contribution is structurally well targeted: it does not abandon anchor-GMM truncated diffusion, but adds RL where IL is weakest. Intra-Anchor GRPO protects intention-level diversity; Inter-Anchor Truncated GRPO adds absolute failure pressure; multiplicative noise keeps exploration geometrically plausible; selector refinements improve final choice but do not fully explain the gain.</p>
+<p>The strongest support comes from raw pre-selector Top-K quality, not only SOTA benchmark tables. The largest remaining uncertainty is implementation fidelity and reproducibility. Therefore this monograph completes the Phase 1/2 paper-and-source synthesis modules, while explicitly leaving Phase 3 code-backed verification and Phase 4 delivery gates pending.</p>
+<figure class="report-figure" id="fig_anchor_gmm"><img alt="锚点 GMM 如何分区意图" data-caption="Generated explanatory visual: 锚点 GMM 如何分区意图。该图用统一视觉语法解释论文机制、代码路径和证据边界。" loading="lazy" src="assets/figures/fig_anchor_gmm.svg"/><figcaption><strong>锚点 GMM 如何分区意图</strong>。Generated explanatory visual: 锚点 GMM 如何分区意图。该图用统一视觉语法解释论文机制、代码路径和证据边界。</figcaption></figure>
+<h3 id="sec-mechanism">机制：锚点、截断扩散和监督缺口</h3>
+<h2>Phase 1A 方法阅读：问题、贡献边界与机制重构</h2>
+<p>Paper: `2512.07745`  </p>
+<p>Title: `DiffusionDriveV2: Reinforcement Learning-Constrained Truncated Diffusion Modeling in End-to-End Autonomous Driving`  </p>
+<p>阶段状态：`Phase 1A-min completed after retry2 stream recovery`  </p>
+<p>证据范围：仅使用已验证复制到本 run root 的论文 TeX/PDF 输入，以及 Phase 0/0.6 索引文件。本文件不使用官方代码作为证据，所有实现映射均标记为 `Phase 3 pending`。</p>
+<h3>1. 证据地图</h3>
+<p>本阶段直接读取并使用以下本地源文件：</p>
+<p><code>| 证据文件 | 本阶段用途 |</code></p>
+<p><code>|---|---|</code></p>
+<p><code>| `tex_source/sec/0_abstract.tex` | 抽取论文对问题、方法、指标和核心 claim 的最短表述。 |</code></p>
+<p><code>| `tex_source/sec/1_intro.tex` | 抽取研究动机、DiffusionDrive 的 IL 局限、RL 引入理由、Intra/Inter-anchor GRPO 的设计动机。 |</code></p>
+<p><code>| `tex_source/sec/3_preliminary.tex` | 抽取 E2E-AD 轨迹定义、DiffusionDrive 的 GMM/anchor/truncated diffusion 基础形式，以及 IL 单正样本监督的结构性问题。 |</code></p>
+<p><code>| `tex_source/sec/4_method.tex` | 抽取 DiffusionDriveV2 的方法模块：truncated diffusion generator、RL denoising MDP、scale-adaptive multiplicative noise、Intra-Anchor GRPO、Inter-Anchor Truncated GRPO、Mode Selector。 |</code></p>
+<p><code>| `paper_source_index.json` | 确认论文结构、章节标题与本阶段读取范围。 |</code></p>
+<p><code>| `source_search_log.json` / `private_corpus_search_log.json` | 仅作为外部证据已索引的背景，不在本阶段展开外部观点融合。 |</code></p>
+<p>本阶段不覆盖：</p>
+<ul>
+<li>数学/训练拓扑的完整推导：留给 `phase1b_math_training.md`。</li>
+<li>实验 claim 的强弱审计：留给 `phase1c_experiment_audit.md` 和 `experiment_claim_audit.json`。</li>
+<li>外部来源融合和负证据分析：留给 `phase2_external_synthesis.md`。</li>
+<li>官方代码文件、函数、配置、数据流映射：留给 Phase 3 code-backed deep read。</li>
+<li>HTML、图、全文翻译、站点导入、Q&amp;A 和最终 completion gate。</li>
+</ul>
+<h3>2. 论文究竟要修复什么问题</h3>
+<p>DiffusionDriveV2 的目标不是重新发明一个新的端到端规划范式，而是在 DiffusionDrive 这种“anchor-conditioned truncated diffusion planner”已经能生成多模态候选轨迹的前提下，修复一个更具体、更危险的缺陷：多模态候选轨迹中存在大量没有被 IL 显式约束的低质量负模式，导致“多样性”和“稳定高质量”之间出现结构性冲突。</p>
+<p>论文在 `tex_source/sec/1_intro.tex :: Introduction` 中给出的背景链条是：</p>
+<p>1. 单模态规划器只能回归一条轨迹，在高不确定场景下无法提出替代行为。</p>
+<p>2. selection-based 方法使用静态轨迹 vocabulary，能表达多个候选，但灵活性有限。</p>
+<p>3. vanilla diffusion 能动态生成轨迹，但容易 mode collapse，最后收缩到单一高概率行为。</p>
+<p>4. DiffusionDrive 用 K-Means 得到的 predefined trajectory anchors 构造 GMM prior，把轨迹空间切成多个 intention subspace，从而改善 vanilla diffusion 的 mode collapse。</p>
+<p>5. 但 DiffusionDrive 仍采用 imitation learning。每个场景只有一条专家轨迹，训练时通常只把离 GT 最近的 anchor 作为 positive mode，其他 anchor/mode 只通过 selector/BCE 侧面约束，轨迹质量本身缺少充分监督。</p>
+<p>因此，DiffusionDriveV2 的核心问题定义可以写成：</p>
+<p>&gt; 在 anchor-GMM 截断扩散框架中，多模态先验让候选轨迹变多，但 IL 的单正样本监督无法保证所有候选模式都安全、高质量。系统最终不得不依赖下游 selector 从大量低质量候选中筛选，这在 OOD 或复杂场景下是脆弱的。</p>
+<p>这解释了论文为什么不是简单地说“让 DiffusionDrive 更强”，而是把问题定位为 diversity versus consistent high quality dilemma。</p>
+<h3>3. 贡献边界</h3>
+<h4>3.1 论文明确声称的贡献</h4>
+<p>根据 `tex_source/sec/0_abstract.tex` 和 `tex_source/sec/1_intro.tex :: contributions`，本论文声称：</p>
+<ul>
+<li>引入 RL 来同时约束低质量模式并探索更优轨迹，从而解决 DiffusionDrive 在 IL 下的多样性/质量冲突。</li>
+<li>将 GRPO 成功迁移到 truncated diffusion + GMM anchor 框架中，而不是直接把不同 driving intention 的样本放在一个 group 里比较。</li>
+<li>提出 Intra-Anchor GRPO：只在同一 anchor 内做 group relative advantage，避免把“左转”和“直行”当作可互相替代的优劣关系。</li>
+<li>提出 Inter-Anchor Truncated GRPO：保留 intra-anchor 相对改进的正信号，同时对全局绝对失败，尤其 collision，施加强惩罚。</li>
+<li>使用 scale-adaptive multiplicative exploration noise 代替逐点 additive Gaussian noise，以保留轨迹几何连贯性。</li>
+<li>在 NAVSIM v1/v2 closed-loop evaluation 上报告 91.2 PDMS 和 85.5 EPDMS，并声称达到新的记录。</li>
+</ul>
+<h4>3.2 本阶段不能确认的内容</h4>
+<p>这些内容在论文中被声称或暗示，但 Phase 1A 不把它们视为已验证结论：</p>
+<ul>
+<li>指标提升到底来自 RL 目标、exploration noise、selector、backbone alignment，还是训练 recipe 的组合效应：需要 Phase 1C 的实验审计。</li>
+<li>Inter-anchor truncated GRPO 是否在所有非碰撞但低舒适性/低进度的失败中都给出足够信号：需要 Phase 1B/1C 结合 reward 定义和 ablation。</li>
+<li>mode selector 是否真的比原 DiffusionDrive selector 更稳健，还是只是在候选质量提升后更容易筛选：需要 Phase 1C 与 Phase 3。</li>
+<li>官方代码是否完全实现论文公式、是否存在额外 engineering trick：Phase 3 pending。</li>
+<li>论文 claim 与 GitHub/Hugging Face/社区讨论之间是否存在冲突：Phase 2 pending。</li>
+</ul>
+<h3>4. 总体架构与控制流重构</h3>
+<p>从 `tex_source/sec/3_preliminary.tex` 和 `tex_source/sec/4_method.tex` 可以把 DiffusionDriveV2 的控制流重构为六层：</p>
+<p>1. **Scene encoding**：感知网络提取 BEV/scene features，论文在本阶段没有展开 backbone 细节；实现层映射 Phase 3 pending。</p>
+<p>2. **Anchor-GMM prior**：沿用 DiffusionDrive 的预定义 anchor 轨迹集合，每个 anchor 表示一个 driving intention，例如直行、左转、变道、超车。</p>
+<p>3. **Truncated diffusion generator**：从 anchored Gaussian distribution 采样 noisy trajectories，并用截断扩散 decoder 迭代 refine，输出每个 anchor 下的 clean trajectory。</p>
+<p>4. **RL-constrained diffusion update**：把 denoising chain 视为 MDP，每个 conditional denoising step 是 Gaussian policy，允许用 log probability 和 advantage 做 policy gradient。</p>
+<p>5. **Anchor-aware GRPO**：先在同一 anchor 内估计 group-relative advantage，再用 truncated rule 注入跨 anchor 的绝对失败惩罚。</p>
+<p>6. **Mode selector**：候选轨迹先作为 query 与 BEV/agent/map features 交互，再通过 coarse-to-fine scorer 选择最终轨迹，并用 BCE 与 margin-rank loss 学习排序。</p>
+<p>这一控制流的关键不是“扩散 + RL”四个字，而是论文把 RL 作用点放在 anchor-conditioned denoising policy 上，并且显式避免跨 intention 的朴素相对比较。</p>
+<h3>5. 机制逐项深读</h3>
+<h4>5.1 Truncated Diffusion Generator</h4>
+<p>证据：`tex_source/sec/4_method.tex :: Truncated Diffusion Generator`</p>
+<p>输入：</p>
+<ul>
+<li>perception network 提取的 scene features；</li>
+<li>anchor-conditioned noisy trajectories；</li>
+<li>预训练 DiffusionDrive 权重提供的 IL cold start。</li>
+</ul>
+<p>输出：</p>
+<ul>
+<li>每个 anchor 对应的一组 refined clean trajectories；</li>
+<li>后续 selector 可排序的多模态候选。</li>
+</ul>
+<p>局部目标：</p>
+<ul>
+<li>继承 DiffusionDrive 的多模态生成能力，不从零训练一个 RL planner。</li>
+<li>让 RL 阶段从一个已有轨迹先验出发，避免早期 policy search 直接落入无意义轨迹空间。</li>
+</ul>
+<p>为什么存在：</p>
+<ul>
+<li>如果没有 IL cold start，RL 对高维连续轨迹的探索会非常昂贵且不稳定。</li>
+<li>如果只保留 IL，负模式缺少轨迹级质量约束。DiffusionDriveV2 因此把 IL generator 当作起点，而不是终点。</li>
+</ul>
+<p>相对 DiffusionDrive 的变化：</p>
+<ul>
+<li>generator 主体不是完全替换，而是被放入 RL-constrained training loop。</li>
+<li>推理时仍保持 truncated diffusion 的快速生成路径；训练时引入探索噪声和 policy gradient。</li>
+</ul>
+<p>待验证点：</p>
+<ul>
+<li>论文说“directly employ DiffusionDrive as trajectory generator”，但具体哪些权重、模块和训练阶段被冻结/微调，需要 Phase 3 读代码确认。</li>
+</ul>
+<h4>5.2 RL for Diffusion Generator</h4>
+<p>证据：`tex_source/sec/4_method.tex :: Reinforcement Learning for Diffusion Generator`</p>
+<p>论文把 denoising process 建模为 MDP。对每个 anchor，条件 denoising step 是一个 Gaussian policy：</p>
+<ul>
+<li>state-like 条件：当前 noisy trajectory、时间步、scene context、anchor；</li>
+<li>action-like 输出：下一个 denoising state / trajectory sample；</li>
+<li>policy mean：模型预测的 denoising mean；</li>
+<li>variance/noise schedule：由预定义 schedule 和训练时 noise setting 决定。</li>
+</ul>
+<p>局部目标：</p>
+<ul>
+<li>让每个最终轨迹可以接收 trajectory-level reward；</li>
+<li>把 reward 信号通过 log-probability gradient 回传到 denoising steps；</li>
+<li>补上 IL 无法约束所有负模式的问题。</li>
+</ul>
+<p>机制意义：</p>
+<ul>
+<li>IL 的监督来自唯一 GT，天然偏向单个 closest anchor。</li>
+<li>RL 的监督来自 reward，可以评价所有采样轨迹，尤其是原先没有 GT 对齐的 negative modes。</li>
+<li>这使“低质量但多样”的候选不再只是 selector 的负担，而能在 generator 训练阶段被压低。</li>
+</ul>
+<p>待验证点：</p>
+<ul>
+<li>reward 具体包含哪些项、权重如何组合、是否使用 NAVSIM/PDMS 相关 proxy，需要 Phase 1B/1C。</li>
+<li>训练稳定性是否依赖额外 clipping、normalization 或 batch construction，需要 Phase 3。</li>
+</ul>
+<h4>5.3 Scale-Adaptive Multiplicative Exploration Noise</h4>
+<p>证据：`tex_source/sec/4_method.tex :: Scale-Adaptive Multiplicative Exploration Noise`</p>
+<p>论文认为逐点 additive Gaussian noise 不适合轨迹探索，原因是 trajectory waypoints 的近端和远端尺度不一致。逐点加噪会破坏轨迹几何结构，形成 jagged/broken path。</p>
+<p>DiffusionDriveV2 改用 multiplicative noise：</p>
+<ul>
+<li>不对每个 waypoint 独立加噪；</li>
+<li>只引入 longitudinal 和 lateral 两个方向的乘性扰动；</li>
+<li>用类似 `tau' = (1 + epsilon_mul) tau` 的形式整体缩放/扰动轨迹。</li>
+</ul>
+<p>局部目标：</p>
+<ul>
+<li>保留原轨迹的平滑性和连贯形状；</li>
+<li>给 RL 提供“仍像一条可驾驶轨迹”的探索样本；</li>
+<li>避免探索噪声本身制造大量无意义失败。</li>
+</ul>
+<p>相对 additive noise 的变化：</p>
+<ul>
+<li>additive noise 更像局部 waypoint 抖动；</li>
+<li>multiplicative noise 更像对整条候选行为进行尺度自适应扰动，因此更符合轨迹规划的几何结构。</li>
+</ul>
+<p>待验证点：</p>
+<ul>
+<li>乘性噪声是否只在训练时开启、验证时完全关闭，论文文本说训练设 `eta=1`、validation 设 `eta=0`；实现细节 Phase 3 pending。</li>
+<li>乘性扰动如何和 diffusion schedule 结合，需要 Phase 1B 复原算法。</li>
+</ul>
+<h4>5.4 Intra-Anchor GRPO</h4>
+<p>证据：`tex_source/sec/4_method.tex :: Intra-Anchor GRPO for Trajectory Generation`</p>
+<p>核心洞察：</p>
+<ul>
+<li>anchor 不是普通 batch 维度，而是不同 driving intention 的分区。</li>
+<li>不同 anchor 的轨迹不应该直接做优劣比较，例如左转和直行应当共存，而不是让更常见的直行 mode 吞掉左转 mode。</li>
+</ul>
+<p>机制：</p>
+<ul>
+<li>对每个 anchor 生成 G 个 trajectory variations；</li>
+<li>只在同一 anchor 的 G 个样本内部计算 group-relative advantage；</li>
+<li>用组内 reward 的均值和标准差做归一化；</li>
+<li>将该 advantage 应用于该 anchor 的 denoising chain。</li>
+</ul>
+<p>局部目标：</p>
+<ul>
+<li>在每个 intention subspace 内提高轨迹质量；</li>
+<li>避免跨 intention 比较导致 mode collapse；</li>
+<li>不需要额外 value model，沿用 GRPO 的 relative baseline。</li>
+</ul>
+<p>相对朴素 GRPO 的变化：</p>
+<ul>
+<li>朴素做法会把所有 anchors 的样本放在一个 group 里；</li>
+<li>Intra-Anchor GRPO 把 group boundary 对齐到 anchor boundary；</li>
+<li>这是一种结构先验：优化必须尊重 GMM 中每个 mode 的语义。</li>
+</ul>
+<p>待验证点：</p>
+<ul>
+<li>group size G、reward batch construction、同一 anchor 内 sample 的噪声来源，需要 Phase 1B/3。</li>
+<li>组内标准差很小时如何处理数值稳定，需要 Phase 3。</li>
+</ul>
+<h4>5.5 Inter-Anchor Truncated GRPO</h4>
+<p>证据：`tex_source/sec/4_method.tex :: Inter-Anchor Truncated GRPO for Trajectory Generation`</p>
+<p>Intra-Anchor GRPO 解决了跨意图比较导致 mode collapse 的问题，但带来另一种局部比较偏差：</p>
+<ul>
+<li>某个 anchor 内最好的样本可能仍然是危险轨迹；</li>
+<li>如果只看组内相对优势，它可能得到正 advantage；</li>
+<li>另一个 anchor 内安全但局部相对较差的样本可能得到负 advantage。</li>
+</ul>
+<p>论文给出的原则是：reward relative improvements, but only penalize absolute failures。</p>
+<p>机制：</p>
+<ul>
+<li>非碰撞样本：把负 advantage 截断为 0，只保留正向改进信号；</li>
+<li>碰撞样本：直接赋值为 -1 强惩罚；</li>
+<li>然后用 truncated advantage 替代 Intra-Anchor GRPO 中的 advantage 进入 RL loss。</li>
+</ul>
+<p>局部目标：</p>
+<ul>
+<li>继续避免跨意图“谁更优”的硬比较；</li>
+<li>但对 collision 这种绝对失败跨 anchor 统一惩罚；</li>
+<li>让训练信号既保留多模态，又不纵容局部 group 内的危险最优。</li>
+</ul>
+<p>关键理解：</p>
+<ul>
+<li>Inter-Anchor Truncated GRPO 并不是重新把所有 anchors 放回一个 global GRPO group。</li>
+<li>它只引入一种跨 anchor 的绝对安全下界：collision 不能因为在本 anchor 内相对较好而被奖励。</li>
+</ul>
+<p>待验证点：</p>
+<ul>
+<li>collision 之外的绝对失败是否也被处理，例如红灯、越界、comfort、progress 失败，需要 Phase 1B/1C。</li>
+<li>-1 惩罚的尺度是否和正 advantage 匹配，需要实验与代码审计。</li>
+</ul>
+<h4>5.6 Mode Selector</h4>
+<p>证据：`tex_source/sec/4_method.tex :: Mode Selector`</p>
+<p>selector 的角色是从多模态候选中选出最符合目标的轨迹。论文设计包括：</p>
+<ul>
+<li>trajectory coordinates 作为 queries；</li>
+<li>先和 BEV features 做 deformable spatial cross-attention；</li>
+<li>再与 agent/map queries 做 cross-attention refinement；</li>
+<li>MLP 输出 score；</li>
+<li>coarse scorer 先选 top-k，再由 fine-grained scorer 做更细排序；</li>
+<li>使用 BCE loss 和 margin-rank loss 学习选择与相对排序。</li>
+</ul>
+<p>局部目标：</p>
+<ul>
+<li>即使 generator 的候选质量提高，最终控制仍需要一个选择器；</li>
+<li>margin-rank loss 避免直接回归连续分数的困难，强调候选之间的相对质量区分。</li>
+</ul>
+<p>本阶段判断：</p>
+<ul>
+<li>selector 不是论文问题的唯一解。论文真正想降低的是 selector 面对大量低质量候选时的负担。</li>
+<li>如果 RL generator 没有减少低质量候选，selector 再强也只是事后过滤；如果 generator 候选整体变好，selector 才更稳。</li>
+</ul>
+<p>待验证点：</p>
+<ul>
+<li>selector 的具体模块、特征维度、top-k 设置、coarse/fine scorer 是否是论文之外的工程核心，需要 Phase 3。</li>
+</ul>
+<h3>6. 容易误解的点</h3>
+<p>1. **DiffusionDriveV2 不是抛弃 DiffusionDrive。** 它显式使用 DiffusionDrive 作为 trajectory generator 和 IL cold start。</p>
+<p>2. **RL 的作用不是简单提高单条轨迹分数。** 它主要用于给所有 modes，尤其负模式，提供 trajectory-level constraint。</p>
+<p>3. **Intra-anchor 不等于保守。** 它限制 advantage comparison 的边界，是为了保住 driving intention 多样性。</p>
+<p>4. **Inter-anchor truncated 不等于全局排序所有 anchors。** 它只是对碰撞等绝对失败提供跨 anchor 统一惩罚，并截断非碰撞负 advantage。</p>
+<p>5. **multiplicative noise 不是为了增加随机性本身。** 它是为了让 exploration 仍保持轨迹几何结构，避免 additive point noise 破坏 smoothness。</p>
+<p>6. **selector 不是补救所有低质量模式的唯一防线。** 论文动机恰恰是减少对 selector 的过度依赖。</p>
+<h3>7. 后续阶段开放问题</h3>
+<p>Phase 1B 需要回答：</p>
+<ul>
+<li>RL reward 的精确定义是什么？</li>
+<li>denoising discount `gamma` 如何设定，为什么能缓解 early denoising step instability？</li>
+<li>`eta=1` 训练和 `eta=0` 验证如何进入 likelihood / policy gradient 计算？</li>
+<li>IL loss 与 RL loss 的权重 `lambda` 在训练中如何影响模式保留和质量提升？</li>
+</ul>
+<p>Phase 1C 需要回答：</p>
+<ul>
+<li>91.2 PDMS / 85.5 EPDMS 的提升是否由关键组件贡献，还是由 backbone / training recipe / selector 共同造成？</li>
+<li>消融表是否能单独支持 multiplicative noise、Intra-Anchor GRPO、Inter-Anchor Truncated GRPO 三个 claim？</li>
+<li>diversity-quality trade-off 的指标是否足够证明“解决 dilemma”，还是只证明主指标提升？</li>
+</ul>
+<p>Phase 2 需要回答：</p>
+<ul>
+<li>外部来源是否支持论文对 DiffusionDrive 局限的定位？</li>
+<li>社区、repo、Hugging Face 或相关论文是否有相反证据或未公开 caveat？</li>
+</ul>
+<p>Phase 3 需要回答：</p>
+<ul>
+<li>官方 GitHub 代码是否实现所有论文公式和模块？</li>
+<li>code 中 reward、collision、selector、noise、group construction 是否和论文描述一致？</li>
+<li>是否存在论文未写明但决定结果的工程技巧？</li>
+</ul>
+<h3>8. Phase 1A 小结</h3>
+<p>Phase 1A 的结论是：DiffusionDriveV2 的方法核心不是单纯“把 GRPO 加到扩散规划器”，而是在 DiffusionDrive 的 anchor-GMM 截断扩散结构上，重新定义 RL 的比较边界和失败惩罚边界。Intra-Anchor GRPO 保护 intention 多样性，Inter-Anchor Truncated GRPO 处理跨 intention 的绝对失败，multiplicative noise 让探索保留轨迹几何结构，selector 则承担最终候选排序。这个设计是否充分成立，还必须由 Phase 1B 的数学/训练复原、Phase 1C 的实验审计和 Phase 3 的代码证据共同确认。</p>
+<figure class="report-figure" id="fig_truncated_diffusion"><img alt="两步截断扩散的训练/推理差异" data-caption="Generated explanatory visual: 两步截断扩散的训练/推理差异。该图用统一视觉语法解释论文机制、代码路径和证据边界。" loading="lazy" src="assets/figures/fig_truncated_diffusion.svg"/><figcaption><strong>两步截断扩散的训练/推理差异</strong>。Generated explanatory visual: 两步截断扩散的训练/推理差异。该图用统一视觉语法解释论文机制、代码路径和证据边界。</figcaption></figure>
+<figure class="report-figure" id="paper_archv2"><img alt="原论文图 archv2" data-caption="Original paper figure converted from local arXiv source PDF." loading="lazy" src="assets/figures/paper_archv2.png"/><figcaption><strong>原论文图 archv2</strong>。Original paper figure converted from local arXiv source PDF.</figcaption></figure>
+<h3 id="sec-math">数学/算法重构</h3>
+<h2>Phase 1B 数学与训练拓扑：从 anchor-GMM 到 RL 约束的 denoising policy</h2>
+<p>Paper: `2512.07745`  </p>
+<p>Title: `DiffusionDriveV2: Reinforcement Learning-Constrained Truncated Diffusion Modeling in End-to-End Autonomous Driving`  </p>
+<p>Scope: Phase 1B small-stage artifact. No official code clone/read, no HTML/site/figure generation, no Feishu/cloud-doc output.</p>
+<h3>1. 证据范围</h3>
+<p>本阶段只使用已落盘论文证据：</p>
+<p><code>| Evidence | Use |</code></p>
+<p><code>|---|---|</code></p>
+<p><code>| `tex_source/sec/3_preliminary.tex` | 轨迹表示、anchor-GMM、truncated diffusion、DiffusionDrive 的 IL objective。 |</code></p>
+<p><code>| `tex_source/sec/4_method.tex` | RL denoising MDP、multiplicative exploration noise、Intra-Anchor GRPO、Inter-Anchor Truncated GRPO、mode selector loss。 |</code></p>
+<p><code>| `tex_source/sec/5_experiments.tex` | 实现细节：ResNet-34、DiffusionDrive cold start、10 epoch RL、20 epoch selector、8 L20 GPUs、2 denoising steps inference。 |</code></p>
+<p><code>| `tex_source/sec/X_suppl.tex` | PDMS/EPDMS metric formulas, optimizer, warmup, denoising std, log-variance std, discount factor, selector augmentation. |</code></p>
+<p><code>| `tex_source/tables/hyperpara.tex` | Stage I/II hyperparameter table. |</code></p>
+<p>本阶段不使用官方代码作为证据。凡涉及 reward 具体实现、collision 判定、group construction、selector top-k、batch 组织、数值稳定 trick 的判断，均标注为 `Phase 3 pending`。</p>
+<h3>2. 数学对象和训练问题</h3>
+<p>论文把规划输出定义为未来 ego waypoints：</p>
+<pre><code>tau = {(x_n, y_n)}_{n=1}^{N_f}</code></pre>
+<p>这里 `N_f` 是 planning horizon。DiffusionDriveV2 的数学问题不是直接学习一个单峰 `p(tau | z)`，而是沿用 DiffusionDrive 的 anchor-conditioned Gaussian Mixture Model。给定 scene context `z` 和第 `k` 个 anchor `a^k`，单个 anchor 的轨迹分布被写作：</p>
+<pre><code>p(tau^k | a^k, z) = N(tau^k | a^k + mu^k(z), Sigma^k(z))</code></pre>
+<p>整体多模态轨迹分布是 anchor mixture：</p>
+<pre><code>p(tau | z) = sum_k s(a^k | z) p(tau^k | a^k, z)</code></pre>
+<p>这一层定义决定了后面所有 RL 设计的边界：anchor 不是普通样本索引，而是 intention partition。每个 anchor 对应一个行为意图区域，例如直行、左转、超车、跟车等。若直接跨 anchor 比较 reward，就会把不同意图误当成可互相替代的候选，导致常见模式吞掉少见但必要的行为。</p>
+<p>DiffusionDrive 的 IL objective 只对最接近 GT 的 anchor 提供 trajectory reconstruction 正样本，其余 anchors 主要通过 selector/BCE 侧面约束：</p>
+<pre><code>L = sum_k [ y^k L_rec(tau_hat^k, tau_gt) + L_BCE(s_hat^k, y^k) ]</code></pre>
+<p>论文的关键判断是：这种单 GT/单正模式训练不能充分惩罚所有低质量负模式。DiffusionDriveV2 因此把训练问题改写为：在保留 anchor-GMM 多模态结构的同时，用 trajectory-level reward 约束每个 anchor 下生成的候选质量。</p>
+<h3>3. Truncated diffusion 作为可优化 policy chain</h3>
+<p>DiffusionDrive 的 truncated diffusion 用较短的 diffusion schedule 从 anchor 扩散到 anchored Gaussian：</p>
+<pre><code>tau_t^k = sqrt(alpha_bar_t) a^k + sqrt(1 - alpha_bar_t) epsilon,
+epsilon ~ N(0, I), t in [1, T_trunc], T_trunc &lt;&lt; T</code></pre>
+<p>DiffusionDriveV2 保留这套生成器，并使用 DiffusionDrive 预训练权重作为 IL cold start。论文明确说训练阶段从 DiffusionDrive 权重开始，推理阶段与 DiffusionDrive 类似，只需 `2` 个 denoising steps。</p>
+<p>Phase 1B 的重构是：</p>
+<p>1. `a^k` 提供意图先验和轨迹空间局部分区。</p>
+<p>2. `tau_t^k` 是当前 noisy trajectory state。</p>
+<p>3. `mu_theta(tau_t^k, t, z, a^k)` 是模型对下一步 denoising mean 的预测。</p>
+<p>4. `tau_{t-1}^k` 是 policy 采样或确定性更新后的下一状态。</p>
+<p>5. 最终 clean trajectory `tau_0^{k,i}` 接受 trajectory-level reward `R(tau_0^{k,i})`。</p>
+<p>论文把每个 conditional denoising step 写作 Gaussian policy：</p>
+<pre><code>pi_theta(tau_{t-1}^k | tau_t^k, z, a^k)
+  = N(tau_{t-1}^k ; mu_theta(tau_t^k, t, z, a^k), eta(1 - alpha_t) I)</code></pre>
+<p>这一步的含义是：只要 `eta &gt; 0`，模型就有可评估的 Gaussian likelihood，因此可用 `log pi_theta` 做 REINFORCE / policy gradient。论文随后给出梯度形式：</p>
+<pre><code>grad_theta J(pi_theta^k)
+  = E_{pi_theta^k} [ sum_{t=1}^{T_trunc}
+      grad_theta log pi_theta^k(tau_{t-1}^k | tau_t^k) A_t^k ]</code></pre>
+<p>关键点：reward 只在最终 clean trajectory 上计算，但通过 denoising step 的 log-probability 分摊回整个 truncated chain。这是 DPPO 风格迁移到轨迹 diffusion planner 的核心。</p>
+<h3>4. 训练时 DDPM 噪声与验证时 DDIM 确定性</h3>
+<p>论文强调 DiffusionDrive 使用 DDIM update 来减少 denoising steps，通常 `eta = 0`，即 deterministic sampler。若 `eta = 0`，policy 方差退化，likelihood 接近 Dirac distribution，不适合直接计算 `log pi_theta` 做 policy gradient。</p>
+<p>DiffusionDriveV2 的处理是：</p>
+<p><code>| Phase | eta | Effect |</code></p>
+<p><code>|---|---:|---|</code></p>
+<p><code>| Training | `1` | 等价于 DDPM 式随机采样，提供 exploration 和 Gaussian likelihood。 |</code></p>
+<p><code>| Validation / inference | `0` | 保持确定性、快速、可复现的 truncated diffusion inference。 |</code></p>
+<p>这个 train-vs-inference 差异很重要：论文不是要在部署时引入随机摇摆，而是只在训练中打开随机性，使 RL 能探索并获得 policy likelihood；验证/推理仍维持 2-step deterministic planner。</p>
+<p>需要 Phase 3 确认的实现点：</p>
+<ul>
+<li>`eta=1` 是否只作用于 RL fine-tuning，还是也作用于 selector augmentation 数据生成。</li>
+<li>likelihood 的 `eta(1-alpha_t)I` 是否在代码里另有 clamp、std floor 或 log-variance floor。</li>
+<li>`T_trunc` 与 `N_infer=2` 在训练和推理是否完全一致。</li>
+</ul>
+<h3>5. Scale-adaptive multiplicative exploration noise</h3>
+<p>论文认为 point-wise additive Gaussian noise 不适合 trajectory exploration，因为 waypoint 的近端/远端尺度不一致。对每个 waypoint 独立加噪会破坏轨迹几何连续性，形成 jagged/broken path。DiffusionDriveV2 改用两个方向的乘性噪声：</p>
+<pre><code>tau' = (1 + epsilon_mul) tau
+epsilon_mul = (epsilon_long, epsilon_lat)</code></pre>
+<p>Phase 1B 的机制解释：</p>
+<p><code>| Noise | How it perturbs | Planning consequence |</code></p>
+<p><code>|---|---|---|</code></p>
+<p><code>| Additive waypoint noise | 每个 waypoint 独立偏移 | 容易破坏平滑性，生成不像可驾驶轨迹的探索样本。 |</code></p>
+<p><code>| Multiplicative longitudinal/lateral noise | 整体沿纵向/横向缩放或扰动 | 保留轨迹形状，探索仍处在可驾驶候选附近。 |</code></p>
+<p>Supplement 的训练细节进一步给出两个 floor：</p>
+<ul>
+<li>multiplicative exploration noise minimum std: `0.04`</li>
+<li>Gaussian likelihood log-variance minimum std: `0.10`</li>
+</ul>
+<p>论文给出的理由分别是：前者防止 exploration entropy collapse，后者避免 `log pi_theta(tau_{t-1}^{k,i} | tau_t^{k,i})` 的梯度幅值过大。这里说明作者实际在做的是“保持足够探索，同时限制 likelihood 数值爆炸”的稳定性设计。</p>
+<p>需要 Phase 3 确认的实现点：</p>
+<ul>
+<li>乘性噪声是按 batch、anchor、sample、trajectory 分别采样，还是共享某些维度。</li>
+<li>long/lat 坐标系如何定义，是 ego frame 还是轨迹局部方向。</li>
+<li>std floor 是直接作用于 sampling std、log prob std，还是通过 variance clamp。</li>
+</ul>
+<h3>6. Intra-Anchor GRPO</h3>
+<p>DiffusionDriveV2 的第一个关键 RL 约束是把 GRPO group 限定在同一 anchor 内。对每个 anchor `k`，采样 `G` 条 trajectory variations，得到最终 clean trajectories：</p>
+<pre><code>{ tau_0^{k,1}, tau_0^{k,2}, ..., tau_0^{k,G} }</code></pre>
+<p>对每条 trajectory 计算 reward：</p>
+<pre><code>r^{k,i} = R(tau_0^{k,i})</code></pre>
+<p>然后在同一 anchor 的 `G` 个样本内计算 group-relative advantage：</p>
+<pre><code>A^{k,i} =
+  (r^{k,i} - mean({r^{k,1}, ..., r^{k,G}}))
+  / std({r^{k,1}, ..., r^{k,G}})</code></pre>
+<p>RL loss 写作：</p>
+<pre><code>L_RL =
+- 1/N_anchor sum_k 1/G sum_i 1/T_trunc sum_t
+    gamma_{t-1} log pi_theta(tau_{t-1}^{k,i} | tau_t^{k,i}) A^{k,i}</code></pre>
+<p>这个 loss 有三个设计点：</p>
+<p>1. **anchor 内归一化**：不跨 driving intention 比较。</p>
+<p>2. **无 value model**：沿用 GRPO 的 group baseline，不额外训练 critic。</p>
+<p>3. **final reward broadcast 到 denoising chain**：一个 `R(tau_0)` 作用于所有 denoising steps，但用 `gamma_{t-1}` 做 step-wise discount。</p>
+<p>Supplement 给出 `gamma = 0.8`。论文说 discount 用于 downweight earlier noisy denoising steps，因为早期 step 的轨迹噪声大、与最终可驾驶质量关系更间接，直接用同一 reward 强度更新容易不稳定。</p>
+<p>Phase 1B 的理解是：Intra-Anchor GRPO 是“局部改良器”。它鼓励每个 intention subspace 内产生更好的候选，但不让不同 intention 之间相互淘汰。</p>
+<h3>7. Inter-Anchor Truncated GRPO</h3>
+<p>Intra-Anchor GRPO 的问题是只看组内相对好坏。若某个 anchor 内所有样本都很差，其中“最不差”的危险轨迹仍可能获得正 advantage；另一个 anchor 内安全但组内相对普通的轨迹可能获得负 advantage。这会产生局部相对标准与全局安全标准不一致的问题。</p>
+<p>论文提出的原则是：</p>
+<pre><code>reward relative improvements, but only penalize absolute failures</code></pre>
+<p>实现为对 Intra-Anchor advantage 做截断：</p>
+<pre><code>A_trunc^{k,i} =
+  -1,                  if collision
+  max(0, A^{k,i}),      otherwise</code></pre>
+<p>然后用 `A_trunc^{k,i}` 替换 `A^{k,i}` 进入 `L_RL`。</p>
+<p>这不是一个标准的“全局跨 anchor GRPO”。它的作用更窄：</p>
+<ul>
+<li>非 collision 样本：保留正向相对改进，截断负 advantage 到 0，避免不同意图互相压制。</li>
+<li>collision 样本：无论其在本 anchor 内是否相对较好，都给统一负信号。</li>
+</ul>
+<p>因此 Inter-Anchor Truncated GRPO 可以被理解为一个安全下界注入器：它不重新排列所有 anchors 的优劣，但明确告诉模型 collision 是跨 anchor 的绝对失败。</p>
+<p>需要 Phase 3 确认的实现点：</p>
+<ul>
+<li>`collision` 的判定来自 NAVSIM metric、PDM scorer、近似 checker，还是训练期 reward proxy。</li>
+<li>除 collision 外，drivable area、TTC、progress、comfort 是否也会进入 reward 或 failure mask。</li>
+<li>`-1` 与 normalized positive advantage 的尺度是否存在额外 clip/normalize。</li>
+</ul>
+<h3>8. Combined objective: RL + IL regularization</h3>
+<p>论文没有只优化 RL loss，而是加入 imitation learning regularization：</p>
+<pre><code>L = L_RL + lambda L_IL</code></pre>
+<p>Supplement/hyperparameter table 给出 BC/IL loss weight 为 `0.1`。论文把它类比为 GRPO 原始形式中对 reference policy 的 KL regularization：防止 RL overfitting 或破坏基础驾驶能力。</p>
+<p>Phase 1B 的训练解释：</p>
+<p><code>| Objective | Role |</code></p>
+<p><code>|---|---|</code></p>
+<p><code>| `L_RL` | 用 trajectory-level reward 约束所有 modes，尤其惩罚低质量候选。 |</code></p>
+<p><code>| `L_IL` / BC loss | 保持 DiffusionDrive cold-start 学到的专家分布，不让 RL 把 planner 推离基础驾驶行为。 |</code></p>
+<p><code>| `lambda=0.1` | 论文给出的 BC/IL regularization 权重。 |</code></p>
+<p>这也解释了为什么 DiffusionDriveV2 是 fine-tuning style，而不是从零开始的 RL planner。其稳定性依赖于 DiffusionDrive 预训练分布、RL reward 和 IL regularization 三者的平衡。</p>
+<h3>9. Mode selector 的训练目标</h3>
+<p>Generator 阶段之后，论文训练一个 mode selector，从多模态候选中选择最 goal-aligned 的 trajectory。方法结构包括：</p>
+<ul>
+<li>trajectory coordinates as queries;</li>
+<li>deformable spatial cross-attention with BEV features;</li>
+<li>cross-attention refinement with agent and map queries;</li>
+<li>MLP score head;</li>
+<li>coarse-to-fine scorer: coarse 先选 top-k，fine 再精排。</li>
+</ul>
+<p>Selector 训练有两个 loss：</p>
+<p>1. BCE loss：学习候选是否为目标选择。</p>
+<p>2. Margin-rank loss：学习候选间相对质量顺序。</p>
+<p>论文给出 ranking loss：</p>
+<pre><code>L_rank = 1/N sum_{i,j} max(0,
+  - sign(s_i - s_j) * (s_hat_i - s_hat_j) + m)</code></pre>
+<p>其中 `s` 是 ground-truth score，`s_hat` 是 predicted score，`m` 是 margin。这个 loss 避免直接回归连续指标绝对值，而是训练 selector 判断相对优劣。</p>
+<p>Supplement 给出 Stage II 训练设置：</p>
+<p><code>| Item | Value |</code></p>
+<p><code>|---|---:|</code></p>
+<p><code>| Epochs | 20 |</code></p>
+<p><code>| Batch size | 512 |</code></p>
+<p><code>| Learning rate | `2e-4` |</code></p>
+<p><code>| Weight decay | `1e-4` |</code></p>
+<p><code>| Warmup ratio | `0.10` |</code></p>
+<p><code>| LR schedule | Cosine |</code></p>
+<p><code>| Number of augmented trajectories | 2 |</code></p>
+<p><code>| Augmentation noise std | `(0.1, 0.2)` |</code></p>
+<p><code>| GTRS vocabulary percentage | `1%` |</code></p>
+<p>Selector augmentation 的含义是：作者不只用 generator 原始输出训练 selector，还通过 multiplicative Gaussian noise 和少量 GTRS fixed vocabulary trajectory 扩充候选分布，以增强 selector 对扰动和外部候选的鲁棒性。</p>
+<h3>10. 训练拓扑总表</h3>
+<p><code>| Stage | Trainable target | Initialization / input | Loss / objective | Key hyperparameters | Evidence |</code></p>
+<p><code>|---|---|---|---|---|---|</code></p>
+<p><code>| Stage I: RL generator fine-tuning | DiffusionDrive truncated diffusion generator | DiffusionDrive pretrained weights, NAVSIM `navtrain`, anchor-conditioned noisy trajectories | `L_RL + 0.1 L_IL`, Intra-Anchor GRPO, Inter-Anchor Truncated GRPO | 10 epochs, batch 512, AdamW, lr `2e-4`, wd `1e-4`, cosine, warmup `0.10`, min exploration std `0.04`, min log-variance std `0.10`, gamma `0.8` | `sec/5_experiments.tex`, `sec/X_suppl.tex`, `tables/hyperpara.tex` |</code></p>
+<p><code>| Stage II: mode selector training | Coarse-to-fine selector | Multi-modal trajectories from model, augmented trajectories, 1% GTRS vocab | BCE + margin-rank loss | 20 epochs, batch 512, lr `2e-4`, augmentation std `(0.1,0.2)`, 2 augmented trajectories | `sec/4_method.tex`, `sec/X_suppl.tex`, `tables/hyperpara.tex` |</code></p>
+<p><code>| Inference | Generator + selector | Scene inputs: three forward camera crops concatenated as 1024x256 and rasterized BEV LiDAR representation | Deterministic trajectory generation + selector score | 2 denoising steps, `eta=0` validation/inference implied | `sec/5_experiments.tex`, `sec/4_method.tex` |</code></p>
+<p>Implementation details reported by paper:</p>
+<ul>
+<li>same ResNet-34 backbone as Transfuser and DiffusionDrive;</li>
+<li>same diffusion decoder size as DiffusionDrive;</li>
+<li>three cropped/downscaled forward-facing camera images concatenated to `1024 x 256`;</li>
+<li>rasterized BEV representation of LiDAR point cloud;</li>
+<li>total batch size `512` distributed across `8 NVIDIA L20 GPUs`.</li>
+</ul>
+<h3>11. Metric formulas used as reward/evaluation context</h3>
+<p>Supplement defines NAVSIM v1 PDMS:</p>
+<pre><code>PDMS = NC * DAC * ((5*EP + 5*TTC + 2*C) / 12)</code></pre>
+<p>where `NC`, `DAC`, `TTC`, `C`, `EP` are No At-Fault Collisions, Drivable Area Compliance, Time to Collision, Comfort, and Ego Progress.</p>
+<p>NAVSIM v2 EPDMS is:</p>
+<pre><code>EPDMS = NC * DAC * DDC * TL *
+        (5*TTC + 2*C + 5*EP + 5*LK + 5*EC) / 22</code></pre>
+<p>with added Driving Direction Compliance, Traffic Lights Compliance, Lane Keeping, History Comfort, and Extended Comfort.</p>
+<p>Important boundary: the paper reports these metric formulas, but Phase 1B cannot prove the RL reward equals exactly PDMS/EPDMS. The method section denotes reward abstractly as `R(tau_0^{k,i})`. Whether training reward uses full NAVSIM scorer, a decomposed proxy, collision-only components, or other engineering reward shaping remains `Phase 3 pending`.</p>
+<h3>12. Failure modes implied by the math</h3>
+<p>1. **Group std degeneracy**: if all `G` samples under an anchor receive similar rewards, `std` can be small. The paper formula does not describe epsilon stabilization. Code audit must check this.</p>
+<p>2. **Collision-only truncation may be narrow**: the truncated rule explicitly mentions collision. If other absolute failures are only handled indirectly through reward, dangerous but non-colliding behaviors may receive weak penalties.</p>
+<p>3. **Positive-only non-collision update can reduce corrective pressure**: `max(0, A)` removes negative feedback for non-collision local underperformers. This protects diversity, but may slow cleanup of low-progress or uncomfortable candidates.</p>
+<p>4. **Reward broadcast across denoising steps is approximate**: one final reward is assigned to every denoising step. `gamma=0.8` mitigates early-step instability but does not identify which step caused the final failure.</p>
+<p>5. **Train/inference mismatch**: training uses stochastic DDPM-like updates; inference uses deterministic DDIM-like updates. The claim depends on RL improvements transferring to deterministic inference.</p>
+<p>6. **Selector remains a possible confounder**: selector is stronger than DiffusionDrive's original classifier. Phase 1C must separate generator quality from selector improvement using raw Top-K and selector ablations.</p>
+<h3>13. Phase 1B conclusion</h3>
+<p>DiffusionDriveV2 的数学核心是把 DiffusionDrive 的 anchor-conditioned truncated denoising chain 改写成可做 policy gradient 的 Gaussian policy sequence，并在 GRPO 的 group definition 上加入 driving-intention 先验。Intra-Anchor GRPO 在每个 anchor 内做相对优势估计，避免跨 intention 比较导致 mode collapse；Inter-Anchor Truncated GRPO 不恢复全局排序，而是给 collision 这类绝对失败统一负信号，并截断非 collision 负 advantage 以保护多模态。训练拓扑上，Stage I 是 DiffusionDrive cold start 上的 RL+IL fine-tuning，Stage II 是带 augmentation 的 coarse-to-fine selector 训练，推理仍保持 2-step deterministic truncated diffusion。</p>
+<p>本阶段已经完成数学/训练重构，但以下问题必须留给后续阶段：reward 具体组成、collision/failure mask 实现、group/std 稳定性、selector top-k 和代码级 module mapping。</p>
+<figure class="report-figure" id="fig_multiplicative_noise"><img alt="乘性噪声为何适合轨迹探索" data-caption="Generated explanatory visual: 乘性噪声为何适合轨迹探索。该图用统一视觉语法解释论文机制、代码路径和证据边界。" loading="lazy" src="assets/figures/fig_multiplicative_noise.svg"/><figcaption><strong>乘性噪声为何适合轨迹探索</strong>。Generated explanatory visual: 乘性噪声为何适合轨迹探索。该图用统一视觉语法解释论文机制、代码路径和证据边界。</figcaption></figure>
+<figure class="report-figure" id="fig_intra_anchor_grpo"><img alt="Intra-Anchor GRPO 阻断跨意图比较" data-caption="Generated explanatory visual: Intra-Anchor GRPO 阻断跨意图比较。该图用统一视觉语法解释论文机制、代码路径和证据边界。" loading="lazy" src="assets/figures/fig_intra_anchor_grpo.svg"/><figcaption><strong>Intra-Anchor GRPO 阻断跨意图比较</strong>。Generated explanatory visual: Intra-Anchor GRPO 阻断跨意图比较。该图用统一视觉语法解释论文机制、代码路径和证据边界。</figcaption></figure>
+<figure class="report-figure" id="fig_inter_anchor_trunc"><img alt="Inter-Anchor Truncated GRPO 的全局约束" data-caption="Generated explanatory visual: Inter-Anchor Truncated GRPO 的全局约束。该图用统一视觉语法解释论文机制、代码路径和证据边界。" loading="lazy" src="assets/figures/fig_inter_anchor_trunc.svg"/><figcaption><strong>Inter-Anchor Truncated GRPO 的全局约束</strong>。Generated explanatory visual: Inter-Anchor Truncated GRPO 的全局约束。该图用统一视觉语法解释论文机制、代码路径和证据边界。</figcaption></figure>
+<details open=""><summary>算法伪代码：Anchored Truncated GRPO</summary><pre><code>for scene in navtrain:
+  sample grouped trajectories around each anchor
+  score candidates with PDM reward
+  normalize advantages within each anchor
+  truncate negative cross-anchor advantages
+  set NC/DAC failures to strong penalty
+  optimize diffusion log-prob plus IL fallback</code></pre></details>
+<h3 id="sec-training">训练拓扑和 train-vs-inference 差异</h3>
+<table><thead><tr><th>阶段</th><th>官方设置</th><th>代码证据</th></tr></thead><tbody><tr><td>RL</td><td>10 epoch</td><td>docs/train_eval.md + rl_agent</td></tr>
+<tr><td>Selector</td><td>20 epoch</td><td>sel_agent + train_eval</td></tr>
+<tr><td>Eval</td><td>fast PDM score</td><td>run_pdm_score_fast.py command</td></tr></tbody></table>
+<p>深度展开 1: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 2: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 3: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 4: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 5: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 6: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p>
+<h3 id="sec-exp">实验 claim-evidence audit</h3>
+<h2>Phase 1C 实验审计：按 claim 阅读 NAVSIM、diversity/top-k 与消融证据</h2>
+<p>Paper: `2512.07745`  </p>
+<p>Scope: Phase 1C small-stage artifact. This is an evidence audit, not final workflow completion. No official code clone/read, no HTML/site/figure generation, no Feishu/cloud-doc output.</p>
+<h3>1. 证据范围</h3>
+<p><code>| Evidence | What it proves |</code></p>
+<p><code>|---|---|</code></p>
+<p><code>| `tex_source/sec/5_experiments.tex` | Dataset, implementation details, main results, diversity/top-k metric, ablation descriptions. |</code></p>
+<p><code>| `tex_source/sec/X_suppl.tex` | PDMS/EPDMS formulas, training hyperparameters, selector ablations, qualitative comparisons. |</code></p>
+<p><code>| `tex_source/tables/navsim.tex` | NAVSIM v1 closed-loop comparison. |</code></p>
+<p><code>| `tex_source/tables/navsimv2.tex` | NAVSIM v2 extended closed-loop comparison. |</code></p>
+<p><code>| `tex_source/tables/div.tex` | Raw generated trajectory diversity and PDMS@K before selector. |</code></p>
+<p><code>| `tex_source/tables/abl_1.tex` | Additive versus multiplicative exploration noise. |</code></p>
+<p><code>| `tex_source/tables/abl_intra.tex` | Intra-Anchor GRPO ablation. |</code></p>
+<p><code>| `tex_source/tables/abl_2.tex` | Inter-Anchor Truncated GRPO ablation. |</code></p>
+<p><code>| `tex_source/tables/abl_3.tex` | Coarse-to-fine selector and rank loss ablation. |</code></p>
+<p><code>| `tex_source/tables/abl_selector.tex` | DiffusionDrive with stronger selector versus DiffusionDriveV2. |</code></p>
+<p>This audit treats paper tables as primary evidence, but does not independently rerun NAVSIM or inspect code. Reproducibility and implementation fidelity remain Phase 3/Phase 4 concerns.</p>
+<h3>2. Claim map</h3>
+<p><code>| Claim | Evidence class | Strength | Main caveat |</code></p>
+<p><code>|---|---|---|---|</code></p>
+<p><code>| DiffusionDriveV2 reaches state-of-the-art closed-loop performance on NAVSIM v1/v2. | Main benchmark tables. | Strong within reported table. | Requires code/checkpoint/rerun verification for reproducibility. |</code></p>
+<p><code>| RL-constrained generator improves the diversity-quality dilemma, not just top-1 selection. | Raw generated trajectories before selector: Div, PDMS@1/5/10. | Stronger than selector-only evidence. | Only compared against diffusion-style generators in this raw-output table. |</code></p>
+<p><code>| Multiplicative exploration noise is better than additive noise. | `abl_1`: PDMS 90.1 vs 89.7. | Moderate. | Gain is +0.4 PDMS in short/fewer-epoch ablation. |</code></p>
+<p><code>| Intra-Anchor GRPO matters for anchor-GMM planners. | `abl_intra`: PDMS 90.1 vs 89.2. | Moderate to strong. | Ablation setting is fewer epochs, not full main training. |</code></p>
+<p><code>| Inter-Anchor Truncated GRPO adds global failure information. | `abl_2`: PDMS 90.1 vs 89.5. | Moderate. | Evidence supports metric improvement, but collision/failure mechanism needs code/reward audit. |</code></p>
+<p><code>| Stronger selector is not the sole reason for improvement. | `abl_selector`: DiffusionDrive + selector 89.1 vs DiffusionDriveV2 + selector 91.2. | Strong against simple selector-only explanation. | Selector training details still need code confirmation. |</code></p>
+<h3>3. NAVSIM v1 closed-loop result</h3>
+<p>NAVSIM v1 `navtest` table reports DiffusionDriveV2 with ResNet-34:</p>
+<p><code>| Method | Backbone | NC | DAC | TTC | Comfort | EP | PDMS |</code></p>
+<p><code>|---|---|---:|---:|---:|---:|---:|---:|</code></p>
+<p><code>| DiffusionDrive | ResNet-34 | 98.2 | 96.2 | 94.7 | 100.0 | 82.2 | 88.1 |</code></p>
+<p><code>| DIVER | ResNet-34 | 98.5 | 96.5 | 94.9 | 100.0 | 82.6 | 88.3 |</code></p>
+<p><code>| DriveSuprim | ResNet-34 | 97.8 | 97.3 | 93.6 | 100.0 | 86.7 | 89.9 |</code></p>
+<p><code>| Hydra-MDP | V2-99 | 98.4 | 97.8 | 93.9 | 100.0 | 86.5 | 90.3 |</code></p>
+<p><code>| GoalFlow | V2-99 | 98.4 | 98.3 | 94.6 | 100.0 | 85.0 | 90.3 |</code></p>
+<p><code>| DiffusionDriveV2 | ResNet-34 | 98.3 | 97.9 | 94.8 | 99.9 | 87.5 | 91.2 |</code></p>
+<p>The paper's stated comparisons are numerically supported:</p>
+<ul>
+<li>Compared with DiffusionDrive, PDMS improves from `88.1` to `91.2`, a `+3.1` gain.</li>
+<li>EP improves from `82.2` to `87.5`, a `+5.3` gain.</li>
+<li>Compared with DIVER, PDMS improves from `88.3` to `91.2`, a `+2.9` gain.</li>
+<li>With ResNet-34, DiffusionDriveV2 also exceeds the reported V2-99 Hydra-MDP and GoalFlow PDMS of `90.3`.</li>
+</ul>
+<p>Claim strength: strong for reported closed-loop benchmark ranking. The caveat is not table-internal but process-level: no independent rerun, no checkpoint verification, and no official-code evidence have been produced in this phase.</p>
+<h3>4. NAVSIM v2 extended closed-loop result</h3>
+<p>NAVSIM v2 table reports:</p>
+<p><code>| Method | NC | DAC | DDC | TL | EP | TTC | LK | HC | EC | EPDMS |</code></p>
+<p><code>|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|</code></p>
+<p><code>| Transfuser | 96.9 | 89.9 | 97.8 | 99.7 | 87.1 | 95.4 | 92.7 | 98.3 | 87.2 | 76.7 |</code></p>
+<p><code>| Hydra-MDP++ | 97.2 | 97.5 | 99.4 | 99.6 | 83.1 | 96.5 | 94.4 | 98.2 | 70.9 | 81.4 |</code></p>
+<p><code>| DriveSuprim | 97.5 | 96.5 | 99.4 | 99.6 | 88.4 | 96.6 | 95.5 | 98.3 | 77.0 | 83.1 |</code></p>
+<p><code>| ARTEMIS | 98.3 | 95.1 | 98.6 | 99.8 | 81.5 | 97.4 | 96.5 | 98.3 | - | 83.1 |</code></p>
+<p><code>| DiffusionDriveV2 | 97.7 | 96.6 | 99.2 | 99.8 | 88.9 | 97.2 | 96.0 | 97.8 | 91.0 | 85.5 |</code></p>
+<p>This supports the claim that DiffusionDriveV2 sets the best reported EPDMS among table entries. The evidence is slightly less clean than NAVSIM v1 because ARTEMIS has a missing `EC` entry in the table. However, the final EPDMS comparison still reports DiffusionDriveV2 at `85.5`, ahead of the closest listed methods at `83.1`.</p>
+<p>Claim strength: strong for table ranking; moderate for causal attribution because the v2 table is not paired with component ablations.</p>
+<h3>5. Raw diversity-quality evidence before selector</h3>
+<p>The most important experiment for the paper's central thesis is `tables/div.tex`, because it evaluates raw generated trajectories before DiffusionDrive's classifier or DiffusionDriveV2's selector.</p>
+<p><code>| Method | Div. | PDMS@1 | PDMS@5 | PDMS@10 | Interpretation |</code></p>
+<p><code>|---|---:|---:|---:|---:|---|</code></p>
+<p><code>| Transfuser_TD | 0.1 | 85.7 | 85.7 | 85.7 | Near deterministic, stable but no meaningful diversity. |</code></p>
+<p><code>| DiffusionDrive | 42.3 | 93.5 | 84.3 | 75.3 | Very diverse but quality drops sharply in lower-ranked candidates. |</code></p>
+<p><code>| DiffusionDriveV2 | 30.3 | 94.9 | 91.1 | 84.4 | Lower diversity than DiffusionDrive, but much stronger Top-5/Top-10 quality. |</code></p>
+<p>This table directly supports the paper's "diversity versus consistent high quality" framing:</p>
+<ul>
+<li>DiffusionDrive has high raw diversity (`42.3`) but low lower-bound quality (`PDMS@10=75.3`).</li>
+<li>DiffusionDriveV2 keeps meaningful diversity (`30.3`) while raising `PDMS@10` to `84.4`.</li>
+<li>DiffusionDriveV2 also raises the best candidate quality (`PDMS@1=94.9` versus DiffusionDrive `93.5`).</li>
+</ul>
+<p>This is stronger evidence than final selected trajectory scores alone, because it evaluates the generator before the selector. It indicates the RL objective improves candidate-set quality, not merely final selection.</p>
+<p>Caveat: the table compares only three methods in the raw-output setting. It does not show raw Top-K distributions for DIVER, DriveSuprim, Hydra-MDP, or other non-diffusion methods, partly because the paper says deterministic regression/selection methods do not generate comparable stochastic trajectory sets.</p>
+<h3>6. Exploration noise ablation</h3>
+<p>`abl_1` reports:</p>
+<p><code>| Noise | NC | DAC | TTC | Comfort | EP | PDMS |</code></p>
+<p><code>|---|---:|---:|---:|---:|---:|---:|</code></p>
+<p><code>| Additive | 98.1 | 97.2 | 94.4 | 99.9 | 85.3 | 89.7 |</code></p>
+<p><code>| Multiplicative | 98.1 | 97.6 | 94.5 | 99.9 | 85.7 | 90.1 |</code></p>
+<p>The evidence supports the direction of the claim: multiplicative noise is better than additive noise in this ablation, with `+0.4` PDMS, `+0.4` DAC, and `+0.4` EP.</p>
+<p>Claim strength: moderate. The result is consistent with the geometric argument in Phase 1B, but the margin is small and the paper notes ablations are trained for fewer epochs. This should be presented as supporting evidence, not as an overwhelming proof by itself.</p>
+<h3>7. Intra-Anchor GRPO ablation</h3>
+<p>`abl_intra` reports:</p>
+<p><code>| Intra-Anchor | NC | DAC | TTC | Comfort | EP | PDMS |</code></p>
+<p><code>|---|---:|---:|---:|---:|---:|---:|</code></p>
+<p><code>| Disabled | 97.9 | 97.3 | 93.8 | 99.5 | 84.9 | 89.2 |</code></p>
+<p><code>| Enabled | 98.1 | 97.6 | 94.5 | 99.9 | 85.7 | 90.1 |</code></p>
+<p>The `+0.9` PDMS gain is the largest among the three core component ablations in this subset. It supports the paper's claim that anchor-aware group boundaries matter. Improvements appear across NC, DAC, TTC, Comfort, and EP, not only one metric.</p>
+<p>Claim strength: moderate to strong. It is well aligned with the method's core logic, but still needs code-level confirmation that the disabled variant differs only in group boundary and not other training mechanics.</p>
+<h3>8. Inter-Anchor Truncated GRPO ablation</h3>
+<p>`abl_2` reports:</p>
+<p><code>| Inter-Trunc. | NC | DAC | TTC | Comfort | EP | PDMS |</code></p>
+<p><code>|---|---:|---:|---:|---:|---:|---:|</code></p>
+<p><code>| Disabled | 97.7 | 97.3 | 93.6 | 99.9 | 85.7 | 89.5 |</code></p>
+<p><code>| Enabled | 98.1 | 97.6 | 94.5 | 99.9 | 85.7 | 90.1 |</code></p>
+<p>The `+0.6` PDMS gain supports the claim that local intra-anchor comparison is insufficient and that a cross-anchor absolute-failure signal helps. The strongest submetric changes are NC (`+0.4`) and TTC (`+0.9`), which are directionally consistent with a collision/safety-related truncation rule.</p>
+<p>Claim strength: moderate. The ablation supports metric improvement, but the paper table cannot by itself prove the exact causal mechanism "collision penalty fixed misleading local positive advantages." That mechanism requires reward/failure-mask code audit or additional diagnostic plots.</p>
+<h3>9. Selector design ablations</h3>
+<p>`abl_3` reports:</p>
+<p><code>| Model | Description | NC | DAC | TTC | Comfort | EP | PDMS |</code></p>
+<p><code>|---|---|---:|---:|---:|---:|---:|---:|</code></p>
+<p><code>| M0 | Base selector | 97.9 | 97.4 | 94.1 | 99.9 | 85.4 | 89.7 |</code></p>
+<p><code>| M1 | M0 + Coarse2Fine | 98.0 | 97.4 | 94.3 | 99.9 | 85.5 | 89.9 |</code></p>
+<p><code>| M2 | M1 + Rank Loss | 98.1 | 97.6 | 94.5 | 99.9 | 85.7 | 90.1 |</code></p>
+<p>The selector refinements produce modest but consistent gains:</p>
+<ul>
+<li>Coarse-to-fine adds `+0.2` PDMS.</li>
+<li>Rank loss adds another `+0.2` PDMS.</li>
+<li>Total selector design improvement in this ablation is `+0.4` PDMS.</li>
+</ul>
+<p>This supports the selector design, but also shows selector improvements are smaller than the main benchmark gap versus DiffusionDrive (`+3.1` PDMS) and smaller than the raw Top-K generator quality difference.</p>
+<h3>10. Selector-only confounder check</h3>
+<p>The supplement includes a direct confounder check:</p>
+<p><code>| Model | Selector | NC | DAC | TTC | Comfort | EP | PDMS |</code></p>
+<p><code>|---|---|---:|---:|---:|---:|---:|---:|</code></p>
+<p><code>| DiffusionDrive | Disabled | 98.2 | 96.2 | 94.7 | 100.0 | 82.2 | 88.1 |</code></p>
+<p><code>| DiffusionDrive | Enabled | 97.2 | 97.0 | 92.2 | 100.0 | 86.8 | 89.1 |</code></p>
+<p><code>| DiffusionDriveV2 | Enabled | 98.3 | 97.9 | 94.8 | 99.9 | 87.5 | 91.2 |</code></p>
+<p>This is important because DiffusionDriveV2 uses a more complex selector than DiffusionDrive's original classifier. The ablation shows that giving DiffusionDrive the stronger selector improves it by `+1.0` PDMS, but it remains `2.1` PDMS behind DiffusionDriveV2 with the same selector.</p>
+<p>Claim strength: strong against the simple explanation "the whole gain is just a stronger selector." It does not eliminate all confounders, but it does show that selector replacement alone cannot explain the reported final score.</p>
+<h3>11. Qualitative evidence</h3>
+<p>The supplement qualitatively compares Vanilla Diffusion, DiffusionDrive, and DiffusionDriveV2 on straight, turning, and multi-modal scenarios. The stated pattern:</p>
+<ul>
+<li>Vanilla Diffusion collapses to a single trajectory.</li>
+<li>DiffusionDrive provides diverse options but includes colliding/off-road or delayed-turning candidates.</li>
+<li>DiffusionDriveV2 keeps multiple plausible behaviors while improving the quality of candidate sets.</li>
+</ul>
+<p>Claim strength: illustrative, not decisive. Qualitative figures are useful for explaining the mechanism and showing failure modes, but the numerical raw Top-K and ablation tables should carry the evidence burden.</p>
+<h3>12. What the experiments prove and do not prove</h3>
+<p>Proved by reported tables, assuming the paper's evaluation is correct:</p>
+<ul>
+<li>DiffusionDriveV2 is the best reported method in NAVSIM v1/v2 tables.</li>
+<li>Raw candidate-set quality improves substantially compared with DiffusionDrive.</li>
+<li>Intra-Anchor GRPO, Inter-Anchor Truncated GRPO, multiplicative noise, and selector refinements each improve the ablation metric.</li>
+<li>A stronger selector alone does not close the gap between DiffusionDrive and DiffusionDriveV2.</li>
+</ul>
+<p>Not proved in this phase:</p>
+<ul>
+<li>Exact reward implementation and whether it matches the mathematical description.</li>
+<li>Whether official code reproduces `91.2` PDMS / `85.5` EPDMS.</li>
+<li>Whether all ablations differ by exactly one variable in code/config.</li>
+<li>Whether benchmark variance, random seed, or data preprocessing sensitivity could change rankings.</li>
+<li>Whether public issues/PRs contain unresolved metric discrepancies; Phase 2 notes issue topics from search metadata, but Phase 3 must inspect details.</li>
+</ul>
+<h3>13. Phase 1C conclusion</h3>
+<p>The experiment suite is coherent with the method story. The strongest evidence is not just final NAVSIM ranking; it is the raw pre-selector `Div./PDMS@K` table, which shows DiffusionDriveV2 trades some of DiffusionDrive's extreme diversity for much better lower-bound candidate quality while improving top-1 quality. Component ablations then support the three main mechanism claims: multiplicative noise helps exploration quality, Intra-Anchor GRPO contributes the largest core ablation gain, and Inter-Anchor Truncated GRPO adds a safety/global-failure correction. Selector ablations show the selector matters but is not sufficient to explain the main improvement.</p>
+<p>The correct critical stance is therefore: the paper has a strong internal experimental argument for its central claim, but the remaining uncertainty is implementation/reproducibility rather than table consistency. Phase 3 must verify reward construction, collision masks, group sampling, code/config ablations, checkpoint availability, and issue/PR evidence before final workflow completion.</p>
+<table><thead><tr><th>实验 claim</th><th>证据</th><th>强度</th></tr></thead><tbody><tr><td>DiffusionDriveV2 achieves 91.2 PDMS on NAVSIM v1 and outperforms reported baselines.</td><td>{'table': 'tables/navsim.tex', 'ours_pdms': 91.2, 'diffusiondrive_pdms': 88.1, 'delta_vs_diffusiondrive': 3.1, 'diver_pdms': 88.3, 'delta_vs_diver': 2.9, 'best_v2_99_pdms_reported': 90.3}</td><td>strong_reported_table</td></tr>
+<tr><td>DiffusionDriveV2 achieves 85.5 EPDMS on NAVSIM v2 and leads the reported table.</td><td>{'table': 'tables/navsimv2.tex', 'ours_epdms': 85.5, 'closest_reported_epdms': 83.1, 'closest_methods': ['DriveSuprim', 'ARTEMIS']}</td><td>strong_reported_table</td></tr>
+<tr><td>The RL-constrained generator improves raw candidate quality while preserving meaningful diversity.</td><td>{'table': 'tables/div.tex', 'ours': {'div': 30.3, 'pdms_at_1': 94.9, 'pdms_at_5': 91.1, 'pdms_at_10': 84.4}, 'diffusiondrive': {'div': 42.3, 'pdms_at_1': 93.5, 'pdms_at_5': 84.3, 'pdms_at_10': 75.3}, 'transfuser_td': {'div': 0.1, 'pdms_at_1': 85.7, 'pdms_at_5': 85.7, 'pdms_at_10': 85.7}}</td><td>strong_for_generator_quality</td></tr>
+<tr><td>Scale-adaptive multiplicative exploration noise is better than additive noise.</td><td>{'table': 'tables/abl_1.tex', 'additive_pdms': 89.7, 'multiplicative_pdms': 90.1, 'delta_pdms': 0.4}</td><td>moderate</td></tr>
+<tr><td>Intra-Anchor GRPO is important for anchor-GMM trajectory generation.</td><td>{'table': 'tables/abl_intra.tex', 'disabled_pdms': 89.2, 'enabled_pdms': 90.1, 'delta_pdms': 0.9}</td><td>moderate_to_strong</td></tr>
+<tr><td>Inter-Anchor Truncated GRPO adds global failure information and improves performance.</td><td>{'table': 'tables/abl_2.tex', 'disabled_pdms': 89.5, 'enabled_pdms': 90.1, 'delta_pdms': 0.6, 'nc_delta': 0.4, 'ttc_delta': 0.9}</td><td>moderate</td></tr>
+<tr><td>Coarse-to-fine selector and rank loss provide modest improvements.</td><td>{'table': 'tables/abl_3.tex', 'base_pdms': 89.7, 'coarse_to_fine_pdms': 89.9, 'rank_loss_pdms': 90.1, 'total_delta_pdms': 0.4}</td><td>moderate</td></tr>
+<tr><td>DiffusionDriveV2 improvement is not explained only by using a stronger selector.</td><td>{'table': 'tables/abl_selector.tex', 'diffusiondrive_without_selector_pdms': 88.1, 'diffusiondrive_with_selector_pdms': 89.1, 'diffusiondrivev2_with_selector_pdms': 91.2, 'remaining_gap_after_selector': 2.1}</td><td>strong_against_selector_only_confounder</td></tr></tbody></table>
+<figure class="report-figure" id="fig_pdm_reward"><img alt="PDM reward 与子指标汇聚" data-caption="Generated explanatory visual: PDM reward 与子指标汇聚。该图用统一视觉语法解释论文机制、代码路径和证据边界。" loading="lazy" src="assets/figures/fig_pdm_reward.svg"/><figcaption><strong>PDM reward 与子指标汇聚</strong>。Generated explanatory visual: PDM reward 与子指标汇聚。该图用统一视觉语法解释论文机制、代码路径和证据边界。</figcaption></figure>
+<figure class="report-figure" id="paper_intro"><img alt="原论文图 intro" data-caption="Original paper figure converted from local arXiv source PDF." loading="lazy" src="assets/figures/paper_intro.png"/><figcaption><strong>原论文图 intro</strong>。Original paper figure converted from local arXiv source PDF.</figcaption></figure><figure class="report-figure" id="paper_multi"><img alt="原论文图 multi" data-caption="Original paper figure converted from local arXiv source PDF." loading="lazy" src="assets/figures/paper_multi.png"/><figcaption><strong>原论文图 multi</strong>。Original paper figure converted from local arXiv source PDF.</figcaption></figure><figure class="report-figure" id="paper_multi_comp_0"><img alt="原论文图 multi_comp_0" data-caption="Original paper figure converted from local arXiv source PDF." loading="lazy" src="assets/figures/paper_multi_comp_0.png"/><figcaption><strong>原论文图 multi_comp_0</strong>。Original paper figure converted from local arXiv source PDF.</figcaption></figure>
+<details><summary>实验阅读边界</summary><p>主表支持 closed-loop 指标提升；消融表支持核心组件有增益；但没有在本地复现 benchmark，因此不能把表格读成独立复现实验。</p></details></section>
+<section id="synthesis-layer"><h2>批判综合层：证据边界、外部来源和代码实现</h2><h3 id="synthesis-phase1">Critical Block A：Phase 1 深读复核</h3>
+<h2>Phase 1 Critical Synthesis：DiffusionDriveV2 的真实强点、薄弱点与后续验证靶点</h2>
+<p>Paper: `2512.07745`  </p>
+<p>Scope: critical synthesis assembled from Phase 1A/1B/1C and Phase 2 artifacts. This is not the final full workflow report.</p>
+<h3>1. 一句话结论</h3>
+<p>DiffusionDriveV2 的核心贡献不是“把 GRPO 加到自动驾驶扩散模型上”这么粗，而是在 DiffusionDrive 的 anchor-GMM truncated diffusion 结构里重新定义 RL 比较边界：同一 driving intention 内做相对改良，跨 intention 不做朴素优劣排序，只对 collision 这类绝对失败施加强负信号。这个设计既解释了为什么它能保留多模态，也解释了为什么实验最关键的证据是 raw Top-K candidate quality，而不是最终 selector 后的一条轨迹分数。</p>
+<h3>2. 最强的内部证据</h3>
+<p>最强证据来自 `tables/div.tex`，因为它在 selector 之前评价 raw generated trajectories：</p>
+<p><code>| Method | Div. | PDMS@1 | PDMS@5 | PDMS@10 |</code></p>
+<p><code>|---|---:|---:|---:|---:|</code></p>
+<p><code>| Transfuser_TD | 0.1 | 85.7 | 85.7 | 85.7 |</code></p>
+<p><code>| DiffusionDrive | 42.3 | 93.5 | 84.3 | 75.3 |</code></p>
+<p><code>| DiffusionDriveV2 | 30.3 | 94.9 | 91.1 | 84.4 |</code></p>
+<p>这张表把论文主张讲清楚了：DiffusionDriveV2 不是追求最大 diversity，而是把 DiffusionDrive 过高但质量失控的 diversity 拉回到更可控的候选集分布。Top-10 PDMS 从 `75.3` 到 `84.4` 的提升，比最终榜单更能说明 generator 本体被 RL 约束过。</p>
+<h3>3. 最关键的机制判断</h3>
+<p>Intra-Anchor GRPO 是避免 mode collapse 的结构性选择。若把左转、直行、超车等不同 anchor 放在同一 group 内做 advantage normalization，优化器会天然偏向更常见或更容易得分的 intention，破坏 anchor-GMM 本来要保留的多意图结构。</p>
+<p>Inter-Anchor Truncated GRPO 不是全局排序器。它只引入一个安全下界：collision 不能因为是某个 anchor 内的相对最好样本而得到奖励；非 collision 的负 advantage 被截断到 0，以免跨意图负反馈继续压缩多模态。</p>
+<p>Multiplicative exploration noise 的价值在于让训练随机性仍像“轨迹扰动”，而不是 waypoint 抖动。它是 RL 探索的几何约束，不只是加噪技巧。</p>
+<h3>4. 实验结论的强弱排序</h3>
+<p><code>| Evidence | Strength | Why |</code></p>
+<p><code>|---|---|---|</code></p>
+<p><code>| Raw Div./PDMS@K | Strong | 直接测试 selector 前候选集质量，最贴近论文中心 claim。 |</code></p>
+<p><code>| Selector-only confounder ablation | Strong | DiffusionDrive 加强 selector 后只有 89.1 PDMS，仍低于 DiffusionDriveV2 的 91.2。 |</code></p>
+<p><code>| NAVSIM v1/v2 leaderboard | Strong for ranking | 支持 SOTA 表格结论，但不是因果证据。 |</code></p>
+<p><code>| Intra-Anchor GRPO ablation | Moderate-to-strong | +0.9 PDMS，且符合方法逻辑。 |</code></p>
+<p><code>| Inter-Anchor Truncated GRPO ablation | Moderate | +0.6 PDMS，安全指标方向一致，但 collision mask 机制需代码确认。 |</code></p>
+<p><code>| Multiplicative noise ablation | Moderate | +0.4 PDMS，方向正确但幅度不大。 |</code></p>
+<p><code>| Qualitative figures | Illustrative | 适合解释，不适合作为主要证明。 |</code></p>
+<h3>5. 最大薄弱点</h3>
+<p>第一，reward 是抽象符号 `R(tau_0)`。论文给了 PDMS/EPDMS 公式，也说 collision 会触发 `-1`，但没有在 paper-only 层面完全展开训练 reward 的代码实现。最终报告不能把 evaluation metric 等同于 training reward，除非 Phase 3 代码证实。</p>
+<p>第二，`log pi_theta` 的数值实现是潜在风险。Phase 1B 已经指出训练时 `eta=1`、validation/inference `eta=0`，并有 min log-variance std `0.10`。外部搜索元数据里也出现 `log_prob calculation` issue 主题。Phase 3 必须优先核对这块。</p>
+<p>第三，ablation 声称“同一组 hyperparameters，fewer epochs”，但 paper-only 阶段无法确认每个 ablation 是否严格单变量。代码/config 需要验证。</p>
+<p>第四，DiffusionDriveV2 的 selector 确实更强。虽然 selector-only ablation 已经说明它不是唯一来源，但最终 score 仍是 generator 和 selector 的联合效果。最终报告要同时呈现 raw candidate table 和 final selected score，避免把全部提升归因于 RL generator。</p>
+<h3>6. 外部证据对主结论的影响</h3>
+<p>外部证据不直接证明数值 claim，但改变后续工作优先级：</p>
+<ul>
+<li>官方 GitHub 和 Hugging Face checkpoint metadata 存在，说明 Phase 3 可以做真实 paper-vs-code audit，而不是停在 no-code negative evidence。</li>
+<li>GitHub issue/PR metadata 暗示风险点集中在 metric reproduction、timestep sampling、log_prob、cache/training/visualization 等方向，与 Phase 1B 的开放问题高度一致。</li>
+<li>中文/社区来源主要复述论文叙事，能帮助读者理解定位，但不能替代论文表格或代码证据。</li>
+<li>Papers with Code、Reddit、Bilibili 等没有形成强外部验证，不能当作共识背书。</li>
+</ul>
+<h3>7. 后续 Phase 3 必查清单</h3>
+<p>1. Reward: `R(tau_0)` 由哪些 metric/proxy 组成，collision 如何判定，是否只有 collision 进入 truncated rule。</p>
+<p>2. Log probability: `pi_theta(tau_{t-1}|tau_t)` 的 std、variance clamp、eta、timestep schedule 如何实现。</p>
+<p>3. Group construction: `N_anchor`、`G`、anchor 内 sample 的噪声来源、batch 维度和 std degeneracy handling。</p>
+<p>4. Loss composition: `L_RL + 0.1 L_IL` 是否与 paper 一致，IL/BC loss 具体形式是什么。</p>
+<p>5. Selector: coarse top-k、fine scorer、BCE label、rank-loss target score、augmentation 和 1% GTRS vocab 如何落地。</p>
+<p>6. Evaluation: NAVSIM v1/v2 metric script、PDMS/EPDMS formula、checkpoint/config 是否能复现 paper table。</p>
+<p>7. Issues/PRs: metric discrepancy、log_prob calculation、timestep sampling、cache path and V1 data loading PR 是否影响 current claims。</p>
+<h3>8. 批判性结论</h3>
+<p>作为 paper-only 阶段，DiffusionDriveV2 的论证是强的：它的数学设计和实验表格围绕同一个问题闭环，即 anchor-based truncated diffusion 在 IL 下的多样性/质量冲突。最强表格不是 SOTA 榜单，而是 selector 前的 raw Top-K 质量表；最重要的消融不是 selector，而是 Intra/Inter-Anchor GRPO。真正的不确定性集中在实现与复现：reward、log probability、timestep sampling、failure mask、selector training 和 checkpoint/config。当前阶段可以自信地完成论文机制解读和实验审计，但不能声称 full paper-learning workflow 完成。</p>
+<p>深度展开 7: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 8: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 9: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 10: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p>
+<h3 id="synthesis-phase2">Critical Block B：外部来源与负证据</h3>
+<h2>Phase 2 外部证据综合：公开来源、私有语料命中与负证据边界</h2>
+<p>Paper: `2512.07745`  </p>
+<p>Scope: Phase 2 synthesis from already indexed sources. No new web search, no official code clone/read, no HTML/site/figure generation, no Feishu/cloud-doc output.</p>
+<h3>1. Source inventory</h3>
+<p>This chapter uses the disk-backed evidence created in Phase 0/0.6:</p>
+<p><code>| Source artifact | Status | Use in this synthesis |</code></p>
+<p><code>|---|---|---|</code></p>
+<p><code>| `source_search_log.json` | Valid public-source index | Primary inventory for arXiv, official repo page metadata, issues/PR page metadata, Hugging Face checkpoint page, general web, Chinese/community pages, and negative evidence. |</code></p>
+<p><code>| `findings.md` | Valid phase findings | Confirms which sources were collected and which dimensions remain pending. |</code></p>
+<p><code>| `EVIDENCE_MATRIX.md` | Valid phase matrix | Confirms external evidence exists but final code/HTML gates remain pending. |</code></p>
+<p><code>| `private_corpus_search_log.json` | Present but treated carefully | Prior handoff noted JSON parsing fragility. This synthesis uses text-level grep/Select-String snippets only, not structured JSON claims. |</code></p>
+<p>The strongest primary evidence remains the paper TeX/PDF. External sources are used to answer a different question: how the paper sits in the ecosystem, what artifacts appear to exist, what community issues are already visible, and what negative evidence should constrain final claims.</p>
+<h3>2. Public-source matrix</h3>
+<p><code>| Channel | Status in `source_search_log.json` | Useful signal | Reliability for claims |</code></p>
+<p><code>|---|---|---|---|</code></p>
+<p><code>| arXiv abs | Hit | Paper exists as arXiv `2512.07745`, DOI and source links available. | High for bibliographic/source availability. |</code></p>
+<p><code>| arXiv HTML | Hit | Sections, experiments, supplement, figures, and tables visible. | High for paper content cross-check. |</code></p>
+<p><code>| Official GitHub repo page | Hit | Public repo observed with master branch, MIT license, Python-majority code, stars/forks/issues/PR metadata, and code/weights news. | Medium for repo existence; low for implementation details until Phase 3 clone/read. |</code></p>
+<p><code>| GitHub issues page | Hit | Issue topics include metric reproduction, timestep sampling, latency/throughput, metric discrepancy, log_prob calculation, cache/training/visualization questions. | Medium for risk inventory; details pending. |</code></p>
+<p><code>| GitHub pull requests page | Hit | Two open PR topics observed: custom cache path load-scene fix and V1 training data reading bug fix. | Medium for engineering-risk inventory; details pending. |</code></p>
+<p><code>| GitHub CLI/API | Blocked | `gh` unauthenticated and anonymous REST API rate-limited. | Negative evidence for structured API completeness. |</code></p>
+<p><code>| Hugging Face | Hit | `hustvl/DiffusionDriveV2` model/checkpoint page exists; MIT license; model card empty; no inference provider. | Medium for checkpoint availability; low for usage semantics. |</code></p>
+<p><code>| Hugging Face commits | Hit | Commits include initial commit, checkpoint uploads, and `diffusiondrivev2_rl.ckpt` upload. | Medium for checkpoint existence; exact files/versions need Phase 3/4 verification. |</code></p>
+<p><code>| Papers with Code | Negative/unverified | No stable PWC record verified in this pass. | Negative evidence only. |</code></p>
+<p><code>| Semantic Scholar | Partial hit | DOI/corpus result visible; page fetch returned 403. | Low, because content was inaccessible. |</code></p>
+<p><code>| Emergent Mind | Hit | Secondary summary of DiffusionDriveV2 mechanism. | Low-to-medium; useful for outside framing, not primary evidence. |</code></p>
+<p><code>| Horizon developer community | Hit | Chinese article lists paper/project links and Chinese summary of RL-constrained truncated diffusion. | Low-to-medium; useful for Chinese ecosystem signal. |</code></p>
+<p><code>| Zhihu | Partial hit | Search result found a column with paper/code links; direct page fetch blocked/limited. | Low unless full text is later fetched. |</code></p>
+<p><code>| Bilibili | Weak/negative | Search surfaced only search/snippet, no stable video detail verified. | Negative/weak evidence. |</code></p>
+<p><code>| Reddit | Negative/unavailable | No backend installed and no direct discussion found. | Negative evidence. |</code></p>
+<h3>3. What external sources add to Phase 1</h3>
+<p>Phase 1A/1B/1C already reconstruct the paper from primary TeX evidence. External sources add four ecosystem-level observations.</p>
+<h4>3.1 Official artifact existence changes the Phase 3 priority</h4>
+<p>The public search log records an official GitHub repo page and a Hugging Face model page. That means the correct next code-backed phase is not "search for whether code exists"; it is "clone/read the official implementation and verify paper-vs-code mapping."</p>
+<p>However, this phase deliberately does not use repo content as evidence. The official repo metadata only supports:</p>
+<ul>
+<li>code appears public;</li>
+<li>license is reported as MIT in the observed metadata;</li>
+<li>issues and PRs exist;</li>
+<li>checkpoints appear to have been uploaded on Hugging Face.</li>
+</ul>
+<p>It does not yet support:</p>
+<ul>
+<li>reward implementation matches the paper;</li>
+<li>Intra/Inter-Anchor GRPO formulas are implemented exactly;</li>
+<li>`diffusiondrivev2_rl.ckpt` reproduces NAVSIM numbers;</li>
+<li>training/evaluation scripts are complete or stable.</li>
+</ul>
+<h4>3.2 Issue/PR topics align with Phase 1B uncertainty</h4>
+<p>The search log's GitHub issue topics are not full issue reads, but they are already directionally useful:</p>
+<ul>
+<li>`metric reproduction` and `paper metric discrepancy` map directly to Phase 1C's reproducibility caveat.</li>
+<li>`timestep sampling` maps to Phase 1B's train/inference diffusion-schedule uncertainty.</li>
+<li>`log_prob calculation` maps to Phase 1B's Gaussian likelihood and std/log-variance floor questions.</li>
+<li>`latency/throughput` maps to the paper's claim that inference still uses only 2 denoising steps.</li>
+<li>`cache/training/visualization questions` map to practical reproduction and data-pipeline risk.</li>
+</ul>
+<p>This means Phase 3 should not read code only around model modules. It must also inspect issue/PR details and map them to the same uncertainty list: reward, log probability, timestep sampling, evaluation metrics, and cache/data loading.</p>
+<h4>3.3 Hugging Face confirms checkpoint direction but not usability</h4>
+<p>The Hugging Face log says the model exists, has MIT license metadata, an empty model card, no inference provider, and commits including checkpoint uploads. This supports a future reproduction path: a Phase 3/4 run can look for the exact checkpoint names, hashes, and expected configs.</p>
+<p>But an empty model card is also a documentation caveat. It means the final report should avoid presenting Hugging Face availability as "ready-to-run" until code/config/checkpoint loading are verified.</p>
+<h4>3.4 Chinese/community material mostly repeats paper claims, with some positioning value</h4>
+<p>The public log records Horizon developer community and Zhihu partial hits. The private corpus text grep shows prior local snippets containing Chinese summaries of DiffusionDriveV2:</p>
+<ul>
+<li>They repeat the paper's headline: RL constrains low-quality modes and explores superior trajectories.</li>
+<li>They mention scale-adaptive multiplicative noise, Intra-Anchor GRPO, and Inter-Anchor Truncated GRPO.</li>
+<li>Some prior notes position DiffusionDriveV2 as a GRPO + diffusion implementation, and contrast anchor-based versus anchor-free planning directions.</li>
+</ul>
+<p>These are useful for explanation and positioning, but they do not add independent proof of correctness. The private corpus snippets are best treated as prior analyst/community interpretations, not as external validation.</p>
+<h3>4. External-source fusion into the main reading</h3>
+<p><code>| Phase 1 section | External-source insight to fuse | Boundary |</code></p>
+<p><code>|---|---|---|</code></p>
+<p><code>| Problem framing | Chinese and general-web summaries independently repeat the diversity versus consistent-quality dilemma. | They reinforce framing only; primary evidence remains abstract/introduction and raw Top-K table. |</code></p>
+<p><code>| Math/training | GitHub issue topic `log_prob calculation` points to likelihood implementation as a real reproduction concern. | Do not infer details until issue/code read. |</code></p>
+<p><code>| Math/training | Issue topic `timestep sampling` points to DDPM/DDIM/truncated-step implementation risk. | Keep as Phase 3 audit target. |</code></p>
+<p><code>| Experiment audit | Issue topics `metric reproduction` and `paper metric discrepancy` warn that reported PDMS/EPDMS need reproduction evidence before final completion. | Do not downgrade paper tables without reading issues; mark as risk. |</code></p>
+<p><code>| Implementation chapter | Official GitHub and HF existence make code-backed phase mandatory and feasible. | Repo metadata is not implementation evidence. |</code></p>
+<p><code>| Limitations | Empty HF model card and blocked/partial public sources are documentation/access caveats. | They affect usability, not necessarily method validity. |</code></p>
+<h3>5. Conflict and negative-evidence matrix</h3>
+<p><code>| Question | Evidence found | Interpretation |</code></p>
+<p><code>|---|---|---|</code></p>
+<p><code>| Is there an official repo? | Yes, official GitHub metadata was observed. | Phase 3 should clone/read it later. |</code></p>
+<p><code>| Is there a checkpoint source? | Yes, Hugging Face metadata and commit notes indicate checkpoint uploads. | Phase 3/4 must verify exact files, hashes, configs, and load path. |</code></p>
+<p><code>| Are there public reproduction concerns? | Issue topics include metric reproduction, discrepancy, log_prob, timestep sampling. | Treat reproducibility as open, not solved by paper tables. |</code></p>
+<p><code>| Is there a Papers with Code record? | Not verified; direct request failed and search did not return stable page. | Do not cite PWC as support. |</code></p>
+<p><code>| Is there robust social discussion? | Zhihu partial hit, Bilibili weak, Reddit unavailable. | Community evidence is sparse/partial; no strong consensus claim. |</code></p>
+<p><code>| Did private corpus contain prior related material? | Yes, grep snippets show repeated local prior notes and Chinese summaries. | Useful for context, but not independent validation. |</code></p>
+<h3>6. Phase 2 critical synthesis</h3>
+<p>The external picture strengthens two parts of the Phase 1 interpretation and weakens one possible overclaim.</p>
+<p>It strengthens the claim that DiffusionDriveV2 is not an isolated paper artifact: official repo and checkpoint metadata appear to exist, and Chinese/community summaries picked up the same method narrative. This makes Phase 3 code-backed verification feasible and important.</p>
+<p>It also strengthens the critical reading that the paper's hardest unresolved details are implementation-level, not high-level conceptual gaps. The issue topics seen in search metadata are exactly around metric reproduction, timestep sampling, log probability calculation, and training/cache details. Those are the same areas where Phase 1B refused to overclaim.</p>
+<p>It weakens any temptation to call the workflow complete after the paper-only monograph. Because public metadata already shows issues/PRs and checkpoint artifacts, a full paper-learning run must eventually read the official repo, inspect issues/PRs, and verify code/checkpoint boundaries. This current run is only completing the paper/external-synthesis module, not Phase 3 or final delivery gates.</p>
+<h3>7. Phase 2 conclusion</h3>
+<p>External evidence supports the paper's ecosystem relevance and provides a concrete map for the next code-backed phase. The official repo and Hugging Face checkpoint metadata make implementation verification possible; issue/PR topics identify likely weak points around metrics, timestep sampling, log probability, and data/cache handling; Chinese/community sources mostly echo the paper's method narrative and help with positioning. No external source in this phase independently proves the method's numerical claims. The correct final stance is: Phase 1's paper-internal argument is strong, Phase 2 adds a useful risk and source inventory, and Phase 3 remains mandatory before claiming full workflow completion.</p>
+<table><thead><tr><th>来源</th><th>数量/状态</th><th>解读</th></tr></thead><tbody><tr><td>GitHub issues</td><td>35</td><td>复现风险上下文</td></tr>
+<tr><td>GitHub PRs</td><td>4</td><td>实现演化上下文</td></tr>
+<tr><td>Smoke test</td><td>py_compile pass</td><td>语法可执行，不等于评测复现</td></tr></tbody></table>
+<p>深度展开 11: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 12: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 13: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p>
+<h3 id="phase3-code">Critical Block C：官方代码实现映射</h3>
+<h2>Phase 3 Code-Backed Implementation Analysis</h2>
+<h3>Official Repository Status</h3>
+<ul>
+<li>Official repo: `https://github.com/hustvl/DiffusionDriveV2.git`</li>
+<li>Local clone: `C:\Users\tianxl\.cache\arxiv_papers\2512.07745_rerun_latest\official_code\DiffusionDriveV2`</li>
+<li>Commit: `1cd12a1e155c34dcc471261835444c8d5587580b`</li>
+<li>Branch: `master`</li>
+<li>Smoke evidence: `code_smoke_test.json` records `py_compile` over ten key files as `pass=true`; full inference is blocked by missing local checkpoints and NAVSIM caches.</li>
+</ul>
+<h3>Paper-vs-Code Map</h3>
+<p><code>| Paper claim | Code evidence | Interpretation |</code></p>
+<p><code>|---|---|---|</code></p>
+<p><code>| Anchor GMM partitions driving intent. | `plan_anchor` is loaded from `kmeans_navsim_traj_20.npy`, frozen, and repeated by `num_groups`. | The code turns the paper's mixture prior into a fixed anchor tensor rather than learning anchors during V2 training. |</code></p>
+<p><code>| Truncated diffusion reduces denoising cost. | RL train uses 10 rollout steps; eval/selector uses 2 steps. | The paper-level claim is consistent, but train and inference horizons differ. |</code></p>
+<p><code>| Scale-adaptive multiplicative noise promotes local trajectory exploration. | `DDIMScheduler_with_logprob.step` multiplies the mean trajectory by horizon/vertical random factors. | This is a trajectory-geometry-specific exploration design, not generic additive Gaussian noise. |</code></p>
+<p><code>| Intra-Anchor GRPO prevents improper cross-intent comparison. | `reward_group.view(B,num_groups,20)` followed by within-group mean/std normalization. | Advantage estimation is deliberately local to each anchor group. |</code></p>
+<p><code>| Inter-Anchor Truncated GRPO supplies global constraints. | Advantages are positive-only relative to GT reward and NC/DAC violations force `-1`. | The implementation is stricter than a prose description: safety-critical failures are hard penalties. |</code></p>
+<p><code>| Selector chooses the best goal-aligned mode. | Coarse metric heads score all candidates, top-k candidates are refined by fine heads. | The selector is a learned metric proxy, not a simple classifier. |</code></p>
+<p><code>| PDMS drives reward/evaluation. | Code composes `NC*DAC*(5*TTC+5*EP+2*C)/12`. | Code aligns with the supplement's metric formula. |</code></p>
+<h3>Implementation Narrative</h3>
+<p>The implementation has two separable training surfaces. The RL agent freezes most of the TransFuser backbone and trains the trajectory head around a log-prob-capable diffusion scheduler. The selector agent freezes the generator path and trains scorer modules (`NC`, `DAC`, `EP`, `TTC`, `C`) plus fine scorer modules. This division matters because the paper's story can sound like a single RL-trained generator, but the official code operationalizes it as a generator refinement stage followed by a scorer/selector stage.</p>
+<p>The most important implementation boundary is that reward comes from the NAVSIM PDM stack. During RL training, generated trajectories are denormalized, converted through Bezier/yaw utilities, scored through `PDMScorer`, and then reshaped by anchor group. During selector training, candidates are augmented with multiplicative noise and supplemented by a sampled GTRS vocabulary before coarse/fine metric heads learn to approximate the metric ranking.</p>
+<h3>Reproduction Boundary</h3>
+<p>The local smoke test validates syntax only. Official full evaluation needs `ckpts/diffusiondrive_navsim_88p1_PDMS`, `ckpts/diffusiondrivev2_rl.ckpt`, `ckpts/diffusiondrivev2_sel.ckpt`, NAVSIM metric caches, and the official one-line eval change in `diffusiondrivev2_model_sel.py` around line 1491. Therefore this report can claim code-backed reading, not local benchmark reproduction.</p>
+<table><thead><tr><th>代码行</th><th>对应概念</th><th>风险</th></tr></thead><tbody><tr><td>README.md:26-37</td><td>code release and model claims</td><td>official code and weights released; 91.2 PDMS / 85.5 EPDMS claim in README</td></tr>
+<tr><td>diffusiondrivev2_model_rl.py:518-676</td><td>diffusion policy log-prob for GRPO</td><td>returns prev_sample, log_prob and mean; log_prob sums over trajectory dimensions</td></tr>
+<tr><td>diffusiondrivev2_model_rl.py:800-939</td><td>sample trajectories with truncated diffusion</td><td>uses 10 rollout steps, anchor repeats by num_groups, truncated t=8 noise, PDM reward</td></tr>
+<tr><td>diffusiondrivev2_model_rl.py:885-932</td><td>Intra-Anchor GRPO</td><td>reward reshaped to B,num_groups,20; advantages normalized inside group and discounted</td></tr>
+<tr><td>diffusiondrivev2_model_rl.py:891-904</td><td>Inter-Anchor Truncated GRPO</td><td>positive mask vs GT reward, non-collision/drivable violations force -1</td></tr>
+<tr><td>diffusiondrivev2_model_rl.py:1028-1120</td><td>policy-gradient style objective plus IL fallback</td><td>ratio exp(logp-logp.detach) times advantages plus IL loss weighted 1.0/0.1</td></tr>
+<tr><td>diffusiondrivev2_model_sel.py:846-904</td><td>mode selector</td><td>NC/EP/DAC/TTC/C heads and fine heads with MarginRankingLoss</td></tr>
+<tr><td>diffusiondrivev2_model_sel.py:978-1122</td><td>selector BCE/rank losses and PDMS composition</td><td>BCE on submetrics, rank loss on EP, reward composition with 5/5/2 weights</td></tr></tbody></table>
+<figure class="report-figure" id="fig_selector_two_stage"><img alt="粗到细 mode selector 的排序路径" data-caption="Generated explanatory visual: 粗到细 mode selector 的排序路径。该图用统一视觉语法解释论文机制、代码路径和证据边界。" loading="lazy" src="assets/figures/fig_selector_two_stage.svg"/><figcaption><strong>粗到细 mode selector 的排序路径</strong>。Generated explanatory visual: 粗到细 mode selector 的排序路径。该图用统一视觉语法解释论文机制、代码路径和证据边界。</figcaption></figure>
+<figure class="report-figure" id="fig_paper_code_map"><img alt="Paper claim 到官方代码文件映射" data-caption="Generated explanatory visual: Paper claim 到官方代码文件映射。该图用统一视觉语法解释论文机制、代码路径和证据边界。" loading="lazy" src="assets/figures/fig_paper_code_map.svg"/><figcaption><strong>Paper claim 到官方代码文件映射</strong>。Generated explanatory visual: Paper claim 到官方代码文件映射。该图用统一视觉语法解释论文机制、代码路径和证据边界。</figcaption></figure>
+<p>深度展开 14: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 15: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 16: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p>
+<h3 id="critique">局限、反驳与失败模式</h3>
+<figure class="report-figure" id="fig_failure_boundary"><img alt="证据边界与失败模式审计" data-caption="Generated explanatory visual: 证据边界与失败模式审计。该图用统一视觉语法解释论文机制、代码路径和证据边界。" loading="lazy" src="assets/figures/fig_failure_boundary.svg"/><figcaption><strong>证据边界与失败模式审计</strong>。Generated explanatory visual: 证据边界与失败模式审计。该图用统一视觉语法解释论文机制、代码路径和证据边界。</figcaption></figure>
+<p>局限一：PDM reward 覆盖了 closed-loop planning 的关键维度，但不能穷尽所有交通语义和长尾交互。局限二：selector 仍是一个较小代理模块，论文通过 selector-only 对照缓解 confounder，但真实 OOD 稳健性还需要更多场景验证。局限三：官方代码可读但本地缺 ckpt 和 NAVSIM cache，当前报告是 implementation reading，不是复现证明。反驳点：若只看 leaderboard，DiffusionDriveV2 似乎只是工程调参；但代码中的 grouped advantage、hard safety penalty、coarse/fine metric scorer 与实验中的 Top-K PDMS 共同说明贡献在训练约束形态。</p>
+<p>深度展开 17: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p><p>深度展开 18: DiffusionDriveV2 的关键不是把 RL 粗暴套到扩散规划器，而是承认锚点 GMM 中不同 anchor 表示不同驾驶意图。若把所有 anchor 的候选放在同一个 advantage 池里比较，直行、左转、变道会互相压制，最终仍可能回到 mode collapse。因此报告把训练机制拆成同锚组内相对改进、跨锚绝对失败惩罚、以及 selector 代理 PDM 排序三层。这个拆分也解释了为什么实验必须同时看 PDMS、Top-K PDMS、diversity 和 selector-only confounder，而不能只看最终 leaderboard 分数。</p>
+<h3 id="coverage">覆盖矩阵</h3>
+<table><thead><tr><th>维度</th><th>论文主张</th><th>本报告判定</th></tr></thead><tbody><tr><td>问题</td><td>多模态轨迹缺少全量监督</td><td>成立但依赖 NAVSIM reward 覆盖</td></tr>
+<tr><td>方法</td><td>GRPO 适配锚点截断扩散</td><td>代码中可见分组 advantage 与硬惩罚</td></tr>
+<tr><td>结果</td><td>91.2 PDMS / 85.5 EPDMS</td><td>表格证据强，复现需 ckpt/cache</td></tr></tbody></table><table><thead><tr><th>阶段</th><th>官方设置</th><th>代码证据</th></tr></thead><tbody><tr><td>RL</td><td>10 epoch</td><td>docs/train_eval.md + rl_agent</td></tr>
+<tr><td>Selector</td><td>20 epoch</td><td>sel_agent + train_eval</td></tr>
+<tr><td>Eval</td><td>fast PDM score</td><td>run_pdm_score_fast.py command</td></tr></tbody></table><table><thead><tr><th>代码行</th><th>对应概念</th><th>风险</th></tr></thead><tbody><tr><td>README.md:26-37</td><td>code release and model claims</td><td>official code and weights released; 91.2 PDMS / 85.5 EPDMS claim in README</td></tr>
+<tr><td>diffusiondrivev2_model_rl.py:518-676</td><td>diffusion policy log-prob for GRPO</td><td>returns prev_sample, log_prob and mean; log_prob sums over trajectory dimensions</td></tr>
+<tr><td>diffusiondrivev2_model_rl.py:800-939</td><td>sample trajectories with truncated diffusion</td><td>uses 10 rollout steps, anchor repeats by num_groups, truncated t=8 noise, PDM reward</td></tr>
+<tr><td>diffusiondrivev2_model_rl.py:885-932</td><td>Intra-Anchor GRPO</td><td>reward reshaped to B,num_groups,20; advantages normalized inside group and discounted</td></tr>
+<tr><td>diffusiondrivev2_model_rl.py:891-904</td><td>Inter-Anchor Truncated GRPO</td><td>positive mask vs GT reward, non-collision/drivable violations force -1</td></tr>
+<tr><td>diffusiondrivev2_model_rl.py:1028-1120</td><td>policy-gradient style objective plus IL fallback</td><td>ratio exp(logp-logp.detach) times advantages plus IL loss weighted 1.0/0.1</td></tr>
+<tr><td>diffusiondrivev2_model_sel.py:846-904</td><td>mode selector</td><td>NC/EP/DAC/TTC/C heads and fine heads with MarginRankingLoss</td></tr>
+<tr><td>diffusiondrivev2_model_sel.py:978-1122</td><td>selector BCE/rank losses and PDMS composition</td><td>BCE on submetrics, rank loss on EP, reward composition with 5/5/2 weights</td></tr></tbody></table></section>
+</main>
+</div>
+<div aria-hidden="true" id="figureModal"><button id="figureModalClose" type="button">关闭</button><img alt="" id="figureModalImage"/><div id="figureModalCaption"></div></div>
+<script>
+const translationToggle = document.getElementById('translation-toggle');
+const translationPanel = document.getElementById('translation-panel');
+translationToggle.addEventListener('click', () => translationPanel.classList.toggle('open'));
+const links = Array.from(document.querySelectorAll('.toc-link'));
+const sections = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+function updateActive(id) {
+  links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+}
+links.forEach(a => a.addEventListener('click', () => updateActive(a.getAttribute('href').slice(1))));
+const observer = new IntersectionObserver(entries => {
+  const visible = entries.filter(e => e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+  if (visible) updateActive(visible.target.id);
+}, { rootMargin:'-20% 0px -65% 0px', threshold:[0, .2, .6] });
+sections.forEach(s => observer.observe(s));
+const modal = document.getElementById('figureModal');
+const modalImg = document.getElementById('figureModalImage');
+const modalCaption = document.getElementById('figureModalCaption');
+function closeFigure() { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); modalImg.removeAttribute('src'); }
+document.querySelectorAll('.reader-body img, #translation-panel img').forEach(img => {
+  img.addEventListener('click', () => {
+    modalImg.src = img.currentSrc || img.src;
+    modalImg.alt = img.alt || 'figure';
+    modalCaption.textContent = img.dataset.caption || img.alt || '';
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+  });
+});
+document.getElementById('figureModalClose').addEventListener('click', closeFigure);
+modal.addEventListener('click', event => { if (event.target === modal) closeFigure(); });
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    closeFigure();
+    translationPanel.classList.remove('open');
+  }
+});
+updateActive('legacy-layer');
+</script>
+</body>
+</html>

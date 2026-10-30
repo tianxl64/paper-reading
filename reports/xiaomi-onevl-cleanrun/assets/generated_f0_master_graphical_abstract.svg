@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="700" viewBox="0 0 1400 700">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1400" height="700" fill="#ffffff"/>
+  <text x="42" y="48" font-size="24" font-weight="800" font-family="Arial, Microsoft YaHei, sans-serif" fill="#0f172a">Master Graphical Abstract: OneVL in One Visual Sentence</text>
+  <text text-anchor="start" font-size="14" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#64748b"><tspan x="42" y="78.0">主线：未来视觉动态约束 compact latent；训练期可读，推理期低延迟。</tspan></text>
+  <rect x="54" y="112" width="270" height="500" rx="16" fill="#f8fafc" stroke="#d9dee8" stroke-width="1"/><text text-anchor="start" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#334155"><tspan x="72" y="140.0">Driving context</tspan></text>
+<rect x="362" y="112" width="355" height="500" rx="16" fill="#f8fafc" stroke="#d9dee8" stroke-width="1"/><text text-anchor="start" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#334155"><tspan x="380" y="140.0">Latent bottleneck</tspan></text>
+<rect x="756" y="112" width="290" height="500" rx="16" fill="#f8fafc" stroke="#d9dee8" stroke-width="1"/><text text-anchor="start" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#334155"><tspan x="774" y="140.0">Training-only readers</tspan></text>
+<rect x="1086" y="112" width="250" height="500" rx="16" fill="#f8fafc" stroke="#d9dee8" stroke-width="1"/><text text-anchor="start" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#334155"><tspan x="1104" y="140.0">Deployment path</tspan></text>
+<rect x="92" y="190" width="195" height="92" rx="10" fill="#f8fafc" stroke="#334155" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="189.5" y="228.6">Front camera</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="189.5" y="254.4">ego state + command</tspan></text>
+<rect x="405" y="170" width="248" height="112" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="529.0" y="217.0">Qwen3-VL trunk</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="529.0" y="240.5">shared visual/text</tspan><tspan x="529.0" y="256.3">states</tspan></text>
+<rect x="430" y="342" width="92" height="84" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="16" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="476.0" y="377.3">4 visual</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="476.0" y="400.8">latents</tspan></text>
+<rect x="552" y="342" width="92" height="84" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="16" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="598.0" y="377.3">2 language</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="598.0" y="400.8">latents</tspan></text>
+<rect x="790" y="176" width="220" height="96" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="900.0" y="216.3">Visual aux decoder</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="900.0" y="243.2">future-frame tokens</tspan></text>
+<rect x="790" y="356" width="220" height="96" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="900.0" y="385.9">Language aux</tspan><tspan x="900.0" y="406.7">decoder</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="900.0" y="423.2">readable CoT</tspan></text>
+<rect x="1120" y="248" width="178" height="118" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="1209.0" y="297.6">Trajectory answer</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="1209.0" y="322.7">prefill, no CoT</tspan><tspan x="1209.0" y="338.5">rollout</tspan></text>
+<polyline points="287,236 405,226" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/><text text-anchor="middle" font-size="12" font-weight="600" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="405" y="214.0">prompt</tspan></text>
+<polyline points="653,226 702,226 702,384 522,384" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/><text text-anchor="middle" font-size="12" font-weight="600" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="702" y="372.0">hidden states</tspan></text>
+<polyline points="522,384 790,224" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/><text text-anchor="middle" font-size="12" font-weight="600" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="790" y="212.0">train signal</tspan></text>
+<polyline points="598,384 790,404" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/><text text-anchor="middle" font-size="12" font-weight="600" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="790" y="392.0">train signal</tspan></text>
+<polyline points="644,384 1120,307" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/><text text-anchor="middle" font-size="12" font-weight="600" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="1120" y="295.0">inference</tspan></text>
+<rect x="118" y="506" width="150" height="62" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="14" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="193.0" y="532.0">Question</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="193.0" y="541.5">CoT benefit without</tspan><tspan x="193.0" y="557.3">CoT latency?</tspan></text>
+<rect x="452" y="506" width="170" height="62" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="14" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="537.0" y="532.0">Main idea</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="537.0" y="541.5">world dynamics shape</tspan><tspan x="537.0" y="557.3">compact latent</tspan></text>
+<rect x="812" y="506" width="174" height="62" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="14" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="899.0" y="532.0">Auditability</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="899.0" y="541.5">decoders expose what</tspan><tspan x="899.0" y="557.3">latent learned</tspan></text>
+<rect x="1122" y="506" width="174" height="62" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="14" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="1209.0" y="532.0">Hot path</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="1209.0" y="541.5">discard decoders at</tspan><tspan x="1209.0" y="557.3">inference</tspan></text>
+</svg>

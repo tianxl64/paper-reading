@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#334155"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="1400" height="760" fill="#ffffff"/>
+  <text x="42" y="48" font-size="24" font-weight="800" font-family="Arial, Microsoft YaHei, sans-serif" fill="#0f172a">Code Detail: Optional Readers vs Deployment Head</text>
+  
+  <rect x="70" y="126" width="1248" height="478" rx="16" fill="#f8fafc" stroke="#d9dee8" stroke-width="1"/><text text-anchor="start" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#334155"><tspan x="88" y="154.0">Auxiliary readers and...</tspan></text>
+<rect x="126" y="220" width="230" height="92" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="241.0" y="258.6">Language reader</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="241.0" y="284.4">latent -&gt; CoT text</tspan></text>
+<rect x="126" y="372" width="230" height="92" rx="10" fill="#ecfdf5" stroke="#047857" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="241.0" y="410.6">Visual reader</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="241.0" y="428.5">latent -&gt; future</tspan><tspan x="241.0" y="444.3">visual tokens</tspan></text>
+<rect x="500" y="294" width="245" height="100" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="622.5" y="336.0">Shared hidden state</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="622.5" y="356.1">exposed only when</tspan><tspan x="622.5" y="371.9">explanation flags are...</tspan></text>
+<rect x="884" y="206" width="230" height="94" rx="10" fill="#eef2ff" stroke="#4338ca" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="999.0" y="245.5">AR trajectory head</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="999.0" y="271.8">88.84 PDM / 4.46s</tspan></text>
+<rect x="884" y="382" width="230" height="94" rx="10" fill="#fff7ed" stroke="#c2410c" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="17" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="999.0" y="421.5">MLP float head</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="999.0" y="447.8">86.83 PDM / 0.24s</tspan></text>
+<polyline points="356,266 500,318" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="356,418 500,370" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="745,344 884,253" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<polyline points="745,344 884,429" fill="none" stroke="#334155" stroke-width="2.1" marker-end="url(#arrow)"/>
+<rect x="374" y="526" width="660" height="54" rx="10" fill="#f8fafc" stroke="#64748b" stroke-width="1.35"/>
+<text text-anchor="middle" font-size="15" font-weight="700" font-family="Arial, Microsoft YaHei, sans-serif" fill="#172033"><tspan x="704.0" y="548.7">Code detail</tspan></text>
+<text text-anchor="middle" font-size="13" font-weight="500" font-family="Arial, Microsoft YaHei, sans-serif" fill="#475569"><tspan x="704.0" y="555.9">FloatMLPHead is a deployment branch, not the default explanation</tspan><tspan x="704.0" y="571.7">pathway.</tspan></text>
+</svg>

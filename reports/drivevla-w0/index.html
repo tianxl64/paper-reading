@@ -1,0 +1,3391 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>DriveVLA-W0 深度解析 HTML 报告</title>
+<link href="data:," rel="icon"/>
+<style>
+:root {
+  --bg: #f7f7f4;
+  --paper: #fffdfa;
+  --ink: #222326;
+  --muted: #667085;
+  --line: #dad7cd;
+  --accent: #0f766e;
+  --accent-2: #9f1239;
+  --accent-3: #7c2d12;
+  --soft: #e8f3f0;
+  --warn: #fff7d6;
+  --danger: #ffe8e8;
+  --code: #1f2937;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--bg);
+  font-family: Inter, "Segoe UI", "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+  line-height: 1.68;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.layout {
+  display: grid;
+  grid-template-columns: clamp(248px, 19vw, 320px) minmax(0, 1fr);
+  min-height: 100vh;
+}
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow: auto;
+  padding: 22px 18px;
+  border-right: 1px solid var(--line);
+  background: #f0f1ed;
+}
+.brand { margin-bottom: 18px; }
+.brand strong { display: block; font-size: 18px; line-height: 1.25; }
+.brand span { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; }
+.toc a {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: #394150;
+  font-size: 13px;
+}
+.toc a:hover { background: #e2ebe8; text-decoration: none; }
+.toc-l2 { font-weight: 700; margin-top: 8px; }
+.toc-l3 { padding-left: 20px !important; color: #667085 !important; }
+.content {
+  width: min(100%, 1240px);
+  justify-self: center;
+  padding: clamp(24px, 3vw, 42px) clamp(22px, 4vw, 64px) 72px;
+}
+.hero {
+  min-height: 54vh;
+  display: grid;
+  align-content: end;
+  padding: 54px 0 28px;
+  border-bottom: 1px solid var(--line);
+}
+.eyebrow {
+  display: inline-flex;
+  width: max-content;
+  padding: 4px 10px;
+  border: 1px solid #b7d8d2;
+  border-radius: 999px;
+  color: #0f5f58;
+  background: #e7f4f1;
+  font-size: 13px;
+  font-weight: 700;
+}
+h1 {
+  max-width: 980px;
+  margin: 16px 0 14px;
+  font-size: clamp(34px, 3.2rem, 54px);
+  line-height: 1.08;
+  letter-spacing: 0;
+}
+.subtitle {
+  max-width: 900px;
+  color: #3f4652;
+  font-size: 18px;
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+.meta span {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: #475467;
+  font-size: 13px;
+}
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 12px;
+  margin: 24px 0 10px;
+}
+.metric-card {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--paper);
+}
+.metric-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.metric-card strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 18px;
+}
+.metric-card p {
+  margin: 8px 0 0;
+  color: #4b5563;
+  font-size: 13px;
+}
+article > p,
+article > ul,
+article > ol,
+article > blockquote,
+article > .callout,
+article > h2,
+article > h3,
+article > h4,
+article > h5,
+article > h6,
+article > .math-display,
+article > .code-block {
+  width: min(100%, 980px);
+  margin-left: auto;
+  margin-right: auto;
+}
+article > .table-wrap {
+  width: min(100%, 1120px);
+  margin-left: auto;
+  margin-right: auto;
+}
+main h2 {
+  margin-top: 52px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 30px;
+  line-height: 1.22;
+}
+main h3 { margin-top: 34px; font-size: 23px; line-height: 1.28; }
+main h4 { margin-top: 26px; font-size: 18px; }
+p { margin: 12px 0; }
+blockquote {
+  margin: 18px 0;
+  padding: 14px 18px;
+  border-left: 4px solid var(--accent);
+  background: #edf7f4;
+  border-radius: 0 8px 8px 0;
+}
+.callout {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  gap: 14px;
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #eef7f4;
+}
+.callout-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  border-radius: 6px;
+  background: #ffffffcc;
+  color: var(--accent);
+  font-weight: 800;
+}
+.callout.warning { background: var(--warn); }
+.callout.danger { background: var(--danger); }
+.callout.success { background: #e9f7e9; }
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 16px 0 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: min(760px, 100%);
+}
+th, td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #e6e2d9;
+  vertical-align: top;
+  text-align: left;
+}
+th {
+  background: #edf3ef;
+  color: #24312f;
+  font-size: 13px;
+}
+tr:last-child td { border-bottom: 0; }
+code {
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: #eceff3;
+  color: #0f172a;
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 0.92em;
+}
+.math-inline {
+  display: inline-block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  vertical-align: middle;
+  padding: 1px 2px;
+}
+.math-display {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 16px auto;
+  padding: 10px 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  text-align: center;
+  border: 1px solid #e7e2d8;
+  border-radius: 8px;
+  background: #fffefb;
+}
+.mjx-container {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
+}
+.code-block, .diagram-card details pre {
+  overflow-x: auto;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--code);
+  color: #e5e7eb;
+}
+.code-block code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+}
+.diagram-card, .image-card, .paper-figure-card, .concept-image-card {
+  margin: 18px 0 28px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+}
+.paper-figure-card {
+  margin: 22px auto 30px;
+  width: min(100%, 1080px);
+  background: #fff;
+}
+.concept-image-card {
+  width: min(100%, 1040px);
+  margin: 18px auto 30px;
+  background: #fbf7ef;
+}
+.figure-kicker {
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #e7f4f1;
+  color: #0f5f58;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+figcaption {
+  margin-bottom: 12px;
+  color: #344054;
+  font-weight: 800;
+}
+.image-card img, .paper-figure-card img, .concept-image-card img {
+  display: block;
+  width: min(100%, 1000px);
+  max-height: min(76vh, 920px);
+  object-fit: contain;
+  margin-inline: auto;
+  height: auto;
+  border-radius: 6px;
+  border: 1px solid #ebe7dc;
+  background: #fff;
+}
+.paper-figure-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.paper-figure-meta span {
+  max-width: 100%;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #667085;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.mermaid {
+  display: flex;
+  justify-content: center;
+  min-height: 160px;
+  padding: 14px;
+  border-radius: 6px;
+  background: #fbfbf8;
+  border: 1px solid #ebe7dc;
+}
+details { margin-top: 10px; }
+summary { cursor: pointer; color: var(--accent); font-weight: 700; }
+.comparison {
+  margin: 34px 0;
+  padding: 22px;
+  border-radius: 8px;
+  border: 1px solid #cfd8d5;
+  background: #f3faf8;
+}
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+  gap: 16px;
+}
+.comparison article {
+  padding: 16px;
+  border: 1px solid #d8e4df;
+  border-radius: 8px;
+  background: #fff;
+}
+.comparison h3 { margin-top: 0; }
+.principle-panel {
+  width: min(100%, 1040px);
+  margin: 18px auto 28px;
+  padding: 18px;
+  border: 1px solid #cdded9;
+  border-radius: 8px;
+  background: #f6fbf9;
+}
+.principle-header span {
+  display: inline-flex;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #e7f4f1;
+  color: #0f5f58;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.principle-header h3 {
+  margin: 8px 0 16px;
+}
+.principle-flow {
+  display: grid;
+  gap: 12px;
+}
+.principle-flow.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.principle-flow div,
+.lane,
+.timeline-process div,
+.attention-grid div {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #d9e4df;
+  border-radius: 8px;
+  background: #fff;
+}
+.principle-flow b,
+.timeline-process b {
+  display: block;
+  margin-bottom: 6px;
+  color: #143d39;
+}
+.dual-lanes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.lane h4 {
+  margin: 0 0 8px;
+}
+.attention-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(140px, 0.8fr) minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  text-align: center;
+}
+.attention-grid .merge {
+  background: #123d3a;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+.timeline-process {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.timeline-process span {
+  display: inline-block;
+  margin-bottom: 6px;
+  color: #9f1239;
+  font-weight: 800;
+}
+.footer {
+  margin-top: 54px;
+  padding-top: 22px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 13px;
+}
+@media (max-width: 980px) {
+  .layout { display: block; }
+  .sidebar { position: static; height: auto; max-height: 340px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .content { padding: 26px 18px 52px; }
+  .metric-grid, .comparison-grid { grid-template-columns: 1fr; }
+  .principle-flow.three, .dual-lanes, .attention-grid, .timeline-process { grid-template-columns: 1fr; }
+  .callout { grid-template-columns: 1fr; }
+}
+
+.image-zoomable {
+  cursor: zoom-in;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.image-zoomable:hover { opacity: .92; }
+#image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(10, 18, 32, .88);
+}
+#image-lightbox.is-open { display: flex; }
+#image-lightbox img {
+  max-width: min(96vw, 1800px);
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  cursor: zoom-out;
+  border-radius: 8px;
+  box-shadow: 0 18px 70px rgba(0, 0, 0, .45);
+}
+#image-lightbox .lightbox-close,
+#image-lightbox .lightbox-nav {
+  position: absolute;
+  border: 1px solid rgba(255,255,255,.35);
+  color: #fff;
+  background: rgba(15, 23, 42, .72);
+  cursor: pointer;
+  font: inherit;
+}
+#image-lightbox .lightbox-close {
+  top: 18px;
+  right: 22px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 25px;
+  line-height: 1;
+}
+#image-lightbox .lightbox-nav {
+  top: 50%;
+  width: 44px;
+  height: 58px;
+  transform: translateY(-50%);
+  border-radius: 8px;
+  font-size: 30px;
+}
+#image-lightbox .lightbox-prev { left: 18px; }
+#image-lightbox .lightbox-next { right: 18px; }
+#image-lightbox .lightbox-caption {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  max-width: 85vw;
+  transform: translateX(-50%);
+  color: #e5e7eb;
+  text-align: center;
+  font-size: 14px;
+}
+@media (max-width: 700px) {
+  #image-lightbox { padding: 14px; }
+  #image-lightbox .lightbox-nav { width: 36px; height: 48px; }
+  #image-lightbox .lightbox-prev { left: 8px; }
+  #image-lightbox .lightbox-next { right: 8px; }
+}
+
+</style>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["\\(", "\\)"]],
+        displayMath: [["\\[", "\\]"]],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ["script", "noscript", "style", "textarea", "pre", "code"]
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "base", securityLevel: "loose" });
+  </script>
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+<div class="brand">
+<strong>DriveVLA-W0 深度解析</strong>
+<span>paper-learning-workflow HTML view</span>
+</div>
+<nav class="toc"><a class="toc-l2" href="#codex-adapter-and-execution-audit">Codex adapter and execution audit</a>
+<a class="toc-l2" href="#前置概念速查表15-条覆盖代码层关键名词">前置概念速查表(≥15 条,覆盖代码层关键名词)</a>
+<a class="toc-l2" href="#1-核心研究问题-监督缺失究竟是什么">§ 1. 核心研究问题 — "监督缺失"究竟是什么</a>
+<a class="toc-l3" href="#11-研究背景与动机作者明写的三个矛盾">1.1 研究背景与动机(作者明写的三个矛盾)</a>
+<a class="toc-l3" href="#12-核心主张逐条梳理每条有-位置">1.2 核心主张逐条梳理(每条有 § 位置)</a>
+<a class="toc-l3" href="#13-创新性与贡献边界严格拆">1.3 创新性与贡献边界(严格拆)</a>
+<a class="toc-l2" href="#2-核心方法架构-关键模块细节展开v3-重点">§ 2. 核心方法架构 — 关键模块细节展开(v3 重点)</a>
+<a class="toc-l3" href="#21-整体架构总览">2.1 整体架构总览</a>
+<a class="toc-l3" href="#22-vla-baseline31-两条-backbone-路径">2.2 VLA Baseline(§3.1)— 两条 backbone 路径</a>
+<a class="toc-l3" href="#23-world-modeling32-双路径密集监督-关键模块细节">2.3 World Modeling(§3.2)— 双路径密集监督 [关键模块细节]</a>
+<a class="toc-l3" href="#24-moe-action-expert33-轻-decoder-并行-三种-decoding-关键模块细节">2.4 MoE Action Expert(§3.3)— 轻 decoder 并行 + 三种 decoding [关键模块细节]</a>
+<a class="toc-l3" href="#25-两阶段训练范式52">2.5 两阶段训练范式(§5.2)</a>
+<a class="toc-l2" href="#3-数学推导与论据">§ 3. 数学推导与论据</a>
+<a class="toc-l3" href="#31-核心公式独立推导v96-blocking">3.1 核心公式独立推导(v9.6 BLOCKING)</a>
+<a class="toc-l3" href="#32-假设审查显式-vs-隐含">3.2 假设审查(显式 vs 隐含)</a>
+<a class="toc-l2" href="#4-实验设计与充分性分析">§ 4. 实验设计与充分性分析</a>
+<a class="toc-l3" href="#41-实验目标-论文主张对应">4.1 实验目标 × 论文主张对应</a>
+<a class="toc-l3" href="#42-关键实验结果表">4.2 关键实验结果表</a>
+<a class="toc-l3" href="#43-关键消融53">4.3 关键消融(§5.3)</a>
+<a class="toc-l3" href="#44-潜在未讨论因素">4.4 潜在未讨论因素</a>
+<a class="toc-l2" href="#5-组件新颖性拆解">§ 5. 组件新颖性拆解</a>
+<a class="toc-l2" href="#6-横向对比分析">§ 6. 横向对比分析</a>
+<a class="toc-l3" href="#61-semantic-scholar-引用图谱api-429-降级声明">6.1 Semantic Scholar 引用图谱(API 429 降级声明)</a>
+<a class="toc-l3" href="#62-主流-vs-反对观点">6.2 主流 vs 反对观点</a>
+<a class="toc-l3" href="#63-与飞书已有文档的交叉对比v8-phase-06-关联c-级处理">6.3 与飞书已有文档的交叉对比(v8 Phase 0.6 关联,C 级处理)</a>
+<a class="toc-l2" href="#7-理论体系严肃反驳5-条">§ 7. 理论体系严肃反驳(≥5 条)</a>
+<a class="toc-l3" href="#q1scaling-law-声明是否严格成立">Q1:Scaling Law 声明是否严格成立?</a>
+<a class="toc-l3" href="#q2supervision-deficit-概念是否事后贴标签">Q2:Supervision Deficit 概念是否"事后贴标签"?</a>
+<a class="toc-l3" href="#q3推理时完全丢弃-wm-的代价">Q3:推理时完全丢弃 WM 的代价?</a>
+<a class="toc-l3" href="#q4moe-action-expert-是否真的是最佳-decoder-路径">Q4:MoE Action Expert 是否真的是最佳 decoder 路径?</a>
+<a class="toc-l3" href="#q5单前视摄像头真的够用吗">Q5:单前视摄像头真的够用吗?</a>
+<a class="toc-l2" href="#8-phase-2-社区博客深度解析">§ 8. Phase 2 — 社区博客深度解析</a>
+<a class="toc-l3" href="#phase-20-新鲜度预检">Phase 2.0 新鲜度预检</a>
+<a class="toc-l3" href="#搜索执行情况">搜索执行情况</a>
+<a class="toc-l3" href="#核心深读-1vla-和世界模型正在逐渐走向融合统一-擎天柱85-赞">核心深读 1:《VLA 和世界模型正在逐渐走向融合统一......》— 擎天柱(85 赞)</a>
+<a class="toc-l3" href="#核心深读-2drivevla-w0-简读世界模型vla自监督-scaling-微卷的大白31-赞-3-评论">核心深读 2:《DriveVLA-W0 简读:世界模型+VLA+自监督 Scaling?》— 微卷的大白(31 赞 + 3 评论)</a>
+<a class="toc-l3" href="#核心深读-3drivevla-w0自动驾驶中世界模型放大数据规模化定律-黄浴14-赞-top-自驾作者-27645-赞">核心深读 3:《DriveVLA-W0:自动驾驶中世界模型放大数据规模化定律》— 黄浴(14 赞 / Top 自驾作者 27645 赞)</a>
+<a class="toc-l3" href="#跨博客观点冲突矩阵">跨博客观点冲突矩阵</a>
+<a class="toc-l3" href="#补充列表10-篇共-18-条超配">补充列表(≥10 篇,共 18 条超配)</a>
+<a class="toc-l2" href="#9-phase-3-代码深度分析关键模块代码级对照">§ 9. Phase 3 — 代码深度分析(关键模块代码级对照)</a>
+<a class="toc-l3" href="#91-paper-vs-code-对照表25-条10-条-论文未披露但复现必需">9.1 Paper vs Code 对照表(25 条,10 条 "论文未披露但复现必需" ❌)</a>
+<a class="toc-l3" href="#911-已回填-phase-1-2-正文的未披露关键机制v8-blocking">9.1.1 已回填 Phase 1 §2 正文的未披露关键机制(v8 BLOCKING)</a>
+<a class="toc-l3" href="#92-issue-pr-挖掘19-issues-0-pr">9.2 Issue / PR 挖掘(19 issues / 0 PR)</a>
+<a class="toc-l3" href="#93-复现-cheatsheet一页搞定">9.3 复现 Cheatsheet(一页搞定)</a>
+<a class="toc-l2" href="#10-历史-surprises-自检v9-从-end-to-end-ad-主题预加载">§ 10. 历史 Surprises 自检(v9 从 end-to-end-AD 主题预加载)</a>
+<a class="toc-l2" href="#11-结论与限制">§ 11. 结论与限制</a>
+<a class="toc-l3" href="#111-本文真正的价值">11.1 本文真正的价值</a>
+<a class="toc-l3" href="#112-论文明确的局限来自失败案例分析">11.2 论文明确的局限(来自失败案例分析)</a>
+<a class="toc-l3" href="#113-v3-独家发现的隐含问题">11.3 v3 独家发现的隐含问题</a>
+<a class="toc-l3" href="#114-未来方向">11.4 未来方向</a>
+<a class="toc-l2" href="#附录-ahtml-当前图像策略速览">附录 A:HTML 当前图像策略速览</a>
+<a class="toc-l2" href="#源码图解联读">§ 12. 源码—图解联读：从未来帧监督到可执行动作</a>
+<a class="toc-l3" href="#源码精读-动作编码与流匹配">12.2 源码精读：动作编码、Flow Matching 与推理落盘</a>
+<a class="toc-l3" href="#论文公式源码实验交错解释">12.3 公式—源码—实验的交错解释</a>
+<a class="toc-l2" href="#delivery-sentinel">Delivery Sentinel</a>
+<a class="toc-l2" href="#原论文图像附录">原论文图像附录</a></nav>
+</aside>
+<main class="content">
+<section class="hero">
+<span class="eyebrow">HTML static report</span>
+<h1>DriveVLA-W0: World Models Amplify Data Scaling Law in Autonomous Driving</h1>
+<p class="subtitle">基于已完成并验证的 paper-learning-workflow 飞书深度解析结果生成。此版本优化为网页阅读:固定目录、摘要卡片、响应式表格、内嵌图像和 Mermaid 图示。</p>
+<div class="meta">
+<span>arXiv 2510.12796</span>
+<span>Source: final_codex_feishu.md</span>
+<span>Feishu: NcgcwJdTIix0p0khd6Ic54kgn3d</span>
+<span>Generated locally</span>
+</div>
+<div class="metric-grid"><div class="metric-card"><span>核心瓶颈</span><strong>Supervision deficit</strong><p>7B VLA 只靠稀疏动作 token 监督, 表征容量无法被充分激活。</p></div>
+<div class="metric-card"><span>方法主线</span><strong>World modeling as dense supervision</strong><p>训练时预测视觉世界状态, 推理时丢弃 WM, 保留规划收益。</p></div>
+<div class="metric-card"><span>关键结果</span><strong>Scaling and transfer flip</strong><p>70M 帧下 WM 持续增益, NuPlan 到 NAVSIM 迁移从负迁移转为正迁移。</p></div>
+<div class="metric-card"><span>工程落点</span><strong>MoE action expert</strong><p>500M expert 降低延迟, 同时改善 PDMS, 是部署侧关键。</p></div></div>
+</section>
+<section class="comparison" id="html-feishu-comparison">
+<h2>HTML 版与飞书版的区别、优缺点</h2>
+<div class="comparison-grid">
+<article>
+<h3>飞书文档版</h3>
+<ul>
+<li><strong>优势:</strong>适合协作、评论、权限管理、团队知识库沉淀, 图文和白板可以被继续编辑。</li>
+<li><strong>优势:</strong>与现有 paper-learning-workflow 的 sentinel/read-back/公式/图片验证闭环一致, 审计链更强。</li>
+<li><strong>劣势:</strong>排版自由度受限, 长文档目录、图表就近阅读和跨章节扫读体验不如网页。</li>
+<li><strong>劣势:</strong>媒体和公式依赖飞书解析器, 会遇到白板导入、100x100 图片、公式 parser 等平台特定问题。</li>
+</ul>
+</article>
+<article>
+<h3>HTML 静态报告版</h3>
+<ul>
+<li><strong>优势:</strong>可做固定侧边目录、摘要卡片、响应式表格、内嵌图片、网页级样式, 阅读体验更可控。</li>
+<li><strong>优势:</strong>适合离线归档、发给不在飞书空间内的人、做展示页或后续转 PDF/站点。</li>
+<li><strong>劣势:</strong>缺少飞书原生评论、权限、版本协作和白板编辑能力。</li>
+<li><strong>劣势:</strong>这是从已验证飞书内容派生出的展示层; 若源文档更新, 需要重新生成 HTML 才能同步。</li>
+</ul>
+</article>
+</div>
+<div class="decision-table">
+<table>
+<thead><tr><th>使用场景</th><th>推荐格式</th><th>原因</th></tr></thead>
+<tbody>
+<tr><td>团队内持续协作、批注、沉淀</td><td>飞书</td><td>权限、评论、历史版本和知识库组织更好。</td></tr>
+<tr><td>个人深读、路演展示、对外分享</td><td>HTML</td><td>排版可控、加载快、目录和图表阅读体验更好。</td></tr>
+<tr><td>需要最强审计闭环</td><td>飞书 + 本地 HTML</td><td>飞书保留验证链, HTML 提供可读展示层。</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<article>
+<h2 id="codex-adapter-and-execution-audit">Codex adapter and execution audit</h2>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>Check</th>
+<th>Result</th>
+<th>Evidence</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Feishu v9.6 manual read-back</td>
+<td>Done</td>
+<td>Manual title read back from Feishu; total length about 94k chars</td>
+</tr>
+<tr>
+<td>Codex skill path</td>
+<td>Done</td>
+<td><code>C:/Users/tianxl/.codex/skills/paper-learning-workflow/</code></td>
+</tr>
+<tr>
+<td>Codex adapter</td>
+<td>Done</td>
+<td><code>references/codex_adapter.md</code> maps paths, tool names, reviewer fallback, and Windows command forms</td>
+</tr>
+<tr>
+<td>Skill validator</td>
+<td>Passed</td>
+<td><code>quick_validate.py</code> returned <code>Skill is valid!</code></td>
+</tr>
+<tr>
+<td>Formula smoke</td>
+<td>Passed</td>
+<td>Feishu <code>docx create</code> followed by <code>verify_formulas_post_write.py</code> returned 0 issue(s)</td>
+</tr>
+<tr>
+<td>Whiteboard smoke</td>
+<td>Passed</td>
+<td>Whiteboard token was extracted from <code>docx blocks</code>; <code>board import</code> then <code>board nodes</code> returned more than 5 nodes</td>
+</tr>
+<tr>
+<td>Reviewer mode</td>
+<td>Codex main-thread fallback</td>
+<td>Claude <code>Agent(...)</code> is unavailable in this runtime, so the adapter's reviewer fallback is recorded in <code>progress.md</code></td>
+</tr>
+</tbody></table></div>
+<aside class="callout success"><div class="callout-label">OK</div><div>
+<p>This section records the Codex compatibility audit for the paper-learning-workflow run. The DriveVLA-W0 analysis below follows the v9.6 phase structure while using Codex-safe paths and Feishu verification commands.</p>
+</div></aside>
+<blockquote><strong>论文</strong>:DriveVLA-W0: World Models Amplify Data Scaling Law in Autonomous Driving<br/><strong>作者</strong>:Yingyan Li*, Shuyao Shang*, Weisong Liu*, Bing Zhan*, Haochen Wang*, Yuqi Wang, Yuntao Chen, Xiaoman Wang, Yasong An, Chufeng Tang, Lu Hou, Lue Fan✉, Zhaoxiang Zhang✉<br/><strong>单位</strong>:NLPR · CASIA(中科院自动化所) + 引望智能<br/><strong>arXiv</strong>:<a 2510.12796""="" abs="" arxiv.org="" href="&lt;a href=" https:="" rel="noopener noreferrer" target="_blank">https://arxiv.org/abs/2510.12796"</a> target="_blank" rel="noopener noreferrer"&gt;2510.12796(v1 2025-10-14 / v2 2025-12-18 / ICLR 2026 submission)<br/><strong>代码</strong>:<a bravegroup="" drivevla-w0""="" github.com="" href="&lt;a href=" https:="" rel="noopener noreferrer" target="_blank">https://github.com/BraveGroup/DriveVLA-W0"</a> target="_blank" rel="noopener noreferrer"&gt;BraveGroup/DriveVLA-W0(349 stars / 23 forks, 最新 commit 2026-02-11)<br/><strong>权重</strong>:<a drivevla-w0""="" href="&lt;a href=" https:="" huggingface.co="" liyingyan="" rel="noopener noreferrer" target="_blank">https://huggingface.co/liyingyan/DriveVLA-W0"</a> target="_blank" rel="noopener noreferrer"&gt;HuggingFace<br/><strong>v3 相对 v2 pipeline 的增量</strong>:飞书跨 12 篇关联论文交叉对比、Paper vs Code 25 条对照(10 条未披露)、Issue/PR 深度挖掘(GT action leak 嫌疑)、复现 Cheatsheet 40+ 超参、adaLN/CFG/Beta(1.5,1.0) 论文未写但代码必须项、关键模块细节展开、历史 Surprises 逐条自检</blockquote>
+<aside class="callout info"><div class="callout-label">Note</div><div>
+<p><strong>TL;DR</strong>:作者把 Vision-Language-Action(VLA)模型在自动驾驶场景中被稀疏动作标签"饿死"的问题命名为 <strong>supervision deficit</strong>(监督缺失),提出用<strong>世界建模(未来/当前图像预测)</strong>作为密集自监督信号的 DriveVLA-W0 框架。<strong>关键发现</strong>:(1) 7000 万帧级别数据下,加 world model 的 VQ 模型 ADE 相对 action-only baseline 提升 <strong>28.8%</strong>、碰撞率降 <strong>19.7%</strong>,而 baseline 出现明显饱和;(2) NuPlan→NAVSIM 跨域迁移中,action-only baseline 从 80.7 掉到 62.2(-9.5%),而 VLA-W0-VQ 从 80.7 升到 85.6(+6.1%),<strong>负迁移翻转为正迁移</strong>;(3) 推理时丢弃 WM + 引入 500M MoE Action Expert → 延迟降到 baseline 的 <strong>63.1%</strong>(117.8ms→74.3ms),PDMS 反而从 85.6 升到 88.4;(4) 揭示 action decoder scaling 反转 —— 小数据 query-based 最优,<strong>70M 帧规模下 AR 反超 flow matching</strong>。NAVSIM v1 单前视摄像头刷到 <strong>93.0 PDMS</strong>(Best-of-N)。</p>
+</div></aside>
+<h2 id="前置概念速查表15-条覆盖代码层关键名词">前置概念速查表(≥15 条,覆盖代码层关键名词)</h2>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>术语</th>
+<th>全称与含义</th>
+<th>在本文的作用</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>VLA</strong></td>
+<td>Vision-Language-Action 模型</td>
+<td>主干范式,把视觉 / 语言 / 动作统一到一个 autoregressive transformer</td>
+</tr>
+<tr>
+<td><strong>VLM</strong></td>
+<td>Vision-Language Model(Emu3 8B / Qwen2.5-VL 7B)</td>
+<td>VLA 的起点,两种代表 backbone</td>
+</tr>
+<tr>
+<td><strong>Supervision Deficit</strong></td>
+<td>监督缺失:7B 参数模型仅由稀疏动作 token 监督,维度 × 信息量严重不匹配</td>
+<td><strong>本文命名的核心瓶颈</strong></td>
+</tr>
+<tr>
+<td><strong>AR World Model</strong></td>
+<td>Autoregressive World Model,对当前帧 <code>V_t</code> 的 discrete visual token 做 next-token prediction</td>
+<td>VQ 路径(DriveVLA-W0 VQ)的 WM 形式</td>
+</tr>
+<tr>
+<td><strong>Diffusion World Model</strong></td>
+<td>Latent diffusion / flow matching,对未来帧 <code>I_{t+1}</code> 的 VAE latent 去噪(代码里实际是 flow matching)</td>
+<td>ViT 路径(DriveVLA-W0 ViT)的 WM 形式</td>
+</tr>
+<tr>
+<td><strong>FAST Tokenizer</strong></td>
+<td>Pertsch et al. 2025,把连续 waypoint 轨迹 DCT + BPE 压成变长 discrete token</td>
+<td>让 VLM 能 autoregressive 地"说"出动作</td>
+</tr>
+<tr>
+<td><strong>MoVQGAN</strong></td>
+<td>Multi-scale VQ-GAN(码本 32768),Emu3 原装的视觉 tokenizer + 解码器</td>
+<td>AR WM 可视化时把 visual tokens 渲染回图像</td>
+</tr>
+<tr>
+<td><strong>MoE Action Expert</strong></td>
+<td>500M 参数的轻量 expert,代码实为 <strong>仅 2 层 transformer</strong>,与 8B VLA expert 并行</td>
+<td>Stage 2 推理时只跑 expert,省 37% 延迟</td>
+</tr>
+<tr>
+<td><strong>Joint Attention</strong></td>
+<td><code>Q=[Q_VLA;Q_AE], K=[K_VLA;K_AE], V=[V_VLA;V_AE]</code> 后做统一 attention 再拆回</td>
+<td>比 cross-attention 对称,避免显式路由网络</td>
+</tr>
+<tr>
+<td><strong>6VA / 2VA</strong></td>
+<td><code>{vision, action}</code> pair 的历史步数符号:6VA=6 步历史,2VA=2 步历史</td>
+<td>Stage 1 预训练用 6VA,Stage 2 微调用 2VA</td>
+</tr>
+<tr>
+<td><strong>PDMS / EPDMS</strong></td>
+<td>NAVSIM v1 / v2 的 Predictive Driver Model Score</td>
+<td>核心评估指标</td>
+</tr>
+<tr>
+<td><strong>Best-of-N(BoN)</strong></td>
+<td>采样 N 条轨迹用规则 metric 再选 best</td>
+<td>VLA 输出多样性天然支持,NAVSIM v1 BoN 升到 93.0</td>
+</tr>
+<tr>
+<td><strong>adaLN-Zero</strong>(代码层)</td>
+<td>DiT 风格 <code>adaLN_modulation = [shift, scale, gate] × 2</code>(论文未写)</td>
+<td>MoE expert 内 TransformerBlock 用 timestep+label 条件调制</td>
+</tr>
+<tr>
+<td><strong>CFG</strong>(代码层)</td>
+<td>Classifier-Free Guidance,<code>forward_with_cfg</code> 函数(论文未写)</td>
+<td>Diffusion/Flow WM 可视化用,class_dropout_prob=0.1</td>
+</tr>
+<tr>
+<td><strong>Beta(1.5, 1.0)</strong>(代码层)</td>
+<td>Flow Matching 时间步采样分布,偏 τ→0 清洁侧(论文未写)</td>
+<td>π0/RFM 最佳实践继承</td>
+</tr>
+<tr>
+<td><strong>null_prompt_prob=0.15</strong>(代码层)</td>
+<td>训练时 15% 文本 prompt dropout(论文未写)</td>
+<td>CFG 式文本条件 dropout</td>
+</tr>
+<tr>
+<td><strong>Anchor Q-Former</strong></td>
+<td>Query-based anchor 变体:<strong>256 queries + 8192 K-means 轨迹 anchor</strong>(论文未写)</td>
+<td>仅 anchor 版本权重可用,PDMS 90.2 来自此</td>
+</tr>
+<tr>
+<td><strong>pre_action</strong></td>
+<td>3 步历史 ego waypoint,始终可见无 dropout(论文几乎未提)</td>
+<td>强 kinematic prior,复现时若未按此注入会掉分</td>
+</tr>
+</tbody></table></div>
+<h2 id="1-核心研究问题-监督缺失究竟是什么">§ 1. 核心研究问题 — "监督缺失"究竟是什么</h2>
+<h3 id="11-研究背景与动机作者明写的三个矛盾">1.1 研究背景与动机(作者明写的三个矛盾)</h3>
+<p>作者在 §1 L4-L12 列出的行业现状 + 矛盾:</p>
+<ol>
+<li><strong>Scaling Law 假设 vs 驾驶领域现实</strong>(§1 L4):Kaplan 2020 / Zhai 2022 / Dehghani 2023 等工作在 NLP / ViT 领域实证了 power-law 数据 / 参数 scaling,驾驶领域自然希望复刻这个路径,但目前两大范式各有卡点。</li>
+<li><strong>BEV 专用模型的先天劣势</strong>(§1 L5-L7):UniAD / VAD / BEVFormer 基于严格的 BEV 几何先验,<strong>难以利用非驾驶数据</strong>,架构紧凑限制了 large-scale scaling。</li>
+<li><strong>VLA 的"形似实空"</strong>(§1 L8-L12):VLA 模型(ORION / ReCogDrive / AutoVLA)靠继承 VLM 的互联网级预训练参数,但 fine-tune 时<strong>只用 expert action</strong>(即几个 waypoint 的坐标)做监督 —— 对 7B 参数的模型来说,这是把"高维感官输入 → 几个低维控制信号"的映射,<strong>绝大多数内部表征容量根本没被激活</strong>。</li>
+</ol>
+<p>作者原文关键判断(§1 L10-L12)翻译:<strong>这不是数据量问题,是监督信号的维度 × 密度问题</strong>。作者进一步观察到:<strong>在没有足够监督的情况下,大 VLA 模型甚至会跑输小的 BEV 专用模型</strong>(§1 L12,后面 Table 5 VLA-VQ 7B 在 NuPlan→NAVSIM 确实只有 62.2 PDMS,而 TransFuser-50M 在 scratch 就有 79.2 PDMS)。</p>
+<h3 id="12-核心主张逐条梳理每条有-位置">1.2 核心主张逐条梳理(每条有 § 位置)</h3>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>#</th>
+<th>核心主张</th>
+<th>论文位置</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td>VLA 存在 supervision deficit 瓶颈,通过 world modeling 提供 dense 自监督可破解</td>
+<td>§1 L14-L16 / §3.2 L38-L40</td>
+</tr>
+<tr>
+<td>C2</td>
+<td>对 VQ 类 VLA(Emu3)用 AR WM(next-token prediction on current frame <code>V_t</code>);对 ViT 类 VLA(Qwen2.5-VL)用 Diffusion WM(predict future frame <code>I_{t+1}</code>)</td>
+<td>§3.2 L41-L68</td>
+</tr>
+<tr>
+<td>C3</td>
+<td>World modeling 提升跨域迁移:baseline 负迁移(TransFuser-7B −8.1%、VLA-VQ −9.5%)→ VLA-W0 正迁移(VQ +6.1%、ViT +1.7%)</td>
+<td>§5.2 Table 5</td>
+</tr>
+</tbody></table></div>
+<p><strong>Figure 9: NuPlan to NAVSIM transfer flip</strong></p>
+<figure class="paper-figure-card" id="paper-fig-4">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 04: World modeling unlocks generalization with data scaling.</figcaption>
+<img alt="Paper Figure 04: World modeling unlocks generalization with data scaling." src="assets/paper_fig04_figure_04.png"/>
+<div class="paper-figure-meta">
+<span>fig:navsim_nuplan</span>
+<span>World Models Amplify Data Scaling Law</span>
+<span>iclr2026_figures/navsim_nuplan.pdf</span>
+</div>
+<p>Figure 9: NuPlan to NAVSIM transfer flip</p>
+</figure>
+<p>Action-only baselines lose cross-domain performance while DriveVLA-W0 gains from world modeling.</p>
+<div class="table-wrap"><table>
+<tbody>
+<tr>
+<td>C4</td>
+<td>World modeling 放大 data scaling law:70k→70M 下 VLA-W0 持续改进,baseline 饱和;70M 时 VQ ADE +28.8%、ViT 碰撞率 +15.9%</td>
+<td>§5.2 Table 3</td>
+</tr>
+<tr>
+<td>C5</td>
+<td>轻量 500M MoE Action Expert 把延迟降到 63.1%,同时反而涨点 88.4 PDMS</td>
+<td>§3.3 + §5.3 Latency</td>
+</tr>
+<tr>
+<td>C6</td>
+<td>Action decoder 存在 scaling 反转:小数据 query-based 领先,大数据 AR 反超 flow matching</td>
+<td>§5.3 Table 4 + §5.3 L87-L89</td>
+</tr>
+</tbody></table></div>
+<h3 id="13-创新性与贡献边界严格拆">1.3 创新性与贡献边界(严格拆)</h3>
+<p>作者声称的 3 个核心贡献(§1 L26-L32):</p>
+<ul>
+<li><strong>贡献 1(概念)</strong>:首次把 VLA 的训练瓶颈命名为 "supervision deficit",并给出<strong>数据扩展实验</strong>证明纯 action 监督在 70M 帧规模<strong>必然饱和</strong>(实证贡献,不是理论定理)</li>
+<li><strong>贡献 2(方法)</strong>:在两种 VLA 范式(VQ / ViT)下<strong>同时</strong>实例化 WM,而非只做其中一种;且明确区分 current-frame prediction(VQ)和 future-frame prediction(ViT)这一<strong>几乎没人关注的设计差异</strong></li>
+<li><strong>贡献 3(工程)</strong>:MoE Action Expert + 揭示 decoder scaling 反转 —— 这条对工业部署格外重要,因为"大规模数据下简单 AR decoder 反而更强"和当下社区的"flow matching/diffusion 决策头是未来"的舆论相反</li>
+</ul>
+<aside class="callout warning"><div class="callout-label">Warn</div><div>
+<p><strong>批判</strong>:贡献 1 的 supervision deficit 概念<strong>并非全新</strong>。LAW(Li 2024a ICLR 2025)已提出 latent world model 解决"感知弱监督";UniVLA / WorldVLA 把 action 纳入 AR 预测是同一思路。真正新颖的是<strong>把 WM 定位成"训练时辅助目标、推理时丢弃"的正则化器</strong>(§3.2 L51-L52 / L67-L68 明确),以及<strong>大规模数据下的系统实证</strong>。</p>
+</div></aside>
+<p><strong>Figure 5: Inference flow with cached VLA features</strong></p>
+<figure class="paper-figure-card" id="paper-fig-6">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 06: Latency analysis.</figcaption>
+<img alt="Paper Figure 06: Latency analysis." src="assets/paper_fig06_figure_06.png"/>
+<div class="paper-figure-meta">
+<span>fig:latency</span>
+<span>Latency Analysis</span>
+<span>iclr2026_figures/latency_compare_baselines.pdf</span>
+</div>
+<p>Figure 5: Inference flow with cached VLA features</p>
+</figure>
+<p>During inference, VLA features are cached once, the world model is skipped, and the action expert decodes waypoints.</p>
+<figure class="diagram-card" id="fig-5">
+<figcaption>Figure 5: Inference flow</figcaption>
+<pre class="mermaid">flowchart TB
+  A[Front camera and history] --&gt; B[Tokenize]
+  B --&gt; C[VLA forward once]
+  C --&gt; D[Cache visual and action features]
+  D --&gt; E[Skip world model]
+  D --&gt; F[Action expert decode]
+  F --&gt; G[FAST detokenize if AR]
+  G --&gt; H[Six future waypoints]
+  E -. no inference cost .-&gt; H
+</pre>
+<details>
+<summary>Mermaid source</summary>
+<pre><code>flowchart TB
+  A[Front camera and history] --&gt; B[Tokenize]
+  B --&gt; C[VLA forward once]
+  C --&gt; D[Cache visual and action features]
+  D --&gt; E[Skip world model]
+  D --&gt; F[Action expert decode]
+  F --&gt; G[FAST detokenize if AR]
+  G --&gt; H[Six future waypoints]
+  E -. no inference cost .-&gt; H
+</code></pre>
+</details>
+</figure>
+<h2 id="2-核心方法架构-关键模块细节展开v3-重点">§ 2. 核心方法架构 — 关键模块细节展开(v3 重点)</h2>
+<h3 id="21-整体架构总览">2.1 整体架构总览</h3>
+<p><strong>Figure 1: DriveVLA-W0 overall architecture</strong></p>
+<figure class="paper-figure-card" id="paper-fig-2">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 02: The architecture of DriveVLA-W0</figcaption>
+<img alt="Paper Figure 02: The architecture of DriveVLA-W0" src="assets/paper_fig02_figure_02.png"/>
+<div class="paper-figure-meta">
+<span>fig:pipeline</span>
+<span>Methodology</span>
+<span>iclr2026_figures/pipeline.pdf</span>
+</div>
+<p>Figure 1: DriveVLA-W0 overall architecture</p>
+</figure>
+<section class="principle-panel" id="principle-supervision-deficit">
+<div class="principle-header">
+<span>Principle visual</span>
+<h3>监督缺失:为什么动作标签“喂不饱”7B VLA</h3>
+</div>
+<div class="principle-flow three">
+<div><b>高维输入</b><p>前视图像、语言指令、历史动作形成长序列。</p></div>
+<div><b>低维监督</b><p>训练目标主要是几个 waypoint/action token,梯度密度低。</p></div>
+<div><b>容量闲置</b><p>大 VLA 的视觉和动态表征能力没有被充分激活。</p></div>
+</div>
+</section>
+<figure class="concept-image-card" id="generated-supervision-deficit">
+<div class="figure-kicker">Generated explanatory visual</div>
+<figcaption>Generated concept visual: supervision deficit and dense world-model supervision</figcaption>
+<img alt="Generated concept visual: supervision deficit and dense world-model supervision" src="assets/drivevla_w0_native_20260828/drivevla_w0_fig01_supervision_deficit.png"/>
+<p>这张图是为 HTML 报告生成的原理说明图,用于辅助解释监督缺失和密集世界建模监督的关系;它不是论文原图,也不承载论文实验数据。</p>
+</figure>
+<p>Main chain from tokenization and VLA backbone to training-only world model and inference-time action expert.</p>
+<figure class="diagram-card" id="fig-1">
+<figcaption>Figure 1: DriveVLA-W0 overall architecture</figcaption>
+<pre class="mermaid">flowchart LR
+  A[Language image history action] --&gt; B[Tokenizers]
+  B --&gt; C[VLA backbone]
+  C --&gt; D[Visual and action features]
+  D --&gt; E[Training only world model]
+  D --&gt; F[MoE action expert]
+  F --&gt; G[Future waypoints]
+  E -. skipped at inference .-&gt; G
+  B --&gt; H[FAST action tokens]
+  H --&gt; F
+</pre>
+<details>
+<summary>Mermaid source</summary>
+<pre><code>flowchart LR
+  A[Language image history action] --&gt; B[Tokenizers]
+  B --&gt; C[VLA backbone]
+  C --&gt; D[Visual and action features]
+  D --&gt; E[Training only world model]
+  D --&gt; F[MoE action expert]
+  F --&gt; G[Future waypoints]
+  E -. skipped at inference .-&gt; G
+  B --&gt; H[FAST action tokens]
+  H --&gt; F
+</code></pre>
+</details>
+</figure>
+<p>图 1 展示 DriveVLA-W0 的完整 pipeline:输入 tokenization → VLA backbone(32 层 causal transformer) → World Model(训练时,推理时完全丢弃) → MoE Action Expert(500M,Stage 2 引入) → 未来轨迹输出。</p>
+<h3 id="22-vla-baseline31-两条-backbone-路径">2.2 VLA Baseline(§3.1)— 两条 backbone 路径</h3>
+<aside class="callout info"><div class="callout-label">Note</div><div>
+<p>DriveVLA-W0 把 VLA 的视觉表示分成两类:<strong>discrete tokens(VQ)</strong>和 <strong>continuous features(ViT)</strong>。这不是随手做的二选一对比,而是<strong>刻意</strong>铺开两条路径,以证明"world modeling 作为正则化器"的思路在两种主流 VLA 范式下都有效。</p>
+</div></aside>
+<h4 id="221-输入-tokenization31-l18-l19">2.2.1 输入 tokenization(§3.1 L18-L19)</h4>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>模态</th>
+<th>Tokenizer</th>
+<th>产出</th>
+<th>关键细节</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>语言指令 <code>L_t</code></td>
+<td>VLM 原生 tokenizer(BPE)</td>
+<td>离散 token ID</td>
+<td>导航粗粒度(Turn Left / Straight / Right 3 类)</td>
+</tr>
+<tr>
+<td>前视图像 <code>V_t</code> (VQ 路径)</td>
+<td>Emu3 内置 MoVQGAN 量化器</td>
+<td>离散 visual token(码本 32768)</td>
+<td>图像 256×144 → 约 256 token / 帧</td>
+</tr>
+<tr>
+<td>前视图像 <code>V_t</code> (ViT 路径)</td>
+<td>Qwen2.5-VL 的 SigLIP ViT</td>
+<td>连续特征向量</td>
+<td>保留梯度可导,便于 diffusion WM</td>
+</tr>
+<tr>
+<td>历史动作 <code>A_{t-1}</code></td>
+<td><strong>FAST tokenizer</strong>(Pertsch 2025)</td>
+<td>变长 discrete action token</td>
+<td>NAVSIM 平均 5.6 token / 轨迹;内部数据集 17.8 token / 轨迹</td>
+</tr>
+</tbody></table></div>
+<p><strong>FAST tokenizer 代码级细节</strong>(Phase 3 补充):</p>
+<p><strong>Figure 6: FAST tokenizer action codec</strong> Continuous waypoints become action tokens through DCT, quantization, character mapping, and BPE.</p>
+<figure class="diagram-card" id="fig-6">
+<figcaption>Figure 6: FAST tokenizer</figcaption>
+<pre class="mermaid">flowchart LR
+  A[Continuous waypoints] --&gt; B[DCT transform]
+  B --&gt; C[Scale and round]
+  C --&gt; D[Integer to character map]
+  D --&gt; E[BPE encoder]
+  E --&gt; F[Action tokens]
+  F --&gt; G[BPE decoder]
+  G --&gt; H[Inverse DCT]
+  H --&gt; I[Recovered waypoints]
+</pre>
+<details>
+<summary>Mermaid source</summary>
+<pre><code>flowchart LR
+  A[Continuous waypoints] --&gt; B[DCT transform]
+  B --&gt; C[Scale and round]
+  C --&gt; D[Integer to character map]
+  D --&gt; E[BPE encoder]
+  E --&gt; F[Action tokens]
+  F --&gt; G[BPE decoder]
+  G --&gt; H[Inverse DCT]
+  H --&gt; I[Recovered waypoints]
+</code></pre>
+</details>
+</figure>
+<ul>
+<li>流程见图 6</li>
+<li>关键参数(<code>configs/fast/processor_config.json</code>):<code>scale=10, vocab_size=2048, min_token=-354</code></li>
+<li>DCT <code>dct(action_chunk, axis=1, norm="ortho")</code> + <code>np.around(dct_coeff * scale)</code> 量化 + 字符映射 + BPE 编码</li>
+<li><strong>论文未披露</strong> <code>scale=10</code> / <code>vocab_size=2048</code> / <code>min_token=-354</code> 这 3 个 load-bearing 值,Issue #1 有 47 条评论讨论 tokenizer 调试</li>
+</ul>
+<h4 id="222-vlm-backbone-深度交错序列">2.2.2 VLM Backbone — 深度交错序列</h4>
+<p>每时刻 <code>t</code> 构建长度约 <code>H=6</code> 步的 interleaved 多模态序列:</p>
+<div class="math-display">\[S_t = [L_{t-H}, V_{t-H}, A_{t-H-1}, \dots, L_t, V_t, A_{t-1}]\]</div>
+<p>该序列由 VLM 以<strong>因果注意力</strong>自回归处理,输出最终层 hidden state,然后<strong>按 token 位置</strong>拆分为 <code>F_L</code> / <code>F_V</code> / <code>F_A</code> 三段。</p>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>参数</th>
+<th>VQ(Emu3)</th>
+<th>ViT(Qwen2.5-VL)</th>
+<th>代码位置</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>骨干参数量</td>
+<td>~8B</td>
+<td>~7B</td>
+<td>—</td>
+</tr>
+<tr>
+<td>hidden_size</td>
+<td>4096</td>
+<td>4096</td>
+<td><code>configs/moe_fast_video.json:13</code></td>
+</tr>
+<tr>
+<td>num_layers</td>
+<td>32</td>
+<td>32</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>num_heads(Q/KV,GQA)</td>
+<td>32 / 8</td>
+<td>32 / 8</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>intermediate_size</td>
+<td>14336</td>
+<td>14336</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>vocab_size</td>
+<td>184622</td>
+<td>—</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>rope_theta</td>
+<td><strong>1e6</strong></td>
+<td><strong>1e6</strong></td>
+<td>同上</td>
+</tr>
+<tr>
+<td>历史长度 <code>H</code></td>
+<td>6 预训练 / 2 微调</td>
+<td>6 预训练 / 2 微调</td>
+<td>训练脚本</td>
+</tr>
+</tbody></table></div>
+<h4 id="223-action-prediction-标准-ce31-l30-l34">2.2.3 Action Prediction — 标准 CE(§3.1 L30-L34)</h4>
+<p>训练时优化真值 action token 序列 <code>A_t = (a_1, ..., a_M)</code> 的 next-token CE:</p>
+<div class="math-display">\[L_\mathrm{Action} = -\sum_{i=1}^{L} \log P(a_i \mid S_t, a_{&lt;i})\]</div>
+<p>推理时自回归 sample,再经 FAST detokenizer 反解成连续 waypoint。<strong>代码里 <code>action_loss_weight</code> 默认值是 10.0,但所有 Stage 2 脚本 CLI override 为 1.0,Stage 1 pretrain 无 override 所以实际是 10.0</strong>(<code>train_navsim_ar.sh:69</code> vs <code>utils/train_ar.py:103</code>),此 α 调度论文未披露。</p>
+<h3 id="23-world-modeling32-双路径密集监督-关键模块细节">2.3 World Modeling(§3.2)— 双路径密集监督 [关键模块细节]</h3>
+<figure class="paper-figure-card" id="paper-fig-5">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 05: Action-Conditioned Simulation.</figcaption>
+<img alt="Paper Figure 05: Action-Conditioned Simulation." src="assets/paper_fig05_figure_05.png"/>
+<div class="paper-figure-meta">
+<span>fig:simulation_stop</span>
+<span>Visualization</span>
+<span>iclr2026_figures/vis_simulation_stop_2.pdf</span>
+</div>
+<p>Original action-conditioned simulation figure, placed with the world-model mechanism discussion</p>
+</figure>
+<aside class="callout info"><div class="callout-label">Next</div><div>
+<p><strong>为什么 VQ 预测当前帧、ViT 预测未来帧?这是本文最被忽略但最关键的设计抉择。</strong></p>
+</div></aside>
+<p><strong>Figure 2: VQ and ViT dual world modeling</strong></p>
+<figure class="paper-figure-card" id="paper-fig-13">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 13: Future image generation.</figcaption>
+<img alt="Paper Figure 13: Future image generation." src="assets/paper_fig13_figure_13.png"/>
+<div class="paper-figure-meta">
+<span>fig:pred_img</span>
+<span>Future Image Generation</span>
+<span>iclr2026_figures/pred_img_1.pdf</span>
+</div>
+<p>Figure 2: VQ and ViT dual world modeling</p>
+</figure>
+<figure class="paper-figure-card" id="paper-fig-14">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 14: Future image generation.</figcaption>
+<img alt="Paper Figure 14: Future image generation." src="assets/paper_fig14_figure_14.png"/>
+<div class="paper-figure-meta">
+<span>fig:pred_img</span>
+<span>Future Image Generation</span>
+<span>iclr2026_figures/pred_img_2.pdf</span>
+</div>
+<p>Figure 2: VQ and ViT dual world modeling</p>
+</figure>
+<section class="principle-panel" id="principle-dual-world-model">
+<div class="principle-header">
+<span>Process visual</span>
+<h3>双世界模型路径:VQ 走 AR,ViT 走 Flow/Diffusion</h3>
+</div>
+<div class="dual-lanes">
+<div class="lane">
+<h4>VQ / Emu3</h4>
+<ol>
+<li>图像被 MoVQGAN 量化为 visual token</li>
+<li>VLM 复用 next-token prediction</li>
+<li>训练时预测当前帧 token</li>
+<li>推理时跳过视觉生成</li>
+</ol>
+</div>
+<div class="lane">
+<h4>ViT / Qwen2.5-VL</h4>
+<ol>
+<li>图像以连续特征进入 backbone</li>
+<li>没有天然 visual vocabulary</li>
+<li>用未来帧 latent 的 flow/diffusion loss</li>
+<li>推理时同样丢弃 world model</li>
+</ol>
+</div>
+</div>
+</section>
+<figure class="concept-image-card" id="generated-dual-world-model">
+<div class="figure-kicker">Generated explanatory visual</div>
+<figcaption>Generated mechanism visual: dual world-model training and simulation loop</figcaption>
+<img alt="Generated mechanism visual: dual world-model training and simulation loop" src="assets/drivevla_w0_native_20260828/drivevla_w0_fig02_dual_world_model.png"/>
+<p>这张图用流程插画解释双世界模型路径:一条从视频上下文产生密集未来场景监督,一条由候选动作条件化生成未来观测,最后服务于规划选择;它是解释性生成图,不是论文实验图。</p>
+</figure>
+<p>Contrasts AR current-frame token prediction with ViT future-frame flow matching.</p>
+<figure class="diagram-card" id="fig-2">
+<figcaption>Figure 2: VQ / ViT dual world modeling</figcaption>
+<pre class="mermaid">flowchart TB
+  A[VQ image tokens] --&gt; B[AR world model]
+  C[Context before current image] --&gt; B
+  B --&gt; D[Current frame token loss]
+  E[ViT visual features] --&gt; F[Flow world model]
+  G[Action features] --&gt; F
+  H[Future frame latent] --&gt; F
+  F --&gt; I[Future image flow loss]
+  D --&gt; J[Dense self supervision]
+  I --&gt; J
+</pre>
+<details>
+<summary>Mermaid source</summary>
+<pre><code>flowchart TB
+  A[VQ image tokens] --&gt; B[AR world model]
+  C[Context before current image] --&gt; B
+  B --&gt; D[Current frame token loss]
+  E[ViT visual features] --&gt; F[Flow world model]
+  G[Action features] --&gt; F
+  H[Future frame latent] --&gt; F
+  F --&gt; I[Future image flow loss]
+  D --&gt; J[Dense self supervision]
+  I --&gt; J
+</code></pre>
+</details>
+</figure>
+<h4 id="231-ar-world-modelvq-路径32-l41-l53">2.3.1 AR World Model(VQ 路径,§3.2 L41-L53)</h4>
+<p><strong>核心机制</strong>:让 VLM 以<strong>自回归方式</strong>生成<strong>当前</strong>图像 <code>V_t</code> 的所有 visual token <code>(v_1, ..., v_N)</code>,以前序上下文 <code>S_{&lt;V_t}</code> 为条件:</p>
+<div class="math-display">\[L^\mathrm{WA} = -\sum_{i=1}^{N} \log P(v_i \mid S_{&lt;V_t}, v_{&lt;i})\]</div>
+<p>(其中 <code>L_WA</code> = L_WM-AR;记号改成上标是为了飞书公式稳定渲染)</p>
+<p>联合优化:</p>
+<div class="math-display">\[L^\mathrm{tot} = L^\mathrm{act} + \alpha \cdot L^\mathrm{WA}\]</div>
+<p>(<code>L_tot</code> = L_Total,<code>L_act</code> = L_Action,<code>L_WA</code> = L_WM-AR)</p>
+<p><strong>推理时</strong>:完全跳过 visual token 的自回归 sample,直接跳到动作生成,<strong>零额外开销</strong>。只在可视化需要时才真的采样 visual token 并经 MoVQGAN decode 回图像 <code>Î_t</code>。</p>
+<p><strong>代码里的关键发现</strong>(Phase 3):</p>
+<ul>
+<li><code>--apply_loss_on_only_vision True</code> 在所有 Stage 1+2 脚本都传</li>
+<li>Stage 1 <code>vision_loss_weight = 1.0</code>(<code>configs/moe_fast_video_pretrain.json:34</code>)</li>
+<li>Stage 2 <code>vision_loss_weight = 0.5</code>(<code>configs/moe_fast_video.json:34</code>)</li>
+<li><strong>β 调度(1.0 → 0.5)论文未披露</strong></li>
+</ul>
+<p><strong>为什么是当前帧(<code>V_t</code>)而不是未来帧(<code>V_{t+1}</code>)?</strong></p>
+<p>答案藏在序列构造本身 —— <code>V_t</code> 在 <code>S_t</code> 里自然出现在 <code>A_{t-1}</code> 之后、<code>A_t</code> 之前,<strong>模型天然需要"先生成当前图像、再生成当前动作"</strong>(causal mask 下)。让它预测当前帧相当于<strong>复用</strong> VLM 的 next-token 结构,不需要改架构。若改为预测 <code>V_{t+1}</code>,则需要重新设计条件注入逻辑。此外,<strong>VQ 离散化引入了硬信息瓶颈</strong>(32768 个码本条目),使当前帧预测已经不平凡,模型无法"复制输入"作弊。</p>
+<h4 id="232-diffusion-world-modelvit-路径32-l54-l68">2.3.2 Diffusion World Model(ViT 路径,§3.2 L54-L68)</h4>
+<p>ViT backbone 没有离散 visual 词表,next-token prediction 不再自然。作者改用 latent diffusion(<strong>代码实为 flow matching,见下</strong>):</p>
+<ul>
+<li>用预训练 VAE 编码未来帧 <code>I_{t+1}</code> 得到 latent <code>z_{t+1}</code></li>
+<li>前向扩散把未来视觉 latent 加入高斯噪声；<code>k</code> 是随机 timestep</li>
+<li>去噪器以 VLA 输出 <code>F_V</code> 和 <code>F_A</code> 为条件,预测噪声残差:</li>
+</ul>
+<div class="math-display">\[L^\mathrm{WD} = \mathbb{E}[\mid \epsilon - \hat{\epsilon}(z, k, F_V, F_A)\mid ^2]\]</div>
+<p>(其中 <code>L_WD</code> = L_WM-Diff,<code>z</code> = 加噪后 latent <code>z_tk</code>;这里把 latent 下标拆出来避免一条 equation 多下标劈碎)</p>
+<p>联合优化:</p>
+<div class="math-display">\[L^\mathrm{tot} = L^\mathrm{act} + \beta \cdot L^\mathrm{WD}\]</div>
+<aside class="callout warning"><div class="callout-label">Warn</div><div>
+<p><strong>Paper vs Code 关键差异</strong>:论文 Eq.4 写的是 DDPM 风格 <code>|| ε − ε̂ ||²</code>,<strong>但代码 <code>models/policy_head/flow_matching.py:39-63</code> 实现的是 Flow Matching</strong>(Lipman 2023),target 是速度 <code>(z₁ − x)</code> 即 <code>v_θ(z_t, t, cond)</code> 的 MSE 对齐,<strong>不是 DDPM 的噪声预测</strong>。这是论文简化表述和代码实际实现的实质差异,<strong>复现时必须用 flow matching 版本</strong>。</p>
+</div></aside>
+<p><strong>为什么 ViT 必须预测未来帧(<code>I_{t+1}</code>)?</strong></p>
+<p>作者在 §3.2 L56-L57 说得很清楚:"since the model is conditioned on all present features simultaneously, predicting the future is necessary to learn predictive dynamics rather than simply performing a reconstruction task."</p>
+<p>翻译:如果预测的是当前帧,<code>F_V</code> 本身就是当前帧的编码,<strong>denoiser 可以通过简单 skip connection 复制条件达成重建</strong>,损失变 trivial。必须预测<strong>下一帧</strong>才会强迫模型学 <strong><code>F_A</code> 与场景演化的因果耦合</strong>。</p>
+<p><strong>推理时</strong>:和 AR WM 一样<strong>彻底跳过</strong> denoising,flow matching 只用于训练时提供梯度。</p>
+<h4 id="233-两个-wm-的关键对称-差异">2.3.3 两个 WM 的关键对称 / 差异</h4>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>维度</th>
+<th>AR World Model(VQ)</th>
+<th>Diffusion/Flow WM(ViT)</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>预测目标</td>
+<td>当前帧 <code>V_t</code> 的 visual token 序列</td>
+<td>未来帧 <code>I_{t+1}</code> 的 VAE latent</td>
+</tr>
+<tr>
+<td>条件来源</td>
+<td>序列 <code>S_{&lt;V_t}</code> 内的所有前序 token</td>
+<td>VLM 最终层特征 <code>F_V</code> + <code>F_A</code></td>
+</tr>
+<tr>
+<td>损失类型</td>
+<td>Cross-Entropy(离散)</td>
+<td><strong>代码实为 Flow Matching MSE</strong>(论文写 DDPM 风格是简化)</td>
+</tr>
+<tr>
+<td>为何这么选</td>
+<td>VQ 离散化自带信息瓶颈 + 序列顺序已经自然</td>
+<td>ViT 连续特征无瓶颈,必须预测未来才有非 trivial 学习</td>
+</tr>
+<tr>
+<td>超参</td>
+<td>平衡系数 <code>α</code>(代码默 10.0,Stage 2 override 1.0)</td>
+<td>平衡系数 <code>β</code>(Stage 1=1.0,Stage 2=0.5)</td>
+</tr>
+<tr>
+<td>推理时</td>
+<td>跳过 visual token 生成</td>
+<td>跳过 denoising</td>
+</tr>
+<tr>
+<td>可视化路径</td>
+<td>采样 visual token → MoVQGAN decode</td>
+<td>从噪声反扩散(10 步)→ VAE decode</td>
+</tr>
+</tbody></table></div>
+<h3 id="24-moe-action-expert33-轻-decoder-并行-三种-decoding-关键模块细节">2.4 MoE Action Expert(§3.3)— 轻 decoder 并行 + 三种 decoding [关键模块细节]</h3>
+<h4 id="241-moe-架构-joint-attention33-l75-l81">2.4.1 MoE 架构 + Joint Attention(§3.3 L75-L81)</h4>
+<p>作者借鉴 pi0 / pi0.5 思路:一个 <strong>8B 主 VLA Expert</strong> + 一个 <strong>500M 轻量 Action Expert</strong>(AE),<strong>两者并行</strong>处理 token,<strong>在每一层的 attention 中融合</strong>,而非 serial。融合机制是本文的命名:<strong>Joint Attention</strong>。</p>
+<p><strong>Joint Attention 机制</strong>(见图 3):</p>
+<p><strong>Figure 3: Joint Attention QKV concat and split</strong></p>
+<figure class="paper-figure-card" id="paper-fig-3">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 03: (a)</figcaption>
+<img alt="Paper Figure 03: (a)" src="assets/paper_fig03_figure_03.png"/>
+<div class="paper-figure-meta">
+<span>fig:action_experts</span>
+<span>Action Expert</span>
+<span>iclr2026_figures/action_expert.pdf</span>
+</div>
+<p>Figure 3: Joint Attention QKV concat and split</p>
+</figure>
+<section class="principle-panel" id="principle-joint-attention">
+<div class="principle-header">
+<span>Mechanism visual</span>
+<h3>Joint Attention:不是单向 Cross-Attention</h3>
+</div>
+<div class="attention-grid">
+<div>VLA Expert<br/><small>scene representation</small></div>
+<div class="merge">Q/K/V concat</div>
+<div>Action Expert<br/><small>fast waypoint decoder</small></div>
+</div>
+<p>拼接后的 key 集合上统一 softmax,使两个 expert 在同一次 attention 中双向交换信息,再把输出拆回各自分支。</p>
+</section>
+<figure class="concept-image-card" id="generated-joint-attention">
+<div class="figure-kicker">Generated explanatory visual</div>
+<figcaption>Generated mechanism visual: Joint Attention between VLA and Action Expert</figcaption>
+<img alt="Generated mechanism visual: Joint Attention between VLA and Action Expert" src="assets/generated_joint_attention_action_expert.png"/>
+<p>这张图用 token 与 attention mesh 表达 VLA Expert 和 Action Expert 的双向交互,帮助区分 Joint Attention 与单向 cross-attention;它是解释性生成图,不代表论文原图。</p>
+</figure>
+<p>Shows why joint attention differs from one-way cross attention.</p>
+<figure class="diagram-card" id="fig-3">
+<figcaption>Figure 3: Joint Attention</figcaption>
+<pre class="mermaid">flowchart LR
+  A[VLA expert] --&gt; B[Q VLA K VLA V VLA]
+  C[Action expert] --&gt; D[Q AE K AE V AE]
+  B --&gt; E[Concatenate Q K V]
+  D --&gt; E
+  E --&gt; F[Joint attention]
+  F --&gt; G[Output for VLA]
+  F --&gt; H[Output for AE]
+  G --&gt; A
+  H --&gt; C
+</pre>
+<details>
+<summary>Mermaid source</summary>
+<pre><code>flowchart LR
+  A[VLA expert] --&gt; B[Q VLA K VLA V VLA]
+  C[Action expert] --&gt; D[Q AE K AE V AE]
+  B --&gt; E[Concatenate Q K V]
+  D --&gt; E
+  E --&gt; F[Joint attention]
+  F --&gt; G[Output for VLA]
+  F --&gt; H[Output for AE]
+  G --&gt; A
+  H --&gt; C
+</code></pre>
+</details>
+</figure>
+<ul>
+<li>两个 expert 各自算自己的 Q / K / V</li>
+<li><strong>沿 token 序列维度拼接</strong>:</li>
+</ul>
+<p>Q, K, V are each concatenated from the VLA-expert branch and the action-expert branch along the token dimension.</p>
+<p>(其中上标 <code>V</code> 代表 VLA Expert,<code>A</code> 代表 Action Expert;拆成 3 个 inline equation 避免单式多下标)</p>
+<ul>
+<li>在拼接矩阵上做<strong>一次标准多头 attention</strong></li>
+<li>输出按原分界拆回两部分,分别路由回各自 expert</li>
+</ul>
+<p><strong>为什么叫 joint 而不是 cross?</strong> Cross-attention 是 Q 来自 expert A、K/V 来自 expert B(单向);Joint Attention 是<strong>对称双向</strong>的 —— 在同一次 attention 里,<code>Q_VLA</code> 能看到 <code>K_AE</code>,<code>Q_AE</code> 也能看到 <code>K_VLA</code>。公开源码已能直接核对这一点：<code>reference/Emu3/emu3/mllm/modeling_emu3.py:1785-1809</code> 分别计算两路 Q/K/V，并沿序列维拼接；<code>:1818-1825</code> 使用显式 <code>combined_attention_mask_4d</code> 做一次 scaled dot-product attention；<code>:1831-1848</code> 再按 VLM/action 序列长度拆分并分别经过输出投影、残差和 MLP。另一个容易忽略的边界是：VLM Q/K 应用 RoPE，而 Action Q/K 保持未旋转。</p>
+<p><strong>推理效率关键</strong>:VLA Expert 只算一次并 cache,真正的 action decoding loop 只在 AE 里迭代,所以才能从 117.8ms 降到 74.3ms。</p>
+<p><strong>AE 的代码级关键参数</strong>(Phase 3):</p>
+<ul>
+<li><code>action_config</code> sub-block <code>num_hidden_layers=2</code>(只有 2 层!) / <code>intermediate_size=2048</code>(VLA 是 14336,7× 小)/ <code>rope_theta=10000</code>(VLA 是 1e6)</li>
+<li><strong>论文完全没说 AE 只有 2 层</strong></li>
+</ul>
+<h4 id="242-三种-action-decoder33-l83-l102">2.4.2 三种 Action Decoder(§3.3 L83-L102)</h4>
+<p><strong>Figure 8: Action decoder scaling reversal</strong></p>
+<figure class="paper-figure-card" id="paper-fig-8">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 08: Comparison of flow matching and autoregressive action expert.</figcaption>
+<img alt="Paper Figure 08: Comparison of flow matching and autoregressive action expert." src="assets/paper_fig08_figure_08.png"/>
+<div class="paper-figure-meta">
+<span>fig:fl_unstable_1</span>
+<span>Planning Trajectory</span>
+<span>iclr2026_figures/fl_unstable_1.pdf</span>
+</div>
+<p>Figure 8: Action decoder scaling reversal</p>
+</figure>
+<figure class="paper-figure-card" id="paper-fig-9">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 09: Comparison of flow matching and autoregressive action expert.</figcaption>
+<img alt="Paper Figure 09: Comparison of flow matching and autoregressive action expert." src="assets/paper_fig09_figure_09.png"/>
+<div class="paper-figure-meta">
+<span>fig:fl_unstable_2</span>
+<span>Planning Trajectory</span>
+<span>iclr2026_figures/fl_unstable_2.pdf</span>
+</div>
+<p>Figure 8: Action decoder scaling reversal</p>
+</figure>
+<figure class="paper-figure-card" id="paper-fig-10">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 10: Comparison of flow matching and autoregressive action expert.</figcaption>
+<img alt="Paper Figure 10: Comparison of flow matching and autoregressive action expert." src="assets/paper_fig10_figure_10.png"/>
+<div class="paper-figure-meta">
+<span>fig:fl_unstable_3_static</span>
+<span>Planning Trajectory</span>
+<span>iclr2026_figures/fl_unstable_3_static.pdf</span>
+</div>
+<p>Figure 8: Action decoder scaling reversal</p>
+</figure>
+<p>Query-based is stable at small scale; AR overtakes flow matching at large scale.</p>
+<aside class="callout warning"><div class="callout-label">gift</div><div>
+<p><strong>论文 §3.3 L83 一句话把三种 decoder 的共通 prior 讲了</strong>:"A key commonality among these variants is the prefilling of the previous action's features (<code>A_{t-1}</code>), which provides a strong temporal prior for the current decision."</p>
+<p><strong>但代码里发现</strong>:实际上注入的是 <strong>3 步历史 ego waypoint</strong>(<code>pre_action_frames=3, cur_frame_idx=3</code>),<strong>始终可见无 dropout</strong> —— 这比"prefilling previous action"要强得多,是显式的 kinematic state channel,论文只用一句话带过。ReCogDrive 历史 LEARNINGS 警告过"75% kinematic state dropout 未披露却是关键" —— 此处再次印证。</p>
+</div></aside>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>Decoder</th>
+<th>表示</th>
+<th>损失</th>
+<th>输出路径</th>
+<th>延迟(H200)</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>Query-based</strong></td>
+<td>连续,固定 K 个 learnable action queries</td>
+<td>L1 on (x, y)</td>
+<td>Query → MLP → 连续 waypoints</td>
+<td><strong>74.3ms 恒定</strong></td>
+</tr>
+<tr>
+<td><strong>Autoregressive</strong></td>
+<td>离散,FAST token 逐个 sample</td>
+<td>Cross-Entropy</td>
+<td>token → FAST detokenizer → 连续</td>
+<td>95ms(NAVSIM,5.6 token) / ~170ms(内部,17.8 token)</td>
+</tr>
+<tr>
+<td><strong>Flow Matching</strong></td>
+<td>连续,向量场 <code>v_phi</code> ODE</td>
+<td>MSE on vector field</td>
+<td>噪声 → ODE solver 10 步 → 连续</td>
+<td>~145ms 恒定</td>
+</tr>
+</tbody></table></div>
+<p><strong>Query-based Anchor 变体</strong>(Phase 3 独家发现):</p>
+<ul>
+<li>论文说"可支持 best-of-N"但未透露 anchor 具体实现</li>
+<li>代码 <code>inference/vla/infer_navsim_query_based_with_anchor_PDMS_90.2.sh</code> 揭示:<code>VLA_ANCHOR_ENABLED=true</code> 时用 <strong>256 queries + 8192 K-means 聚类 anchor</strong>(<code>cluster_centers_8192.npy</code>)</li>
+<li><strong>非 anchor 版本用 8 queries</strong>,Issue #19 抱怨权重 mismatch,说明公开只有 anchor 版本</li>
+<li>Table 1 "<strong>90.2 anchor</strong>" 行的背后就是这套 —— 论文没给任何 anchor 数量细节</li>
+</ul>
+<p><strong>Flow Matching 专家的数学核心</strong>:学 conditional vector field <code>v_phi</code> 把简单噪声分布"流"到真实 action 分布。训练时定义从高斯噪声 <code>x0</code> 到真值 action <code>x1</code> 的直线路径,优化 MSE 让 <code>v_phi</code> 对齐 <code>x1 - x0</code>。<strong>代码里 tau 从 Beta(1.5, 1.0) 采样</strong>(<code>noise_schedulers.py:19</code>,偏清洁侧),inference 10 步 ODE solver。CFG 默认 scale=2.0(<code>flow_matching.py:66</code>),论文都没写。</p>
+<h3 id="25-两阶段训练范式52">2.5 两阶段训练范式(§5.2)</h3>
+<p><strong>Figure 4: Two-stage training</strong></p>
+<section class="principle-panel" id="principle-two-stage">
+<div class="principle-header">
+<span>Training process</span>
+<h3>两阶段训练:先把世界表征写进 backbone,再训练轻量 Action Expert</h3>
+</div>
+<div class="timeline-process">
+<div><b>Stage 1</b><span>6VA pretrain</span><p>Action loss + world-model dense loss</p></div>
+<div><b>Stage 2</b><span>2VA finetune</span><p>移除 WM loss,训练 MoE Action Expert</p></div>
+<div><b>Inference</b><span>WM skipped</span><p>缓存 VLA 特征,由轻 expert 解码轨迹</p></div>
+</div>
+</section>
+<p>Stage 1 uses world-model and action supervision; Stage 2 removes world-model loss and trains the action expert.</p>
+<figure class="diagram-card" id="fig-4">
+<figcaption>Figure 4: Two-stage training</figcaption>
+<pre class="mermaid">flowchart TB
+  A[Stage 1 NuPlan or in house] --&gt; B[6VA input]
+  B --&gt; C[VLA backbone]
+  C --&gt; D[Action loss plus world model loss]
+  D --&gt; E[World aware representation]
+  E --&gt; F[Stage 2 NAVSIM]
+  F --&gt; G[2VA input]
+  G --&gt; H[VLA plus action expert]
+  H --&gt; I[Action loss only]
+  I --&gt; J[Realtime trajectory output]
+</pre>
+<details>
+<summary>Mermaid source</summary>
+<pre><code>flowchart TB
+  A[Stage 1 NuPlan or in house] --&gt; B[6VA input]
+  B --&gt; C[VLA backbone]
+  C --&gt; D[Action loss plus world model loss]
+  D --&gt; E[World aware representation]
+  E --&gt; F[Stage 2 NAVSIM]
+  F --&gt; G[2VA input]
+  G --&gt; H[VLA plus action expert]
+  H --&gt; I[Action loss only]
+  I --&gt; J[Realtime trajectory output]
+</code></pre>
+</details>
+</figure>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>阶段</th>
+<th>输入序列</th>
+<th>组件</th>
+<th>损失</th>
+<th>目的</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>Stage 1 Pretrain</strong></td>
+<td><code>6VA</code>(6 步历史)</td>
+<td>VLA backbone 独立</td>
+<td><code>L_Action + L_WM</code>(α=10, β=1.0)</td>
+<td>学丰富 world 表征</td>
+</tr>
+<tr>
+<td><strong>Stage 2 Finetune</strong></td>
+<td><code>2VA</code>(2 步历史)</td>
+<td>VLA backbone + Action Expert</td>
+<td><strong>仅</strong> <code>L_Action</code>(来自 AE 部分,α=1.0;backbone 不 freeze)</td>
+<td>专注动作精度 + 实时效率</td>
+</tr>
+</tbody></table></div>
+<p><strong>关键坑</strong>:论文 §5.2 L33 <strong>明确说 Stage 2 VLA backbone NOT freeze</strong> —— 它继续通过 Joint Attention 的梯度与 AE 一起训练。但 <strong>WM loss 在 Stage 2 被移除</strong>。这意味着:</p>
+<ul>
+<li>Stage 1 的 WM 正则化痕迹<strong>必须在 Stage 1 end-of-training 时已固化到 backbone 里</strong></li>
+<li>如果 Stage 1 训练不充分,Stage 2 反而可能<strong>遗忘 WM 学到的表征</strong> —— Phase 2 黄浴博客提到过此 catastrophic forgetting 风险</li>
+<li><strong>Phase 3 佐证</strong>:Stage 1 用 8k steps(NAVSIM)/ 50k steps(in-house),lr=2e-4(<strong>比 Stage 2 高 4×</strong>),warmup 400 步(比 Stage 2 的 50 多 8×),训练结构和 Stage 2 完全不同</li>
+</ul>
+<h2 id="3-数学推导与论据">§ 3. 数学推导与论据</h2>
+<h3 id="31-核心公式独立推导v96-blocking">3.1 核心公式独立推导(v9.6 BLOCKING)</h3>
+<h4 id="推导-1ar-wm-loss-是-vla-在视觉-token-空间上的-mle">推导 1:AR WM loss 是 VLA 在视觉 token 空间上的 MLE</h4>
+<p><strong>前提</strong>:</p>
+<ul>
+<li><code>P_theta(v_i | S, previous v)</code> 是 VLM 在位置 <code>i</code> 输出的 softmax over 32768 码本</li>
+<li>真实 visual token <code>v_i^*</code> 来自 MoVQGAN 对真实图像 <code>I_t</code> 量化后的 token</li>
+</ul>
+<p><strong>推导</strong>:</p>
+<ol>
+<li>最大化 log-likelihood:</li>
+</ol>
+<div class="math-display">\[\theta^* = \arg\max_\theta \sum_{i=1}^{N} \log P_\theta(v_i^* \mid S_{&lt;V_t}, v_{&lt;i}^*)\]</div>
+<ol>
+<li>改写为最小化负 log-likelihood:</li>
+</ol>
+<div class="math-display">\[\theta^* = \arg\min_\theta \left[ -\sum_{i=1}^{N} \log P_\theta(v_i^* \mid S_{&lt;V_t}, v_{&lt;i}^*) \right]\]</div>
+<ol>
+<li>这就是论文 Eq.2 的 <code>L_WM-AR</code>,和 Action 侧的 CE 损失结构完全同构,只是 vocab 不同(visual 32768 vs action FAST 2048)</li>
+</ol>
+<p><strong>关键观察(论文未强调)</strong>:由于 <code>V_t</code> 在序列中紧跟 <code>A_{t-1}</code> 之前,<code>v_{&lt;i}^*</code> 是前 <code>i-1</code> 个 ground truth visual token <strong>(teacher forcing)</strong>,和 action autoregressive 训练完全对称。推理时<strong>跳过</strong>这部分,相当于把整段 <code>V_t</code> 视为"空位"直接进 action token 预测 —— <strong>这就是为什么 WM 零推理开销</strong>。</p>
+<h4 id="推导-2flow-matching-loss代码实际对比-ddpm-simple-loss论文写">推导 2:Flow Matching loss(代码实际)对比 DDPM simple loss(论文写)</h4>
+<p><strong>论文 Eq.4 的 DDPM 风格写法(前提是 DDPM)</strong>:</p>
+<ul>
+<li>DDPM 前向:<code>z_k = sqrt(ᾱ_k) · z_0 + sqrt(1 - ᾱ_k) · ε</code>,<code>eps ~ N(0,I)</code></li>
+<li>变分 ELBO 简化(Ho 2020):<code>L_simple = E[||ε − ε̂(z_k, k, c)||²]</code></li>
+<li>代入 <code>c = (F_V, F_A)</code>,<code>z_0 = z_{t+1}</code> 即得论文 Eq.4</li>
+</ul>
+<p><strong>代码实际 Flow Matching(Lipman 2023)</strong>:</p>
+<ul>
+<li>前向路径:<code>x_tau = (1 - tau) * x0 + tau * x1</code>,其中 <code>x0</code>,<code>x1 = z_next</code>(目标)</li>
+<li>target 是 velocity: <code>u(x_τ, τ) = x_1 − x_0</code></li>
+<li>loss: <code>L_FM = E[||u(x_τ, τ) − v_θ(x_τ, τ, c)||²]</code></li>
+</ul>
+<p><strong>两者关系</strong>:Flow Matching 在 <code>τ ∈ [0, 1]</code> 上是广义的 ODE 形式,DDPM 是 SDE 特例。数学上 Flow Matching 可涵盖 DDPM(通过特定选择 <code>x_τ</code> 路径),但 <strong>velocity target 与 noise prediction target 不等价</strong>。</p>
+<p><strong>结论</strong>:论文为<strong>表达简洁</strong>用 DDPM 记法,代码为<strong>训练稳定/样本效率</strong>选 flow matching。<strong>复现时严格对齐代码版本</strong>,用 DDPM 实现会掉分。</p>
+<h4 id="推导-3joint-attention-输出与分别做-cross-attention-不等价">推导 3:Joint Attention 输出与分别做 cross-attention 不等价</h4>
+<p><strong>前提</strong>:标准多头 attention <code>Attn(Q, K, V) = softmax(QK^T / sqrt(d)) V</code></p>
+<p><strong>Claim</strong>:令 <code>Q = [Q_V; Q_A]</code>,<code>K = [K_V; K_A]</code>,<code>V = [V_V; V_A]</code>,则 Joint Attention 的输出 <code>O = softmax(QK^T / sqrt(d)) V</code>,拆回两部分 <code>O_V = O[:n_V]</code>,<code>O_A = O[n_V:]</code> 后:</p>
+<div class="math-display">\[O_V = \mathrm{softmax}\left(\frac{[Q_V K_V^\top, Q_V K_A^\top]}{\sqrt{d}}\right) \cdot [V_V; V_A]\]</div>
+<p>也就是说,<code>O_V</code> 的 softmax <strong>是在 <code>V</code> 和 <code>A</code> 拼接后的 key 集合上做归一化</strong>,所以 <code>V</code>/<code>A</code> 的权重不是独立的 —— 这是 joint 比"先 self-attention 再 cross-attention"更紧耦合的根本原因。</p>
+<p><strong>推导失败标记</strong>:如果 <code>QVK_A</code> 的量级显著大于 <code>QVK_V</code>(例如 AE 的 hidden_dim 和 VLA 不同导致 key 尺度不一致),<code>O_V</code> 可能<strong>过度关注 AE tokens 而忽略自身上下文</strong>。论文对此<strong>未提任何 scale normalization 策略</strong> —— 这是 v3 发现的潜在坑。<strong>Phase 3 代码验证</strong>:<code>moe_experts.py:90-91</code> 有 <code>q_norm</code> / <code>k_norm</code> LayerNorm,但<strong>VLA 和 AE 的 hidden_dim 相同(都 4096)</strong>,所以 key 尺度问题不存在;真正的隐患在于 <code>rope_theta</code> 不同(1e6 vs 10000)导致的位置编码尺度差。</p>
+<h3 id="32-假设审查显式-vs-隐含">3.2 假设审查(显式 vs 隐含)</h3>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>类型</th>
+<th>假设</th>
+<th>工程风险</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>显式</td>
+<td>未来帧与当前帧在 visual 分布上相似</td>
+<td>雨天/夜间突变场景失效</td>
+</tr>
+<tr>
+<td>显式</td>
+<td>70M 帧数据 "curated to be balanced"</td>
+<td>高依赖 in-house dataset 质量</td>
+</tr>
+<tr>
+<td>隐含</td>
+<td>Stage 1 预训练 8k steps(NAVSIM)足够</td>
+<td><strong>步数太少</strong>,LAW ICLR 2025 版本用 20k+ steps</td>
+</tr>
+<tr>
+<td>隐含</td>
+<td>FAST tokenizer 量化误差小于 action 精度要求</td>
+<td>Table 4 显示 AR decoder 在小数据上 PDMS 比 query-based 低 3.1 分,主因是量化误差</td>
+</tr>
+<tr>
+<td>隐含</td>
+<td>MoE 训练 AE 能有效"读"到 VLA 表征</td>
+<td>AE 和 VLA 的 <code>rope_theta</code> 差 100 倍,位置编码可能不协调</td>
+</tr>
+<tr>
+<td>隐含</td>
+<td>AR inference 时 GT action 不会泄露</td>
+<td><strong>Issue #5 指出 <code>datasets.py:1076-1083</code> 始终拼 <code>&lt;boa&gt;action&lt;eoa&gt;</code> 进 <code>vlm_input_ids</code></strong>,若推理时未手动切除会泄露 → 论文 AR PDMS 数字可能虚高</td>
+</tr>
+</tbody></table></div>
+<h2 id="4-实验设计与充分性分析">§ 4. 实验设计与充分性分析</h2>
+<h3 id="41-实验目标-论文主张对应">4.1 实验目标 × 论文主张对应</h3>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>主张</th>
+<th>对应实验</th>
+<th>结论强度</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>C1 supervision deficit 存在</td>
+<td>Table 5 NuPlan→NAVSIM(baseline 负迁移)</td>
+<td><strong>强</strong></td>
+</tr>
+<tr>
+<td>C2 两条 WM 路径都 work</td>
+<td>Table 3 + Table 4 同时有 VQ / ViT</td>
+<td><strong>强</strong></td>
+</tr>
+<tr>
+<td>C3 跨域迁移翻转</td>
+<td>Table 5</td>
+<td><strong>强</strong></td>
+</tr>
+<tr>
+<td>C4 data scaling law 放大</td>
+<td>Table 3(三 scale)</td>
+<td><strong>中</strong> — 仅 3 点,严格讲不足以声称 power-law;700k scale 非单调</td>
+</tr>
+<tr>
+<td>C5 63.1% latency</td>
+<td>§5.3 Ablation Latency</td>
+<td><strong>强</strong></td>
+</tr>
+<tr>
+<td>C6 decoder scaling 反转</td>
+<td>Table 4</td>
+<td><strong>中</strong> — AR vs Flow 差距 1-2 分,无 seed 方差</td>
+</tr>
+</tbody></table></div>
+<h3 id="42-关键实验结果表">4.2 关键实验结果表</h3>
+<p><strong>Figure 7: Data scaling: ADE vs training frames</strong></p>
+<figure class="paper-figure-card" id="paper-fig-1">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 01: World modeling as a catalyst for VLA data scalability.</figcaption>
+<img alt="Paper Figure 01: World modeling as a catalyst for VLA data scalability." src="assets/paper_fig01_figure_01.png"/>
+<div class="paper-figure-meta">
+<span>fig:fig1</span>
+<span></span>
+<span>iclr2026_figures/fig1.pdf</span>
+</div>
+<p>Figure 7: Data scaling: ADE vs training frames</p>
+</figure>
+<p>Table 3 visualized: action-only saturation and world-model gains at 70M frames.</p>
+<p><strong>Table 1 NAVSIM v1 SOTA</strong>(单前视摄像头刷爆多视角 + LiDAR 基线)</p>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>Method</th>
+<th>Sensors</th>
+<th>PDMS</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>UniAD</td>
+<td>6× Cam</td>
+<td>83.4</td>
+</tr>
+<tr>
+<td>TransFuser</td>
+<td>3× Cam + L</td>
+<td>84.0</td>
+</tr>
+<tr>
+<td>LAW</td>
+<td>1× Cam</td>
+<td>84.6</td>
+</tr>
+<tr>
+<td>DiffusionDrive</td>
+<td>3× Cam + L</td>
+<td>88.1</td>
+</tr>
+<tr>
+<td>WoTE</td>
+<td>3× Cam + L</td>
+<td>88.3</td>
+</tr>
+<tr>
+<td><strong>DriveVLA-W0</strong>*</td>
+<td><strong>1× Cam</strong></td>
+<td><strong>88.4</strong></td>
+</tr>
+<tr>
+<td>AutoVLA</td>
+<td>3× Cam</td>
+<td>89.1</td>
+</tr>
+<tr>
+<td>ReCogDrive</td>
+<td>3× Cam</td>
+<td>89.6</td>
+</tr>
+<tr>
+<td><strong>DriveVLA-W0 (anchor)</strong></td>
+<td><strong>1× Cam</strong></td>
+<td><strong>90.2</strong></td>
+</tr>
+<tr>
+<td><strong>DriveVLA-W0 (BoN)</strong></td>
+<td><strong>1× Cam</strong></td>
+<td><strong>93.0</strong></td>
+</tr>
+</tbody></table></div>
+<p><strong>Table 3 In-house Scaling</strong>(关键)</p>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>Model</th>
+<th>70k ADE</th>
+<th>700k ADE</th>
+<th>70M ADE</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>VLA (VQ) Baseline</td>
+<td>2.8520</td>
+<td>1.5424</td>
+<td>1.4829</td>
+</tr>
+<tr>
+<td>+ WM (Ours)</td>
+<td>2.7482</td>
+<td>1.5985</td>
+<td><strong>1.0563 (+28.8%)</strong></td>
+</tr>
+<tr>
+<td>VLA (ViT) Baseline</td>
+<td>3.1524</td>
+<td>1.4202</td>
+<td>1.1051</td>
+</tr>
+<tr>
+<td>+ WM (Ours)</td>
+<td>2.5268</td>
+<td>1.3436</td>
+<td><strong>1.0640 (+3.7%)</strong></td>
+</tr>
+</tbody></table></div>
+<aside class="callout warning"><div class="callout-label">Warn</div><div>
+<p><strong>非单调性警告</strong>:VLA (VQ) + WM 在 700k 规模 ADE=1.5985,反而比 baseline 1.5424 差(-3.6%)。作者<strong>完全未解释</strong>此现象。合理假设:WM 在中等数据量下和 action loss 存在梯度冲突。历史 LEARNINGS "Hydra-MDP++ perception aux 反而损害 planning" 同源。</p>
+</div></aside>
+<h3 id="43-关键消融53">4.3 关键消融(§5.3)</h3>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>消融</th>
+<th>对照</th>
+<th>结果</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Vision-Only vs Vision-Action</td>
+<td>6V / 6VA</td>
+<td><strong>6VA 85.6 vs 6V 84.1</strong>(+1.5) — 动作条件化让 WM 学因果动态</td>
+</tr>
+<tr>
+<td>序列长度</td>
+<td>VA / 2VA / 6VA</td>
+<td><strong>6VA 85.6 vs VA 83.3</strong>(+2.3)</td>
+</tr>
+<tr>
+<td>Latency</td>
+<td>baseline vs + MoE Expert</td>
+<td><strong>117.8ms → 74.3ms, PDMS 85.6 → 88.4</strong></td>
+</tr>
+<tr>
+<td>FID × PDMS</td>
+<td>2VA / 6VA</td>
+<td>正相关 — <strong>图像生成质量 ≈ 规划性能代理</strong></td>
+</tr>
+</tbody></table></div>
+<p><strong>Figure 11: FID-PDMS relation and latency</strong> Shows the image-generation quality proxy and MoE action expert latency gain.</p>
+<div class="table-wrap"><table>
+<tbody>
+<tr>
+<td>Time Interval</td>
+<td>1s / 4s</td>
+<td><strong>1s 85.6 &gt; 4s 84.3</strong></td>
+</tr>
+</tbody></table></div>
+<h3 id="44-潜在未讨论因素">4.4 潜在未讨论因素</h3>
+<ol>
+<li><strong>α / β 的敏感性</strong>:loss weight 正文未给,无 ablation;代码透露 α=1.0(S2)/10(S1 default),β=0.5(S2)/1.0(S1)</li>
+<li><strong>Stage 1 训练步数</strong>:8k steps 对 WM 充分内化是否够?未扫</li>
+<li><strong>单前视摄像头的边界</strong>:所有实验都是 1-cam,没试过 3-cam 加 WM</li>
+<li><strong>FID 与 PDMS 相关性的因果方向</strong>:可能是共同受益于 backbone,不能推 FID→PDMS 因果</li>
+</ol>
+<h2 id="5-组件新颖性拆解">§ 5. 组件新颖性拆解</h2>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>组件</th>
+<th>新颖性</th>
+<th>证据</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>VLA interleaved sequence</td>
+<td><strong>(c) 直接复用</strong></td>
+<td>UniVLA / InterleaveVLA</td>
+</tr>
+<tr>
+<td>Emu3 / Qwen2.5-VL backbone</td>
+<td><strong>(c) 直接复用</strong></td>
+<td>原装</td>
+</tr>
+<tr>
+<td>FAST tokenizer</td>
+<td><strong>(c) 直接复用</strong></td>
+<td>Pertsch 2025</td>
+</tr>
+<tr>
+<td>AR WM on current frame <code>V_t</code></td>
+<td><strong>(b) 已有技术改进</strong></td>
+<td>UniVLA 已做 AR WM,本文设置 current-frame 目标</td>
+</tr>
+<tr>
+<td>Flow Matching WM on future frame <code>I_{t+1}</code></td>
+<td><strong>(a) 本文首次在 VLA+AD 组合</strong></td>
+<td>Epona / GAIA-1 是"WM 即生成器",本文是"WM 即辅助监督"</td>
+</tr>
+<tr>
+<td><strong>"WM 训练时用,推理时丢" 的正则化范式</strong></td>
+<td><strong>(a) 核心贡献</strong></td>
+<td>和 LAW(latent WM 推理时也用)完全不同</td>
+</tr>
+<tr>
+<td>MoE Action Expert Joint Attention</td>
+<td><strong>(b) 改进</strong></td>
+<td>pi0 / pi0.5 已有双 expert;Joint Attention 对称实现 + 2 层 AE + 7× 小 FFN 是本文命名</td>
+</tr>
+<tr>
+<td>三种 action decoder 并列对比</td>
+<td><strong>(a) 系统实证新</strong></td>
+<td>此前没人在 70M 帧尺度对比 query / AR / flow</td>
+</tr>
+<tr>
+<td>Data scaling 实证(70k / 700k / 70M)</td>
+<td><strong>(a) 规模最大</strong></td>
+<td>70M 帧首次公开此量级 VLA scaling</td>
+</tr>
+<tr>
+<td>NuPlan→NAVSIM 负迁移翻转证据</td>
+<td><strong>(a) 首次量化</strong></td>
+<td>Table 5 是本文最"干净"证据</td>
+</tr>
+<tr>
+<td><strong>256 queries + 8192 anchor</strong>(代码)</td>
+<td><strong>(a) 未公开</strong></td>
+<td>论文未提,Issue #19 才暴露</td>
+</tr>
+<tr>
+<td><strong>Flow Matching Beta(1.5, 1.0) + CFG scale=2 + adaLN</strong>(代码)</td>
+<td><strong>(c) 直接复用</strong></td>
+<td>π0 / DiT 已有,但论文没讲,用户得从代码自己挖</td>
+</tr>
+</tbody></table></div>
+<p><strong>真正的创新点</strong>:(a) 类里最硬核的是 <strong>"WM 训练时用、推理时丢" + "data scaling 放大"</strong> 的实证组合。单看每个元素(WM / MoE / decoder 对比)都是已知零件,组合到 70M 帧规模上的实证是不可替代的贡献。</p>
+<h2 id="6-横向对比分析">§ 6. 横向对比分析</h2>
+<h3 id="61-semantic-scholar-引用图谱api-429-降级声明">6.1 Semantic Scholar 引用图谱(API 429 降级声明)</h3>
+<aside class="callout warning"><div class="callout-label">Warn</div><div>
+<p><strong>API 失败记录</strong>:Semantic Scholar <code>/paper/ArXiv:2510.12796</code> 端点连续 3 次返回 HTTP 429(Too Many Requests),社区 API key 未配置;bb-browser 打开 semanticscholar.org 搜索也返回 "Error"。<strong>降级</strong>:基于论文自引 + 飞书关联文档的 12 篇已知深度解析 + 历史 LEARNINGS 15 篇,手工重建核心引用图谱,标注为"手工采样"不是"S2 官方数据"。</p>
+</div></aside>
+<p><strong>手工采样 References Top-8</strong>:</p>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>#</th>
+<th>类型</th>
+<th>论文</th>
+<th>与本论文关系</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Ref</td>
+<td>Kaplan et al. 2020 Scaling Laws</td>
+<td>§1 L4,scaling 叙事起点</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Ref</td>
+<td>Emu3(Wang 2024b)</td>
+<td>VQ 路径 backbone</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Ref</td>
+<td>Qwen2.5-VL(Bai 2025)</td>
+<td>ViT 路径 backbone</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Ref</td>
+<td>LAW(Li 2024a ICLR 2025)</td>
+<td><strong>同组前作</strong> latent WM,本文 image-space 升级</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Ref</td>
+<td>FAST tokenizer(Pertsch 2025)</td>
+<td>动作 tokenization 核心</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Ref</td>
+<td>NAVSIM(Dauner 2024)</td>
+<td>主 benchmark</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Ref</td>
+<td>pi0 / pi0.5(Black 2025 / Intelligence 2025)</td>
+<td>MoE Action Expert 灵感</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Ref</td>
+<td>Stable Diffusion(Rombach 2021)</td>
+<td>Diffusion WM 基础</td>
+</tr>
+</tbody></table></div>
+<p><strong>Citations Top-8(2025-11~2026-05)</strong>:</p>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>#</th>
+<th>论文</th>
+<th>关系</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>ORION v2(ICCV 2025)</td>
+<td>引用"W0 超大数据时 AR 比 diffusion/flow 更好"</td>
+</tr>
+<tr>
+<td>2</td>
+<td>DrivingGPT</td>
+<td>被列"前驱",W0 将 WM+VLA 扩到 70M</td>
+</tr>
+<tr>
+<td>3</td>
+<td>FSDrive(NeurIPS 2025 Spotlight)</td>
+<td>同期 VLA+spatio-temporal CoT</td>
+</tr>
+<tr>
+<td>4</td>
+<td>ReCogDrive(ICLR 2026)</td>
+<td>NAVSIM 89.6 竞品</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Epona(ICCV 2025)</td>
+<td>AR+Diffusion 组合</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Alpamayo-R1</td>
+<td>2026-04 ReasoningVLA</td>
+</tr>
+<tr>
+<td>7</td>
+<td>DriveDPO(NeurIPS 2025)</td>
+<td>NAVSIM 90.0</td>
+</tr>
+<tr>
+<td>8</td>
+<td>DriveWorld-VLA(2026)</td>
+<td>小米/北交指出 W0 缺因果推理</td>
+</tr>
+</tbody></table></div>
+<h3 id="62-主流-vs-反对观点">6.2 主流 vs 反对观点</h3>
+<p><strong>Figure 10: Field positioning</strong> Places DriveVLA-W0 among BEV planners, VLA methods, world-model assisted training, and inference-time world models.</p>
+<p><strong>一致方向</strong>:数据驱动 &gt; 结构先验;WM 作辅助目标 &gt; WM 作推理模块;large backbone 对 driving 有正收益。</p>
+<p><strong>分歧方向</strong>:</p>
+<ol>
+<li><strong>是否需要文本 CoT</strong>:FSDrive / Alpamayo-R1 主张"显式 reasoning trace",本文<strong>完全没有</strong>,把推理隐式丢进 VLM</li>
+<li><strong>VAE / Diffusion 还是 AR 做 WM</strong>:Epona AR+Diffusion 组合,本文 VQ 纯 AR — 仍是开放问题</li>
+<li><strong>action decoder 复杂度</strong>:DiffusionDrive / ReCogDrive 选 flow / diffusion;本文结论<strong>大规模数据下简单 AR 反超</strong>,直接挑战"复杂 decoder 是未来"路线</li>
+</ol>
+<h3 id="63-与飞书已有文档的交叉对比v8-phase-06-关联c-级处理">6.3 与飞书已有文档的交叉对比(v8 Phase 0.6 关联,C 级处理)</h3>
+<aside class="callout info"><div class="callout-label">Next</div><div>
+<p><strong>命中 ≥10 篇</strong>,触发 C 级处理 —— 本节用"演进时间轴 + 方法族矩阵"放同一坐标系。</p>
+</div></aside>
+<h4 id="631-关联论文表">6.3.1 关联论文表</h4>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>关联类型</th>
+<th>论文</th>
+<th>飞书 URL</th>
+<th>关系</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>直接前序 VLA SFT baseline</strong></td>
+<td>OpenDriveVLA(AAAI 2026)</td>
+<td><a gyttwiqc4ikbank2jupcqdbunkf""="" href="&lt;a href=" https:="" mi.feishu.cn="" rel="noopener noreferrer" target="_blank" wiki="">https://mi.feishu.cn/wiki/GYTtwIqC4ikBANk2JUPcQDBunkf"</a> target="_blank" rel="noopener noreferrer"&gt;OpenDriveVLA 深度解析</td>
+<td>VLA 纯 SFT 版本,本文在其基础上加 WM 正则</td>
+</tr>
+<tr>
+<td><strong>同范式 WM+Planning 统一</strong></td>
+<td>DrivingGPT</td>
+<td><a edu8we7srimesukuiaqcieu8nwd""="" href="&lt;a href=" https:="" mi.feishu.cn="" rel="noopener noreferrer" target="_blank" wiki="">https://mi.feishu.cn/wiki/EDU8we7SRiMESUkuiAQcIeu8nWd"</a> target="_blank" rel="noopener noreferrer"&gt;DrivingGPT 深度解析</td>
+<td>飞书明说"直接触发 DriveVLA-W0"</td>
+</tr>
+<tr>
+<td><strong>同范式 VLA+视觉 CoT</strong></td>
+<td>FSDrive(NeurIPS 2025 Spotlight)</td>
+<td><a gxflwl6eciw1pokkcdrcqwownrg""="" href="&lt;a href=" https:="" mi.feishu.cn="" rel="noopener noreferrer" target="_blank" wiki="">https://mi.feishu.cn/wiki/GXFLwl6ECiw1POkKcdrcQWOwnrg"</a> target="_blank" rel="noopener noreferrer"&gt;FSDrive 深度解析</td>
+<td>同 VLA 扮演 WM + inverse dynamics</td>
+</tr>
+<tr>
+<td><strong>AR+Diffusion 组合 WM</strong></td>
+<td>Epona(ICCV 2025)</td>
+<td><a gam3ww4kmipxdkkbgorc98amnvf""="" href="&lt;a href=" https:="" mi.feishu.cn="" rel="noopener noreferrer" target="_blank" wiki="">https://mi.feishu.cn/wiki/GAM3wW4KmipXDKkbGORc98Amnvf"</a> target="_blank" rel="noopener noreferrer"&gt;Epona 深度解析</td>
+<td>1.2B DiT + Flow Matching</td>
+</tr>
+<tr>
+<td><strong>VAE 路线对比者</strong></td>
+<td>ORION(ICCV 2025)</td>
+<td><a dcezwlb90iccqokn1pack7oinsg""="" href="&lt;a href=" https:="" mi.feishu.cn="" rel="noopener noreferrer" target="_blank" wiki="">https://mi.feishu.cn/wiki/DCeZwLB90iCcQOkn1PAcK7OInsg"</a> target="_blank" rel="noopener noreferrer"&gt;ORION 深度解析 v2</td>
+<td>飞书原话"W0 超大数据时 AR 比 diffusion/flow 更好"</td>
+</tr>
+<tr>
+<td><strong>VLA RL+轨迹评估</strong></td>
+<td>ReCogDrive(ICLR 2026)</td>
+<td><a href="&lt;a href=" https:="" mi.feishu.cn="" rel="noopener noreferrer" target="_blank" uuaywndjni2kyek3esbcb2rrn8e""="" wiki="">https://mi.feishu.cn/wiki/UuAywnDjNi2KYEk3esbcb2RRn8e"</a> target="_blank" rel="noopener noreferrer"&gt;ReCogDrive 深度解析 v2</td>
+<td>NAVSIM 89.6 竞品</td>
+</tr>
+<tr>
+<td><strong>DPO 轨迹对齐</strong></td>
+<td>DriveDPO(NeurIPS 2025)</td>
+<td><a href="&lt;a href=" https:="" mi.feishu.cn="" odwnwxzq1ic0fck8gvdcjpmwn1e""="" rel="noopener noreferrer" target="_blank" wiki="">https://mi.feishu.cn/wiki/ODWnwXZQ1iC0FCk8gVdcjPmWn1e"</a> target="_blank" rel="noopener noreferrer"&gt;DriveDPO 深度解析</td>
+<td>NAVSIM 90.0</td>
+</tr>
+<tr>
+<td><strong>BEV WM</strong></td>
+<td>WoTE(ICCV 2025)</td>
+<td><a href="&lt;a href=" https:="" mi.feishu.cn="" ozcxw3gzti86izkucgpc2hnmnme""="" rel="noopener noreferrer" target="_blank" wiki="">https://mi.feishu.cn/wiki/OzCXw3gzTi86IzkucGpc2hNMnMe"</a> target="_blank" rel="noopener noreferrer"&gt;WoTE 深度解析</td>
+<td>BEV WM + online eval</td>
+</tr>
+<tr>
+<td><strong>Proposal-centric</strong></td>
+<td>iPad(NeurIPS 2025)</td>
+<td><a href="&lt;a href=" https:="" kglaw7xzgirybykvjj8czzysnxf""="" mi.feishu.cn="" rel="noopener noreferrer" target="_blank" wiki="">https://mi.feishu.cn/wiki/KGlAw7xZgiRyBYkVJJ8cZzYSnxf"</a> target="_blank" rel="noopener noreferrer"&gt;iPad 深度解析</td>
+<td>迭代 proposal</td>
+</tr>
+</tbody></table></div>
+<h4 id="632-方法族矩阵">6.3.2 方法族矩阵</h4>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>论文</th>
+<th>表示空间</th>
+<th>WM 使用方式</th>
+<th>推理时 WM</th>
+<th>NAVSIM PDMS</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>OpenDriveVLA(2025-03)</td>
+<td>3D 空间感知</td>
+<td>无 WM,纯 SFT</td>
+<td>—</td>
+<td>83-86</td>
+</tr>
+<tr>
+<td>LAW(2024-06)</td>
+<td>Latent</td>
+<td>预测 latent</td>
+<td><strong>在线</strong></td>
+<td>84.6</td>
+</tr>
+<tr>
+<td>WoTE(2025-05)</td>
+<td>BEV</td>
+<td>BEV WM trajectory eval</td>
+<td><strong>在线</strong></td>
+<td>88.3</td>
+</tr>
+<tr>
+<td>DrivingGPT(2024-12)</td>
+<td>VQ</td>
+<td>AR 多模态预测</td>
+<td><strong>在线</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>FSDrive(2025-05)</td>
+<td>VQ visual token</td>
+<td>spatio-temporal CoT</td>
+<td><strong>中间步骤</strong></td>
+<td>85.1</td>
+</tr>
+<tr>
+<td>Epona(2025-05)</td>
+<td>latent+DiT</td>
+<td>AR+Flow 组合</td>
+<td><strong>在线</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>ORION(2025-03)</td>
+<td>VAE latent</td>
+<td>VAE 重建+planning</td>
+<td><strong>在线</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>ReCogDrive(2025-06)</td>
+<td>连续特征</td>
+<td>Diffusion+RL 规划</td>
+<td><strong>在线</strong></td>
+<td>89.6</td>
+</tr>
+<tr>
+<td>DriveDPO(2025-09)</td>
+<td>连续特征</td>
+<td>无 WM,DPO</td>
+<td>—</td>
+<td>90.0</td>
+</tr>
+<tr>
+<td><strong>DriveVLA-W0(2025-10)</strong></td>
+<td><strong>VQ AR / ViT Flow 双路径</strong></td>
+<td><strong>仅训练时用,推理时丢</strong></td>
+<td><strong>完全丢弃</strong></td>
+<td><strong>88.4 / 90.2 / 93.0</strong></td>
+</tr>
+</tbody></table></div>
+<p><strong>独特定位总结</strong>:本文是<strong>唯一把 WM 定位为"训练时正则化器、推理时零开销"的 VLA 工作</strong>。</p>
+<h4 id="633-演进时间轴">6.3.3 演进时间轴</h4>
+<ul>
+<li><strong>T-3(2024-06)LAW</strong> — 首个 AD 上用 latent WM,但 latent 表示信息量有限</li>
+<li><strong>T-2(2024-12)DrivingGPT</strong> — WM + planning 合一 AR transformer</li>
+<li><strong>T-1(2025-05)FSDrive + Epona</strong> — spatio-temporal CoT / AR+Diffusion 组合</li>
+<li><strong>T0(2025-10)DriveVLA-W0</strong>(本文) — 双路径 WM + 70M 帧 + MoE Expert,NAVSIM 93.0</li>
+<li><strong>T+1(2026-Q1)DriveWorld-VLA</strong>(小米/北交) + <strong>DriveLaW</strong>(华科/小米) — 指出 W0 缺因果推理,提出后续方案</li>
+</ul>
+<h4 id="634-与-opendrivevla-的直接对比前序-本文">6.3.4 与 OpenDriveVLA 的直接对比(前序 → 本文)</h4>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>维度</th>
+<th>OpenDriveVLA</th>
+<th>DriveVLA-W0</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>核心监督</td>
+<td>纯 SFT</td>
+<td>SFT + dense WM</td>
+</tr>
+<tr>
+<td>表示</td>
+<td>3D 空间感知 token</td>
+<td>VQ / ViT 双路径</td>
+</tr>
+<tr>
+<td>训练数据</td>
+<td>nuScenes 级</td>
+<td>70M 帧 in-house</td>
+</tr>
+<tr>
+<td>推理 decoder</td>
+<td>标准 AR</td>
+<td>Query / AR / Flow 三种对比</td>
+</tr>
+<tr>
+<td>PDMS</td>
+<td>~86</td>
+<td><strong>88.4 / 90.2 / 93.0</strong></td>
+</tr>
+</tbody></table></div>
+<h2 id="7-理论体系严肃反驳5-条">§ 7. 理论体系严肃反驳(≥5 条)</h2>
+<h3 id="q1scaling-law-声明是否严格成立">Q1:Scaling Law 声明是否严格成立?</h3>
+<p><strong>作者</strong>:"world modeling amplifies the data scaling law"(§1 L25)。</p>
+<p><strong>反驳</strong>:</p>
+<ul>
+<li>真正 power-law 要求 log-log 线性,需 ≥4-5 个 scale 点(Kaplan 2020 / Dehghani 2023 都 ≥5)</li>
+<li>本文只有 3 个点(70k / 700k / 70M),<strong>画 log-linear 就声称 scaling law</strong> — iPad 历史 LEARNINGS 警告过</li>
+<li>Table 3 VQ 在 700k 非单调,严格 scaling law 不允许</li>
+<li><strong>建议</strong>:标题改 "World modeling 在 70M 尺度相对 action-only 有更强增益" 更严谨</li>
+</ul>
+<h3 id="q2supervision-deficit-概念是否事后贴标签">Q2:Supervision Deficit 概念是否"事后贴标签"?</h3>
+<p><strong>反驳</strong>:</p>
+<ul>
+<li>任何迁移学习/表征学习工作都能套"稀疏监督 → 加 aux task"故事</li>
+<li>LAW(2024-06)已做同构工作(latent WM),只是换"latent"为"image"</li>
+<li>缺"消除 WM 后性能退回原点"的严格消融 — Table 3 "VQ Baseline" 是 action-only,但 backbone <strong>未经 WM 初始化</strong>,不能严格证明 WM 是 causal 因素</li>
+<li><strong>崩溃假设</strong>:若用 MAE pretrain 的 ViT + action-only,可能拿到和 +WM 相近提升</li>
+</ul>
+<h3 id="q3推理时完全丢弃-wm-的代价">Q3:推理时完全丢弃 WM 的代价?</h3>
+<p><strong>反驳</strong>:</p>
+<ul>
+<li>丢弃 WM 意味着<strong>推理时退化为纯 VLA</strong>,WM 的"反事实推理"能力在部署时失效</li>
+<li>Fig.5 "减速指令下世界响应减速"是训练期可视化,<strong>生产推理根本不跑这块</strong></li>
+<li>未来做 <strong>Model Predictive Control</strong> 闭环推理时,这个设计反而是阻碍</li>
+</ul>
+<h3 id="q4moe-action-expert-是否真的是最佳-decoder-路径">Q4:MoE Action Expert 是否真的是最佳 decoder 路径?</h3>
+<p><strong>作者</strong>:AR 在大规模数据下最优,flow "sample-inefficient"。</p>
+<p><strong>反驳</strong>:</p>
+<ul>
+<li><strong>Phase 2 微卷的大白博客质疑</strong>:Flow Matching 专家实现过简,condition 只有 VLA 特征,对比 DiffusionDrive/DiffVLA 有 trajectory-level constraints</li>
+<li>70M 帧对 flow matching 是否"足够"?flow 文献典型数据量 1-10B tokens,并不一定"无法收敛",可能只是<strong>调参不够</strong></li>
+<li>AR 需要 FAST tokenizer 量化误差抵消,若有更好 tokenizer,flow 连续优势可能反超</li>
+<li><strong>崩溃假设</strong>:若给 flow 专业调优 + EDM ODE solver + 20k+ warmup,AR 优势可能消失</li>
+</ul>
+<h3 id="q5单前视摄像头真的够用吗">Q5:单前视摄像头真的够用吗?</h3>
+<p><strong>Phase 2 微卷的大白博客尖锐批评</strong>:引望(华为子公司)必有多摄像头+LiDAR 生产系统,<strong>单前视更像学术方案验证</strong>。</p>
+<p><strong>反驳</strong>:</p>
+<ul>
+<li>NAVSIM 集中高速/主路,单前视在城市复杂路口可能失效</li>
+<li>Table 1 竞品 DiffusionDrive/WoTE 已 88+ PDMS,本文 88.4 仅微升 0.1,统计显著性存疑</li>
+<li>Table 2 NAVSIM v2:EPDMS 86.1 vs DiffusionDrive 84.5,但 <strong>EC(Extended Comfort)58.9 vs 87.7 大幅落后</strong> — WM 在"舒适度"维度有盲点</li>
+</ul>
+<h2 id="8-phase-2-社区博客深度解析">§ 8. Phase 2 — 社区博客深度解析</h2>
+<h3 id="phase-20-新鲜度预检">Phase 2.0 新鲜度预检</h3>
+<ul>
+<li><strong>论文发表</strong>:arXiv v1 = 2025-10-14;v2 = 2025-12-18</li>
+<li><strong>当前</strong>:2026-05-03,距今约 4.5-6.6 个月</li>
+<li><strong>新鲜度档次</strong>:中档(6-12 月)→ 核心深读 ≥3 篇,每篇 ≥500 字;补充 ≥10</li>
+<li><strong>早退</strong>:<strong>未触发</strong>,3 通道独立有效</li>
+</ul>
+<h3 id="搜索执行情况">搜索执行情况</h3>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>通道</th>
+<th>平台</th>
+<th>试验次数</th>
+<th>命中数</th>
+<th>核心价值</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>A 知乎</td>
+<td>zhihu.com/search</td>
+<td>1 主查 + 3 正文爬取</td>
+<td>20+ 条 / 5+ 篇 &gt;10 赞深度</td>
+<td>主力,贡献 3 篇核心深读</td>
+</tr>
+<tr>
+<td>B 微信 + CSDN</td>
+<td>weixin.sogou.com + so.csdn.net</td>
+<td>2 次</td>
+<td>CSDN 10+ / 微信 8+(去重 4 独立账号)</td>
+<td>工业界视角</td>
+</tr>
+<tr>
+<td>C B 站 + 英文</td>
+<td>bilibili.com + twitter + alphaXiv</td>
+<td>4 次</td>
+<td>B 站 1 视频 1062 播放 / Twitter 被墙 ERR → alphaXiv 降级</td>
+<td>alphaXiv 提供唯一高质量英文概览</td>
+</tr>
+</tbody></table></div>
+<h3 id="核心深读-1vla-和世界模型正在逐渐走向融合统一-擎天柱85-赞">核心深读 1:《VLA 和世界模型正在逐渐走向融合统一......》— 擎天柱(85 赞)</h3>
+<p><strong>基本信息</strong>:知乎专栏 <a 1986398591003161238""="" href="&lt;a href=" https:="" p="" rel="noopener noreferrer" target="_blank" zhuanlan.zhihu.com="">https://zhuanlan.zhihu.com/p/1986398591003161238"</a> target="_blank" rel="noopener noreferrer"&gt;zhuanlan.zhihu.com/p/1986398591003161238,2025-12-22,85 赞 2 评论 252 收藏 — <strong>本次搜索热度最高解读</strong>。</p>
+<p><strong>独有技术见解</strong>(≥3 条):</p>
+<ol>
+<li><strong>VLA × WM 融合演进谱系</strong>:时间轴串联 3D-VLA (2024.03) → WorldVLA (2025.06) → IRL-VLA (2025.08) → <strong>DriveVLA-W0 (2025.10)</strong> → WM-MoE (2025.10) → FutureSightDrive (2025.11),把 DriveVLA-W0 定位为"从具身到自驾"融合趋势的关键节点 — 这是论文 Related Work 覆盖不到的跨领域叙事</li>
+<li><strong>工业界信号解读</strong>:明确点出"华为鼓吹自己的 World Model 很牛,小鹏已开始做所谓 VLA 2.0,理想也展示了这部分理解" — 把 DriveVLA-W0 放到华为/小鹏/理想的工业路线竞争中,这是论文隐去的产业定位信号</li>
+<li><strong>融合闭环三路径</strong>:架构级融合(WM 预测器 + VLA 决策层)/ 训练数据互补(WM 合成 corner-case 训 VLA,VLA 语言标注训 WM)/ 闭环智能(VLA 初步决策 → WM 脑内推演 → 反馈调整)</li>
+<li><strong>Trajectory Level 统一理由</strong>:"Action 定义在轨迹层面,轨迹相对通用,可较容易转换为低层指令" — 解释为什么 DriveVLA-W0 输出 waypoint 而非 steering/throttle</li>
+</ol>
+<p><strong>批评与质疑</strong>(≥2 条):</p>
+<ol>
+<li><strong>算力瓶颈放大质疑</strong>:VLA 核心挑战是"说做不一",WM 核心是"缺高级语义 + 推演成本高",融合后<strong>叠加不是减少而是放大了算力瓶颈</strong> — 对 DriveVLA-W0 的 63.1% latency 宣称是隐含挑战</li>
+<li><strong>"二八定律下半场"同质化</strong>:VLA 用语言应对 corner case,WM 用仿真覆盖 corner case — 两路径都在打"数据工程"仗,DriveVLA-W0 的 70M 帧本就印证"数据堆"路线依赖</li>
+<li><strong>融合仍停"脑海推演"比喻</strong>:学术界目前没有公认 VLA+WM 集成标准,DriveVLA-W0 的"未来帧预测作为密集监督"<strong>只是松耦合共享主干</strong>,远未达到真 WM 循环推演</li>
+</ol>
+<p><strong>工程实现补充</strong>:</p>
+<ol>
+<li><strong>部署三级拆分</strong>:低层指令(油门/方向盘,快速响应)vs 轨迹规划(3 秒连续路径,平顺+前瞻)— 解释 W0 为什么不预测低层指令而预测 waypoint,是<strong>跨车型可迁移性</strong>考量</li>
+<li><strong>WorldVLA 注意力掩码</strong>:生成当前动作时屏蔽已生成动作,减少错误累积 — 这是 DriveVLA-W0 AR-WM 没用但有潜在借鉴价值的优化</li>
+<li><strong>FSDrive 物理约束对比</strong>:FSDrive 生成未来帧叠加车道线+3D 框先验,DriveVLA-W0 只预测原始像素 — 暗示<strong>物理合理性约束</strong>工程细节缺失</li>
+</ol>
+<h3 id="核心深读-2drivevla-w0-简读世界模型vla自监督-scaling-微卷的大白31-赞-3-评论">核心深读 2:《DriveVLA-W0 简读:世界模型+VLA+自监督 Scaling?》— 微卷的大白(31 赞 + 3 评论)</h3>
+<p><strong>基本信息</strong>:知乎专栏 <a 1962678456325248819""="" href="&lt;a href=" https:="" p="" rel="noopener noreferrer" target="_blank" zhuanlan.zhihu.com="">https://zhuanlan.zhihu.com/p/1962678456325248819"</a> target="_blank" rel="noopener noreferrer"&gt;zhuanlan.zhihu.com/p/1962678456325248819,2025-10-18(<strong>发布 4 天后首波解读,时效性最早</strong>),31 赞 3 评论 73 收藏。</p>
+<p><strong>独有技术见解</strong>:</p>
+<ol>
+<li><strong>"来自引望但单 V 太简洁"</strong>:第一时间点明"虽来自引望,但 VLA 设计太简洁,还是单 V(单摄像头),更像方案验证" — <strong>论文刻意回避了"为什么 70M 内部数据居然只用单前视"</strong></li>
+<li><strong>Joint Attention 与 Bagel/Lavida-O 对比</strong>:"DriveVLA-W0 的 MoE 联合注意力<strong>纯为降计算量,和 π0 类似</strong>;与 Bagel、Lavida-O 的理解+生成统一模型出发点不一样" — 跨领域技术源流追溯</li>
+<li><strong>AR-WM 推理时 Decoder 重建 loss 假设</strong>:提出论文未展开的设想 —— "如果模型准确预测 token,当它通过 MoVQGAN 解码器,最终图像应接近原图,或许可在 Decoder 后加重建 loss" — 指出 AR-WM <strong>token-level 预测 + pixel-level 重建 loss 双重监督</strong>的潜在改进</li>
+<li><strong>Diffusion WM 的 "t+1 vs t" 一针见血</strong>:"选择预测未来帧<strong>因为模型已以所有当前特征为条件,预测当前会变重建</strong>" — 比论文更直白道出设计 inductive bias</li>
+</ol>
+<p><strong>批评与质疑</strong>:</p>
+<ol>
+<li><strong>不信 AR Decoder 能 scaling</strong>:"Flow Matching Expert 还是做的太简单了...<strong>个人比较难相信 AR 模型能直接在自动驾驶 scaling(希望后续被打脸)</strong>,短期内'过度设计'的结构还是好一些的" — <strong>直接反驳论文核心结论</strong>,质疑 Flow Matching 实现是否 underfit 而非"AR 更强"</li>
+<li><strong>"方案验证"定位</strong>:单 V 更像方案验证,真正要落地肯定需要多摄像头甚至激光雷达,论文做单 V 只是为把 VLA baseline 的 fair comparison 做干净</li>
+</ol>
+<p><strong>工程实现补充</strong>:</p>
+<ol>
+<li><strong>Clips 数据集自监督性质</strong>:"自驾训练中数据是 clips(片段),天然有 t+1 帧当 GT,说是自监督也没问题" — 解释 DriveVLA-W0 <strong>不需额外标注即可开启 WM 训练</strong>,这是工业落地的关键前提</li>
+<li><strong>DiffusionDrive/DiffVLA/TransDiffusers 对比</strong>:列举同期 Flow Matching planner,暗示 DriveVLA-W0 的 Flow Matching 专家<strong>condition 过简</strong>,没有 trajectory-level constraints</li>
+</ol>
+<h3 id="核心深读-3drivevla-w0自动驾驶中世界模型放大数据规模化定律-黄浴14-赞-top-自驾作者-27645-赞">核心深读 3:《DriveVLA-W0:自动驾驶中世界模型放大数据规模化定律》— 黄浴(14 赞 / Top 自驾作者 27645 赞)</h3>
+<p><strong>基本信息</strong>:知乎专栏 <a 1966831401258185534""="" href="&lt;a href=" https:="" p="" rel="noopener noreferrer" target="_blank" zhuanlan.zhihu.com="">https://zhuanlan.zhihu.com/p/1966831401258185534"</a> target="_blank" rel="noopener noreferrer"&gt;zhuanlan.zhihu.com/p/1966831401258185534,2025-10-31,14 赞(数字不高但<strong>作者权威度 = 全站 Top 自驾作者</strong>)。</p>
+<p><strong>独有技术见解</strong>:</p>
+<ol>
+<li><strong>"680 倍规模"的解读</strong>:明确换算 NAVSIM 约 10 万帧 vs 内部 70M 帧 <strong>约 680 倍的数据规模跨度</strong> — 论文摘要只说"massive internal dataset",黄浴主动补算让读者直观感受</li>
+<li><strong>"视觉词汇表缺失导致 Diffusion WM 必要"</strong>:"VLA (ViT) 缺适用于 next-token 的离散视觉词汇表,因此引入扩散世界模型" — 一句话解释 ViT 为何必须走 Diffusion,论文论述散在多处,黄浴浓缩为核心论断</li>
+<li><strong>两阶段训练的具体步数拆解</strong>:"第一阶段 NuPlan 预训练 8k 步,NAVSIM 微调 4k 步,图像 256×144,8 张 L20 GPU,global batch 48,AdamW,cosine LR,lr=2e-4,bf16;内部数据集预训练 50k 步 + 微调 30k 步,64 GPU 集群 global batch 256" — 完整训练配方,可复现级别高</li>
+<li><strong>TransFuser-7B 对照的细节</strong>:"作者专门魔改 Latent-TransFuser,50M ResNet-34 和 7B ViT-DINOv3 两版本,都单摄像头,原始 TransFuser 是多视角" — 这个细节让读者明白为 apples-to-apples 作者做了大量工程投入,论文一笔带过</li>
+</ol>
+<p><strong>批评与质疑</strong>:</p>
+<ol>
+<li><strong>"为什么放弃 NAVSIM 经典 benchmark 转而自建 70M"</strong>:暗示 NAVSIM scale 太小无法体现 scaling law,隐含批评整个 NAVSIM-only 社区</li>
+<li><strong>碰撞率评估口径变化</strong>:内部数据集用 offline 碰撞率代理,与 NAVSIM v2 closed-loop 相悖,70M scaling 结果可能被<strong>低估/高估</strong></li>
+</ol>
+<p><strong>工程实现补充</strong>:</p>
+<ol>
+<li><strong>MoVQGAN Decoder 引用源确认</strong>:Zheng et al., 2022 — 对想复现 AR-WM 推理阶段 image visualization 很重要</li>
+<li><strong>FAST Tokenizer 引用源</strong>:Pertsch 2025 —— action → discrete token 转换器,复现时必须一并实现</li>
+<li><strong>两阶段 VLA backbone 行为差异</strong>:"第二阶段虽未冻结 VLA 主干,但仅由动作专家的动作损失监督" — 暗示第二阶段可能 <strong>catastrophic forgetting</strong> 第一阶段的 WM 知识,论文未讨论此风险</li>
+</ol>
+<h3 id="跨博客观点冲突矩阵">跨博客观点冲突矩阵</h3>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>#</th>
+<th>冲突点</th>
+<th>博客 A 观点</th>
+<th>博客 B 观点</th>
+<th>谁更可信</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>AR vs Flow 大规模反超</strong></td>
+<td>微卷的大白:质疑 Flow underfit</td>
+<td>黄浴/擎天柱:信论文数据</td>
+<td>B 基于论文数据更可信,但 A 的"Flow 实现过简"有理 — DiffusionDrive/DiffVLA 有 trajectory 约束对比</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>真 WM 融合 还是 松耦合辅助</strong></td>
+<td>擎天柱:关键融合节点</td>
+<td>微卷的大白:辅助目标非真融合</td>
+<td><strong>B 更精准</strong> — DriveVLA-W0 推理时直接跳过 WM,不是真循环推演</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>"监督不足"是否核心瓶颈</strong></td>
+<td>alphaXiv/黄浴:是</td>
+<td>擎天柱/谭日成:真正瓶颈是对齐</td>
+<td>两者都对但 scope 不同 — scaling 维度 A 对,工业落地维度 B 对</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>单前视摄像头评价</strong></td>
+<td>微卷的大白:方案验证</td>
+<td>黄浴/擎天柱:架构特色</td>
+<td>A 更尖锐 — 引望必有多传感器,单 V 更多是学术 apples-to-apples</td>
+</tr>
+</tbody></table></div>
+<h3 id="补充列表10-篇共-18-条超配">补充列表(≥10 篇,共 18 条超配)</h3>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>#</th>
+<th>标题</th>
+<th>平台</th>
+<th>作者</th>
+<th>日期</th>
+<th>热度</th>
+<th>一句话定位</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Awesome VLA-WM</td>
+<td>知乎</td>
+<td>王东伟</td>
+<td>2025-12</td>
+<td>2 赞</td>
+<td>VLA×WM 工作列表合集</td>
+</tr>
+<tr>
+<td>2</td>
+<td>李飞飞空间智能首秀(谭日成回答)</td>
+<td>知乎</td>
+<td>谭日成</td>
+<td>2025-11</td>
+<td>7 赞</td>
+<td>"supervision deficit"非唯一瓶颈</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2026 具身突破(CyberSoma)</td>
+<td>知乎</td>
+<td>CyberSoma</td>
+<td>2025-12</td>
+<td>14 赞</td>
+<td>列为关键突破候选</td>
+</tr>
+<tr>
+<td>4</td>
+<td>DriveVLA-W0 改写数据扩展法则</td>
+<td>知乎</td>
+<td>wanhjh1223</td>
+<td>2026-03</td>
+<td>1 赞</td>
+<td>后期总结帖</td>
+</tr>
+<tr>
+<td>5</td>
+<td>MMatx 版解读</td>
+<td>知乎</td>
+<td>MMatx</td>
+<td>2026-02</td>
+<td>0 赞</td>
+<td>三贡献拆解</td>
+</tr>
+<tr>
+<td>6</td>
+<td>2025 DriveVLA-W0 Emu3</td>
+<td>知乎</td>
+<td>么么牛</td>
+<td>2026-04</td>
+<td>0 赞</td>
+<td>强调华为引望背景</td>
+</tr>
+<tr>
+<td>7</td>
+<td>智能驾驶技术解析(四)-VLA</td>
+<td>知乎</td>
+<td>小蝎子</td>
+<td>2025-11</td>
+<td>15 赞</td>
+<td>VLA 量产三方向总览</td>
+</tr>
+<tr>
+<td>8</td>
+<td>自动驾驶 VLA 的 MoE 支柱</td>
+<td>知乎</td>
+<td>汽车电子与软件</td>
+<td>2025-11</td>
+<td>2 赞</td>
+<td>专讲 MoE 以 W0 为案例</td>
+</tr>
+<tr>
+<td>9</td>
+<td>华为刷新小米 VLA 纪录</td>
+<td>知乎</td>
+<td>佐思汽车研究</td>
+<td>2026-03</td>
+<td>0 赞</td>
+<td>工业视角</td>
+</tr>
+<tr>
+<td>10</td>
+<td>DriveVLA-W0 出发探讨 WM 放大 VLA scaling</td>
+<td>B 站视频</td>
+<td>自动驾驶之心</td>
+<td>2025-12</td>
+<td>1062 播放</td>
+<td>唯一有效中文视频</td>
+</tr>
+<tr>
+<td>11</td>
+<td>70M 数据解锁 VLA Scaling</td>
+<td>微信</td>
+<td>极智视界</td>
+<td>2026-03</td>
+<td>—</td>
+<td>公众号级解读</td>
+</tr>
+<tr>
+<td>12</td>
+<td>VLA × WM 路线之争</td>
+<td>微信</td>
+<td>CarRobo Vision</td>
+<td>2026-04</td>
+<td>—</td>
+<td>华为方案</td>
+</tr>
+<tr>
+<td>13</td>
+<td>CVPR 2026 VLA+WM 新范式</td>
+<td>微信</td>
+<td>CarRobo Vision</td>
+<td>2026-04</td>
+<td>—</td>
+<td>和博世 ExploreVLA 对比</td>
+</tr>
+<tr>
+<td>14</td>
+<td>清华 LaST-VLA-8B 超越 W0 86.1</td>
+<td>微信</td>
+<td>赛博雷达</td>
+<td>2026-04</td>
+<td>—</td>
+<td>LaST-VLA 87.1 &gt; W0 86.1</td>
+</tr>
+<tr>
+<td>15</td>
+<td>DriveVLA-W0 Boosts AD</td>
+<td>alphaXiv</td>
+<td>AI overview</td>
+<td>2025-10+</td>
+<td>—</td>
+<td>唯一高质量英文技术总结</td>
+</tr>
+<tr>
+<td>16</td>
+<td>长安 DreamerAD</td>
+<td>微信</td>
+<td>科工力量</td>
+<td>2026-03</td>
+<td>—</td>
+<td>W0 列为先驱</td>
+</tr>
+<tr>
+<td>17</td>
+<td>超越 W0! DriveLaW</td>
+<td>自动驾驶之心</td>
+<td>-</td>
+<td>2026+</td>
+<td>—</td>
+<td>华科+小米后继</td>
+</tr>
+<tr>
+<td>18</td>
+<td>DriveWorld-VLA 小米北交</td>
+<td>自动驾驶之心</td>
+<td>-</td>
+<td>2026-02</td>
+<td>—</td>
+<td>小米 WM-VLA 超 W0</td>
+</tr>
+</tbody></table></div>
+<h2 id="9-phase-3-代码深度分析关键模块代码级对照">§ 9. Phase 3 — 代码深度分析(关键模块代码级对照)</h2>
+<aside class="callout warning"><div class="callout-label">Warn</div><div>
+<p>README 明示:<strong>"Due to company policy, only the reviewed part of our codebase is available."</strong> → 多条"论文未披露"源于此。仓库 349 stars / 23 forks / <strong>0 PR</strong>(直接 commit),最新有效 commit 2026-02-11。</p>
+</div></aside>
+<h3 id="91-paper-vs-code-对照表25-条10-条-论文未披露但复现必需">9.1 Paper vs Code 对照表(25 条,10 条 "论文未披露但复现必需" ❌)</h3>
+<p><strong>Figure 12: Paper vs Code gap map</strong> Highlights reproduction-critical mechanisms not disclosed in the paper text.</p>
+<figure class="diagram-card" id="fig-12">
+<figcaption>Figure 12: Paper vs Code gap</figcaption>
+<pre class="mermaid">flowchart TB
+  A[Paper method] --&gt; B[MoE action expert]
+  A --&gt; C[Flow matching decoder]
+  A --&gt; D[Joint attention]
+  B --&gt; E[Code adds adaLN modulation]
+  C --&gt; F[Code uses Beta time sampling]
+  C --&gt; G[Code has CFG path]
+  D --&gt; H[Vendored attention mask needs audit]
+  A --&gt; I[Issue 5 GT action leak risk]
+  E --&gt; J[Reproduction critical gaps]
+  F --&gt; J
+  G --&gt; J
+  H --&gt; J
+  I --&gt; J
+</pre>
+<details>
+<summary>Mermaid source</summary>
+<pre><code>flowchart TB
+  A[Paper method] --&gt; B[MoE action expert]
+  A --&gt; C[Flow matching decoder]
+  A --&gt; D[Joint attention]
+  B --&gt; E[Code adds adaLN modulation]
+  C --&gt; F[Code uses Beta time sampling]
+  C --&gt; G[Code has CFG path]
+  D --&gt; H[Vendored attention mask needs audit]
+  A --&gt; I[Issue 5 GT action leak risk]
+  E --&gt; J[Reproduction critical gaps]
+  F --&gt; J
+  G --&gt; J
+  H --&gt; J
+  I --&gt; J
+</code></pre>
+</details>
+</figure>
+<p>限于篇幅,下表列出<strong>最关键的 12 条</strong>(完整 25 条见 <code>phase3_code.md</code> 本地文件):</p>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>#</th>
+<th>模块</th>
+<th>代码位置(file:line)</th>
+<th>状态</th>
+<th>关键差异</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>2</td>
+<td>MoE Action Expert</td>
+<td><code>configs/moe_fast_video.json:35-55</code></td>
+<td>✅</td>
+<td><strong>仅 2 层 transformer + FFN 2048(VLA 是 14336)+ rope_theta 10000(VLA 1e6)</strong> — 论文仅说"small MoE"</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Eq.1 L_Action α weight</td>
+<td><code>utils/train_ar.py:103 default=10.0</code> vs <code>train_navsim_ar.sh:69 override=1.0</code></td>
+<td>⚠</td>
+<td><strong>Stage 1 α=10, Stage 2 α=1.0 未披露</strong></td>
+</tr>
+<tr>
+<td>4</td>
+<td>Eq.2 L_WM-AR β weight</td>
+<td><code>moe_fast_video_pretrain.json:34 β=1.0</code> vs <code>moe_fast_video.json:34 β=0.5</code></td>
+<td>✅</td>
+<td><strong>β 调度 Stage 1→2:1.0→0.5 未披露</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td>Eq.4 L_WM-Diff</td>
+<td><code>flow_matching.py:39-63 target=(z₁-x)</code></td>
+<td>⚠</td>
+<td><strong>代码是 Flow Matching 不是 DDPM</strong> — 论文 Eq.4 简化表述</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Joint Attention mask</td>
+<td><code>reference/Emu3/emu3/mllm/modeling_emu3.py:1726-1923</code></td>
+<td>✓</td>
+<td>公开代码可见双路 Q/K/V 拼接、<code>combined_attention_mask_4d</code>、拆分输出和缓存 VLM K/V 的推理路径</td>
+</tr>
+<tr>
+<td><strong>7</strong></td>
+<td><strong>adaLN modulation</strong></td>
+<td><code>moe_experts.py:185-188</code></td>
+<td><strong>❌</strong></td>
+<td><strong>DiT 风格 6× modulation 每 block,论文完全未写</strong></td>
+</tr>
+<tr>
+<td><strong>8</strong></td>
+<td><strong>CFG in Diffusion WM</strong></td>
+<td><code>moe_experts.py:314-322 forward_with_cfg</code></td>
+<td><strong>❌</strong></td>
+<td>classifier-free guidance,class_dropout_prob=0.1,论文未写</td>
+</tr>
+<tr>
+<td><strong>9</strong></td>
+<td><strong>Flow Matching Beta(1.5, 1.0) τ sampling</strong></td>
+<td><code>noise_schedulers.py:19 Beta(1.5, 1.0)</code></td>
+<td><strong>❌</strong></td>
+<td>偏 τ→0 清洁侧,论文未写,借鉴 π0</td>
+</tr>
+<tr>
+<td>10</td>
+<td>FAST tokenizer 关键参数</td>
+<td><code>configs/fast/processor_config.json</code></td>
+<td>✅</td>
+<td><strong>scale=10, vocab_size=2048, min_token=-354</strong> 未披露但 Issue #1 47 评论围绕这个</td>
+</tr>
+<tr>
+<td><strong>12</strong></td>
+<td><strong>Anchor Q-Former 256 queries + 8192 clusters</strong></td>
+<td><code>cluster_centers_8192.npy</code> + Issue #19</td>
+<td><strong>❌</strong></td>
+<td>论文说 Query-based 用 learnable queries,<strong>实际 anchor 版本用 256 queries + 8192 K-means clusters</strong></td>
+</tr>
+<tr>
+<td><strong>16</strong></td>
+<td><strong>null_prompt_prob 0.15</strong></td>
+<td>所有训练脚本</td>
+<td><strong>❌</strong></td>
+<td>15% 文本 prompt dropout(CFG 式),论文未写</td>
+</tr>
+<tr>
+<td><strong>20</strong></td>
+<td><strong>AR inference GT action leak 嫌疑</strong></td>
+<td><code>utils/datasets.py:1076-1083</code></td>
+<td><strong>❌</strong></td>
+<td><code>Emu3DrivingVAVA_AR_Dataset</code> 始终拼 <code>&lt;boa&gt;action&lt;eoa&gt;</code> 进 <code>vlm_input_ids</code>,<strong>Issue #5 指出可能泄漏至 AR 推理</strong>,作者未解释</td>
+</tr>
+<tr>
+<td><strong>21</strong></td>
+<td><strong>pre_action 3 步历史无 dropout</strong></td>
+<td><code>--use_previous_actions True + pre_action_frames=3</code></td>
+<td><strong>❌</strong></td>
+<td>3 步过去 ego 始终可见,强 kinematic prior,与 ReCogDrive LEARNINGS 75% dropout 警告共振</td>
+</tr>
+</tbody></table></div>
+<h3 id="911-已回填-phase-1-2-正文的未披露关键机制v8-blocking">9.1.1 已回填 Phase 1 §2 正文的未披露关键机制(v8 BLOCKING)</h3>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>#</th>
+<th>差异</th>
+<th>回填位置</th>
+<th>状态</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>7 adaLN modulation</td>
+<td>Phase 1 §2.4.1 MoE 架构小节末 callout</td>
+<td><strong>✓ 已回填</strong></td>
+</tr>
+<tr>
+<td>9 Beta(1.5, 1.0) τ</td>
+<td>Phase 1 §2.4.2 Flow Matching 段末</td>
+<td><strong>✓ 已回填</strong></td>
+</tr>
+<tr>
+<td>12 Anchor 256+8192</td>
+<td>Phase 1 §2.4.2 Query-based Anchor 变体独立 callout</td>
+<td><strong>✓ 已回填</strong></td>
+</tr>
+<tr>
+<td>21 pre_action 3 步无 dropout</td>
+<td>Phase 1 §2.4.2 开头 callout</td>
+<td><strong>✓ 已回填</strong></td>
+</tr>
+<tr>
+<td>5 Flow Matching vs DDPM</td>
+<td>Phase 1 §2.3.2 callout</td>
+<td><strong>✓ 已回填</strong></td>
+</tr>
+<tr>
+<td>20 GT action leak 嫌疑</td>
+<td>Phase 1 §3.2 假设审查最后一行</td>
+<td><strong>✓ 已回填</strong></td>
+</tr>
+</tbody></table></div>
+<h3 id="92-issue-pr-挖掘19-issues-0-pr">9.2 Issue / PR 挖掘(19 issues / 0 PR)</h3>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>#</th>
+<th>标题</th>
+<th>Severity</th>
+<th>关键发现</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><strong>#5 (closed, 未解释)</strong></td>
+<td><strong>GT actions are used when inferencing</strong></td>
+<td><strong>Critical</strong></td>
+<td><code>inference_action_navsim_ar_vava.py:79</code> 存 8 future GT actions 到 <code>vlm_input_ids</code>;3 👍 作者关闭无回复 — <strong>AR PDMS 可能虚高</strong></td>
+</tr>
+<tr>
+<td>#19 (open)</td>
+<td>Emu3_Query_based 权重 size mismatch</td>
+<td>High</td>
+<td><code>[1,256,1024] vs [1,8,1024]</code>;必须 <code>VLA_ANCHOR_ENABLED=true</code> 才能跑 PDMS 90.2</td>
+</tr>
+<tr>
+<td>#8 (open)</td>
+<td><code>normalize_pi0</code> 模块缺失</td>
+<td>Medium</td>
+<td>import error,公开代码缺</td>
+</tr>
+<tr>
+<td>#1 (open)</td>
+<td>怎么 tokenize trajectory</td>
+<td><strong>47 comments</strong></td>
+<td>FAST tokenizer 社区调试大合集</td>
+</tr>
+<tr>
+<td>#16 (open)</td>
+<td>Qwen-VLA reproduction <strong>PDMS 69 vs 报 85.3(-16)</strong></td>
+<td><strong>Critical</strong></td>
+<td>无作者回复;怀疑 path/config 错</td>
+</tr>
+<tr>
+<td>#15 (open)</td>
+<td>Flow Matching 复现 -2.3 PDMS</td>
+<td>High</td>
+<td>无作者回复,怀疑 norm_stats/anchor/cfg_scale</td>
+</tr>
+<tr>
+<td>#17/18 (open)</td>
+<td>NuPlan 预处理文件缺失</td>
+<td>Medium</td>
+<td>作者未释出完整预处理</td>
+</tr>
+<tr>
+<td>#7 (closed)</td>
+<td>"unfair comparison" 训练 validation 拆分质疑</td>
+<td>—</td>
+<td>脚本确实用 <code>trainval_pre_1s.pkl</code>(trainval 合并)</td>
+</tr>
+</tbody></table></div>
+<p><strong>commit timeline 作 PR 代理</strong>:2026-01-07 支持 flow matching test + anchor 工作流,<strong>初次 release 3 个月后才补全</strong> — 反映代码工程化不足。</p>
+<h3 id="93-复现-cheatsheet一页搞定">9.3 复现 Cheatsheet(一页搞定)</h3>
+<h4 id="931-环境配置">9.3.1 环境配置</h4>
+<pre class="code-block"><code data-lang="bash">conda create -n drivevla python=3.10 &amp;&amp; conda activate drivevla
+pip install torch==2.4.0 torchvision==0.19.0 --index-url https://download.pytorch.org/whl/cu124
+pip install -r requirements.txt # transformers==4.44.0, flash-attn==2.5.7
+pip install deepspeed scipy tensorboard==2.14.0
+export HF_ENDPOINT=https://hf-mirror.com</code></pre>
+<h4 id="932-数据准备">9.3.2 数据准备</h4>
+<pre class="code-block"><code data-lang="bash"># 下载预处理 pickle(强烈建议,别自己跑 nuplan pretrain)
+huggingface-cli download liyingyan/DriveVLA-W0 \
+ navsim_emu_vla_256_144_test_pre_1s.pkl \
+ navsim_emu_vla_256_144_trainval_pre_1s.pkl \
+ train_vq_codes.zip test_vq_codes.zip
+bash scripts/misc/download_emu3_pretrain.sh
+# Anchor 变体需要 cluster_centers_8192.npy —— HF 上没,Issue #19 才暴露,找作者要</code></pre>
+<h4 id="933-训练命令">9.3.3 训练命令</h4>
+<pre class="code-block"><code data-lang="bash"># Stage 1 pretrain (3 node x 8 GPU, 48h;绝大多数用户直接跳过用 HF ckpt)
+bash scripts/pretrain/train_nuplan_6va_multi_v0.2_worker.sh &lt;master_ip&gt;
+
+# Stage 2 finetune(单机 8× L20 40GB,16h;挑一个变体)
+bash scripts/scripts_train/train_navsim_ar.sh # AR decoder
+bash scripts/scripts_train/train_navsim_flow_matching.sh # Flow(87.2 PDMS)
+bash scripts/scripts_train/train_navsim_query_based.sh # Query+Anchor(90.2 PDMS)</code></pre>
+<h4 id="934-硬件估算表">9.3.4 硬件估算表</h4>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>阶段</th>
+<th>变体</th>
+<th>GPU 数</th>
+<th>per-dev bsz</th>
+<th>max_pos_emb</th>
+<th>max_steps</th>
+<th>预估时间</th>
+<th>显存</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Stage 1 pretrain</td>
+<td>nuplan 6VA 多节点</td>
+<td>L20-40GB × 8 × <strong>3 节点</strong></td>
+<td>4</td>
+<td>4000</td>
+<td>8000</td>
+<td>~48h</td>
+<td>~38 GB/GPU(ZeRO-3 offload)</td>
+</tr>
+<tr>
+<td>Stage 2 finetune</td>
+<td>AR-MoE</td>
+<td>L20-40GB × 8</td>
+<td>6</td>
+<td>1500</td>
+<td>10000</td>
+<td>~16h</td>
+<td>~35 GB/GPU</td>
+</tr>
+<tr>
+<td>Stage 2 finetune</td>
+<td>Flow matching</td>
+<td>L20-40GB × 8</td>
+<td>12</td>
+<td>1400</td>
+<td>10000</td>
+<td>~16h</td>
+<td>~32 GB/GPU</td>
+</tr>
+<tr>
+<td>Stage 2 finetune</td>
+<td>Query-based</td>
+<td>L20-40GB × 8</td>
+<td>12</td>
+<td>1400</td>
+<td>4000</td>
+<td>~6h</td>
+<td>~32 GB/GPU</td>
+</tr>
+<tr>
+<td>Inference</td>
+<td>所有变体</td>
+<td>1× 24GB+ GPU</td>
+<td>1</td>
+<td>1400</td>
+<td>—</td>
+<td>&lt;1h 12k scenes × 8 GPU</td>
+<td>&lt;16 GB</td>
+</tr>
+</tbody></table></div>
+<p>README 只说"8×L20 ~16h" — 实际仅覆盖 Stage 2 单一变体,Stage 1 若从零训练需要 <strong>3×</strong> 资源。</p>
+<h4 id="935-关键超参对照表40-行选-15-行核心">9.3.5 关键超参对照表(≥40 行,选 15 行核心)</h4>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>组</th>
+<th>参数</th>
+<th>值</th>
+<th>论文披露?</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>Optimizer</td>
+<td>lr (Stage 1 / Stage 2)</td>
+<td><strong>2e-4 / 5e-5</strong>(4× 差)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Optimizer</td>
+<td>warmup (Stage 1 / Stage 2)</td>
+<td><strong>400 / 50 steps</strong></td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Optimizer</td>
+<td>scheduler / weight_decay / adam</td>
+<td>cosine+min_lr 1e-6 / 0.1 / (0.9, 0.95) eps=1e-6</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Optimizer</td>
+<td>max_grad_norm / precision</td>
+<td>5.0 / bf16+tf32</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Loss</td>
+<td>α L_Action(Stage 2)</td>
+<td><strong>1.0</strong>(override,code default 10.0)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Loss</td>
+<td>β L_WM(Stage 1 / Stage 2)</td>
+<td><strong>1.0 / 0.5</strong></td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Loss</td>
+<td>null_prompt_prob</td>
+<td><strong>0.15</strong>(文本 CFG drop)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>VLA FFN / AE FFN</td>
+<td><strong>14336 / 2048</strong>(7× 小)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>VLA rope_theta / AE rope_theta</td>
+<td><strong>1e6 / 10000</strong>(100× 差)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>AE num_hidden_layers</td>
+<td><strong>2</strong>(仅 2 层)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>FAST</td>
+<td>scale / vocab / min_token / DCT</td>
+<td><strong>10 / 2048 / -354 / axis=1 norm=ortho</strong></td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Flow</td>
+<td>τ 分布 / 阈值 / 推理步数</td>
+<td><strong>Beta(1.5, 1.0) / 0.999 / 10</strong></td>
+<td>❌</td>
+</tr>
+<tr>
+<td>CFG</td>
+<td>class_dropout_prob / infer cfg_scale</td>
+<td><strong>0.1 / 2.0</strong></td>
+<td>❌</td>
+</tr>
+<tr>
+<td>Data</td>
+<td>pre_action_frames / action_dim / action_hz</td>
+<td><strong>3 frames 无 dropout / 3(x,y,yaw) / 2Hz</strong></td>
+<td>⚠ 仅"prefill"</td>
+</tr>
+<tr>
+<td>Query decoder</td>
+<td>num_queries / num_anchors</td>
+<td><strong>8 非 anchor / 256 anchor / 8192 K-means</strong></td>
+<td>❌</td>
+</tr>
+</tbody></table></div>
+<h4 id="936-复现陷阱-top-5">9.3.6 复现陷阱 TOP 5</h4>
+<ol>
+<li><strong>不要直接跑 <code>inference_action_navsim_ar_vava.py</code></strong> — 修 Issue #5 先,确保 inference 样本不 pre-concat <code>&lt;boa&gt;action&lt;eoa&gt;</code></li>
+<li><code>VLA_ANCHOR_ENABLED=true</code> <strong>必须设</strong> 才能跑公开的 88.4 / 90.2 Query-based ckpt(Issue #19)</li>
+<li><code>pi0_fast_video.json</code> 文件缺失(Issue #18),换 <code>configs/moe_fast_video.json</code></li>
+<li><strong>Stage 1 从零训练不可复现</strong> — NuPlan 预处理缺(Issue #17/18),用 HF <code>Emu3_NuPlan_Pretrain_Cktps</code></li>
+<li><strong>Qwen-VLA 训练脚本未释出</strong>(Issue #13),Qwen PDMS 85.3 不可复现</li>
+</ol>
+<h2 id="10-历史-surprises-自检v9-从-end-to-end-ad-主题预加载">§ 10. 历史 Surprises 自检(v9 从 end-to-end-AD 主题预加载)</h2>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>来源</th>
+<th>检查点</th>
+<th>本次发现</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>DiffAD</td>
+<td>config 默认 dropout 0.5 vs 最优 0.95</td>
+<td>✅ 对应 null_prompt_prob=0.15 default 确为训练常用值,无"默认 vs 最优"分叉</td>
+</tr>
+<tr>
+<td>DiffAD</td>
+<td>MotionAlignment 纯几何 warp 论文零字未提</td>
+<td>⚠ 对应 pre_action 3 步历史无 dropout,论文仅 1 句带过</td>
+</tr>
+<tr>
+<td>Hydra-MDP++</td>
+<td>Perception aux 反而损害 planning</td>
+<td>⚠ <strong>命中</strong>:VQ +WM 在 700k scale 出现非单调 -3.6%,可能同源 gradient conflict</td>
+</tr>
+<tr>
+<td>ORION</td>
+<td>同组续作 ReCogDrive 否定 VAE 换 Diffusion+RL</td>
+<td>✅ W0 vs LAW:前作 latent WM,本文 image-space WM,修正了 latent 信息量不足</td>
+</tr>
+<tr>
+<td>iPad</td>
+<td>飞书 equation 标签内的下标组合仍可能被劈碎</td>
+<td>✅ 本 v3 公式已全用单字母下标</td>
+</tr>
+<tr>
+<td>iPad</td>
+<td>Diversity loss 代码存在但默认关闭</td>
+<td>✅ 已确认 W0 代码 diversity 相关路径 — 无 diversity loss,只有 256 anchor 提供多样性</td>
+</tr>
+<tr>
+<td>ReCogDrive</td>
+<td>默认超参 ≠ 最优超参(bc_coeff/min_sampling)</td>
+<td>⚠ <strong>命中</strong>:α default 10.0 vs 实际使用 1.0(Stage 2)</td>
+</tr>
+<tr>
+<td>ReCogDrive</td>
+<td>Eq 公式 γ 方向与代码相反</td>
+<td>⚠ <strong>命中</strong>:Eq.4 论文 DDPM 记法 vs 代码 Flow Matching 实现,虽非"相反"但<strong>不等价</strong></td>
+</tr>
+<tr>
+<td>DriveDPO</td>
+<td>abstract 方法名 ≠ 最大 Δ 贡献</td>
+<td>⚠ <strong>命中</strong>:方法名"World Models Amplify..."但最大 Δ(28.8% ADE)来自 70M 数据本身,WM 在 700k 反而 -3.6%</td>
+</tr>
+<tr>
+<td>DriveDPO</td>
+<td>SOTA 3 月内被 3 条路线超越</td>
+<td>⚠ <strong>命中</strong>:DriveWorld-VLA 99.1、DriveLaW、LaST-VLA 87.1 EPDMS 都在 2026-Q1 超越了 W0</td>
+</tr>
+</tbody></table></div>
+<h2 id="11-结论与限制">§ 11. 结论与限制</h2>
+<h3 id="111-本文真正的价值">11.1 本文真正的价值</h3>
+<ol>
+<li><strong>supervision deficit 命名 + 大规模实证</strong>:把行业隐约感觉的"VLA 用大模型小监督"问题明确命名,并在 70M 帧级别给出严格的 scaling 实验证据</li>
+<li><strong>"WM 训练时用、推理时丢"的正则化范式</strong>:这是 VLA+WM 研究中第一次被完整证明可行的路线,为后续工作留出"训推分离"设计空间</li>
+<li><strong>action decoder scaling 反转的意外发现</strong>:推翻社区对 flow matching / diffusion 的"未来属于复杂 decoder"舆论,为工业部署给出"大规模数据下用简单 AR"的指导</li>
+</ol>
+<h3 id="112-论文明确的局限来自失败案例分析">11.2 论文明确的局限(来自失败案例分析)</h3>
+<figure class="paper-figure-card" id="paper-fig-11">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 11: Failure case analysis: ambiguity in driving commands.</figcaption>
+<img alt="Paper Figure 11: Failure case analysis: ambiguity in driving commands." src="assets/paper_fig11_figure_11.png"/>
+<div class="paper-figure-meta">
+<span>fig:vis_failure_case_command</span>
+<span>Failure Case</span>
+<span>iclr2026_figures/vis_failure_case_driving_command.pdf</span>
+</div>
+<p>Original failure-case figure: ambiguity in driving commands</p>
+</figure>
+<figure class="paper-figure-card" id="paper-fig-12">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 12: Failure case analysis: dynamic object prediction.</figcaption>
+<img alt="Paper Figure 12: Failure case analysis: dynamic object prediction." src="assets/paper_fig12_figure_12.png"/>
+<div class="paper-figure-meta">
+<span>fig:vis_failure_case_may_cars</span>
+<span>Failure Case</span>
+<span>iclr2026_figures/vis_failure_case_may_cars.pdf</span>
+</div>
+<p>Original failure-case figure: dynamic object prediction</p>
+</figure>
+<section class="principle-panel" id="principle-failure-loop">
+<div class="principle-header">
+<span>Failure process</span>
+<h3>失败链路:视频未来错了,轨迹会一致地跟着错</h3>
+</div>
+<div class="principle-flow three">
+<div><b>视觉预测偏差</b><p>世界模型误判动态物体或道路拓扑。</p></div>
+<div><b>内部一致性仍成立</b><p>轨迹与预测视频保持一致,但一致的是错误未来。</p></div>
+<div><b>规划行为失效</b><p>不必要停车、错误转向或错过潜在冲突。</p></div>
+</div>
+</section>
+<figure class="concept-image-card" id="generated-counterfactual-rollout">
+<div class="figure-kicker">Generated explanatory visual</div>
+<figcaption>Generated process visual: counterfactual rollout and failure diagnosis</figcaption>
+<img alt="Generated process visual: counterfactual rollout and failure diagnosis" src="assets/generated_counterfactual_rollout_failure_diagnosis.png"/>
+<p>这张图把同一观测场景分叉成多条候选未来,突出安全、指令歧义和动态物体误判三类路径,用于解释失败案例如何反向暴露世界模型盲点;它不是论文原图。</p>
+</figure>
+<ol>
+<li><strong>指令模糊性</strong>:NAVSIM 离散指令集(Turn Left/Straight/Right)粒度过粗,复杂 Y 路口决策不确定</li>
+<li><strong>动态对象预测误差</strong>:WM 在复杂交叉口预测多动态对象(如对向来车)仍有挑战</li>
+<li><strong>EC(Extended Comfort)指标偏低</strong>:NAVSIM v2 上 EC 58.9(DiffusionDrive 87.7),舒适度优化空间大</li>
+</ol>
+<h3 id="113-v3-独家发现的隐含问题">11.3 v3 独家发现的隐含问题</h3>
+<ol>
+<li><strong>AR inference GT action leak 嫌疑</strong>(Issue #5):可能使 AR PDMS 数字虚高,作者未澄清</li>
+<li><strong>"数据 scaling law"声明严格性不足</strong>:仅 3 scale 点且 700k 非单调,不构成 power-law</li>
+<li><strong>大量"未披露但复现必需"参数</strong>(adaLN / CFG / Beta(1.5,1.0) / 256+8192 anchor / pre_action 等),独立复现难度高 → Issue #16 Qwen -16 PDMS 就是例证</li>
+</ol>
+<h3 id="114-未来方向">11.4 未来方向</h3>
+<ul>
+<li>更细粒度导航指令体系</li>
+<li>多视角输入扩展(当前仅单前视)</li>
+<li>WM 的动态对象建模增强</li>
+<li>更大规模数据(&gt;70M)下的持续 scaling 研究</li>
+<li>闭环 WM 推理模式(训练时也丢、推理时也用)</li>
+</ul>
+<h2 id="附录-ahtml-当前图像策略速览">附录 A:HTML 当前图像策略速览</h2>
+<p>本 HTML 版按用户最新要求重排图像:优先使用论文原文作者图,再补机制/流程解释图;旧版从表格重绘的 matplotlib 数据图不再进入正文阅读流。</p>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>类别</th>
+<th>数量</th>
+<th>内容</th>
+<th>当前处理</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>原论文作者图</td>
+<td>16</td>
+<td>论文源码包 <code>iclr2026_figures/*.pdf</code> 转出的 Figure 1-16</td>
+<td>已复制到 <code>assets/paper_fig*.png</code>,尽量放在对应解读段落,其余放入原论文图像附录</td>
+</tr>
+<tr>
+<td>机制/流程 HTML 面板</td>
+<td>5</td>
+<td>supervision deficit、双 WM、Joint Attention、两阶段训练、失败链路</td>
+<td>使用网页原生布局展示,随缩放自动贴合阅读区</td>
+</tr>
+<tr>
+<td>Mermaid 原理图</td>
+<td>7</td>
+<td>原飞书解析中的架构/数据流/训练流程白板</td>
+<td>在 HTML 中保留为 Mermaid 源码渲染,并提供 source fallback</td>
+</tr>
+<tr>
+<td>生成解释图</td>
+<td>4</td>
+<td>supervision deficit、dual world-model loop、Joint Attention、counterfactual rollout/failure diagnosis</td>
+<td>明确标注为 Generated explanatory visual,只解释原理和流程,不冒充论文原图</td>
+</tr>
+<tr>
+<td>旧数据图</td>
+<td>5</td>
+<td>data scaling、decoder reversal、generalization flip、field positioning、FID/latency</td>
+<td>已取消正文展示,文件移入 <code>_omitted_data_visualizations/</code>,避免重复绘制实验指标</td>
+</tr>
+</tbody></table></div>
+<h2 id="delivery-sentinel">Delivery Sentinel</h2>
+<p>SECTION_END_SENTINEL_20260614_DRIVEVLA_W0_CODEX</p>
+<h2 id="原论文图像附录">原论文图像附录</h2>
+<p>以下集中列出正文未就近展示的作者原图,全部来自 arXiv 源码包并已转为本地 PNG。</p>
+<figure class="paper-figure-card" id="paper-fig-7">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 07: World modeling improves trajectory planning in complex scenarios.</figcaption>
+<img alt="Paper Figure 07: World modeling improves trajectory planning in complex scenarios." src="assets/paper_fig07_figure_07.png"/>
+<div class="paper-figure-meta">
+<span>fig:vla_w0_win</span>
+<span>Planning Trajectory</span>
+<span>iclr2026_figures/vla_w0_win.pdf</span>
+</div>
+<p>Original paper appendix figure 7</p>
+</figure>
+<figure class="paper-figure-card" id="paper-fig-15">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 15: Counterfactual reasoning.</figcaption>
+<img alt="Paper Figure 15: Counterfactual reasoning." src="assets/paper_fig15_figure_15.png"/>
+<div class="paper-figure-meta">
+<span>fig:counter_reason</span>
+<span>Counterfactual Reasoning</span>
+<span>iclr2026_figures/vis_counter_reason_1.pdf</span>
+</div>
+<p>Original paper appendix figure 15</p>
+</figure>
+<figure class="paper-figure-card" id="paper-fig-16">
+<div class="figure-kicker">Original paper figure</div>
+<figcaption>Paper Figure 16: Counterfactual reasoning.</figcaption>
+<img alt="Paper Figure 16: Counterfactual reasoning." src="assets/paper_fig16_figure_16.png"/>
+<div class="paper-figure-meta">
+<span>fig:counter_reason</span>
+<span>Counterfactual Reasoning</span>
+<span>iclr2026_figures/vis_counter_reason_2.pdf</span>
+</div>
+<p>Original paper appendix figure 16</p>
+</figure>
+</article>
+<section class="comparison" id="verification">
+<h2>生成与验证记录</h2>
+<p>本 HTML 从本地已验证 Markdown 结果生成,没有重写论文结论。下方保留 Codex closure 与 reviewer fallback 摘要。</p>
+<h3>Codex closure</h3>
+<pre class="code-block"><code>
+## Codex execution closure - 2026-06-14
+
+&lt;callout emoji="white_check_mark" background-color="light-green"&gt;
+This closure records the final Codex-side execution state after applying the paper-learning-workflow Codex adapter and PUA fallback checks.
+&lt;/callout&gt;
+
+| Item | Evidence |
+|-|-|
+| Skill compatibility | `~/.codex/skills/paper-learning-workflow` validated by `quick_validate.py`: Skill is valid |
+| Codex adapter | `references/codex_adapter.md` loaded and used for path/tool/reviewer fallback mapping |
+| Feishu document | `https://mi.feishu.cn/wiki/NcgcwJdTIix0p0khd6Ic54kgn3d`, doc token `HJhldfylDol8Vrxg8DxcZJrenPb` |
+| Text integrity | chunks 01-15 re-written and each chunk sentinel read back |
+| Formula source lint | `sanitize_formulas.py --check-only`: 0 residual issues |
+| Formula post-write fallback | `docx read` full text has final sentinel, no literal `equation tag` tags, no dangerous inline LaTeX text-run patterns; 9 intended formula areas sampled by keyword/block checks, bad formula blocks = 0 |
+| Whiteboards | 7 imported; node counts: fig1=17, fig2=19, fig3=17, fig4=19, fig5=16, fig6=17, fig12=23 |
+| Images | 5 uploaded; dimensions: 1785x705, 1785x740, 1635x734, 1634x1108, 1785x660; bad_100x100=0 |
+| Reviewer fallback | `review_resolution.md`: CLEAN, no BLOCKING issue |
+| Phase 5 learnings | `~/.cache/arxiv_papers/_learnings/end-to-end-AD/2510.12796-LEARNINGS.md` |
+| PUA fallback | Full `docx blocks` endpoint repeatedly returned Feishu 99991400, so the workflow switched to equivalent targeted lower-level checks instead of waiting silently |
+
+CODEX_CLOSURE_SENTINEL_20260614_DRIVEVLA_W0
+</code></pre>
+<h3>Reviewer fallback</h3>
+<pre class="code-block"><code># DriveVLA-W0 Codex Main-thread Reviewer Fallback
+
+Scope: review the Feishu read-back markdown after Codex-compatible paper-learning-workflow execution.
+
+## Verdict
+CLEAN: no BLOCKING issue found in the five required review dimensions.
+
+## Five-dimension review
+1. Concept dependency: PASS. The document starts with a prerequisite concept table covering VLA, VLM, supervision deficit, AR/Diffusion WM, FAST, MoE Action Expert, Joint Attention, PDMS/EPDMS, BoN, adaLN-Zero, CFG, Beta sampling, Anchor Q-Former, and pre_action.
+2. Logic continuity: PASS. The main argument follows supervision deficit -&gt; world-model auxiliary training -&gt; scaling/generalization evidence -&gt; action expert deployment -&gt; code/repro gaps.
+3. Figure-text alignment: PASS with note. Seven whiteboards were imported and verified by node count; five PNG figures were uploaded as figure appendix/body media. Exact in-place PNG anchoring was not attempted because full docx blocks list was rate-limited, but block-level image dimensions are verified.
+4. Paper-vs-code coverage: PASS. The document includes paper/code gap analysis, issue/PR findings, unreleased Qwen path, action-leak issue, hidden hyperparameters, and reproduction caveats.
+5. Practical reproducibility: PASS. The document includes environment, data, training commands, GPU estimates, key hyperparameters, and pitfalls.
+
+## Residual risk
+Full-document `feishu docx blocks` remained rate-limited by Feishu code 99991400, so the global verifier was replaced by targeted evidence: `docx read` full text checks, nine local formula block checks, whiteboard nodes, and image block dimensions.
+</code></pre>
+</section>
+<section class="deep-dive-addendum" id="源码图解联读">
+<h2 id="源码图解联读">§ 12. 源码—图解联读：从未来帧监督到可执行动作</h2>
+<p class="lead">本节是对前文的增量补充，不替换既有论文翻译、原图、公式或实验记录。阅读顺序固定为：图稿 → 图中全部细节 → 机制原理 → 源码锚点 → 一个可手算的例子 → 实验含义。</p>
+<h3 id="图解资产与事实边界">12.1 图解资产与事实边界</h3>
+<p>下列六张图是当前报告中的候选/来源资产，已逐图执行视觉审校并按 <code>figure_audit_20260828.json</code> 留存结果：4 张 <code>generated_*.png</code> 因缺少中文标签和可核对细节被拒收，2 张 <code>paper_fig*.png</code> 明确是论文原图、不能计入新生成图。当前环境本回合未暴露 paper-comic 的原生图像生成 callable，因此本节不把这些候选图宣称为正式高密度 paper-figure；正文、源码、六份事实合同和替换入口已准备完毕，待原生图工具重新挂载后逐张生成并通过视觉验收。</p>
+<div class="callout warning"><strong>事实边界：</strong>论文明确给出 VQ/ViT 双世界模型、动作专家与 scaling law 结果；源码进一步暴露了 Beta 时间采样、CFG、patchify、action token 词表尾映射、归一化统计和推理落盘等复现细节。两者不一致之处以“论文未披露的工程实现”标记，不能反推为论文的额外理论主张。</div>
+<figure class="paper-figure-card" id="deep-fig-01">
+<img alt="监督缺失与世界模型密集监督机制图" src="assets/drivevla_w0_native_20260828/drivevla_w0_fig01_supervision_deficit.png"/>
+<figcaption>图解 01：监督缺失 → 未来帧预测 → 表征与动作共同改善。</figcaption>
+<div class="paper-figure-meta"><span>资产：generated_supervision_deficit_world_model.png</span><span>角色：核心方法总览</span></div>
+</figure>
+<h4>图解 01｜全部细节</h4>
+<p>左侧“稀疏动作标签”表示一个驾驶片段通常只给一条未来轨迹，监督密度随时间和空间迅速变稀；中部将同一历史观测与动作条件送入世界模型，要求预测未来图像/视觉 token，因而每个未来位置都产生自监督误差信号；右侧把 VLA 动作损失与世界模型视觉损失并列，说明增强来自共享表征而不是推理时额外调用世界模型。图中箭头方向必须是“观测+动作 → 未来视觉 → 辅助损失 → 共享骨干更新”，不能画成“未来视觉直接替代动作标签”。</p>
+<p><strong>机制对应：</strong>离散 VQ 路径对未来视觉 token 做自回归交叉熵；连续 ViT 路径在潜空间做去噪/流匹配式视觉重建。论文的核心因果链是密集预测目标缓解 supervision deficit，从而让更多驾驶帧继续带来有效梯度。</p>
+<figure class="paper-figure-card" id="deep-fig-02">
+<img alt="VQ AR 与 ViT Diffusion 双世界模型闭环" src="assets/drivevla_w0_native_20260828/drivevla_w0_fig02_dual_world_model.png"/>
+<figcaption>图解 02：VQ-AR 与 ViT-Diffusion 两条世界建模路径。</figcaption>
+<div class="paper-figure-meta"><span>资产：generated_dual_world_model_loop.png</span><span>角色：专门的方法机制</span></div>
+</figure>
+<h4>图解 02｜全部细节</h4>
+<p>图左的 VQ 分支必须出现“图像 → VQ 编码 → 离散视觉 token → AR next-token prediction → VQ 解码图像”的闭环；图右的 ViT 分支必须出现“连续视觉特征 → 加噪潜变量 → 条件去噪网络 → 未来连续特征/图像”的闭环。两分支共享历史驾驶上下文与动作条件，但输出空间不同：一个是词表上的离散分类，一个是连续空间中的向量场或噪声回归。图中如果出现同一套 loss、同一个解码器或把 VQ token 当作 ViT 特征，均属于事实错误。</p>
+<p><strong>源码联读：</strong>仓库的配置文件将 <code>vision_loss_weight</code> 与 <code>action_config</code> 分开；论文正文则以统一的总损失描述两类实例。复现时必须先确认当前 checkpoint 走的是 <code>moe_fast_video_pretrain.json</code> 还是 <code>moe_fast_video.json</code>，因为视觉损失权重并不相同。</p>
+<figure class="paper-figure-card" id="deep-fig-03">
+<img alt="Joint Attention 与 Action Expert 机制图" src="assets/drivevla_w0_native_20260828/drivevla_w0_fig03_joint_attention_action_expert.png"/>
+<figcaption>图解 03：VLA 主干与轻量 Action Expert 的 Joint Attention。</figcaption>
+<div class="paper-figure-meta"><span>资产：generated_joint_attention_action_expert.png</span><span>角色：模型结构与低延迟动作头</span></div>
+</figure>
+<h4>图解 03｜全部细节</h4>
+<p>图中应把训练态和推理态分开：训练态由 VLA expert 与 Action expert 分别计算 Q/K/V，VLM Q/K 使用 RoPE、Action Q/K 不使用 RoPE；两路张量沿序列维拼接后执行一次联合注意力，再按原序列长度拆回各自残差与 MLP。推理态则缓存 VLM 的 K<sub>rope</sub>/V，只实时计算 Action Q/K/V，让 Action Q 同时关注“缓存 VLM K/V + 实时 Action K/V”。这才是源码中的低延迟关键，而不是简单把两路 hidden state 相加。</p>
+<p><strong>实现锚点：</strong>真正的 Pi0-style Joint Attention 位于 <code>reference/Emu3/emu3/mllm/modeling_emu3.py:1726</code> 的 <code>Emu3Pi0SharedLayer</code>；<code>:1785-1809</code> 计算并拼接双路 Q/K/V，<code>:1818-1848</code> 完成联合注意力、拆分和双路残差/MLP，<code>:1852-1923</code> 实现缓存 VLM K/V 的推理路径。NAVSIM 训练脚本使用 <code>action_frames=8</code>、<code>action_dim=3</code>。仓库中的 <code>models/policy_head/moe_experts.py</code> 是另一条包含 patchify、AdaLN 和 unpatchify 的独立动作网络实现，不能与 <code>Emu3Pi0SharedLayer</code> 混为同一段代码。</p>
+<figure class="paper-figure-card" id="deep-fig-04">
+<img alt="论文原图：Action Expert 与模型结构" src="assets/drivevla_w0_native_20260828/drivevla_w0_fig04_action_tokenizer_normalization.png"/>
+<figcaption>图解 04：论文原图中的 Action Expert 结构与动作解码位置。</figcaption>
+<div class="paper-figure-meta"><span>资产：paper_fig03_figure_03.png</span><span>角色：论文原图交叉核对</span></div>
+</figure>
+<h4>图解 04｜全部细节</h4>
+<p>这张论文原图用于核对图解 03 的拓扑：输入端是多视角/历史上下文，中间是 VLA backbone 与 action expert 的交互，输出端是未来动作序列。阅读时要区分“训练期的世界模型辅助分支”和“推理期的动作专家”：前者提供额外视觉监督，后者承担低延迟的动作生成；两者不是同一个 head，也不能把 world-model rollout 画成每次车辆控制都必经的在线环节。</p>
+<figure class="paper-figure-card" id="deep-fig-05">
+<img alt="论文原图：推理延迟对比" src="assets/drivevla_w0_native_20260828/drivevla_w0_fig05_flow_matching.png"/>
+<figcaption>图解 05：不同动作解码器的延迟—精度权衡。</figcaption>
+<div class="paper-figure-meta"><span>资产：paper_fig06_figure_06.png</span><span>角色：部署与实验机制</span></div>
+</figure>
+<h4>图解 05｜全部细节</h4>
+<p>图中横向比较应至少保留三种解码器：query-based、AR、flow matching；纵向含义是推理延迟而不是训练 loss。Query-based 的固定 query 数带来近似恒定延迟；AR 逐 token 生成，序列长度增加会带来线性增长；flow matching 的步数固定时延迟近似恒定但单步网络调用成本更高。正文已有“约 74 ms、约 145 ms”等报告数值时，图注必须说明它们来自对应实验设置，不能推广为所有硬件/分辨率下的绝对延迟。</p>
+<figure class="paper-figure-card" id="deep-fig-06">
+<img alt="反事实 rollout 与失败诊断机制图" src="assets/drivevla_w0_native_20260828/drivevla_w0_fig06_inference_failure_diagnosis.png"/>
+<figcaption>图解 06：动作条件未来帧、反事实 rollout 与失败链路诊断。</figcaption>
+<div class="paper-figure-meta"><span>资产：generated_counterfactual_rollout_failure_diagnosis.png</span><span>角色：数据流、边界与失败案例</span></div>
+</figure>
+<h4>图解 06｜全部细节</h4>
+<p>图中应把“当前观测”与“候选动作”作为两个独立输入，并画出多个候选未来，而不是只画一条确定性预测；每条 rollout 都必须标注动作条件、未来帧、轨迹/碰撞检查和最终选择或训练信号。失败诊断要区分三类错误：命令语义歧义、动态物体未来预测错误、动作解码/归一化错误。图中不能暗示模型拥有真实世界中的完美反事实因果模型；它学习的是数据分布上的条件未来预测，错误的未来视觉会把错误梯度传给动作头。</p>
+<h3 id="源码精读-动作编码与流匹配">12.2 源码精读：动作编码、Flow Matching 与推理落盘</h3>
+<div class="code-explain">
+<h4>12.2.1 ActionTokenizer：连续轨迹如何变成语言模型 token</h4>
+<p><code>models/tokenizer/action_tokenizer.py:24-34</code> 先在 <code>[-1,1]</code> 上均匀建立 256 个 bin，并把动作 token 放到词表尾部；<code>:36-41</code> 对动作 clip 后用 <code>np.digitize</code> 分箱，再用 <code>last_vocab_idx - discretized_action</code> 反向映射为 token id；<code>:82-90</code> 在反解码前处理边界，避免最后一个 digitize index 越过 <code>bin_centers</code>。</p>
+<pre class="code-block"><code>action = np.clip(action, -1, 1)
+discretized_action = np.digitize(action, self.bins)
+token_ids = self.last_vocab_idx - discretized_action</code></pre>
+<p><strong>手算例子：</strong>假设归一化横向动作为 <code>0.0</code>，256 个端点从 -1 到 1，<code>digitize</code> 得到大约中间 bin；模型生成 token 后再反向查找 bin center，最后用场景的 <code>action_low/action_high</code> 做反归一化。该过程解释了为什么“动作 token 看似是文本”并不意味着语义词义：它只是把连续控制值借用到词表的稀疏尾部。</p>
+<h4>12.2.2 FlowMatching：训练目标与采样方向</h4>
+<p><code>models/policy_head/flow_matching.py:19-37</code> 用 Uniform 或 Beta(1.5,1.0) 采样时间；<code>:49-58</code> 构造 <code>z_t=(1-t)x+tε</code>，令网络预测速度/残差并以 <code>(ε-x-vθ)^2</code> 做 MSE；<code>:65-80</code> 在采样时从噪声状态反向 Euler 更新，并可用 classifier-free guidance 合并条件与无条件速度场。</p>
+<pre class="code-block"><code>t = sample_t(batch)
+z1 = torch.randn_like(x)
+zt = (1 - t) * x + t * z1
+vtheta = model(zt, t, cond)
+loss = ((z1 - x - vtheta) ** 2).mean()</code></pre>
+<p>因此图中箭头必须从“数据动作/特征”指向“噪声端”的加噪训练路径，同时采样箭头从噪声端反向回到动作端；把训练和采样画成同一个方向会误导读者。</p>
+<h4>12.2.3 两种公开动作实现：共享层 Joint Attention 与独立 patch 网络</h4>
+<p><strong>Pi0-style 共享层：</strong><code>reference/Emu3/emu3/mllm/modeling_emu3.py:1726-1923</code> 对 VLM/Action 两路 Q/K/V 做联合注意力，并支持推理时缓存 VLM K/V。<strong>独立 patch 网络：</strong><code>models/policy_head/moe_experts.py:277-310</code> 则把 <code>B×C×H×W</code> 张量 patchify，经时间/类别条件、decoder 和 FinalLayer 后 unpatchify。两者体现不同工程路径；图解与复现必须先确认 checkpoint/训练脚本实际实例化的是哪一个类，不能把 patchify/AdaLN 细节强行画入所有 Joint Attention 配置。</p>
+<h4>12.2.4 推理：输入、采样步数、反归一化、JSON</h4>
+<p><code>inference/vla/inference_action_navsim_flow_matching_vava.py:168-179</code> 从配置读取采样步数，输入 <code>input_ids</code>、<code>attention_mask</code>、<code>pre_action</code>、<code>cmd</code> 并调用 <code>model.sample_actions</code>；<code>:181-196</code> 用 q01/q99 统计反归一化，按场景 token 名称写出 JSON。因而数据流图必须包含“归一化动作 → 采样 → 反归一化 → 结果文件”四个节点。</p>
+<pre class="code-block"><code>predicted_action = model.sample_actions(..., pre_action, cmd,
+    num_inference_steps=num_inference_steps)
+action_denorm = 0.5 * (predicted_action + 1) * (action_high - action_low) + action_low
+json.dump({"action": action_denorm.tolist()}, output_file)</code></pre>
+</div>
+<h3 id="论文公式源码实验交错解释">12.3 公式—源码—实验的交错解释</h3>
+<table class="data-table"><thead><tr><th>读者问题</th><th>公式层</th><th>代码层</th><th>实验/复现含义</th></tr></thead><tbody>
+<tr><td>为什么未来帧能提供密集监督？</td><td><code>L=L_action+λL_world</code>；每个未来视觉位置产生误差</td><td>视觉损失配置与动作配置分离</td><td>大数据规模下世界模型增益更明显，但需核对数据分布与权重</td></tr>
+<tr><td>为什么 VQ 与 ViT 要两条路径？</td><td>离散 CE vs 连续去噪/向量场 MSE</td><td>不同 backbone/tokenizer/config</td><td>不能用单一 decoder 结论替代双架构比较</td></tr>
+<tr><td>为什么 Action Expert 更快？</td><td>固定长度/少层数动作分支减少解码成本</td><td>2-layer action config、patchify/unpatchify</td><td>延迟依赖采样步数、硬件和输出 horizon</td></tr>
+<tr><td>为什么复现时动作会偏尺度？</td><td>模型输出在归一化空间</td><td>q01/q99 反归一化与 256-bin 边界处理</td><td>遗漏统计文件会导致轨迹尺度错误，不能归因于模型能力</td></tr>
+</tbody></table>
+<h3 id="复现检查清单与图稿补做入口">12.4 复现检查清单与图稿补做入口</h3>
+<ol>
+<li>固定论文版本为 <code>2510.12796v2</code>，源码 commit 为 <code>a55766ce46ee55d9035b93816e57b8d933166482</code>。</li>
+<li>确认配置、归一化统计、动作 tokenizer 和 checkpoint 属于同一实验路径。</li>
+<li>先执行单 batch 的 token 编解码与动作反归一化，再执行 world-model 或 action sampling。</li>
+<li>逐图检查中文文字、变量、箭头方向、分支边界、张量形状和图注是否与本节一致。</li>
+<li>原生 paper-comic callable 重新挂载后，按本节六张图的事实合同逐张单独生成；通过视觉审校后再替换候选资产，不覆盖当前已验收文件。</li>
+</ol>
+</section>
+<div class="footer">
+        Generated from C:\Users\tianxl\.cache\arxiv_papers\2510.12796\final_codex_feishu.md. Feishu source document: https://mi.feishu.cn/wiki/NcgcwJdTIix0p0khd6Ic54kgn3d
+      </div>
+</main>
+</div>
+<div aria-label="??????" aria-modal="true" id="image-lightbox" role="dialog">
+<button aria-label="??????" class="lightbox-close" type="button">?</button>
+<button aria-label="?????" class="lightbox-nav lightbox-prev" type="button">?</button>
+<img alt=""/>
+<button aria-label="?????" class="lightbox-nav lightbox-next" type="button">?</button>
+<div aria-live="polite" class="lightbox-caption"></div>
+</div>
+<script>
+(() => {
+  const box = document.getElementById('image-lightbox');
+  if (!box) return;
+  const preview = box.querySelector('img');
+  const caption = box.querySelector('.lightbox-caption');
+  const images = Array.from(document.querySelectorAll('main img, article img, .content img'));
+  let active = -1;
+  images.forEach((image, index) => {
+    image.classList.add('image-zoomable');
+    image.setAttribute('tabindex', '0');
+    image.setAttribute('role', 'button');
+    image.setAttribute('aria-label', `${image.alt || '??'}?????`);
+    image.addEventListener('click', () => open(index));
+    image.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        open(index);
+      }
+    });
+  });
+  function open(index) {
+    active = (index + images.length) % images.length;
+    const image = images[active];
+    preview.src = image.currentSrc || image.src;
+    preview.alt = image.alt || '??????';
+    caption.textContent = `${image.alt || '??'} ? ${active + 1}/${images.length}`;
+    box.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+    box.querySelector('.lightbox-close').focus();
+  }
+  function close() {
+    box.classList.remove('is-open');
+    preview.removeAttribute('src');
+    document.body.style.overflow = '';
+    active = -1;
+  }
+  function move(step) { if (active >= 0) open(active + step); }
+  box.querySelector('.lightbox-close').addEventListener('click', close);
+  box.querySelector('.lightbox-prev').addEventListener('click', () => move(-1));
+  box.querySelector('.lightbox-next').addEventListener('click', () => move(1));
+  box.addEventListener('click', (event) => { if (event.target === box) close(); });
+  preview.addEventListener('click', close);
+  document.addEventListener('keydown', (event) => {
+    if (!box.classList.contains('is-open')) return;
+    if (event.key === 'Escape') close();
+    else if (event.key === 'ArrowLeft') move(-1);
+    else if (event.key === 'ArrowRight') move(1);
+  });
+})();
+</script>
+</body>
+</html>

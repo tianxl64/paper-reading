@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#556376"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="760" fill="#FFFFFF"/>
+<text x="42" y="42" font-size="22" font-weight="700" fill="#172033">论文 claim 到代码对象的双栏映射</text>
+<text x="42" y="70" font-size="13" font-weight="500" text-anchor="start" fill="#596579">paper-vs-code bipartite map；连接线不穿文本</text>
+<rect x="60" y="110" width="420" height="520" rx="12" fill="#EAF2FF" stroke="#D8DEE8"/>
+<text x="76" y="135" font-size="13" font-weight="700" text-anchor="start" fill="#596579">论文机制</text>
+<rect x="800" y="110" width="420" height="520" rx="12" fill="#ECF8F1" stroke="#D8DEE8"/>
+<text x="816" y="135" font-size="13" font-weight="700" text-anchor="start" fill="#596579">代码证据</text>
+<rect x="110" y="170" width="250" height="50" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="126" y="198" font-size="13" font-weight="700" text-anchor="start" fill="#172033">latent token</text>
+<rect x="850" y="170" width="275" height="50" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="866" y="198" font-size="13" font-weight="700" text-anchor="start" fill="#172033">tokenizer pattern</text>
+<path d="M 360 195 L 520 195 L 520 195 L 850 195" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="110" y="254" width="250" height="50" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="126" y="282" font-size="13" font-weight="700" text-anchor="start" fill="#172033">visual decoder</text>
+<rect x="850" y="254" width="275" height="50" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="866" y="282" font-size="13" font-weight="700" text-anchor="start" fill="#172033">future token decode</text>
+<path d="M 360 279 L 520 279 L 520 279 L 850 279" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="110" y="338" width="250" height="50" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="126" y="366" font-size="13" font-weight="700" text-anchor="start" fill="#172033">language decoder</text>
+<rect x="850" y="338" width="275" height="50" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="866" y="366" font-size="13" font-weight="700" text-anchor="start" fill="#172033">CoT readout</text>
+<path d="M 360 363 L 520 363 L 520 363 L 850 363" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="110" y="422" width="250" height="50" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="126" y="450" font-size="13" font-weight="700" text-anchor="start" fill="#172033">prefill inference</text>
+<rect x="850" y="422" width="275" height="50" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="866" y="450" font-size="13" font-weight="700" text-anchor="start" fill="#172033">assistant prefix</text>
+<path d="M 360 447 L 520 447 L 520 447 L 850 447" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="110" y="506" width="250" height="50" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="126" y="534" font-size="13" font-weight="700" text-anchor="start" fill="#172033">MLP head</text>
+<rect x="850" y="506" width="275" height="50" rx="10" fill="#FFFFFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="866" y="534" font-size="13" font-weight="700" text-anchor="start" fill="#172033">waypoint regression</text>
+<path d="M 360 531 L 520 531 L 520 531 L 850 531" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="510" y="215" width="245" height="235" rx="10" fill="#FFF8D8" stroke="#B76E00" stroke-width="1.3"/>
+<text x="526" y="243" font-size="15" font-weight="700" text-anchor="start" fill="#172033">实现边界</text>
+<text x="526" y="269" font-size="12" font-weight="500" text-anchor="start" fill="#596579">推理仓：infer_onevl.py</text>
+<text x="526" y="290" font-size="12" font-weight="500" text-anchor="start" fill="#596579">训练仓：ms-swift fork</text>
+<text x="526" y="311" font-size="12" font-weight="500" text-anchor="start" fill="#596579">smoke test ≠ benchmark</text>
+<text x="526" y="332" font-size="12" font-weight="500" text-anchor="start" fill="#596579">README 数字 ≠ 本地复现</text>
+</svg>

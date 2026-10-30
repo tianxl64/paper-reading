@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+<rect width="1280" height="720" fill="#ffffff"/>
+
+<defs>
+  <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto">
+    <path d="M 0,0 L 10,5 L 0,10 z" fill="#315f8f"/>
+  </marker>
+</defs>
+<style>
+  .title{font:700 24px Arial,"Microsoft YaHei",sans-serif;fill:#1b2533}
+  .sub{font:600 15px Arial,"Microsoft YaHei",sans-serif;fill:#35465c}
+  .txt{font:500 14px Arial,"Microsoft YaHei",sans-serif;fill:#26364a}
+  .tiny{font:500 12px Arial,"Microsoft YaHei",sans-serif;fill:#5f6f80}
+  .box{rx:12;fill:#f8fbff;stroke:#aec3da;stroke-width:1.5}
+  .key{rx:12;fill:#e8f2ff;stroke:#4d7fb2;stroke-width:2}
+  .warn{rx:12;fill:#fff6e8;stroke:#d79b42;stroke-width:1.7}
+  .ok{rx:12;fill:#edf8f2;stroke:#55a06b;stroke-width:1.7}
+  .bad{rx:12;fill:#fff0f0;stroke:#c95d5d;stroke-width:1.7}
+  .line{stroke:#315f8f;stroke-width:2.5;fill:none;marker-end:url(#arrow)}
+</style>
+
+<text class="title" x="48" y="46">Inter-Anchor Truncated GRPO 的全局约束</text>
+<rect class="box" x="55" y="115" width="175" height="90"/><text class="txt" x="142" y="143" text-anchor="middle"><tspan x="142" dy="0">论文命题</tspan></text>
+<rect class="key" x="290" y="115" width="175" height="90"/><text class="txt" x="377" y="143" text-anchor="middle"><tspan x="377" dy="0">机制对象</tspan></text>
+<rect class="box" x="525" y="115" width="175" height="90"/><text class="txt" x="612" y="143" text-anchor="middle"><tspan x="612" dy="0">实现路径</tspan></text>
+<rect class="box" x="760" y="115" width="175" height="90"/><text class="txt" x="847" y="143" text-anchor="middle"><tspan x="847" dy="0">评价信号</tspan></text>
+<rect class="box" x="995" y="115" width="175" height="90"/><text class="txt" x="1082" y="143" text-anchor="middle"><tspan x="1082" dy="0">风险边界</tspan></text>
+<path class="line" d="M230,160 L290,160"/>
+<path class="line" d="M465,160 L525,160"/>
+<path class="line" d="M700,160 L760,160"/>
+<path class="line" d="M935,160 L995,160"/>
+<rect class="warn" x="95" y="300" width="250" height="86"/><text class="txt" x="220" y="328" text-anchor="middle"><tspan x="220" dy="0">Inter-Anchor</tspan><tspan x="220" dy="18">Truncated</tspan></text>
+<rect class="box" x="405" y="300" width="250" height="86"/><text class="txt" x="530" y="328" text-anchor="middle"><tspan x="530" dy="0">形状:BxGx20x8x2</tspan></text>
+<rect class="box" x="715" y="300" width="250" height="86"/><text class="txt" x="840" y="328" text-anchor="middle"><tspan x="840" dy="0">公式/指标:</tspan><tspan x="840" dy="18">log_prob</tspan><tspan x="840" dy="18">advantagePDMS</tspan></text>
+<path class="line" d="M345,343 L405,343"/>
+<path class="line" d="M655,343 L715,343"/>
+<rect class="box" x="220" y="505" width="270" height="76"/><text class="txt" x="355" y="533" text-anchor="middle"><tspan x="355" dy="0">章节锚点:</tspan><tspan x="355" dy="18">sec-training</tspan></text>
+<rect class="box" x="640" y="505" width="300" height="76"/><text class="txt" x="790" y="533" text-anchor="middle"><tspan x="790" dy="0">图型:</tspan><tspan x="790" dy="18">loss_dashboard</tspan></text>
+<path class="line" d="M490,543 L640,543"/>
+</svg>

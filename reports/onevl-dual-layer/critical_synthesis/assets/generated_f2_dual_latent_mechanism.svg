@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="F2 双 latent 机制">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4B5565"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+<text x="54" y="48" font-family="Microsoft YaHei, Arial, sans-serif" font-size="23" font-weight="700" fill="#172033">F2 双 latent 机制</text>
+<text x="54" y="76" font-family="Microsoft YaHei, Arial, sans-serif" font-size="13" font-weight="500" fill="#596579">Z_v 与 Z_l 是同一瓶颈的两个可读面</text>
+<rect x="70" y="120" width="1120" height="430" rx="14" fill="#F7F9FC" stroke="#AEB8C6" stroke-width="1"/>
+<text x="86" y="146" font-family="Microsoft YaHei, Arial, sans-serif" font-size="14" font-weight="700" fill="#596579">训练期读出，推理期只保留 latent 位置</text>
+<rect x="120" y="250" width="220" height="104" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="136" y="278" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">主 VLM hidden</text>
+<text x="136" y="304" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="136" dy="0">图像 token</tspan>
+<tspan x="136" dy="17">文本 token</tspan>
+<tspan x="136" dy="17">答案 token</tspan>
+</text>
+<rect x="465" y="150" width="238" height="98" rx="10" fill="#FFF3DF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="481" y="178" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">H_v -&gt; Z_v</text>
+<text x="481" y="204" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="481" dy="0">视觉 latent</tspan>
+<tspan x="481" dy="17">未来场景</tspan>
+<tspan x="481" dy="17">world signal</tspan>
+</text>
+<rect x="465" y="382" width="238" height="98" rx="10" fill="#FFF3DF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="481" y="410" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">H_l -&gt; Z_l</text>
+<text x="481" y="436" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="481" dy="0">语言 latent</tspan>
+<tspan x="481" dy="17">CoT 解释</tspan>
+<tspan x="481" dy="17">semantic signal</tspan>
+</text>
+<rect x="850" y="150" width="240" height="98" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="866" y="178" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">视觉 decoder</text>
+<text x="866" y="204" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="866" dy="0">t+0.5s/1.0s</tspan>
+<tspan x="866" dy="17">离散视觉 token</tspan>
+</text>
+<rect x="850" y="382" width="240" height="98" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="866" y="410" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">语言 decoder</text>
+<text x="866" y="436" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="866" dy="0">reasoning text</tspan>
+<tspan x="866" dy="17">解释一致性</tspan>
+</text>
+<path d="M340,302 L465,302 L465,199" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="471" y="294" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">取 latent 位</text>
+<path d="M340,302 L465,302 L465,431" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="471" y="294" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">取 latent 位</text>
+<path d="M703,199 L850,199" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="856" y="191" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">监督</text>
+<path d="M703,431 L850,431" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="856" y="423" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">监督</text>
+<rect x="130" y="518" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="144" y="539" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">slots</text>
+<text x="144" y="561" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">4 visual + 2 text</text>
+<rect x="470" y="518" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="484" y="539" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">实现</text>
+<text x="484" y="561" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">原词表 token</text>
+<rect x="850" y="518" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="864" y="539" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">边界</text>
+<text x="864" y="561" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">decoder 非热路径</text>
+<line x1="54" y1="660" x2="1226" y2="660" stroke="#AEB8C6" stroke-width="1"/>
+<text x="54" y="686" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">读图重点：视觉分支负责动态世界，语言分支负责可读解释，二者都塑形同一主模型。</text>
+</svg>

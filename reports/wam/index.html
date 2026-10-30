@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>WAM 系列论文与代码联合精读 · 独立工程</title><style>*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:#172033;background:#f5f7fb;font-family:system-ui,-apple-system,"Microsoft YaHei","Noto Sans CJK SC",sans-serif;line-height:1.85}header{padding:56px 6vw 36px;background:#101c35;color:white}header h1{font-size:clamp(28px,4vw,52px);line-height:1.25;max-width:1100px;margin:0 0 18px}header p{max-width:1000px;color:#cbd5e1}.status{display:inline-block;padding:6px 14px;border:1px solid #6582ad;border-radius:20px;font-size:14px}.layout{display:grid;grid-template-columns:260px minmax(0,1fr);max-width:1800px;margin:auto}nav{position:sticky;top:0;height:100vh;overflow:auto;padding:24px 18px;background:#e9eef6;border-right:1px solid #d3dce9}nav a{display:block;color:#334155;text-decoration:none;padding:8px 12px;border-radius:8px;font-size:14px}nav a:hover,nav a.active{background:white;color:#1d4ed8}.nav-main{font-weight:700}main{padding:32px 4vw;min-width:0}.paper-section{background:white;border:1px solid #dce4ef;border-radius:14px;padding:32px 40px;margin:0 0 34px;scroll-margin-top:24px}h2{font-size:30px;line-height:1.4;margin:12px 0 26px;color:#14294f}h3{font-size:25px;margin-top:44px;color:#193b6d}h4{font-size:20px;margin-top:32px;color:#255181}h5{font-size:18px}p{margin:18px 0}blockquote{border-left:4px solid #6d8fbd;background:#eef4fb;padding:12px 20px;margin:20px 0;color:#37506e}code{background:#eef2f7;border:1px solid #e1e7f0;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere;font-size:.9em}.math-inline{font-family:"Cambria Math",serif;font-style:italic}.math-display{background:#f8fafc;border:1px solid #d6e0ee;padding:20px;overflow:auto;font-family:"Cambria Math",serif;white-space:pre-wrap}.table-wrap{overflow:auto;margin:24px 0}table{border-collapse:collapse;font-size:14px;min-width:800px;width:100%}th,td{border:1px solid #d6dfec;padding:10px 12px;vertical-align:top}th{background:#eaf1fa;color:#193b6d;text-align:left}tr:nth-child(even)td{background:#fbfcfe}figure{margin:30px 0;padding:10px;border:1px solid #dbe3ee;border-radius:10px;background:#fff}figure img{display:block;width:100%;height:auto}figcaption{font-size:13px;color:#62748e;padding:10px 6px}.paper-kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#5c75a0;font-weight:700}.boundary{background:#fff5df;border-left:4px solid #dca525;padding:14px 18px;color:#70561b}ul{padding-left:26px}li{margin:8px 0}footer{padding:24px;color:#60728d;text-align:center}@media(max-width:900px){.layout{grid-template-columns:1fr}nav{position:relative;height:auto;display:flex;flex-wrap:wrap;gap:4px;padding:12px}nav a{font-size:12px;padding:6px 8px}main{padding:14px}.paper-section{padding:22px 18px}header{padding:32px 22px}h2{font-size:25px}h3{font-size:22px}}</style></head><body><header><span class="status">独立研究稿 · 当前任务来源 · 2026-10-27</span><h1>WAM 系列论文与代码<br/>联合精读报告</h1><p>DreamZero、Fast-WAM、LingBot-VA、X-WAM、Cosmos Policy、Motus、DriveVA、X-Foresight、DriveWAM、PWM、SimWAM、Metis、DrivingGPT、WoTE 与 ReSim。以 world supervision、action path、反馈闭环和真实源码为统一阅读轴。</p><p>本研究稿保留 pending 验收项；完整状态见 run-manifest.json。未使用既有 WAM 工程报告、图片、源码快照或结论。</p></header><div class="layout"><nav><a class="nav-main" href="#overview">总览与机制网络</a><a href="#figures">机制图与中文详解</a><a href="#paper-dreamzero">DreamZero</a><a href="#paper-fast-wam">Fast-WAM</a><a href="#paper-lingbot-va">LingBot-VA</a><a href="#paper-x-wam">X-WAM</a><a href="#paper-cosmos-policy">Cosmos-Policy</a><a href="#paper-motus">Motus</a><a href="#paper-driveva">DriveVA</a><a href="#paper-x-foresight">X-Foresight</a><a href="#paper-drivewam">DriveWAM</a><a href="#paper-pwm">PWM</a><a href="#paper-simwam">SimWAM</a><a href="#paper-metis">Metis</a><a href="#paper-drivinggpt">DrivingGPT</a><a href="#paper-wote">WoTE</a><a href="#paper-resim">ReSim</a></nav><main><section class="paper-section" id="overview"><h2 id="syn-WAM-系列论文跨论文综合-从-生成未来-到-学习世界表示-再到-受控评估">WAM 系列论文跨论文综合：从“生成未来”到“学习世界表示”再到“受控评估”</h2>
+<h3 id="syn-阅读范围和证据等级">阅读范围和证据等级</h3>
+<p>本综合只使用本项目重新获取的 15 篇 primary paper 的 PDF/TeX/HTML、固定官方 commit 代码和本项目的代码地图。论文明确说法记为 L2，固定 commit 可核验的源码事实记为 L3，跨论文归纳记为 L4；没有完整 source/code 的相关工作保留为 <code>candidate_citation_only</code>，不把候选标题当成全文结论。</p>
+<p>15 篇 primary 的共同轴线是：<strong>世界模型是否在推理时生成未来、未来监督是否只在训练时存在、动作是否读取未来表示、以及生成未来如何被校准为可执行决策</strong>。这四个问题比“是否使用视频模型”更能解释方法差异。</p>
+<h3 id="syn-由粗到细的统一表示">由粗到细的统一表示</h3>
+<p>一个 WAM 可以抽象为：</p>
+<pre class="math-display">\text{history } H_t \xrightarrow{E} z_t,
+\qquad
+\hat z_{t+1},\hat a_{t:t+K}=G_\theta(z_t,c,\epsilon),
+\qquad
+\pi_t=\mathcal{D}(\hat a),</pre>
+<p>其中 <span class="math-inline">E</span> 是视频/BEV/离散 token 编码，<span class="math-inline">G_\theta</span> 是 AR、扩散或 flow matching 生成器，<span class="math-inline">c</span> 是语言、路线、proprioception 或 VLM guidance，<span class="math-inline">\mathcal{D}</span> 是 action decoder/反归一化/轨迹后处理。不同论文真正改变的是：</p>
+<ul>
+<li><strong>状态表示</strong>：像素 latent（DreamZero、DriveVA、DriveWAM）、离散 image/action token（DrivingGPT、PWM）、BEV latent（WoTE）、4D RGB-D latent（X-WAM）、flow latent action（Motus）。</li>
+<li><strong>世界监督位置</strong>：联合 action/video（DreamZero、LingBot-VA、X-WAM、DriveVA、DriveWAM），训练辅助但推理 action-only（Fast-WAM、SimWAM、Metis），显式 future rationale（PWM），候选 trajectory evaluator（WoTE、ReSim）。</li>
+<li><strong>推理因果性</strong>：chunk AR + KV cache（DreamZero、LingBot-VA、DriveWAM）、并行 next-frame（PWM）、离散 next-token（DrivingGPT）、video/action 异步 denoise（X-WAM、DreamZero-Flash）、single-pass action branch（Fast-WAM/SimWAM/Metis）。</li>
+<li><strong>反馈闭环</strong>：真实观察 re-anchor（DreamZero、Cosmos Policy、DriveWAM）、FDM correction（LingBot-VA）、video continuation（DriveVA）、selective KV（DriveWAM）、BEV simulator supervision（WoTE）、CARLA non-expert + Video2Reward（ReSim）。</li>
+</ul>
+<h3 id="syn-机制分类矩阵">机制分类矩阵</h3>
+<div class="table-wrap"><table>
+<tr><th>论文</th><th>领域</th><th>表示</th><th>训练时 world supervision</th><th>推理时是否生成 future</th><th>动作读取什么</th><th>主要效率机制</th><th>代码状态</th></tr>
+<tr><td>DreamZero</td><td>manipulation</td><td>Wan video/action latent</td><td>joint causal flow</td><td>是，chunk AR</td><td>noisy/current video + history</td><td>KV cache、async、Flash</td><td>official commit</td></tr>
+<tr><td>Fast-WAM</td><td>manipulation</td><td>Wan video/action latent</td><td>video co-training</td><td>可跳过</td><td>shared world representation</td><td>action-only branch</td><td>official commit</td></tr>
+<tr><td>LingBot-VA</td><td>manipulation</td><td>shared latent MoT</td><td>joint causal flow</td><td>是，partial denoise</td><td>FDM-corrected history</td><td>MoT、FDM、async</td><td>official commit</td></tr>
+<tr><td>X-WAM</td><td>manipulation</td><td>multi-view RGB-D/state/action</td><td>joint + depth</td><td>action 先、video 后</td><td>shared 4D latent</td><td>depth branch、ANS</td><td>official commit</td></tr>
+<tr><td>Cosmos Policy</td><td>manipulation</td><td>latent frames</td><td>action/world/value joint</td><td>planning samples future/value</td><td>injected action/value/future slots</td><td>best-of-N、latent reuse</td><td>official commit</td></tr>
+<tr><td>Motus</td><td>manipulation</td><td>video + optical-flow latent action</td><td>three-stage unified</td><td>mode-dependent</td><td>three experts/MoT</td><td>UniDiffuser schedule</td><td>official commit</td></tr>
+<tr><td>DriveVA</td><td>driving</td><td>video latent + trajectory</td><td>joint flow</td><td>continuation rollout</td><td>shared DiT future</td><td>video continuation</td><td>no official code identified</td></tr>
+<tr><td>X-Foresight</td><td>driving</td><td>multi-view camera/BEV/action tokens</td><td>long-horizon AR</td><td>LDM + renderer</td><td>future chunks/queries</td><td>chunk curriculum、TIS、sparse mask</td><td>no official code identified</td></tr>
+<tr><td>DriveWAM</td><td>driving</td><td>Wan video/action latent</td><td>joint causal flow</td><td>是，video→action</td><td>generated future latent</td><td>VLM guidance、selective KV</td><td>official commit</td></tr>
+<tr><td>PWM</td><td>driving</td><td>28-token/frame AR</td><td>action-free video pretrain + joint fine-tune</td><td>是，作为 rationale</td><td>predicted text/future tokens</td><td>parallel next-frame、DFL</td><td>official commit</td></tr>
+<tr><td>SimWAM</td><td>driving</td><td>video/action flow experts</td><td>joint flow + RL</td><td>否，action-only</td><td>current observation/world representation</td><td>isolated mask、RL</td><td>official commit</td></tr>
+<tr><td>Metis</td><td>driving/navigation</td><td>MoT video/action latent</td><td>joint flow</td><td>否，action-only</td><td>current latent + implicit video training</td><td>asymmetric mask</td><td>README/asset-level repo</td></tr>
+<tr><td>DrivingGPT</td><td>driving</td><td>discrete VQ image + binned action</td><td>next-token joint</td><td>可 AR rollout</td><td>previous discrete tokens</td><td>vocabulary masking</td><td>project repo 404</td></tr>
+<tr><td>WoTE</td><td>driving</td><td>BEV latent</td><td>future BEV + reward</td><td>evaluator rollout</td><td>candidate trajectory future BEV</td><td>BEV simulator, reward head</td><td>official commit</td></tr>
+<tr><td>ReSim</td><td>driving</td><td>pixel/video diffusion</td><td>controllable video + V2R</td><td>是，candidate future</td><td>action-conditioned video or IDM</td><td>heterogeneous data, V2R</td><td>official commit</td></tr>
+</table></div>
+<h3 id="syn-机制演化链">机制演化链</h3>
+<h4 id="syn-1-从视觉先验到动作对齐">1. 从视觉先验到动作对齐</h4>
+<p>DreamZero、LingBot-VA、DriveVA、DriveWAM 的共同假设是：视频生成模型的时空先验比静态 VLM 更接近 physical dynamics。它们都把 action 放进同一生成过程，但实现不同：DreamZero 以 causal chunk flow 强调真实观测回写；LingBot-VA 以 MoT/FDM 强调 stale prediction correction；DriveVA 以 shared latent DiT 和 video–trajectory consistency 强调跨域；DriveWAM 以 VLM chunk guidance 和 cache 强调 driving 长时域。</p>
+<h4 id="syn-2-从-必须想象-到-只需训练时想象">2. 从“必须想象”到“只需训练时想象”</h4>
+<p>Fast-WAM 的受控实验把 WAM 的收益拆为两部分：视频 co-training 带来的 representation/world prior，以及 inference-time future imagination。SimWAM 把这个结论变成 driving baseline，并加入 RL；Metis 用 asymmetric attention 从结构上保证 action expert 不直接读取 future video；PWM 则走相反方向，让 future token 在 inference graph 中显式成为 action rationale。因而“是否生成视频”不是好坏二元变量，而是一个由任务、算力和 planner 角色决定的选择。</p>
+<h4 id="syn-3-从共享分布到专家分布隔离">3. 从共享分布到专家分布隔离</h4>
+<p>Motus 的三专家 MoT 和 Metis 的 video/action experts 都承认：视频 token 与 action token 的统计分布不同，完全共享 head/attention 可能污染 action distribution。Motus 通过 latent action 和 UniDiffuser scheduler 统一多任务；Metis 通过 asymmetric mask 保留 video→action 的训练影响、阻断 action→future-video 的推理干扰；X-WAM 则把 state/action/depth 统一到预训练 DiT latent，同时用 depth branch 保持主干分布稳定。</p>
+<p>方向校正（保留上段原句用于追溯）：Metis论文Figure 3允许未来video查询读取action/current visual，禁止action查询读取future video；“视频监督影响动作表示”属于训练梯度/共享表示解释，不能把信息读取箭头反转。当前固定Metis ref只有README/资产，完整运行mask仍是source_boundary。</p>
+<h4 id="syn-4-从生成未来到评估候选">4. 从生成未来到评估候选</h4>
+<p>WoTE 与 ReSim 把 world model 的职责从“直接给 action”扩展为“评估 action 的后果”。WoTE 在 BEV 空间生成 future state 和 reward，速度和监督更可控；ReSim 用 CARLA 非专家数据覆盖 hazardous action，再用 Video2Reward 把视频未来映射成 scalar reward。Cosmos Policy 处于两者之间：同一个 video model 既生成 action/future state/value，又用 best-of-N value planning 选择动作。</p>
+<h3 id="syn-训练-推理一致性检查">训练-推理一致性检查</h3>
+<div class="table-wrap"><table>
+<tr><th>风险</th><th>受影响论文</th><th>本项目核验点</th></tr>
+<tr><td>训练看 clean future、推理看 generated future</td><td>DriveWAM、DriveVA、LingBot-VA</td><td>teacher forcing vs rollout、FDM/continuation 是否补偿</td></tr>
+<tr><td>训练噪声分布与异步推理不一致</td><td>DreamZero-Flash、X-WAM</td><td>Beta/ANS joint distribution、action/video timestep</td></tr>
+<tr><td>action 读取 future video 导致 inference noise</td><td>Metis、Fast-WAM、SimWAM</td><td>asymmetric/isolated mask 与 action-only branch</td></tr>
+<tr><td>cache 保留历史但忘记关键事件</td><td>DreamZero、DriveWAM</td><td>real observation re-anchor、selective KV relevance</td></tr>
+<tr><td>reward/价值只学到 simulator bias</td><td>Cosmos Policy、WoTE、ReSim</td><td>value target、BEV simulator、CARLA infraction score</td></tr>
+<tr><td>视觉质量被误认为决策质量</td><td>全部</td><td>分开看 FID/FVD、PDMS、collision、decision-equivalent metric</td></tr>
+</table></div>
+<h3 id="syn-证据和复现边界">证据和复现边界</h3>
+<ul>
+<li><strong>可做源码级联合分析</strong>：DreamZero、Fast-WAM、LingBot-VA、X-WAM、Cosmos Policy、Motus、DriveWAM、PWM、SimWAM、WoTE、ReSim。</li>
+<li><strong>论文完整但官方代码未识别</strong>：DriveVA、X-Foresight。</li>
+<li><strong>论文完整但项目页仓库链接 404</strong>：DrivingGPT。</li>
+<li><strong>论文有完整 TeX/附录，但 release 主要是 README/资产</strong>：Metis。</li>
+<li><strong>不可把第三方复现、旧报告或旧图片当作补洞证据</strong>：本项目明确禁止，所有缺口保留在 source boundary。</li>
+</ul>
+<h3 id="syn-面向新读者的决策顺序">面向新读者的决策顺序</h3>
+<ul>
+<li>先问 future 预测在系统中承担什么角色：生成控制条件、训练表示、候选评估，还是价值规划。</li>
+<li>再问 action token 是否能看到 future token，看到的是 clean、noisy 还是 generated future。</li>
+<li>再检查训练和推理的 noise/timestep/chunk/mask 是否一致。</li>
+<li>最后检查闭环反馈是重新编码真实观测、FDM 校正、KV 选择，还是完全 open-loop。</li>
+</ul>
+<h3 id="syn-重要相关论文候选">重要相关论文候选</h3>
+<p>本项目从 primary papers 的 BibTeX/Bbl 和独立 arXiv/GitHub 检索建立 <code>02_search/related_citation_candidates.json</code>（1115 条去重前候选，含关系候选与 citation-only 状态）。优先后续全文核验的方向包括：UWM/Unified World Model、VideoVLA、GigaWorld-Policy、GigaBrain、DriveVLA-W0、Epona、FutureSightDrive、DriveLaW、VLA-MBPO、WoVR、RISE、WorldGym、VLA-Loop、DriveDreamer-Policy、V-JEPA/JEPA world models、FlowCache、DPFlow、NAVSIM/Bench2Drive。它们目前只作为关系候选，不能替代 15 篇 primary 的全文证据。</p></section><section class="paper-section" id="figures"><h2>机制图与中文详解</h2><p class="boundary">当前六张图为本项目新生成 SVG 机制图候选；原生 ImageGen 正式验收仍 pending。</p><figure><a href="assets/fig01_wam_design_space.svg" target="_blank"><img alt="机制图 1" loading="lazy" src="assets/fig01_wam_design_space.svg"/></a><figcaption>图 1 · 当前任务新生成矢量图候选 · 点击原图查看</figcaption></figure><figure><a href="assets/fig02_causal_closed_loop.svg" target="_blank"><img alt="机制图 2" loading="lazy" src="assets/fig02_causal_closed_loop.svg"/></a><figcaption>图 2 · 当前任务新生成矢量图候选 · 点击原图查看</figcaption></figure><figure><a href="assets/fig03_action_only_decoupling.svg" target="_blank"><img alt="机制图 3" loading="lazy" src="assets/fig03_action_only_decoupling.svg"/></a><figcaption>图 3 · 当前任务新生成矢量图候选 · 点击原图查看</figcaption></figure><figure><a href="assets/fig04_latent_value_planning.svg" target="_blank"><img alt="机制图 4" loading="lazy" src="assets/fig04_latent_value_planning.svg"/></a><figcaption>图 4 · 当前任务新生成矢量图候选 · 点击原图查看</figcaption></figure><figure><a href="assets/fig05_xwam_4d_ans.svg" target="_blank"><img alt="机制图 5" loading="lazy" src="assets/fig05_xwam_4d_ans.svg"/></a><figcaption>图 5 · 当前任务新生成矢量图候选 · 点击原图查看</figcaption></figure><figure><a href="assets/fig06_driving_evaluator_network.svg" target="_blank"><img alt="机制图 6" loading="lazy" src="assets/fig06_driving_evaluator_network.svg"/></a><figcaption>图 6 · 当前任务新生成矢量图候选 · 点击原图查看</figcaption></figure><h2 id="fig-六张机制图逐图说明">六张机制图逐图说明</h2>
+<h3 id="fig-图-1-WAM-统一设计空间">图 1：WAM 统一设计空间</h3>
+<p>这张图给新读者提供总览坐标。左侧输入框把 15 篇论文反复出现的观测、历史、语言、路线和 proprioception 放在同一入口；中间“共享生成器”表示模型形式可以是 AR Transformer、flow-matching DiT 或 MoT，但它们都要把历史编码成可供未来预测和动作读取的内部表示。上方输出是 future world：像素视频、BEV、RGB-D、latent action 或 value；下方输出是可执行 action/trajectory。右侧闭环框强调一个经常被摘要遮蔽的事实：生成 future 本身不等于闭环控制，必须说明真实观测如何重新进入模型、缓存怎样截断、candidate 如何被 reward/value 选择。</p>
+<p>底部三块是比较论文时最有用的三个问题。训练时 world role 可以是 joint loss、辅助表示、action-free pretraining 或 simulator supervision；推理时 world role 可以是 action condition、planning rationale、candidate evaluator，也可以被 action-only 分支绕过；效率与安全则由 mask、noise schedule、KV cache、异步执行和 value calibration 共同决定。DreamZero、Fast-WAM、Cosmos Policy 的差别主要落在第二、第三块，而不是都简单归为“用了视频模型”。阅读报告中的 crosswalk 可以沿着每条箭头回到对应 source line。</p>
+<h3 id="fig-图-2-因果-WAM-闭环链">图 2：因果 WAM 闭环链</h3>
+<p>图 2 只画 DreamZero、LingBot-VA、DriveWAM 的共同闭环，避免把系统层优化误当成网络层结构。观测历史进入因果 chunk mask 后，video 和 action 分支在同一个生成器内分开去噪。动作执行和下一次预测存在并行关系，因此输出右侧不是单一“生成完成”箭头，而是 execution/observation 两条边。真实观测回写 KV 的长箭头说明自回归模型可以保留长期上下文，但上下文中的预测帧应被真实帧替换；LingBot-VA 还要经过 FDM correction，防止 stale hallucination 继续滚动；DriveWAM 则在 chunk 边界引入新的 VLM guidance 和 selective KV。</p>
+<p>这张图的验收重点是因果方向：历史到当前块、当前 action 到执行、执行结果到新观测，不能把未来 video 反向泄漏到 action。它也帮助解释为什么 AR 与 bidirectional 的差异不只是速度：AR 保留 native FPS 和历史反馈，代价是缓存和 rollout state 复杂度增加。论文报告中的 asynchronous、FDM、real observation re-anchor、selective KV 都需要分别核对，不能用一条“异步推理”概括。</p>
+<h3 id="fig-图-3-训练时联合-推理时解耦">图 3：训练时联合、推理时解耦</h3>
+<p>Fast-WAM、SimWAM、Metis 都把 video co-training 的 supervision 与 test-time video generation 分开，但实现细节不同。顶部是共同训练图：current observation、noisy future video 和 noisy action 进入共享 latent/MoT；视频 loss 学物理演化，action loss 学控制。底部三块指出各自的门控方式：Fast-WAM 用受控变体直接比较 action-only、joint 和 IDM；SimWAM 用 isolated mask 和 driving RL；Metis 用 asymmetric mask 让 video token 可以读取 action、action token 不直接读取 future video。</p>
+<p>图中“推理只跑 action branch”不是说视频知识消失，而是说 future video 的显式 denoising 被 bypass。它保留了训练阶段通过共享表示、梯度或 attention 传递的 world prior。这个区别直接对应论文最关键的实验：去掉 video co-training 会掉得更多，而去掉 test-time imagination 未必掉很多。报告里的代码入口需要核对 action expert 是否真的可以在 current observation 上单独 forward、配置是否存在 hidden future branch，以及 latency 是否来自模型本身还是外部 server。</p>
+<h3 id="fig-图-4-latent-slot-与-latent-action-规划">图 4：latent slot 与 latent action 规划</h3>
+<p>Cosmos Policy 和 Motus 都把“动作”放进视频模型 latent，但语义不同。Cosmos Policy 用帧形状 slot injection：action、proprio、future state 和 scalar value 被 repeat/fill 到原本的视频 latent 序列，再由同一个扩散过程处理；规划时采样多个 action/future/value 候选，按 value 选择并在真实 rollout 后更新。Motus 用 optical-flow latent action：DPFlow 得到像素位移，DC-AE 压成 4×512，再投影到约 14D，作为跨 embodiment 的 motion representation，最后 Stage 3 才换成真实 action。</p>
+<p>左侧到右侧的箭头强调两种“latent action”不能混用。前者是模型输入槽位和 value planning 的协议，后者是从视觉运动学习动作先验的表示。Cosmos 的主要风险是 value calibration、candidate count 和 action index 对齐；Motus 的主要风险是 latent-action VAE 训练/权重公开边界、weak action grounding 和目标 embodiment adapter。最终报告同时给出论文公式、代码函数和未公开资产清单。</p>
+<h3 id="fig-图-5-X-WAM-的-4D-与-ANS">图 5：X-WAM 的 4D 与 ANS</h3>
+<p>图 5 把 X-WAM 的四种输出和两个核心设计放在一张图内。多视角 RGB、初始 proprioception 和 noisy action 经 Wan2.2 DiT 进入共享 latent；depth 不沿序列拼接，而是复制 final M blocks 构成辅助 branch，单向读取主干 hidden state。这样主干保留预训练视频分布，depth branch 负责 inverse-depth MSE。动作/状态的 denoising step 数较少，完成后即可发送给机器人；视频继续到更长的 T_O，形成 action-first、video-later 的异步过程。</p>
+<p>ANS 的训练约束是图中的关键注释：它不是两个独立 timestep 的笛卡尔积，而是联合分布约束 t_O ≥ t_a，删除推理永远不会出现的无效区域。阅读时要把 depth branch 的空间监督、VAE 的 pseudo-RGB 编码、RGB-D 几何评价和 action latency 分别审计。图右侧风险框提醒：4D 质量提高并不自动保证 action 更好，深度误差、相机视角 embedding 和 branch copy ratio 都可能改变结论。</p>
+<h3 id="fig-图-6-Driving-WAM-的-evaluator-网络">图 6：Driving WAM 的 evaluator 网络</h3>
+<p>驾驶论文比机器人论文多一个“候选评估”问题。PWM 先用 action-free future tokens 形成 anticipatory rationale，再输出 action；DriveVA 和 X-Foresight 直接把 future video 与 trajectory 放进共享生成或长时域 chunk foresight；WoTE 把 BEV future 当作 candidate trajectory evaluator，ReSim 则用 action-conditioned video 加 Video2Reward 给候选策略打分。图中未来生成与评估选择分成两个输出，避免把所有 driving world model 都称为 policy。</p>
+<p>这张图的审计重点是 reward 的来源。WoTE 的 reward 来自 BEV simulator/规则监督，ReSim 的 Video2Reward 继承 CARLA infraction score，Cosmos 的 value 来自 robot rollout reward，三者的 calibration 和 domain bias 不同。图中的闭环箭头说明真正安全的系统必须把候选、未来、reward、执行结果串起来；单独报告 FID、FVD 或 open-loop L2 不能证明 decision-equivalent correctness。最终综合用这张图把视觉生成、轨迹一致性、候选排序和 closed-loop 验证统一起来。</p></section><section class="paper-section" id="paper-dreamzero"><div class="paper-kicker">DreamZero · 2602.15922</div><h2 id="dreamzero-World-Action-Models-are-Zero-shot-Policies">World Action Models are Zero-shot Policies</h2>
+<blockquote>用户名称：DreamZero；arXiv：2602.15922；阅读版本：https://arxiv.org/abs/2602.15922</blockquote>
+<h3 id="dreamzero-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/dreamzero0/dreamzero</code>。</p>
+<h3 id="dreamzero-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>DreamZero 把预训练视频扩散 DiT 改造成闭环 World Action Model：视频未来和动作块在同一因果、分块、流匹配过程里联合预测，并用真实观测回写 KV cache 解决自回归漂移。</p>
+<p><strong>研究问题。</strong> 视频生成的时空先验是否能直接转化为跨任务、跨 embodiment 的动作泛化，同时满足实时闭环控制？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 6 个源文件、1672 行展平文本、36 个结构标题、18 个 figure 环境和 7 个 table 环境。关键阅读位置：paper_tex_flat.tex:L864 (方法)；paper_tex_flat.tex:L999 (实验)；paper_tex_flat.tex:L1257 (附录/限制)。</p>
+<h3 id="dreamzero-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>DreamZero 的核心不是给一个 VLA 加一个视频辅助损失，而是把策略定义为联合分布 <span class="math-inline">p(o_{t+1:t+H},a_{t:t+H}\mid o_{0:t},q_t,c)</span> 的流匹配模型。论文把每个未来视频块和动作块当作带独立/耦合时间步的噪声变量，在因果块注意力下由同一个 14B DiT 预测速度场。前文的真实视频是 clean context，当前块的 video/action 是 noisy query；推理时先对当前块迭代去噪，执行动作，再把真实新观测编码后替换历史预测帧写入 KV cache。这样模型保留长时记忆，但不把上一轮幻觉视频当作下一轮事实。</p>
+<h4 id="dreamzero-机制链">机制链</h4>
+<p>三个设计决定行为：一是 autoregressive chunk-wise teacher forcing，保证 native FPS 与视频/动作对齐；二是异步执行，机器人执行当前 48-step chunk 时并行预测下一块；三是 Flash 训练把视频噪声偏向高噪声、动作仍完整去噪，使单步动作推理匹配低步数视频条件。论文报告从约 5.7s 降到约 150ms、约 7Hz；这些是论文实验结论，代码还暴露了 Beta 参数、16-step mask、KV cache 和量化入口。</p>
+<h4 id="dreamzero-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="dreamzero-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p>官方仓库的 <code>WANPolicyHead</code> 在 <code>groot/vla/model/dreamzero/action_head/wan_flow_matching_action_tf.py</code> 管理视频 VAE、动作编码器、FlowMatchScheduler、KV/cross-attention cache 与训练/推理噪声；<code>groot/vla/model/dreamzero/modules/wan_video_dit_action_casual_chunk.py</code> 是因果块 DiT；<code>eval_utils/serve_dreamzero_wan22.py</code> 和 <code>policy_server.py</code> 是部署闭环。代码明确区分 coupled 与 decoupled noise、动作 horizon、video final noise 和固定 <code>dit_step_mask</code>，因此能核验论文中的训练-部署对应关系。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>groot/vla/model/dreamzero/action_head/wan_flow_matching_action_tf.py</code>：1401 行；符号 hf_download:27-30, ensure_file:33-37, WANPolicyHeadConfig:56-154, WANPolicyHead:157-1401, __init__:151-154, __init__:161-323, set_trainable_parameters:325-365, print_trainable_params:368-381</li>
+<li><code>groot/vla/model/dreamzero/modules/wan_video_dit_action_casual_chunk.py</code>：2245 行；符号 CategorySpecificLinear:31-42, CategorySpecificMLP:45-54, MultiEmbodimentActionEncoder:57-90, causal_rope_action_apply:93-97, causal_rope_action_apply_no_polar:100-151, causal_rope_action_apply_polar:153-185, CausalWanSelfAttention:188-1093, CausalWanAttentionBlock:1096-1210</li>
+<li><code>eval_utils/serve_dreamzero_wan22.py</code>：391 行；符号 _get_expected_video_resolution:76-93, _resize_frames_to_resolution:96-106, _maybe_init_distributed:109-116, DreamZeroWan225BPolicy:136-328, main:331-387, __init__:147-170, _convert_observation:172-226, _convert_action:228-253</li>
+</ul>
+<h3 id="dreamzero-实验逐项阅读">实验逐项阅读</h3>
+<p>预训练覆盖多机器人/人类视频，post-training 在 AgiBot、DROID 等任务比较 seen/unseen、跨 embodiment、AR/BD、数据规模和 Flash 单步推理；关键证据包括 7Hz 实时闭环、视频-only 迁移和 30 分钟 embodiment adaptation。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="dreamzero-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>论文的泛化结论依赖数据多样性、真实观测回写和系统优化共同成立，不能把 7Hz 单独归因于模型结构。代码默认/分支里存在论文正文未逐项列出的噪声 Beta 参数、量化精度和 cache 开关；跨 embodiment 的提升也受语言模板与多视角拼接方式影响。</p>
+<h4 id="dreamzero-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="dreamzero-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/dreamzero/2602.15922/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L864 (方法)；paper_tex_flat.tex:L999 (实验)；paper_tex_flat.tex:L1257 (附录/限制)。</li>
+<li>代码 commit：<code>ab790c198fbce33503358efbbd4187ce9a89adf3</code>；官方仓库：<code>https://github.com/dreamzero0/dreamzero</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="dreamzero-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="dreamzero-questions-论文问题台账-DreamZero">论文问题台账：DreamZero</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：groot/vla/model/dreamzero/action_head/wan_flow_matching_action_tf.py</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：groot/vla/model/dreamzero/modules/wan_video_dit_action_casual_chunk.py</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：eval_utils/serve_dreamzero_wan22.py</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-fast-wam"><div class="paper-kicker">Fast-WAM · 2603.16666</div><h2 id="fast-wam-Fast-WAM-Do-World-Action-Models-Need-Test-time-Future-Imagination">Fast-WAM: Do World Action Models Need Test-time Future Imagination?</h2>
+<blockquote>用户名称：Fast-WAM；arXiv：2603.16666；阅读版本：https://arxiv.org/abs/2603.16666</blockquote>
+<h3 id="fast-wam-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/yuantianyuan01/FastWAM</code>。</p>
+<h3 id="fast-wam-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>Fast-WAM 用受控消融拆开 WAM 的两种收益：训练时视频 co-training 的表示学习收益，以及测试时显式 future imagination 的收益。</p>
+<p><strong>研究问题。</strong> WAM 的性能提升主要来自推理时生成未来视频，还是来自训练时视频监督塑造的 world representation？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 9 个源文件、537 行展平文本、16 个结构标题、4 个 figure 环境和 3 个 table 环境。关键阅读位置：paper_tex_flat.tex:L199 (方法)；paper_tex_flat.tex:L309 (实验)；paper_tex_flat.tex:L457 (附录/限制)。</p>
+<h3 id="fast-wam-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>Fast-WAM 保留视频专家和动作专家的联合训练，但在 action-only 推理时绕过未来视频采样。论文构造 Base、Joint、IDM 等受控变体，使“视频训练是否存在”和“推理是否生成视频”可以分别比较。动作头仍在共享 Wan/DiT 表示上做 flow matching，差异集中在推理是否运行 video denoising，而不是把 video branch 从训练图中删除。</p>
+<h4 id="fast-wam-机制链">机制链</h4>
+<p>关键实验显示，保留 video co-training 的 Fast-WAM 家族彼此差异小，而删除视频训练会显著掉点，真实 towel-folding 甚至降到约 10% success；action-only 约 190ms，带 imagine-then-execute 的 IDM 约 810ms。这个结果把“视频作为训练时归纳偏置”和“视频作为测试时规划轨迹”区分开。</p>
+<h4 id="fast-wam-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="fast-wam-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p>固定 commit 的 <code>src/fastwam/models/wan22/wan22.py</code>、<code>wan_video_dit.py</code>、<code>mot.py</code> 和 <code>scheduler_continuous.py</code> 实现视频/动作专家与连续时间调度；<code>src/fastwam/runtime.py</code>、<code>scripts/train.py</code>、<code>configs/model/fastwam*.yaml</code> 连接训练和 action-only/joint/IDM 变体；LIBERO/Robotwin evaluation 脚本提供 near-runnable 入口。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>src/fastwam/models/wan22/wan22.py</code>：399 行；符号 Wan22Core:13-399, __init__:16-43, from_wan22_pretrained:46-87, to:89-94, _check_resize_height_width:97-104, encode_prompt:106-111, _encode_video_latents:113-116, _encode_input_image_latents_tensor:118-128</li>
+<li><code>src/fastwam/models/wan22/mot.py</code>：819 行；符号 MoT:14-819, __init__:15-67, _split_modulation:70-86, _mixed_attention:88-103, _apply_expert_post_block:106-128, _apply_expert_post_block_tensor:131-149, _build_expert_attention_io:151-211, _apply_post_with_optional_checkpoint:213-282</li>
+<li><code>src/fastwam/runtime.py</code>：533 行；符号 _normalize_mixed_precision:22-31, _mixed_precision_to_model_dtype:34-40, create_wan22_model:43-73, create_fastwam:76-160, create_fastwam_joint:163-245, create_fastwam_idm:248-336, create_fastwam_optional_idm:339-427, build_datasets:430-441</li>
+<li><code>scripts/train.py</code>：16 行；符号 main:11-12</li>
+</ul>
+<h3 id="fast-wam-实验逐项阅读">实验逐项阅读</h3>
+<p>LIBERO、RoboTwin 和真实 towel-folding；比较 success、completion time、latency 与视频 co-training ablation。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="fast-wam-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>论文的结论是关于当前规模、数据与架构的受控结论，不能直接外推到没有视频先验的模型或不同采样器。代码版本比论文叙述更丰富，配置中存在 optional IDM、continuous scheduler 和不同 camera 设置，复现实验必须锁定 config/commit。</p>
+<h4 id="fast-wam-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="fast-wam-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/fast-wam/2603.16666/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L199 (方法)；paper_tex_flat.tex:L309 (实验)；paper_tex_flat.tex:L457 (附录/限制)。</li>
+<li>代码 commit：<code>7faa71108368fbb3b6885649f112af607427a2d4</code>；官方仓库：<code>https://github.com/yuantianyuan01/FastWAM</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="fast-wam-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="fast-wam-questions-论文问题台账-Fast-WAM">论文问题台账：Fast-WAM</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：src/fastwam/models/wan22/wan22.py</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：src/fastwam/models/wan22/mot.py</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：src/fastwam/runtime.py</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：scripts/train.py</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-lingbot-va"><div class="paper-kicker">LingBot-VA · 2601.21998</div><h2 id="lingbot-va-Causal-World-Modeling-for-Robot-Control">Causal World Modeling for Robot Control</h2>
+<blockquote>用户名称：LingBot-VA；arXiv：2601.21998；阅读版本：https://arxiv.org/abs/2601.21998</blockquote>
+<h3 id="lingbot-va-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/robbyant/lingbot-va</code>。</p>
+<h3 id="lingbot-va-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>LingBot-VA 将视频预测与策略执行放进统一 latent sequence，以 MoT、因果 chunk mask、FDM 校正和异步执行形成闭环机器人控制。</p>
+<p><strong>研究问题。</strong> 如何在统一视频/动作模型中同时获得长期记忆、因果一致性和真实环境反馈？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 9 个源文件、1481 行展平文本、24 个结构标题、9 个 figure 环境和 10 个 table 环境。关键阅读位置：paper_tex_flat.tex:L230 (方法)；paper_tex_flat.tex:L565 (实验)；paper_tex_flat.tex:L988 (附录/限制)。</p>
+<h3 id="lingbot-va-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>模型把历史视频、动作和语言编码到共享 latent sequence，按 chunk 自回归预测。视频块内部可并行，跨 chunk 用 causal mask；video expert 与 action expert 采用 MoT/独立参数，flow matching 目标分别约束视觉和动作速度。训练时对视频和动作采样时间步，推理时视频可只做部分 denoising，动作先完成。</p>
+<h4 id="lingbot-va-机制链">机制链</h4>
+<p>论文的异步 Algorithm 2 不只是把线程并行：执行当前动作时，下一步预测使用最近真实观测和当前动作的 FDM forward dynamics 重新校正旧的视觉预测，避免模型沿着 stale hallucination 继续滚动。KV cache 让长时记忆可持续更新；variable chunk size 训练使部署可以在频率和每次规划长度之间折中。</p>
+<h4 id="lingbot-va-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="lingbot-va-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p><code>wan_va/modules/model.py</code> 定义 unified video/action model、expert routing 与 attention；<code>wan_va/utils/scheduler.py</code> 管理 flow schedule；<code>wan_va/wan_va_server.py</code>、<code>evaluation/*/websocket_client_policy.py</code> 和各 config 展示训练/部署分支。代码可核验 paper 的 MoT、causal mask、partial denoising、FDM/async 设计。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>wan_va/modules/model.py</code>：903 行；符号 custom_sdpa:37-40, FlexAttnFunc:42-201, WanTimeTextImageEmbedding:203-240, WanRotaryPosEmbed:243-286, WanAttention:289-465, WanTransformerBlock:468-566, WanTransformer3DModel:569-884, __init__:50-55</li>
+<li><code>wan_va/utils/scheduler.py</code>：135 行；符号 FlowMatchScheduler:5-135, __init__:7-31, set_timesteps:33-76, step:78-89, return_to_timestep:91-97, add_noise:99-109, training_target:111-113, training_weight:115-122</li>
+<li><code>wan_va/wan_va_server.py</code>：731 行；符号 VA_Server:41-675, run:677-698, main:700-726, __init__:43-104, _get_t5_prompt_embeds:106-151, encode_prompt:153-209, normalize_latents:211-222, preprocess_action:224-240</li>
+<li><code>evaluation/robotwin/websocket_client_policy.py</code>：108 行；符号 WebsocketClientPolicy:10-73, __init__:16-22, get_server_metadata:24-25, _wait_for_server:41-59, infer:62-69, reset:72-73</li>
+</ul>
+<h3 id="lingbot-va-实验逐项阅读">实验逐项阅读</h3>
+<p>真实双臂、LIBERO、RoboTwin；主结果、sample efficiency、temporal memory、generalization 与 async/sync ablation。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="lingbot-va-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>论文将“异步”作为闭环机制，实际部署还受 websocket、VAE、GPU 和执行器延迟约束；公开代码同时包含 demo、RobotWin、LIBERO 配置，默认分支差异必须保留。</p>
+<h4 id="lingbot-va-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="lingbot-va-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/lingbot-va/2601.21998/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L230 (方法)；paper_tex_flat.tex:L565 (实验)；paper_tex_flat.tex:L988 (附录/限制)。</li>
+<li>代码 commit：<code>7c6ffa9bfc4b83582cafc860fab4c82cc7deeeeb</code>；官方仓库：<code>https://github.com/robbyant/lingbot-va</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="lingbot-va-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="lingbot-va-questions-论文问题台账-LingBot-VA">论文问题台账：LingBot-VA</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：wan_va/modules/model.py</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：wan_va/utils/scheduler.py</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：wan_va/wan_va_server.py</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：evaluation/robotwin/websocket_client_policy.py</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-x-wam"><div class="paper-kicker">X-WAM · 2604.26694</div><h2 id="x-wam-Unified-4D-World-Action-Modeling-from-Video-Priors-with-Asynchronous-Denoising">Unified 4D World Action Modeling from Video Priors with Asynchronous Denoising</h2>
+<blockquote>用户名称：X-WAM；arXiv：2604.26694；阅读版本：https://arxiv.org/abs/2604.26694</blockquote>
+<h3 id="x-wam-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/sharinka0715/X-WAM</code>。</p>
+<h3 id="x-wam-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>X-WAM 把 WAM 从 2D 视频-动作扩展到统一 4D：同时生成多视角 RGB、depth、state 和 action，并用轻量 depth branch 与 ANS 平衡空间建模和动作延迟。</p>
+<p><strong>研究问题。</strong> 如何在不复制完整视频 DiT、不过度增加 token/attention 成本的前提下加入显式 3D 空间监督？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 1 个源文件、715 行展平文本、24 个结构标题、4 个 figure 环境和 7 个 table 环境。关键阅读位置：paper_tex_flat.tex:L165 (方法)；paper_tex_flat.tex:L253 (实验)；paper_tex_flat.tex:L701 (附录/限制)。</p>
+<h3 id="x-wam-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>Wan2.2-TI2V-5B 的共享主干先处理统一 latent；RGB 与 depth 使用同一 VAE latent 格式，state/action 经 MLP 投影；复制最后 M 个 DiT blocks 构造 depth branch，depth 单向读取主干，主干不被 depth token 反向污染。视频/状态 horizon 与 action horizon 异步：动作在较少步数完成后立刻执行，视频继续 denoise。</p>
+<h4 id="x-wam-机制链">机制链</h4>
+<p>ANS 不是独立随机采样两个 timestep，而是约束训练联合分布满足 <span class="math-inline">t_O\ge t_a</span>，与推理“action 先收敛、video 后完成”的轨迹一致；这解决了完全 decoupled noise 产生的无效训练区域。</p>
+<h4 id="x-wam-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="x-wam-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p><code>modules/wan_model.py</code>、<code>modules/attention.py</code>、<code>runners/xwam_runner.py</code>、<code>evaluation/X-WAM/deploy_policy.py</code> 与 <code>scripts/train_sft.py</code> 是主路径；<code>configs/model/wan22_5b_sft.yaml</code> 和 robot dataset 定义 RGB/action/depth 数据接口。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>modules/wan_model.py</code>：835 行；符号 sinusoidal_embedding_1d:18-27, rope_params:31-38, rope_apply_1d:42-52, WanRMSNorm:55-71, WanLayerNorm:74-91, WanSelfAttention:94-152, WanCrossAttention:155-197, WanAttentionBlock:200-256</li>
+<li><code>modules/attention.py</code>：59 行；符号 attention:21-59</li>
+<li><code>runners/xwam_runner.py</code>：622 行；符号 XWAMRunner:17-622, __init__:18-60, configure_optimizers:62-79, on_fit_start:81-83, training_step:85-268, validation_step:270-389, forward:391-530, generate:532-572</li>
+<li><code>evaluation/X-WAM/deploy_policy.py</code>：189 行；符号 compute_future_poses:31-64, compute_seed:67-70, encode_obs:73-76, get_model:79-87, eval:90-184, reset_model:187-189</li>
+</ul>
+<h3 id="x-wam-实验逐项阅读">实验逐项阅读</h3>
+<p>RoboCasa/RoboTwin policy、4D reconstruction/generation、ANS/depth ablation、real robot。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="x-wam-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>depth 分支的空间质量依赖单目/多视角 depth 伪 RGB 编码和 branch 复制比例；论文高保真 4D 结论必须同时看 depth 几何指标和 policy success，不能只看视频视觉质量。</p>
+<h4 id="x-wam-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="x-wam-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/x-wam/2604.26694/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L165 (方法)；paper_tex_flat.tex:L253 (实验)；paper_tex_flat.tex:L701 (附录/限制)。</li>
+<li>代码 commit：<code>72cfb86b33fc5060963ef63412f16439fcfa472f</code>；官方仓库：<code>https://github.com/sharinka0715/X-WAM</code>。</li>
+<li>缺失/不确定：{'path': 'neurips_2026.tex', 'include': 'checklist'}。</li>
+</ul>
+<h3 id="x-wam-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="x-wam-questions-论文问题台账-X-WAM">论文问题台账：X-WAM</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：modules/wan_model.py</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：modules/attention.py</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：runners/xwam_runner.py</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：evaluation/X-WAM/deploy_policy.py</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-cosmos-policy"><div class="paper-kicker">Cosmos-Policy · 2601.16163</div><h2 id="cosmos-policy-Cosmos-Policy-Fine-Tuning-Video-Models-for-Visuomotor-Control-and-Planning">Cosmos Policy: Fine-Tuning Video Models for Visuomotor Control and Planning</h2>
+<blockquote>用户名称：Cosmos-Policy；arXiv：2601.16163；阅读版本：https://arxiv.org/abs/2601.16163</blockquote>
+<h3 id="cosmos-policy-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/NVlabs/cosmos-policy</code>。</p>
+<h3 id="cosmos-policy-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>Cosmos Policy 直接在 Cosmos-Predict2 的 latent frame 序列中注入 action/proprio/value/future-state，不改 backbone 拓扑，用单阶段 target-robot post-training 同时学 policy、world model 和 value。</p>
+<p><strong>研究问题。</strong> 预训练视频模型能否以“帧形状 latent”容纳动作和价值，并在同一扩散过程里支持 test-time planning？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 2 个源文件、1164 行展平文本、29 个结构标题、12 个 figure 环境和 4 个 table 环境。关键阅读位置：paper_tex_flat.tex:L672 (方法)；paper_tex_flat.tex:L733 (实验)；paper_tex_flat.tex:L901 (附录/限制)。</p>
+<h3 id="cosmos-policy-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>原始 LIBERO/RoboCasa 序列经过 VAE 变成 latent frames；action chunk、proprio、future observation 和 scalar value 都被 repeat/fill 到相同 latent slot 结构。训练为完整序列的 EDM/flow objective，clean observation 替换条件帧。推理先采样 action/future/value，best-of-N 以 value 选择，再执行部分 action 并真实观测 re-anchor。</p>
+<h4 id="cosmos-policy-机制链">机制链</h4>
+<p>核心是 slot injection 而非 action head：<code>replace_latent_with_action_chunk</code>、proprio replacement 与 value expansion 直接改变 x0 的局部 latent。planning 时可以并行采样或 staged autoregressive reuse latent；rollout data 还能继续训练 world/value。</p>
+<h4 id="cosmos-policy-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="cosmos-policy-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p><code>cosmos_policy/models/policy_text2world_model.py</code> 的 latent replacement、<code>policy_video2world_model.py</code> 的 VAE/denoise/sampler、<code>modules/cosmos_sampler.py</code> 和 LIBERO/RoboCasa/ALOHA datasets 是论文-代码主证据。公开配置还暴露 noise schedule、action indices、value target 和 rollout path。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>cosmos_policy/models/policy_text2world_model.py</code>：836 行；符号 replace_latent_with_action_chunk:45-109, replace_latent_with_proprio:112-173, CosmosPolicyModelConfig:177-217, CosmosPolicyDiffusionModel:220-836, __attrs_post_init__:211-217, __init__:232-238, training_step:240-308, compute_loss_with_epsilon_and_sigma:310-700</li>
+<li><code>cosmos_policy/models/policy_video2world_model.py</code>：854 行；符号 CosmosPolicyVideo2WorldConfig:51-80, CosmosPolicyVideo2WorldModel:83-854, __attrs_post_init__:68-80, __init__:96-98, get_data_and_condition:100-392, denoise:394-567, get_x0_fn_from_batch:569-770, draw_training_sigma_and_epsilon:772-834</li>
+<li><code>cosmos_policy/modules/cosmos_sampler.py</code>：141 行；符号 CosmosPolicySampler:40-141, __init__:49-50, forward:53-93, _forward_impl:96-141, float64_x0_fn:69-70</li>
+<li><code>cosmos_policy/datasets/dataset_common.py</code>：371 行；符号 compute_monte_carlo_returns:25-55, get_action_chunk_with_padding:58-95, build_rollout_step_index_mapping:98-162, calculate_epoch_structure:165-247, load_or_compute_dataset_statistics:250-285, load_or_compute_post_normalization_statistics:288-323, build_demo_step_index_mapping:326-349, determine_sample_type:352-371</li>
+</ul>
+<h3 id="cosmos-policy-实验逐项阅读">实验逐项阅读</h3>
+<p>LIBERO 98.5%、RoboCasa 67.1%、ALOHA real-world，no-planning/planning、value target、rollout refinement 与 latency ablations。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="cosmos-policy-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>“无架构修改”是相对于 backbone 拓扑的说法，代码仍新增 latent injection/data/value 语义；planning performance 取决于 value calibration 与 candidate count，不应只引用 average success。</p>
+<h4 id="cosmos-policy-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="cosmos-policy-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/cosmos-policy/2601.16163/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L672 (方法)；paper_tex_flat.tex:L733 (实验)；paper_tex_flat.tex:L901 (附录/限制)。</li>
+<li>代码 commit：<code>18a2accadf4e7a3531e56754102af5a24d2316da</code>；官方仓库：<code>https://github.com/NVlabs/cosmos-policy</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="cosmos-policy-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="cosmos-policy-questions-论文问题台账-Cosmos-Policy">论文问题台账：Cosmos-Policy</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：cosmos_policy/models/policy_text2world_model.py</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：cosmos_policy/models/policy_video2world_model.py</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：cosmos_policy/modules/cosmos_sampler.py</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：cosmos_policy/datasets/dataset_common.py</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-motus"><div class="paper-kicker">Motus · 2512.13030</div><h2 id="motus-Motus-A-Unified-Latent-Action-World-Model">Motus: A Unified Latent Action World Model</h2>
+<blockquote>用户名称：Motus；arXiv：2512.13030；阅读版本：https://arxiv.org/abs/2512.13030</blockquote>
+<h3 id="motus-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/thu-ml/Motus</code>。</p>
+<h3 id="motus-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>Motus 以三专家 MoT 统一 understanding、video generation、action，并用 optical-flow latent action 把无动作视频转为可迁移运动先验。</p>
+<p><strong>研究问题。</strong> 能否把理解、未来视频、逆动力学和策略执行放进同一模型，并用跨 embodiment motion representation 扩大动作预训练数据？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 10 个源文件、1768 行展平文本、31 个结构标题、14 个 figure 环境和 19 个 table 环境。关键阅读位置：paper_tex_flat.tex:L479 (方法)；paper_tex_flat.tex:L864 (实验)；paper_tex_flat.tex:L1077 (附录/限制)。</p>
+<h3 id="motus-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>Qwen-VL understanding expert、Wan video expert、action expert 在共享 latent space 中通过 MoT 交互；UniDiffuser-style scheduler 让模型切换 VGM、WM、IDM、VLA、video-action joint 等模式。latent action 由 DPFlow optical flow 经 DC-AE 压成 4×512，再投影到 14D；90% unlabeled reconstruction + 10% weak action grounding 使 latent space 靠近可行 action。</p>
+<h4 id="motus-机制链">机制链</h4>
+<p>三阶段：Stage 1 机器人/人类视频继续预训练 VGM；Stage 2 用视频、语言、latent actions 预训练统一模型；Stage 3 用目标 embodiment 的真实 actions SFT。论文把 latent action 视为 pixel-level delta action，但公开代码主要提供 consumer/model/data path，VAE 训练和 checkpoint 边界要单独标注。</p>
+<h4 id="motus-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="motus-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p><code>models/motus.py</code>、<code>models/und_expert.py</code>、<code>models/action_expert.py</code>、<code>models/wan_model.py</code> 对应三专家；<code>data/latent_action/latent_action_dataset.py</code>、<code>configs/latent_action.yaml</code>、<code>train/train.py</code> 和 real/robotwin inference 是主入口。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>models/motus.py</code>：1374 行；符号 MotusConfig:32-95, VideoModule:98-280, UndModule:283-424, ActionModule:427-483, Motus:486-1352, test_motus:1355-1371, __post_init__:87-95, __init__:101-106</li>
+<li><code>models/und_expert.py</code>：164 行；符号 UndExpertConfig:33-48, get_1d_sincos_pos_embed_from_grid:51-71, UndExpertBlock:74-108, UndExpert:111-164, __post_init__:47-48, __init__:81-108, __init__:122-144, build_condition_adapter:146-164</li>
+<li><code>models/action_expert.py</code>：390 行；符号 get_1d_sincos_pos_embed_from_grid:28-53, ActionExpertConfig:57-87, StateActionEncoder:89-171, ActionEncoder:174-215, ActionExpertBlock:218-261, ActionDecoder:264-306, ActionExpert:308-390, __post_init__:84-87</li>
+<li><code>data/latent_action/latent_action_dataset.py</code>：301 行；符号 _has_triplet_subdirs:35-36, _find_leaf_dataset_dirs:39-51, LatentActionDataset:54-301, __init__:69-115, _scan_all_episodes:117-167, __len__:169-170, _select_indices:172-186, _load_language_embedding:188-205</li>
+<li><code>train/train.py</code>：739 行；符号 setup_logging:41-56, load_config:58-84, setup_distributed:86-98, UniDiffuserTrainer:100-438, create_model_and_optimizer:440-502, create_dataloaders:504-540, main:542-736, __init__:103-150</li>
+</ul>
+<h3 id="motus-实验逐项阅读">实验逐项阅读</h3>
+<p>RoboTwin 2.0 多任务、AC-One/Agilex-Aloha-2 real-world、stage ablations、不同 baseline 和 data pyramid。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="motus-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>论文的 unified claim 强，但 understanding expert、latent-action VAE、各数据层的公开完整度不等；必须区分论文设计、release code 和未发布训练资产。</p>
+<h4 id="motus-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="motus-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/motus/2512.13030/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L479 (方法)；paper_tex_flat.tex:L864 (实验)；paper_tex_flat.tex:L1077 (附录/限制)。</li>
+<li>代码 commit：<code>88f6fe30c62af033874b0a2e48ad1cbdaf12cfdf</code>；官方仓库：<code>https://github.com/thu-ml/Motus</code>。</li>
+<li>缺失/不确定：{'path': 'main.tex', 'include': 'docs/comment'}。</li>
+</ul>
+<h3 id="motus-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="motus-questions-论文问题台账-Motus">论文问题台账：Motus</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：models/motus.py</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：models/und_expert.py</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：models/action_expert.py</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：data/latent_action/latent_action_dataset.py</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：train/train.py</li>
+</ul></section><section class="paper-section" id="paper-driveva"><div class="paper-kicker">DriveVA · 2604.04198</div><h2 id="driveva-DriveVA-Video-Action-Models-are-Zero-Shot-Drivers">DriveVA: Video Action Models are Zero-Shot Drivers</h2>
+<blockquote>用户名称：DriveVA；arXiv：2604.04198；阅读版本：https://arxiv.org/abs/2604.04198</blockquote>
+<h3 id="driveva-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>无官方仓库</code>。</p>
+<h3 id="driveva-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>DriveVA 用共享 latent DiT 同时预测未来视频和 3D trajectory，并用 video continuation 保持长 rollout 一致性，目标是跨数据集 zero-shot driving。</p>
+<p><strong>研究问题。</strong> 视频模型的 motion/physics prior 能否直接迁移为跨 sensor/domain 的 trajectory planning？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 1 个源文件、1040 行展平文本、32 个结构标题、12 个 figure 环境和 7 个 table 环境。关键阅读位置：paper_tex_flat.tex:L255 (方法)；paper_tex_flat.tex:L375 (实验)；paper_tex_flat.tex:L829 (附录/限制)。</p>
+<h3 id="driveva-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>历史 front-view video、ego state 和 command 进入 latent video encoder；action trajectory token 与未来 video latent 放在同一个 diffusion/flow matching sequence，由统一 DiT 解码。video continuation 把上一段生成视频作为下一段上下文，形成递归 long-horizon rollout；trajectory 与生成视频共享条件和 latent，使 DPVO 从视频重建出的 ego motion 与 action 对齐。</p>
+<h4 id="driveva-机制链">机制链</h4>
+<p>论文的关键证据不是单独 video FID，而是 video–trajectory consistency：DPVO 由生成视频反推运动，比较该轨迹与模型 action。action-only ablation 与 video supervision ablation 证明 dense temporal supervision 是 planning gain 的主要来源。</p>
+<h4 id="driveva-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="driveva-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p>官方论文/项目页没有识别到可核验公开实现；报告只保留 TeX/PDF/HTML 和 project page 证据，所有实现细节标为 paper-only。</p>
+<p>代码证据索引：</p>
+<h3 id="driveva-实验逐项阅读">实验逐项阅读</h3>
+<p>NAVSIM 90.9 PDMS、nuScenes/Bench2Drive zero-shot、DPVO consistency、ablation 与 failure cases。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="driveva-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>cross-domain zero-shot 数字依赖 NAVSIM/nuScenes/Bench2Drive 协议和外部 DPVO；没有官方代码时无法核验 tokenizer、trajectory scaling、continuation state 和 exact sampler。</p>
+<h4 id="driveva-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="driveva-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/driveva/2604.04198/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L255 (方法)；paper_tex_flat.tex:L375 (实验)；paper_tex_flat.tex:L829 (附录/限制)。</li>
+<li>代码 commit：<code>无</code>；官方仓库：<code>无</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="driveva-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="driveva-questions-论文问题台账-DriveVA">论文问题台账：DriveVA</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-x-foresight"><div class="paper-kicker">X-Foresight · 2605.24892</div><h2 id="x-foresight-X-Foresight-A-Joint-Vision-Action-Causal-Forecasting-Network-via-Predictive-World-Modeling">X-Foresight: A Joint Vision-Action Causal Forecasting Network via Predictive World Modeling</h2>
+<blockquote>用户名称：X-Foresight；arXiv：2605.24892；阅读版本：https://arxiv.org/abs/2605.24892</blockquote>
+<h3 id="x-foresight-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>无官方仓库</code>。</p>
+<h3 id="x-foresight-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>X-Foresight 把 world modeling 嵌入 VLA 的 long-horizon chunk-wise foresight：稠密 chunk 内帧捕捉瞬时动力学，稀疏 chunk 间转移捕捉长期因果，另用 renderer 恢复真实视觉。</p>
+<p><strong>研究问题。</strong> 如何同时避免相邻帧低熵的 trivial extrapolation 与长时域预测的监督/计算爆炸？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 11 个源文件、703 行展平文本、27 个结构标题、8 个 figure 环境和 5 个 table 环境。关键阅读位置：paper_tex_flat.tex:L187 (方法)；paper_tex_flat.tex:L422 (实验)。</p>
+<h3 id="x-foresight-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>Large Drive Model 输入系统 prompt、multi-view ViT tokens、ego state、action 和 query tokens；teacher forcing 下预测 action、camera latent、BEV。chunk stride/长度逐步 curriculum 扩展，temporal importance sampling 依据 ego motion/behavior 将监督集中在 safety-critical chunks。独立 DiT renderer 只接受 LDM camera tokens，将 latent imagination 解码成七视角视频。</p>
+<h4 id="x-foresight-机制链">机制链</h4>
+<p>LDM 与 renderer 分阶段训练，第三阶段用 LDM predicted camera tokens 替换 ground-truth，解决 train/inference mismatch；semi-causal block-sparse mask 允许 chunk 内双向、chunk 间因果和 query token 局部可见。</p>
+<h4 id="x-foresight-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="x-foresight-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p>官方项目页提供论文与技术报告，但未识别到公开实现仓库；因此只做 paper-level source/figure/metric audit。</p>
+<p>代码证据索引：</p>
+<h3 id="x-foresight-实验逐项阅读">实验逐项阅读</h3>
+<p>horizon H=1/6/21、CL/CLEF/TIS、renderer FID/FVD、block sparse throughput、qualitative navigation/signal scenarios。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="x-foresight-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>rendered video fidelity 与 planning gain 来自两个模块，renderer 可能隐藏 LDM latent 的不足；报告需把 LDM trajectory metrics、renderer FID/FVD 和 closed-loop visual evidence 分开。</p>
+<h4 id="x-foresight-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="x-foresight-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/x-foresight/2605.24892/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L187 (方法)；paper_tex_flat.tex:L422 (实验)。</li>
+<li>代码 commit：<code>无</code>；官方仓库：<code>无</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="x-foresight-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="x-foresight-questions-论文问题台账-X-Foresight">论文问题台账：X-Foresight</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-drivewam"><div class="paper-kicker">DriveWAM · 2605.28544</div><h2 id="drivewam-DriveWAM-Video-Generative-Priors-Enable-Scalable-World-Action-Modeling-for-Autonomous-Driving">DriveWAM: Video Generative Priors Enable Scalable World-Action Modeling for Autonomous Driving</h2>
+<blockquote>用户名称：DriveWAM；arXiv：2605.28544；阅读版本：https://arxiv.org/abs/2605.28544</blockquote>
+<h3 id="drivewam-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/chenshi3/DriveWAM</code>。</p>
+<h3 id="drivewam-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>DriveWAM 将预训练视频 DiT 变成 driving autoregressive video-action policy，并用冻结 VLM 的 chunk-specific scene guidance 与 selective KV memory 扩展长时域。</p>
+<p><strong>研究问题。</strong> 如何让视频生成先验同时承载密集时空 dynamics、路线语义和有界长时记忆？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 6 个源文件、979 行展平文本、23 个结构标题、8 个 figure 环境和 5 个 table 环境。关键阅读位置：paper_tex_flat.tex:L230 (方法)；paper_tex_flat.tex:L431 (实验)。</p>
+<h3 id="drivewam-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>视频 chunk 由 VAE 编码，ego translation/yaw 由 MLP action encoder 进入共享 hidden；训练时 joint flow matching + causal teacher forcing，推理按 chunk 先生成 video latent 再生成 action。每个 chunk 的冻结 Qwen3-VL 生成 route/scene guidance，经 block-diagonal mask 只作用于对应 chunk。selective KV 将 video/action history 分成两池，按 relevance–redundancy 选择保留。</p>
+<h4 id="drivewam-机制链">机制链</h4>
+<p>论文明确 training video supervision 与 inference action rollout 的分工：视频 latent 在推理仍被生成，用作 action inverse dynamics 条件；selective cache 把 300s rollout 的 memory/GFLOPs 从全缓存压到约 1/12。</p>
+<h4 id="drivewam-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="drivewam-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p><code>navsim/</code> 是完整 driving substrate；仓库包含 model/config/runner、VLM guidance、cache/metric caching 和 deployment paths，commit 已锁定。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>navsim/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>scripts/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>configs/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>README.md</code>：278 行；符号 未解析到 Python 符号</li>
+</ul>
+<h3 id="drivewam-实验逐项阅读">实验逐项阅读</h3>
+<p>NAVSIM PDMS 90.1、PhysicalAI、4k/20k/100k data scaling、guidance/no-guidance、full/FIFO/selective cache。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="drivewam-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>VLM guidance 需要 route command、latest frame、BEV trajectory，属于额外系统输入；selective KV 是 inference-only heuristic，需单独评估失忆长尾事件。</p>
+<h4 id="drivewam-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="drivewam-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/drivewam/2605.28544/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L230 (方法)；paper_tex_flat.tex:L431 (实验)。</li>
+<li>代码 commit：<code>14d16d2412dc4d70af59a921cc450299f5207f10</code>；官方仓库：<code>https://github.com/chenshi3/DriveWAM</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="drivewam-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="drivewam-questions-论文问题台账-DriveWAM">论文问题台账：DriveWAM</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：navsim/</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：scripts/</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：configs/</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：README.md</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-pwm"><div class="paper-kicker">PWM · 2510.19654</div><h2 id="pwm-From-Forecasting-to-Planning-Policy-World-Model-for-Collaborative-State-Action-Prediction">From Forecasting to Planning: Policy World Model for Collaborative State-Action Prediction</h2>
+<blockquote>用户名称：PWM；arXiv：2510.19654；阅读版本：https://arxiv.org/abs/2510.19654</blockquote>
+<h3 id="pwm-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/6550Zhao/Policy-World-Model</code>。</p>
+<h3 id="pwm-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>PWM 通过 action-free future forecasting 让世界模型真正参与 planning：compact 28-token/frame tokenizer + parallel next-frame generation + Dynamic Focal Loss。</p>
+<p><strong>研究问题。</strong> 怎样把大规模无 action 视频的 world knowledge 以低 token 成本注入轨迹规划？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 32 个源文件、1353 行展平文本、22 个结构标题、11 个 figure 环境和 5 个 table 环境。关键阅读位置：paper_tex_flat.tex:L148 (方法)；paper_tex_flat.tex:L245 (实验)。</p>
+<h3 id="pwm-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>context-guided tokenizer 用高分辨率初始帧分支和低分辨率全视频分支 cross-attention，将每帧压到 4×7=28 tokens。PWM 先在 OpenDV-YouTube action-free 视频上预训练 next-frame AR；再在 nuScenes/NAVSIM 中输入历史帧、navigation/ego state，先生成 text description 和 future frame tokens，再让 action tokens 读取这些预测 latent 输出轨迹。DFL 提升相邻帧中变化区域 token 的权重。</p>
+<h4 id="pwm-机制链">机制链</h4>
+<p>PWM 与 DrivingGPT 的区别是 world-model forecast 不是与 action 并列生成，而是作为 action token 的显式前置 rationale；这使 model-based knowledge 在 inference graph 中真实参与 planning。</p>
+<h4 id="pwm-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="pwm-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p><code>Policy-World-Model</code> commit 包含 tokenizer、training scripts、NAVSIM/nuScenes configs、action head 与 future prediction path；仓库规模很大，需严格按 <code>pwm</code>/<code>tokenizer</code>/<code>navsim</code> 路径隔离第三方。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>README.md</code>：194 行；符号 未解析到 Python 符号</li>
+<li><code>configs/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>scripts/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>pwm/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>tokenizer/</code>：? 行；符号 未解析到 Python 符号</li>
+</ul>
+<h3 id="pwm-实验逐项阅读">实验逐项阅读</h3>
+<p>OpenDV-YouTube pretraining、nuScenes/NAVSIM planning、tokenizer/focal loss/forecast horizon/text generation ablations、front camera-only comparison。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="pwm-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>action-free forecast 避免 action labels，但 future frame token 的语义/视觉 fidelity 与 trajectory benefit 不等价；DFL 和 28-token compression 可能牺牲细粒度 geometry。</p>
+<h4 id="pwm-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="pwm-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/pwm/2510.19654/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L148 (方法)；paper_tex_flat.tex:L245 (实验)。</li>
+<li>代码 commit：<code>c67e4b90364d8e94ff54fba4905ea2550c8ea138</code>；官方仓库：<code>https://github.com/6550Zhao/Policy-World-Model</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="pwm-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="pwm-questions-论文问题台账-PWM">论文问题台账：PWM</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：README.md</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：configs/</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：scripts/</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：pwm/</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：tokenizer/</li>
+</ul></section><section class="paper-section" id="paper-simwam"><div class="paper-kicker">SimWAM · 2608.07468</div><h2 id="simwam-SimWAM-A-Simple-World-Action-Model-for-End-to-End-Autonomous-Driving">SimWAM: A Simple World Action Model for End-to-End Autonomous Driving</h2>
+<blockquote>用户名称：SimWAM；arXiv：2608.07468；阅读版本：https://arxiv.org/abs/2608.07468</blockquote>
+<h3 id="simwam-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/H-EmbodVis/SimWAM</code>。</p>
+<h3 id="simwam-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>SimWAM 是面向 driving 的简单基线：video expert 与 lightweight action expert 联合 flow matching，但 isolated attention 让 action 推理不依赖 future video；再用 RL 优化组合驾驶 reward。</p>
+<p><strong>研究问题。</strong> 能否把视频预测保留为 training-time supervision，而在 driving inference 中只运行 action branch？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 2 个源文件、1387 行展平文本、27 个结构标题、5 个 figure 环境和 11 个 table 环境。关键阅读位置：paper_tex_flat.tex:L634 (方法)；paper_tex_flat.tex:L757 (实验)；paper_tex_flat.tex:L1108 (附录/限制)。</p>
+<h3 id="simwam-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>预训练视频 backbone 与动作专家共享 attention interface；视频 future tokens 用 video loss，action tokens 用 flow matching。isolated mask 禁止 action token 读取 future video token，因此 inference 可绕过 video generation。RL 阶段在 NAVSIM/WOD/PhysicalAI reward 上优化 action distribution，目标超越纯 trajectory imitation。</p>
+<h4 id="simwam-机制链">机制链</h4>
+<p>SimWAM 延续 Fast-WAM 的关键结论但加入 driving RL：视频为 representation prior，action branch 负责低延迟 control；代码中还保留多 backbone、RL trainer 和 NAVSIM integration，因而是可验证的基线而非只有论文概念。</p>
+<h4 id="simwam-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="simwam-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p><code>src/simwam/models/</code>、<code>src/simwam/runtime/</code>、<code>src/simwam/trainer/</code>、<code>configs/</code> 和 <code>scripts/</code> 构成视频专家、动作专家、训练/RL、推理与 NAVSIM 接口；固定 commit 可核验 isolated mask 与 action-only 分支。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>src/simwam/models/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>src/simwam/runtime/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>src/simwam/trainer/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>configs/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>scripts/</code>：? 行；符号 未解析到 Python 符号</li>
+</ul>
+<h3 id="simwam-实验逐项阅读">实验逐项阅读</h3>
+<p>NAVSIM 91.9 PDMS、nuScenes zero-shot、WOD-E2E、PhysicalAI、video/action expert scaling、RL ablation。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="simwam-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>RL reward composition、offline/online boundary 与 action mask 一起决定结果；91.9 PDMS 不能单独说明 world model quality，必须对比 latency、zero-shot transfer 和 video branch ablation。</p>
+<h4 id="simwam-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="simwam-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/simwam/2608.07468/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L634 (方法)；paper_tex_flat.tex:L757 (实验)；paper_tex_flat.tex:L1108 (附录/限制)。</li>
+<li>代码 commit：<code>1433ee7e06a62bd8b89da74455df0d82bda7b726</code>；官方仓库：<code>https://github.com/H-EmbodVis/SimWAM</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="simwam-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="simwam-questions-论文问题台账-SimWAM">论文问题台账：SimWAM</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：src/simwam/models/</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：src/simwam/runtime/</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：src/simwam/trainer/</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：configs/</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：scripts/</li>
+</ul></section><section class="paper-section" id="paper-metis"><div class="paper-kicker">Metis · 2606.15869</div><h2 id="metis-Metis-A-Generalizable-and-Efficient-World-Action-Model-for-Autonomous-Driving-and-Urban-Navigation">Metis: A Generalizable and Efficient World-Action Model for Autonomous Driving and Urban Navigation</h2>
+<blockquote>用户名称：Metis；arXiv：2606.15869；阅读版本：https://arxiv.org/abs/2606.15869</blockquote>
+<h3 id="metis-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/LogosRoboticsGroup/Metis</code>。</p>
+<h3 id="metis-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>Metis 用 MoT 把 video generation expert 与 action expert 分布解耦，结构化 asymmetric mask 允许共同训练但 action-only inference。</p>
+<p><strong>研究问题。</strong> 如何在保持视频 dynamics 监督的同时避免视频噪声污染 action distribution，并取得低延迟部署？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 27 个源文件、1282 行展平文本、31 个结构标题、14 个 figure 环境和 7 个 table 环境。关键阅读位置：paper_tex_flat.tex:L277 (方法)；paper_tex_flat.tex:L425 (实验)；paper_tex_flat.tex:L900 (附录/限制)。</p>
+<h3 id="metis-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>current observation latent、noisy future video latent、noisy action latent 经 expert-specific projection 进入共享 latent；视频 token 可见 action token，action token 禁止直接看 future video。总损失为 action flow + video flow，推理只保留 current observation/context，未来视频 branch bypass。</p>
+<h4 id="metis-机制链">机制链</h4>
+<p>论文的核心 trade-off 是 joint attention（信息最充分但 action 受 future video noise 干扰）、isolated attention（稳定但失去 implicit dynamics supervision）和 asymmetric attention（保留训练时 video→action 影响、推理时解耦）。</p>
+<h4 id="metis-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="metis-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p>官方仓库在固定 commit 下只有 README/论文资产级内容，几乎没有可读 Python 训练/推理实现；因此不能把论文算法冒充为已代码核验。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>README.md</code>：269 行；符号 未解析到 Python 符号</li>
+<li><code>figure/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>table/</code>：? 行；符号 未解析到 Python 符号</li>
+</ul>
+<h3 id="metis-实验逐项阅读">实验逐项阅读</h3>
+<p>NAVSIM navhard/navtest、CityWalker、real-world、mask/action capacity/resolution/latency ablations。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="metis-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>Metis 的 source boundary 是本项目重要结论：论文有完整公式和 ablation，但 release 不足以核验 action/video tensor shape、mask construction、scheduler 默认值与 latency path。</p>
+<h4 id="metis-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="metis-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/metis/2606.15869/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L277 (方法)；paper_tex_flat.tex:L425 (实验)；paper_tex_flat.tex:L900 (附录/限制)。</li>
+<li>代码 commit：<code>7677b62d786cff8bb2044b489bd41f3d59514b43</code>；官方仓库：<code>https://github.com/LogosRoboticsGroup/Metis</code>。</li>
+<li>缺失/不确定：{'path': 'sec\\5_exp.tex', 'include': 'table/variant'}; {'path': 'main.tex', 'include': 'checklist.tex'}。</li>
+</ul>
+<h3 id="metis-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="metis-questions-论文问题台账-Metis">论文问题台账：Metis</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：README.md</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：figure/</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：table/</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-drivinggpt"><div class="paper-kicker">DrivingGPT · 2412.18607</div><h2 id="drivinggpt-DrivingGPT-Unifying-Driving-World-Modeling-and-Planning-with-Multi-modal-Autoregressive-Transformers">DrivingGPT: Unifying Driving World Modeling and Planning with Multi-modal Autoregressive Transformers</h2>
+<blockquote>用户名称：DrivingGPT；arXiv：2412.18607；阅读版本：https://arxiv.org/abs/2412.18607</blockquote>
+<h3 id="drivinggpt-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/RogerChern/DrivingGPT</code>。</p>
+<h3 id="drivinggpt-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>DrivingGPT 将 driving video 与 trajectory 离散成统一 multimodal driving language，用 VQ-VAE image tokens + binned action tokens 做标准 next-token prediction。</p>
+<p><strong>研究问题。</strong> 能否用自回归 token modeling 同时完成 action-conditioned video generation 与 end-to-end planning？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 23 个源文件、614 行展平文本、17 个结构标题、6 个 figure 环境和 7 个 table 环境。关键阅读位置：paper_tex_flat.tex:L142 (方法)；paper_tex_flat.tex:L237 (实验)。</p>
+<h3 id="drivinggpt-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>每帧图像经 VQ-VAE 得到 image vocabulary，x/y/yaw action 经 percentile clamp + uniform binning 得到 action vocabulary，序列交错为 <span class="math-inline">z_1,q_1,z_2,q_2,\ldots</span>。causal Transformer 预测下一 token，foreign vocabulary logits 在采样时屏蔽；视频用历史 context 递归生成，action token 解码为轨迹。</p>
+<h4 id="drivinggpt-机制链">机制链</h4>
+<p>它的统一来自同一离散序列和共享 next-token objective，而不是 video latent 作为 action condition 的 flow matching。优点是可扩展长序列和多模态 vocabulary，代价是 token 数巨大、量化误差和 open-loop NAVSIM 评估边界。</p>
+<h4 id="drivinggpt-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="drivinggpt-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p>项目页的 GitHub 链接在本次重新核验中返回 404；只保留 arXiv TeX/PDF/HTML 和 project page，不能引用第三方复现作为官方代码。</p>
+<p>代码证据索引：</p>
+<h3 id="drivinggpt-实验逐项阅读">实验逐项阅读</h3>
+<p>nuPlan/NAVSIM video generation、long video/object hallucination、planning PDMS、data/action/position embedding ablations。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="drivinggpt-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>论文的 action tokenization 与 VQ-VAE 分辨率、sampling top-k 强相关；没有官方仓库时无法核验训练脚本、checkpoint、数据过滤和 long-video SVD decoder。</p>
+<h4 id="drivinggpt-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="drivinggpt-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/drivinggpt/2412.18607/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L142 (方法)；paper_tex_flat.tex:L237 (实验)。</li>
+<li>代码 commit：<code>无</code>；官方仓库：<code>https://github.com/RogerChern/DrivingGPT</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="drivinggpt-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="drivinggpt-questions-论文问题台账-DrivingGPT">论文问题台账：DrivingGPT</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-wote"><div class="paper-kicker">WoTE · 2504.01941</div><h2 id="wote-End-to-End-Driving-with-Online-Trajectory-Evaluation-via-BEV-World-Model">End-to-End Driving with Online Trajectory Evaluation via BEV World Model</h2>
+<blockquote>用户名称：WoTE；arXiv：2504.01941；阅读版本：https://arxiv.org/abs/2504.01941</blockquote>
+<h3 id="wote-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/liyingyanUCAS/WoTE</code>。</p>
+<h3 id="wote-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>WoTE 不把未来视频直接作为 policy，而是用 BEV world model 对候选轨迹做在线未来状态与 reward 评估，形成 trajectory evaluation loop。</p>
+<p><strong>研究问题。</strong> 如何在端到端 planner 产生多条 trajectory 后，用可微/低延迟世界预测判断哪条更安全？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 15 个源文件、761 行展平文本、17 个结构标题、4 个 figure 环境和 7 个 table 环境。关键阅读位置：paper_tex_flat.tex:L214 (方法)；paper_tex_flat.tex:L182 (实验)。</p>
+<h3 id="wote-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>trajectory predictor 先产生多模态 candidate trajectories；BEV world model 接收当前 BEV feature 与候选轨迹，预测未来 BEV states；image/BEV reward model 从预测状态估计 collision/drivable/TTC 等 reward。训练监督来自 BEV-space simulator，避免 image-level video generation 的高延迟和像素不确定性。</p>
+<h4 id="wote-机制链">机制链</h4>
+<p>WoTE 的 world model 角色是 evaluator，而不是直接动作生成器；这个架构与 WAM 的“video-action joint diffusion”正交，适合分析 planning candidate selection 和 reward calibration。</p>
+<h4 id="wote-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="wote-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p><code>navsim/agents/WoTE/WoTE_model.py</code> 的 <code>_latent_world_model_processing</code>、<code>_sample_future_bev_feature</code>、<code>weighted_reward_calculation</code>；<code>WoTE_loss.py</code> 的 trajectory/imagination/sim reward loss；<code>WoTE_agent.py</code> 串联 train/test。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>navsim/agents/WoTE/WoTE_model.py</code>：891 行；符号 ResNet34Backbone:20-31, WoTEModel:33-736, AgentHead:738-773, BEVUpsampleHead:775-817, RewardConvNet:819-871, TrajectoryOffsetHead:873-891, __init__:21-26, forward:28-31</li>
+<li><code>navsim/agents/WoTE/WoTE_loss.py</code>：338 行；符号 compute_wote_loss:15-72, compute_traj_offset_loss:74-141, compute_im_reward_loss:143-166, compute_sim_reward_loss:168-182, compute_wote_agent_loss:184-237, _get_ce_cost:241-261, _get_l1_cost:265-282, _get_src_permutation_idx:285-294</li>
+<li><code>navsim/agents/WoTE/WoTE_agent.py</code>：225 行；符号 build_from_configs:29-36, WoTEAgent:38-175, WarmupCosLR:177-225, __init__:39-63, name:65-68, initialize:70-82, get_sensor_config:84-86, get_target_builders:88-96</li>
+</ul>
+<h3 id="wote-实验逐项阅读">实验逐项阅读</h3>
+<p>NAVSIM、Bench2Drive CARLA、trajectory/reward/time-step/number-of-candidates ablations、visual analysis。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="wote-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>BEV simulator supervision 可能把规则和 simulator bias 注入 reward；closed-loop Bench2Drive 结果更有意义，不能用 open-loop NAVSIM 单独证明安全。</p>
+<h4 id="wote-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="wote-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/wote/2504.01941/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L214 (方法)；paper_tex_flat.tex:L182 (实验)。</li>
+<li>代码 commit：<code>298957c128a91d41a1c6075bd0bb6e7e845e093f</code>；官方仓库：<code>https://github.com/liyingyanUCAS/WoTE</code>。</li>
+<li>缺失/不确定：{'path': 'main.tex', 'include': 'sec/X_suppl'}; {'path': 'main.tex', 'include': 'sec/X_suppl'}。</li>
+</ul>
+<h3 id="wote-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="wote-questions-论文问题台账-WoTE">论文问题台账：WoTE</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：navsim/agents/WoTE/WoTE_model.py</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：navsim/agents/WoTE/WoTE_loss.py</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：navsim/agents/WoTE/WoTE_agent.py</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section><section class="paper-section" id="paper-resim"><div class="paper-kicker">ReSim · 2506.09981</div><h2 id="resim-ReSim-Reliable-World-Simulation-for-Autonomous-Driving">ReSim: Reliable World Simulation for Autonomous Driving</h2>
+<blockquote>用户名称：ReSim；arXiv：2506.09981；阅读版本：https://arxiv.org/abs/2506.09981</blockquote>
+<h3 id="resim-证据边界">证据边界</h3>
+<p>本报告由本项目重新下载的 PDF、TeX/source、HTML 和固定 commit 代码生成。论文事实以 <code>paper_tex_flat.tex</code> 与 PDF 抽取为主，图表以 source archive/PDF 为准；代码事实只来自 <code>https://github.com/OpenDriveLab/ReSim</code>。</p>
+<h3 id="resim-Pass-1-论文地图与定位">Pass 1：论文地图与定位</h3>
+<p>ReSim 通过 real expert + CARLA non-expert heterogeneous data 构建可控 driving world simulator，并用 Video2Reward 将生成未来接入 policy selection。</p>
+<p><strong>研究问题。</strong> 如何让世界模型可靠模拟 hazardous/non-expert action，并从视频未来得到可用于规划的 reward？</p>
+<p><strong>论文结构。</strong> 该论文的递归 TeX 包包含 2 个源文件、2036 行展平文本、29 个结构标题、16 个 figure 环境和 2 个 table 环境。关键阅读位置：paper_tex_flat.tex:L438 (方法)；paper_tex_flat.tex:L797 (实验)；paper_tex_flat.tex:L1840 (附录/限制)。</p>
+<h3 id="resim-Pass-2-方法精读">Pass 2：方法精读</h3>
+<p>数据编译包含真实安全驾驶、CARLA expert 和随机/规则探索的非专家/危险行为。扩散 DiT 以历史视频、command、waypoint/trajectory 等条件生成未来；clean historical latent、conditioning augmentation、动作控制模块增强 controllability。Video2Reward 用冻结 DINOv2 + spatiotemporal head，监督 CARLA infraction score，输入 ReSim 预测视频输出 scalar reward。</p>
+<h4 id="resim-机制链">机制链</h4>
+<p>ReSim 的贡献在“可靠控制+reward feedback”闭环：action-conditioned simulation 产生候选未来，V2R 给 candidate score，policy selection 选最高 reward。对 action-free prediction 则用 IDM 反演未来视频为轨迹。</p>
+<h4 id="resim-输入-输出和计算">输入、输出和计算</h4>
+<p>输入、latent/token 形式、训练目标、推理顺序和反馈回路必须以论文公式和代码入口逐项对照。不能把摘要中的“统一”“实时”“zero-shot”直接当作实现事实；本项目把每项主张拆成 paper claim、code fact 和 inference。</p>
+<h3 id="resim-论文到代码-crosswalk">论文到代码 crosswalk</h3>
+<p>固定仓库包含 ReSim model/training/eval、CARLA data/conditioners、reward model 与 NAVSIM/Waymo paths；论文 source 与 code 需要区分仿真数据构建和模型推理两个层次。</p>
+<p>代码证据索引：</p>
+<ul>
+<li><code>README.md</code>：273 行；符号 未解析到 Python 符号</li>
+<li><code>resim/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>scripts/</code>：? 行；符号 未解析到 Python 符号</li>
+<li><code>configs/</code>：? 行；符号 未解析到 Python 符号</li>
+</ul>
+<h3 id="resim-实验逐项阅读">实验逐项阅读</h3>
+<p>action controllability、non-expert human evaluation、reward correlation、NAVSIM policy selection、sim-data ablation、long-horizon/failure cases。</p>
+<p>实验主张必须和数据、split、baseline、metric、sampling steps、硬件、是否 closed-loop 一起读取。指标高低只说明对应协议下的结果，不能替代机制证据。</p>
+<h3 id="resim-Pass-3-批判与限制">Pass 3：批判与限制</h3>
+<p>V2R 继承 simulator infraction score 的定义，跨真实域的 reward calibration 是主要风险；非专家 controllability 由 human study 与 trajectory difference 支持，但不等于完整 closed-loop safety。</p>
+<h4 id="resim-需要代码回答的问题">需要代码回答的问题</h4>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+</ul>
+<h3 id="resim-来源与复核">来源与复核</h3>
+<ul>
+<li>论文源：<code>03_papers/resim/2506.09981/paper_tex_flat.tex</code>、<code>paper.pdf</code>、<code>pdf_parsed.md</code>。</li>
+<li>论文定位：paper_tex_flat.tex:L438 (方法)；paper_tex_flat.tex:L797 (实验)；paper_tex_flat.tex:L1840 (附录/限制)。</li>
+<li>代码 commit：<code>bf13dff45975eabbabc4e7de778207d2bb785e9b</code>；官方仓库：<code>https://github.com/OpenDriveLab/ReSim</code>。</li>
+<li>缺失/不确定：无递归 include 缺失。</li>
+</ul>
+<h3 id="resim-教学总结">教学总结</h3>
+<p>读者应先掌握这篇论文的任务定义和表示，再按“输入 → latent/token → mask/denoising → action/world output → feedback/evaluation”顺序阅读。最容易误读的地方是把 training-time future supervision、test-time future generation、真实观测 re-anchor、缓存/异步系统优化混为一层；本报告将它们分开。</p><h2 id="resim-questions-论文问题台账-ReSim">论文问题台账：ReSim</h2>
+<ul>
+<li>论文中的 video/action/state token 顺序、形状和 mask 在代码中分别由哪些入口实现？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：README.md</li>
+</ul>
+<ul>
+<li>训练时的 world-model loss 与 inference 时的 action path 是否完全一致？如果不一致，差异是什么？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：resim/</li>
+</ul>
+<ul>
+<li>论文宣称的速度/规划收益依赖哪些默认配置、采样步数、缓存和外部组件？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：scripts/</li>
+</ul>
+<ul>
+<li>公开仓库是否包含数据预处理、训练入口、推理入口、评估脚本和论文使用的 checkpoint？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：configs/</li>
+</ul>
+<ul>
+<li>哪些结论只能由论文支持，哪些可以由固定 commit 的源码核验？</li>
+<li>状态：pending code audit</li>
+<li>证据入口：paper_tex_flat.tex</li>
+</ul></section></main></div><footer>Canonical Markdown：wam_report.md · Machine-readable bundle：../05_analysis/analysis_bundle.json · 全部资产位于本工程内</footer><script>const links=[...document.querySelectorAll('nav a')];const secs=[...document.querySelectorAll('main section[id]')];const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle('active',a.hash==='#'+e.target.id))}})},{rootMargin:'-10% 0px -75% 0px'});secs.forEach(s=>obs.observe(s));</script></body></html>

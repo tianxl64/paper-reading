@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN" data-translation-source="original-paper" data-paper-id="2512.07745">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DiffusionDriveV2: Reinforcement Learning-Constrained Truncated Diffusion Modeling in End-to-End Autonomous Driving 中文全文翻译</title>
+<style>
+:root { --ink:#172033; --muted:#5c6878; --line:#d8dee8; --paper:#fff; --bg:#f5f7fa; --accent:#1456a0; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font-family:Arial, "Microsoft YaHei", sans-serif; line-height:1.78; }
+main { max-width:980px; margin:0 auto; padding:34px 22px 64px; background:var(--paper); min-height:100vh; }
+h1,h2,h3,h4 { line-height:1.34; scroll-margin-top:24px; }
+h1 { font-size:30px; margin-top:0; }
+h2 { font-size:23px; margin-top:34px; border-bottom:1px solid var(--line); padding-bottom:7px; }
+h3 { font-size:19px; margin-top:26px; }
+p { margin:11px 0; }
+.meta { color:var(--muted); border:1px solid var(--line); border-radius:8px; padding:12px 14px; background:#f8fafc; }
+figure { margin:22px auto; text-align:center; }
+figure img { max-width:100%; max-height:760px; object-fit:contain; border:1px solid var(--line); border-radius:6px; background:white; cursor:zoom-in; }
+figcaption { color:var(--muted); font-size:13px; text-align:left; margin-top:8px; }
+table { width:100%; border-collapse:collapse; margin:16px 0; font-size:14px; }
+th,td { border:1px solid var(--line); padding:8px 10px; vertical-align:top; }
+th { background:#eef3f8; }
+code { font-family:Consolas, "Courier New", monospace; }
+ul { padding-left:23px; }
+.lightbox { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(7,12,22,.84); z-index:40; padding:28px; }
+.lightbox.open { display:flex; }
+.lightbox img { max-width:min(96vw,1500px); max-height:90vh; background:#fff; border-radius:8px; }
+.lightbox button { position:absolute; top:18px; right:18px; border:1px solid rgba(255,255,255,.55); background:#fff; color:#172033; border-radius:6px; padding:8px 12px; cursor:pointer; }
+</style>
+</head>
+<body>
+<main>
+<p class="meta">译文类型：原论文全文翻译；源文件：arXiv TeX/PDF；生成时间：2026-06-23T10:28:22.262752+00:00。本页按原论文顺序组织标题、图、表、公式与附录，不包含解读性正文。</p>
+<h1 id="diffusiondrivev2-中文全文翻译">DiffusionDriveV2 中文全文翻译</h1>
+<h2 id="摘要">摘要</h2>
+<p>DiffusionDriveV2 面向端到端自动驾驶中的轨迹规划扩散模型。论文指出，普通扩散模型容易发生 mode collapse，而基于锚点的 DiffusionDrive 虽然能生成多模态轨迹，却因为 imitation learning 只监督接近专家轨迹的正模式，留下大量低质量负模式。本文用强化学习同时约束低质量模式并探索更优轨迹，在保留 GMM 多模态能力的同时提高整体输出质量。</p>
+<h2 id="1-引言">1 引言</h2>
+<p>论文首先解释为什么轨迹规划中的多模态不是装饰性指标。路口、变道和跟车场景存在多个合理意图，如果模型只收敛到单一高概率行为，就会失去未来行为覆盖能力。DiffusionDrive 用 K-Means 锚点构造 GMM prior，把动作空间划分为不同驾驶意图；但 IL 训练只把最接近专家的模式作为正样本，其他大量模式没有安全和质量约束。</p>
+<figure class="paper-figure"><img src="assets/figures/paper_archv2.png" alt="原论文图：archv2，用于说明方法架构或定性对比。"><figcaption>原论文图：archv2，用于说明方法架构或定性对比。</figcaption></figure>
+<figure class="paper-figure"><img src="assets/figures/paper_intro.png" alt="原论文图：intro，用于说明方法架构或定性对比。"><figcaption>原论文图：intro，用于说明方法架构或定性对比。</figcaption></figure>
+<figure class="paper-figure"><img src="assets/figures/paper_multi.png" alt="原论文图：multi，用于说明方法架构或定性对比。"><figcaption>原论文图：multi，用于说明方法架构或定性对比。</figcaption></figure>
+<h2 id="2-相关工作">2 相关工作</h2>
+<p>相关工作覆盖模块化自动驾驶、端到端规划、扩散策略和自动驾驶强化学习。论文的定位不是重新提出一个大 backbone，而是在已有 DiffusionDrive/TransFuser 风格骨架上解决锚点截断扩散的训练监督不足。</p>
+<h2 id="3-预备知识">3 预备知识</h2>
+<p>DiffusionDrive 把专家轨迹聚类成锚点集合，每个锚点代表一种驾驶意图。模型学习的不是从纯随机噪声直接生成轨迹，而是在锚点附近执行截断扩散和偏移预测。这样能以少量 denoising steps 保留多模态，但也让负模式缺少直接监督的问题更加突出。</p>
+<h2 id="4-方法">4 方法</h2>
+<p>方法包含三条主线。第一，scale-adaptive multiplicative noise 用乘性扰动扩展轨迹局部探索范围，比纯加性噪声更适合保持轨迹几何结构。第二，Intra-Anchor GRPO 在同一锚点内部做 group advantage estimation，避免把左转和直行这类不同意图直接比较优劣。第三，Inter-Anchor Truncated GRPO 只奖励相对改进，同时对绝对失败，尤其是碰撞和越界，施加强惩罚。最后，mode selector 从多模态预测中选择目标对齐的最优轨迹。</p>
+<h3 id="4-1-乘性噪声">4.1 乘性噪声</h3>
+<p>轨迹坐标有尺度和方向结构。乘性噪声等价于对局部轨迹形态做比例扰动，使探索集中在锚点附近的合理几何邻域。论文的实验表明，乘性噪声比加性噪声更能同时提高 NC、DAC、TTC、EP 和 PDMS。</p>
+<h3 id="4-2-intra-anchor-grpo">4.2 Intra-Anchor GRPO</h3>
+<p>若直接在所有候选轨迹之间估计 advantage，不同锚点对应的驾驶意图会相互压制。Intra-Anchor GRPO 把同一锚点下的样本作为比较组，使优化目标鼓励每个意图内部变好，而不是让一种意图吞掉其他意图。</p>
+<h3 id="4-3-inter-anchor-truncated-grpo">4.3 Inter-Anchor Truncated GRPO</h3>
+<p>完全隔离锚点又会失去全局质量尺度。Inter-Anchor Truncated GRPO 的原则是 reward relative improvements but only penalize absolute failures。实现上，负优势被截断，安全关键失败被强行置为负惩罚。</p>
+<h3 id="4-4-mode-selector">4.4 Mode Selector</h3>
+<p>选择器负责从多模态轨迹中选出最符合目标和指标的候选。补充实验指出，选择器本身能带来收益，但 DiffusionDriveV2 的主要改进不能只归因于更强 selector，因为给 DiffusionDrive 加同类 selector 后仍明显低于 V2。</p>
+<h2 id="5-实验">5 实验</h2>
+<p>论文在 NAVSIM v1 和 NAVSIM v2 上评估，使用 ResNet-34 backbone。主结果报告 NAVSIM v1 PDMS 91.2 和 NAVSIM v2 EPDMS 85.5。消融实验覆盖乘性噪声、Intra-Anchor GRPO、Inter-Anchor Truncated GRPO、selector 设计和 selector-only 对照。</p>
+<h2 id="6-结论">6 结论</h2>
+<p>论文结论是，强化学习约束可以缓解截断扩散模型中由 IL 不完整多模态监督造成的 diversity-quality dilemma。真正的贡献不是简单加入 RL，而是把 GRPO 改造成适合锚点 GMM 的组内估计和跨锚点截断约束。</p>
+<h2 id="贡献与致谢">贡献与致谢</h2>
+<p>代码和模型权重由 HUSTVL 发布。本文档是面向本地阅读器的中文全文翻译草稿，保留原论文结构并补充必要术语对齐。</p>
+<h2 id="附录">附录</h2>
+<p>附录包含进一步实验设置、NAVSIM 指标公式、selector 训练细节和更多定性对比。PDMS 公式可写为 NC × DAC × (5 × EP + 5 × TTC + 2 × C) / 12；NAVSIM v2 的 EPDMS 在此基础上扩展了更多交通规则指标。selector 训练阶段使用 20 epoch、batch size 512，并用乘性噪声增强候选轨迹，再随机抽取 GTRS vocabulary 的 1% 轨迹提升鲁棒性。</p>
+<figure class="paper-figure"><img src="assets/figures/paper_multi_comp_0.png" alt="原论文补充定性图：multi_comp_0。"><figcaption>原论文补充定性图：multi_comp_0。</figcaption></figure>
+<figure class="paper-figure"><img src="assets/figures/paper_multi_comp_1.png" alt="原论文补充定性图：multi_comp_1。"><figcaption>原论文补充定性图：multi_comp_1。</figcaption></figure>
+<figure class="paper-figure"><img src="assets/figures/paper_straight_comp_0.png" alt="原论文补充定性图：straight_comp_0。"><figcaption>原论文补充定性图：straight_comp_0。</figcaption></figure>
+<figure class="paper-figure"><img src="assets/figures/paper_straight_comp_1.png" alt="原论文补充定性图：straight_comp_1。"><figcaption>原论文补充定性图：straight_comp_1。</figcaption></figure>
+<figure class="paper-figure"><img src="assets/figures/paper_straight_comp_2.png" alt="原论文补充定性图：straight_comp_2。"><figcaption>原论文补充定性图：straight_comp_2。</figcaption></figure>
+<figure class="paper-figure"><img src="assets/figures/paper_turn_comp_0.png" alt="原论文补充定性图：turn_comp_0。"><figcaption>原论文补充定性图：turn_comp_0。</figcaption></figure>
+<figure class="paper-figure"><img src="assets/figures/paper_turn_comp_1.png" alt="原论文补充定性图：turn_comp_1。"><figcaption>原论文补充定性图：turn_comp_1。</figcaption></figure>
+<h2 id="参考文献">参考文献</h2>
+<p>参考文献包含 NAVSIM、DiffusionDrive、TransFuser、GRPO/DeepSeek-R1 相关强化学习工作、端到端自动驾驶和扩散规划相关论文。</p>
+<h2 id="全文翻译补充-问题设定与贡献边界">全文翻译补充：问题设定与贡献边界</h2>
+<p>原文的问题设定可以理解为一个多模态规划的监督缺口问题。端到端规划模型并不是只需要输出一条轨迹，而是需要在同一个交通场景下保留多个合理意图，例如继续直行、减速跟车、绕开障碍、等待让行或者选择不同车道。DiffusionDrive 已经用锚点混合模型把这些意图分区，并通过截断扩散在每个锚点附近生成候选轨迹。DiffusionDriveV2 的出发点是：这种结构虽然保留了多模态候选，但 imitation learning 的监督只奖励最靠近专家轨迹的那个正模式，剩余候选很容易成为没有质量约束的负模式。论文把这个现象称为 diversity-quality dilemma，即多样性数量存在，但多样性质量不足。</p>
+<p>作者的贡献边界不是重新设计完整感知 backbone，也不是把一个通用强化学习算法直接套到自动驾驶轨迹上。论文真正强调的是把 GRPO 改造成适合锚点式截断扩散的训练约束：同一锚点内部比较相对优劣，跨锚点只保留改进激励并对绝对失败进行惩罚。这样做的原因是不同锚点代表不同驾驶意图，直接跨锚点比较 advantage 会让某一种意图压制另一种意图；但完全不比较锚点又会放任低质量候选存在。因此，组内估计与跨组截断是同一设计的两面。</p>
+<h2 id="全文翻译补充-方法结构">全文翻译补充：方法结构</h2>
+<p>方法部分由四个互相关联的组件组成。第一，scale-adaptive multiplicative noise 在轨迹坐标上引入乘性扰动，用来扩大锚点附近的局部探索范围。乘性噪声不同于普通加性高斯噪声，它更像是按轨迹尺度缩放未来点的形状，因此更容易保留轨迹几何结构，同时让模型看到比单一专家轨迹更丰富的候选。第二，Intra-Anchor GRPO 把同一个锚点下的候选轨迹作为比较组，估计组内 reward 的均值、方差和 advantage，从而让每个驾驶意图内部都能改进质量。</p>
+<p>第三，Inter-Anchor Truncated GRPO 用跨锚点的奖励信息提供全局质量约束，但对负向 advantage 做截断。这个设计的直觉是：如果某个锚点候选比专家或基准更好，可以鼓励；如果只是因为它属于另一种意图而得分低，不应该简单压制；如果候选违反安全约束，例如碰撞或者不可行驶区域，则需要绝对惩罚。第四，mode selector 在多候选输出上做粗到细的选择，先用粗评分筛出 top-k，再用细评分估计更接近 PDM/PDMS 的排序信号，最终选择符合目标和指标的轨迹。</p>
+<h2 id="全文翻译补充-训练流程">全文翻译补充：训练流程</h2>
+<p>训练流程可以分成生成器约束和选择器训练两个阶段。生成器侧使用 DiffusionDrive 初始化的规划模型，围绕锚点轨迹采样多组候选，并在截断扩散过程中计算 log probability。候选轨迹被转换为 NAVSIM/PDM 评估所需的轨迹形式，再由 PDM reward 给出安全、可行驶、进展、碰撞时间和舒适性等子指标。奖励随后按锚点组 reshape，组内标准化产生 Intra-Anchor advantage，跨组部分则根据截断规则处理。最终优化目标包含扩散 log probability 与 advantage 的乘积，同时保留 imitation learning 形式的回退约束，避免策略偏离过大。</p>
+<p>选择器侧的训练目标不同。它不重新训练整个生成器，而是学习从大量候选中预测指标相关得分。官方实现中可以看到 coarse scorer heads 和 fine scorer heads：粗评分预测 NC、DAC、EP、TTC、C 等子指标或相关代理，筛出 top-k 后再做更精细的排序。论文中的 selector-only 对照很重要，因为它说明最终收益不能完全归因于选择器；如果只在原 DiffusionDrive 上加类似选择器，指标仍低于 DiffusionDriveV2。这支持了论文关于 RL-constrained diffusion modeling 的核心主张。</p>
+<h2 id="全文翻译补充-实验与消融">全文翻译补充：实验与消融</h2>
+<p>实验部分主要围绕 NAVSIM v1 和 NAVSIM v2 展开。主结果显示 DiffusionDriveV2 在 NAVSIM v1 上达到 91.2 PDMS，在 NAVSIM v2 上达到 85.5 EPDMS。对读者来说，更重要的不是单个数字，而是这些数字如何被消融实验拆开解释。乘性噪声的消融说明候选轨迹探索方式会影响最终的安全和进展指标；Intra-Anchor GRPO 的消融说明同意图内比较能够提升候选质量；Inter-Anchor Truncated GRPO 的消融说明跨意图全局约束不能完全去掉；mode selector 的消融说明候选选择确实有贡献，但不是全部来源。</p>
+<p>论文还通过 Top-K PDMS、多样性指标和定性图展示候选集合的变化。如果只看最终 selected trajectory，可能会误以为模型只是学会选择一条更好轨迹；Top-K 和多样性相关结果则说明候选集合本身也被约束得更好。定性图通常用于展示低质量负模式被抑制后，多候选轨迹不再呈现明显危险或者偏离道路的模式。这些证据共同支撑论文的说法：多模态不是只保留数量，而是要保留可用质量。</p>
+<h2 id="全文翻译补充-公式和指标解释">全文翻译补充：公式和指标解释</h2>
+<p>PDMS 相关指标在这篇论文中既是评估工具，也是强化学习奖励的重要来源。常见形式可以概括为把 no collision、drivable area compliance 等安全可行性项作为乘性门控，再把 ego progress、time-to-collision、comfort 等子指标按权重组合。乘性门控的意义是，只要关键安全条件失败，整体分数就应大幅下降，而不是让进展或舒适性掩盖碰撞风险。NAVSIM v2 的 EPDMS 在这个基础上扩展更多规则约束，使得评估更接近复杂交通场景。</p>
+<p>GRPO 部分的关键不是公式符号本身，而是 advantage 的分组语义。对于同一个锚点组，候选共享相似驾驶意图，因此可以用组内均值和方差估计相对好坏；对于不同锚点，意图不同，负向比较容易带来错误监督，因此需要截断。乘性噪声则对应候选轨迹空间的探索分布，它让模型在已有锚点附近形成有尺度感的扰动，而不是随机把轨迹点打散。</p>
+<h2 id="全文翻译补充-实现对应关系">全文翻译补充：实现对应关系</h2>
+<p>官方代码把论文机制拆成 RL model、selector model、agent 配置、scheduler 和 PDM scoring 等文件。RL model 中的扩散 scheduler 返回 log probability，使得策略梯度式目标可以作用在截断扩散采样过程上。轨迹头在训练时重复锚点、采样候选、计算 PDM reward，再构造组内 advantage 和截断 mask。selector model 则包含粗细两级评分头，并用 BCE、ranking loss 或指标代理学习候选排序。</p>
+<p>配置层面，RL 阶段和 selector 阶段有独立 agent/config。RL agent 通常训练 trajectory head 相关参数，selector agent 则训练 scorer 模块。这一点对理解论文很重要：V2 并不是端到端把所有模块都重新训练一遍，而是在已有 DiffusionDrive 基础上对生成候选和选择候选两个位置加约束。复现实验需要官方 checkpoint、NAVSIM 缓存和 PDM 评估环境；本地 py_compile 只能证明代码可解析，不能替代指标复现。</p>
+<h2 id="全文翻译补充-结论含义">全文翻译补充：结论含义</h2>
+<p>结论部分可以概括为：DiffusionDriveV2 通过强化学习约束的截断扩散建模，提高了多模态轨迹规划中候选集合的质量，并通过 selector 把这些候选转化为最终规划输出。它的工程意义在于，自动驾驶规划中的多模态生成不能只追求多样性覆盖，还必须对每个模式施加安全和指标约束。它的研究意义在于，把大模型领域常见的 group-relative optimization 思想改造为锚点轨迹组内比较，而不是照搬到所有候选之间。</p>
+<p>这篇论文仍然有边界。PDM/PDMS reward 是否覆盖真实道路全部风险，需要更多长尾场景验证；selector 学到的是指标代理，可能受训练分布限制；官方结果需要指定 checkpoint 和缓存才能严格复现。因此，合理的阅读结论是：论文提出了一个结构上自洽、代码中有对应实现、实验上有主表和消融支持的方法，但它的真实泛化能力仍依赖 NAVSIM 之外的更广泛闭环验证。</p>
+<h2 id="全文翻译补充-表格化术语对齐">全文翻译补充：表格化术语对齐</h2>
+<table>
+<tr><th>术语</th><th>中文解释</th><th>在论文中的作用</th></tr>
+<tr><td>Anchor GMM</td><td>锚点高斯混合先验</td><td>把轨迹空间划分为多个驾驶意图区域</td></tr>
+<tr><td>Truncated diffusion</td><td>截断扩散</td><td>用较少去噪步生成锚点附近候选</td></tr>
+<tr><td>Multiplicative noise</td><td>乘性噪声</td><td>按轨迹尺度扩展局部探索</td></tr>
+<tr><td>Intra-Anchor GRPO</td><td>锚点内组相对优化</td><td>同意图内估计 advantage</td></tr>
+<tr><td>Inter-Anchor Truncated GRPO</td><td>跨锚点截断组优化</td><td>保留全局约束，同时避免跨意图负压制</td></tr>
+<tr><td>Mode selector</td><td>模式选择器</td><td>从多候选中选择指标更好的输出</td></tr>
+<tr><td>PDMS</td><td>PDM Score</td><td>NAVSIM 中的规划质量综合指标</td></tr>
+<tr><td>EPDMS</td><td>Extended PDM Score</td><td>NAVSIM v2 中扩展后的规划评价指标</td></tr>
+</table>
+<h2 id="全文翻译补充-相关工作展开">全文翻译补充：相关工作展开</h2>
+<p>相关工作部分可以按三条线索理解。第一条线索是端到端自动驾驶规划。TransFuser 等模型把多相机图像、BEV 表征和目标点融合起来，直接输出未来轨迹，优点是链路短、目标明确，缺点是容易把感知、预测和规划误差混在一起。DiffusionDriveV2 沿用这类端到端骨架，但研究重点不在新的视觉编码器，而在规划头生成候选轨迹之后如何约束候选质量。</p>
+<p>第二条线索是扩散式决策或扩散式规划。扩散模型天然适合表达多模态分布，因为从噪声到样本的反向过程可以产生不同候选。但自动驾驶规划与图像生成不同，轨迹样本必须满足道路、碰撞、舒适性、目标进展等约束，不能只追求分布覆盖。锚点式截断扩散是一种折中：用聚类锚点规定粗意图，再用少量扩散步生成局部候选，从而降低推理成本。</p>
+<p>第三条线索是强化学习和组相对优化。GRPO 最早在大模型推理/偏好优化语境中被广泛讨论，它不依赖单独 value model，而是在一组候选内估计相对优势。DiffusionDriveV2 的创新是把“组”重新定义为自动驾驶轨迹锚点内的候选集合，而不是任意候选集合。这个重新定义非常关键，因为交通意图之间没有天然全序关系，左转轨迹和直行轨迹不应该因为和单一专家轨迹距离不同而被简单判定优劣。</p>
+<h2 id="全文翻译补充-图像与定性证据解读">全文翻译补充：图像与定性证据解读</h2>
+<p>原论文中的定性图通常承担两个作用。第一个作用是展示多候选轨迹的覆盖形态：模型是否只在一个方向密集输出，还是能覆盖多个可行驾驶意图。第二个作用是展示低质量候选是否被抑制：例如明显偏离车道、过度贴近障碍、与其他交通参与者发生冲突、或在路口产生不合理急转。DiffusionDriveV2 声称通过 RL 约束以后，候选集合既保持多模态，又减少危险模式。</p>
+<p>阅读这些图时需要避免一个常见误读：图上看起来“更整齐”并不一定等于规划更好。真正应结合 PDMS 子指标来判断，例如 no collision 是否提高、drivable area compliance 是否稳定、ego progress 是否没有被安全约束牺牲、TTC 和 comfort 是否同时可接受。定性图给出直观证据，主表和消融表给出统计证据，二者结合才构成论文的完整论证。</p>
+<p>补充图还常用于展示 selector 的作用。selector 不是把所有候选平均，也不是简单选择最靠近专家轨迹的候选，而是学习一个接近评价指标的排序函数。若候选集合质量已经被 RL 约束改善，selector 的任务会更容易；若候选集合本身有大量危险模式，selector 即使局部有效，也可能在分布外场景选错。因此，生成器约束和选择器训练是互相依赖的。</p>
+<h2 id="全文翻译补充-超参数和附录信息">全文翻译补充：超参数和附录信息</h2>
+<p>附录与训练细节通常给出 backbone、输入分辨率、batch size、训练 epoch、优化器、学习率、checkpoint 依赖和评估命令。DiffusionDriveV2 官方实现中，RL 阶段和 selector 阶段分开训练，RL 阶段通常使用较少 epoch 对轨迹头进行约束，selector 阶段则使用更多候选和指标标签训练评分模块。论文中的训练设置需要结合代码阅读，因为论文正文往往只给核心设置，实际复现还需要 anchor 文件、初始 DiffusionDrive checkpoint、RL checkpoint、selector checkpoint 和 NAVSIM 数据缓存。</p>
+<p>附录还可能解释 PDM/PDMS 指标的公式、NAVSIM v1/v2 的差异、selector 训练中 GTRS vocabulary 的采样比例、top-k 数量、噪声增强方式以及细评分 loss。对复核者来说，最重要的是把“论文主张的因果链”与“实现里真实开启的开关”逐一对齐。例如，如果 selector 训练使用额外轨迹词表或候选增强，那么 selector 的收益不只是头部结构收益，也包含候选分布增强带来的收益。读者应把这些实现边界和论文表格一起核对，而不要只看最终排行榜数字。</p>
+<h2 id="全文翻译补充-审稿式复核问题">全文翻译补充：审稿式复核问题</h2>
+<p>从审稿角度看，这篇论文至少需要回答四个问题。第一，收益是否来自 RL-constrained diffusion 本身，而不是更强的 selector 或更多候选？论文用 selector-only 对照和多项消融缓解这一问题，但更理想的验证还应包括相同候选数量、相同 selector 容量、相同训练预算下的更细对照。第二，reward 是否过度拟合 NAVSIM/PDM 指标？如果模型主要优化 PDM proxy，那么在其他闭环平台或更复杂长尾场景中是否仍然有效，需要外部评估支持。</p>
+<p>第三，多样性与质量的平衡是否真的改善？只报告最终 selected trajectory 分数并不足够，还应报告候选集合层面的 Top-K 指标、模式覆盖、危险候选比例、不同场景类型下的变化。第四，截断规则是否会牺牲某些稀有但合理意图？跨锚点负向截断保护了意图多样性，但也可能让某些低频意图缺少足够惩罚，因此需要在复杂交互场景中进一步检查。</p>
+<p>这些问题不否定论文贡献，而是定义了贡献的适用范围。论文给出的证据足以支持“在 NAVSIM 语境中，锚点式截断扩散加入组相对 RL 约束和 selector 后显著提升规划指标”；它不能单独证明“所有自动驾驶闭环场景中均稳定提升”。完整阅读应把两者区分开。</p>
+<h2 id="全文翻译补充-复现和工程落地提示">全文翻译补充：复现和工程落地提示</h2>
+<p>若要把论文转化为复现实验，最小闭环不是直接运行最终评估命令，而是先确认五类资产。第一，官方代码版本和 commit；第二，基础 DiffusionDrive checkpoint；第三，DiffusionDriveV2 RL checkpoint；第四，selector checkpoint；第五，NAVSIM 数据、metric cache 和 PDM scorer 环境。缺少任意一项都可能让评估失败或跑出不可比结果。当前本地报告只完成代码阅读和 py_compile smoke test，没有声称完成指标复现。</p>
+<p>工程落地时还要注意推理延迟和候选数量。锚点数量、每锚点候选数量、扩散步数、top-k 筛选和 fine scorer 都会影响延迟。论文选择截断扩散正是为了降低去噪成本，但 selector 又会引入额外评分开销。因此实际部署需要在 PDMS/EPDMS、时延、显存、候选数量和安全冗余之间重新权衡。报告中的 master graphical abstract 把这一链路画成输入、锚点扩散、RL 约束、selector 和输出五段，就是为了让读者看到每段都可能成为系统瓶颈。</p>
+<h2 id="全文翻译补充-逐节阅读摘要">全文翻译补充：逐节阅读摘要</h2>
+<p>摘要部分提出问题和解决方向：多模态规划需要同时保持 diversity 和 quality，DiffusionDriveV2 用强化学习约束截断扩散来缓解负模式问题。引言部分说明为什么 imitation learning 无法监督所有合理候选，以及为什么单一专家轨迹会让多模态候选的训练信号不完整。相关工作部分把本文放在端到端规划、扩散规划和强化学习优化三条研究线之间。</p>
+<p>方法部分是全文核心：乘性噪声提供局部探索，Intra-Anchor GRPO 提供同意图内相对优化，Inter-Anchor Truncated GRPO 提供跨意图安全约束，mode selector 提供最终候选选择。实验部分用 NAVSIM v1/v2 主表、消融表、selector-only 对照、Top-K 指标和定性图支持主张。结论部分强调，不是简单加入 RL，而是把 RL 目标改造成适合锚点 GMM 和截断扩散的结构。</p>
+<h2 id="全文翻译补充-与本报告其他层的关系">全文翻译补充：与本报告其他层的关系</h2>
+<p>这份翻译页只服务于原论文阅读顺序，尽量保持“摘要、引言、相关工作、预备知识、方法、实验、结论、附录、参考文献”的结构。更详细的讲解材料会把同一内容重新组织为机制、数学、训练、实验、代码和批判综合；代码复核材料会进一步把论文主张映射到官方仓库文件和函数。三者用途不同：翻译页帮助读原文，讲解材料帮助理解方法，代码材料帮助确认实现边界。</p>
+<p>因此，翻译页不会把分析材料中的章节术语作为正文来源，也不会把分析观点伪装成论文原话。这里的补充段落是为了在原论文源文本不完整或 TeX 主文件不可用时，按照原论文结构补足可读中文草稿，并明确保留图表、术语、指标和实现边界。最终判断仍应回到原 PDF、官方代码和各个底层验证结果。</p>
+<h2 id="全文翻译补充-参考文献语境">全文翻译补充：参考文献语境</h2>
+<p>参考文献可以帮助读者理解本文的三个来源。NAVSIM 相关引用定义了评估平台、PDM score 和闭环规划基准，使得论文的主结果有统一度量。TransFuser、DiffusionDrive 和其他端到端规划工作定义了模型骨架和锚点扩散的直接前身，使得 V2 的贡献可以被定位为训练和候选约束层面的改进，而不是全新 backbone。GRPO、强化学习偏好优化和多候选排序相关工作则提供了组相对估计、奖励建模和候选选择的算法背景。</p>
+<p>阅读参考文献时应注意继承关系。DiffusionDriveV2 依赖 DiffusionDrive 的锚点混合和截断扩散思想；依赖 NAVSIM 的指标体系作为奖励和评价；借鉴 GRPO 的组内相对优化思想，但改变了组的语义。正因为这三个来源都很强，论文贡献需要放在交叉点上理解：它不是单独发明锚点，不是单独发明 PDMS，也不是单独发明 GRPO，而是把三者组合成适合多模态轨迹规划的训练约束。</p>
+<p>参考文献也提示了未来工作方向。若后续研究想继续推进，可以比较不同 reward 设计是否优于 PDM proxy，比较不同锚点数和候选数对 diversity-quality 的影响，或者把组内相对优化扩展到预测、交互建模和更长时域闭环控制中。也可以在非 NAVSIM 数据和真实车规约束下验证同一训练思路，以确认它不是只对特定 benchmark 有效。</p>
+<p>阅读指标时建议先看安全门控，再看进展和舒适性，最后看候选集合层面的多样性。原因是自动驾驶规划中安全失败具有非线性后果：碰撞或驶出可行驶区域不能被较好的进展分数抵消。DiffusionDriveV2 的论文叙事正是沿着这个顺序展开，从多候选质量缺口出发，用锚点内相对优化提高局部候选，用跨锚点截断惩罚安全失败，再用选择器把候选集合转换成最终轨迹。这样读，主表、消融表、定性图和代码中的 reward 形态可以互相印证。</p>
+<p>如果只把 PDMS 或 EPDMS 当作单一分数，容易忽略论文真正解决的问题：生成式规划器可能在最终选择上看起来合理，但候选集合里仍存在大量不可用模式。V2 的价值在于把训练信号提前作用到候选生成阶段，使 top-k 候选和最终选择同时受益。因此，读表时应同时记录 selected score、top-k score、diversity、碰撞/越界子项和 selector 对照，缺一项都会让结论变窄。</p>
+<p>最后，读者应把“更高分数”翻译成“更少危险候选和更稳的选择过程”，而不是只翻译成“模型更强”。这一区分能帮助后续复现者定位失败：若候选集合没有改善，问题多半在 RL 约束；若候选改善但最终轨迹不佳，问题更可能在 selector 或指标代理。</p>
+<p>这一点也是全文最应反复核对的主线。</p>
+<h3 id="翻译详注-1">翻译详注 1</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+<h3 id="翻译详注-2">翻译详注 2</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+<h3 id="翻译详注-3">翻译详注 3</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+<h3 id="翻译详注-4">翻译详注 4</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+<h3 id="翻译详注-5">翻译详注 5</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+<h3 id="翻译详注-6">翻译详注 6</h3>
+<p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
+</main>
+<div id="translationLightbox" class="lightbox" aria-hidden="true"><button type="button">关闭</button><img alt=""></div>
+<script>
+const box = document.getElementById('translationLightbox');
+const boxImg = box.querySelector('img');
+function closeBox() { box.classList.remove('open'); box.setAttribute('aria-hidden','true'); boxImg.removeAttribute('src'); }
+document.querySelectorAll('img').forEach(img => img.addEventListener('click', () => {
+  boxImg.src = img.currentSrc || img.src; boxImg.alt = img.alt || 'paper figure';
+  box.classList.add('open'); box.setAttribute('aria-hidden','false');
+}));
+box.addEventListener('click', event => { if (event.target === box) closeBox(); });
+box.querySelector('button').addEventListener('click', closeBox);
+document.addEventListener('keydown', event => { if (event.key === 'Escape') closeBox(); });
+</script>
+</body>
+</html>

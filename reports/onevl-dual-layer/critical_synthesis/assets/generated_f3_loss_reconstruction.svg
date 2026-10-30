@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="F3 目标函数与瓶颈">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4B5565"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+<text x="54" y="48" font-family="Microsoft YaHei, Arial, sans-serif" font-size="23" font-weight="700" fill="#172033">F3 目标函数与瓶颈</text>
+<text x="54" y="76" font-family="Microsoft YaHei, Arial, sans-serif" font-size="13" font-weight="500" fill="#596579">三类损失共同规定 latent 应保留什么信息</text>
+<rect x="92" y="286" width="230" height="112" rx="10" fill="#FFF3DF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="108" y="314" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">latent hidden states</text>
+<text x="108" y="340" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="108" dy="0">H_v / H_l</tspan>
+<tspan x="108" dy="17">少量可控位置</tspan>
+</text>
+<rect x="462" y="130" width="260" height="90" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="478" y="158" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">轨迹 CE</text>
+<text x="478" y="184" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="478" dy="0">最终 answer</tspan>
+<tspan x="478" dy="17">规划可用性</tspan>
+</text>
+<rect x="462" y="310" width="260" height="90" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="478" y="338" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">语言损失</text>
+<text x="478" y="364" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="478" dy="0">CoT 文本</tspan>
+<tspan x="478" dy="17">可解释读出</tspan>
+</text>
+<rect x="462" y="490" width="260" height="90" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="478" y="518" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">视觉损失</text>
+<text x="478" y="544" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="478" dy="0">未来视觉 token</tspan>
+<tspan x="478" dy="17">短时动态</tspan>
+</text>
+<rect x="900" y="292" width="250" height="120" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="916" y="320" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">联合压力</text>
+<text x="916" y="346" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="916" dy="0">L = Lc + λlLl + λvLv</tspan>
+<tspan x="916" dy="17">λl=1.0, λv=0.1</tspan>
+</text>
+<path d="M322,342 L462,342 L462,175" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="468" y="334" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">answer</text>
+<path d="M322,342 L462,342 L462,355" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="468" y="334" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">text</text>
+<path d="M322,342 L462,342 L462,535" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="468" y="334" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">visual</text>
+<path d="M722,175 L900,175 L900,330" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M722,355 L900,355 L900,352" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M722,535 L900,535 L900,374" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="96" y="510" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="110" y="531" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">无 visual</text>
+<text x="110" y="553" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">-0.87 PDM</text>
+<rect x="920" y="510" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="934" y="531" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">无 language</text>
+<text x="934" y="553" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">-0.31 PDM</text>
+<line x1="54" y1="660" x2="1226" y2="660" stroke="#AEB8C6" stroke-width="1"/>
+<text x="54" y="686" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">公式细节保留在正文；图中只显示梯度如何集中塑形少量 latent 位置。</text>
+</svg>

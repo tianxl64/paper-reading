@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#556376"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="760" fill="#FFFFFF"/>
+<text x="42" y="42" font-size="22" font-weight="700" fill="#172033">机制放大：双 latent 的读写接口</text>
+<text x="42" y="70" font-size="13" font-weight="500" text-anchor="start" fill="#596579">机制 zoom-in；展示 hidden-state 位置、decoder 读出和 consequence</text>
+<rect x="54" y="148" width="210" height="88" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="70" y="176" font-size="15" font-weight="700" text-anchor="start" fill="#172033">assistant prefix</text>
+<text x="70" y="202" font-size="12" font-weight="500" text-anchor="start" fill="#596579">&lt;visual_latent&gt;</text>
+<text x="70" y="223" font-size="12" font-weight="500" text-anchor="start" fill="#596579">&lt;language_latent&gt;</text>
+<rect x="330" y="108" width="400" height="415" rx="12" fill="#FFF2DE" stroke="#D8DEE8"/>
+<text x="346" y="133" font-size="13" font-weight="700" text-anchor="start" fill="#596579">latent hidden states</text>
+<rect x="380" y="170" width="58" height="58" rx="10" fill="#FFFFFF" stroke="#B76E00" stroke-width="1.3"/>
+<text x="396" y="198" font-size="13" font-weight="700" text-anchor="start" fill="#172033">v1</text>
+<text x="396" y="224" font-size="12" font-weight="500" text-anchor="start" fill="#596579">H_v</text>
+<rect x="460" y="170" width="58" height="58" rx="10" fill="#FFFFFF" stroke="#B76E00" stroke-width="1.3"/>
+<text x="476" y="198" font-size="13" font-weight="700" text-anchor="start" fill="#172033">v2</text>
+<text x="476" y="224" font-size="12" font-weight="500" text-anchor="start" fill="#596579">H_v</text>
+<rect x="540" y="170" width="58" height="58" rx="10" fill="#FFFFFF" stroke="#B76E00" stroke-width="1.3"/>
+<text x="556" y="198" font-size="13" font-weight="700" text-anchor="start" fill="#172033">v3</text>
+<text x="556" y="224" font-size="12" font-weight="500" text-anchor="start" fill="#596579">H_v</text>
+<rect x="620" y="170" width="58" height="58" rx="10" fill="#FFFFFF" stroke="#B76E00" stroke-width="1.3"/>
+<text x="636" y="198" font-size="13" font-weight="700" text-anchor="start" fill="#172033">v4</text>
+<text x="636" y="224" font-size="12" font-weight="500" text-anchor="start" fill="#596579">H_v</text>
+<rect x="455" y="320" width="70" height="58" rx="10" fill="#FFFFFF" stroke="#B76E00" stroke-width="1.3"/>
+<text x="471" y="348" font-size="13" font-weight="700" text-anchor="start" fill="#172033">l1</text>
+<text x="471" y="374" font-size="12" font-weight="500" text-anchor="start" fill="#596579">H_l</text>
+<rect x="560" y="320" width="70" height="58" rx="10" fill="#FFFFFF" stroke="#B76E00" stroke-width="1.3"/>
+<text x="576" y="348" font-size="13" font-weight="700" text-anchor="start" fill="#172033">l2</text>
+<text x="576" y="374" font-size="12" font-weight="500" text-anchor="start" fill="#596579">H_l</text>
+<rect x="815" y="150" width="280" height="92" rx="10" fill="#ECF8F1" stroke="#168A52" stroke-width="1.3"/>
+<text x="831" y="178" font-size="15" font-weight="700" text-anchor="start" fill="#172033">visual auxiliary decoder</text>
+<text x="831" y="204" font-size="12" font-weight="500" text-anchor="start" fill="#596579">读 H_v</text>
+<text x="831" y="225" font-size="12" font-weight="500" text-anchor="start" fill="#596579">预测未来 visual tokens</text>
+<text x="831" y="246" font-size="12" font-weight="500" text-anchor="start" fill="#596579">约束几何与运动</text>
+<rect x="815" y="315" width="280" height="82" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="831" y="343" font-size="15" font-weight="700" text-anchor="start" fill="#172033">language auxiliary decoder</text>
+<text x="831" y="369" font-size="12" font-weight="500" text-anchor="start" fill="#596579">读 H_l</text>
+<text x="831" y="390" font-size="12" font-weight="500" text-anchor="start" fill="#596579">还原 explanation</text>
+<text x="831" y="411" font-size="12" font-weight="500" text-anchor="start" fill="#596579">支持离线审计</text>
+<rect x="500" y="575" width="330" height="70" rx="10" fill="#FFF8D8" stroke="#B76E00" stroke-width="1.3"/>
+<text x="516" y="603" font-size="15" font-weight="700" text-anchor="start" fill="#172033">瓶颈 consequence</text>
+<text x="516" y="629" font-size="12" font-weight="500" text-anchor="start" fill="#596579">同一少量位置同时服务轨迹、视觉未来和可读解释</text>
+<path d="M 264 192 L 350 192 L 350 245 L 380 245" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 678 198 L 750 198 L 750 205 L 815 205" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 630 348 L 730 348 L 730 356 L 815 356" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 535 378 L 535 520 L 620 520 L 620 575" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 530 228 L 530 520 L 620 520 L 620 575" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+</svg>

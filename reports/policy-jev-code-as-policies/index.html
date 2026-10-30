@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="具身机器人与自动驾驶中的结构化概率决策与代码策略入门报告" name="description"/>
+<title>面向 policy 的大模型：Jev 与 Code as Policies</title>
+<style>:root { color-scheme: light; --ink:#172b3a; --line:#d9e3e9; --accent:#176678; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; color:var(--ink); background:#edf2f5; font:17px/1.85 "Segoe UI","Microsoft YaHei",sans-serif; }
+a { color:var(--accent); text-underline-offset:3px; }
+.page-shell { max-width:1900px; margin:auto; display:grid; grid-template-columns:320px minmax(0,1fr); }
+.toc-panel { position:sticky; top:0; height:100vh; overflow:auto; padding:24px 18px; background:#122d3c; color:#e4f1f2; }
+.brand { padding:10px 10px 24px; border-bottom:1px solid #ffffff35; }
+.brand-kicker { font-size:11px; letter-spacing:.13em; color:#83c7c3; }
+.brand-title { font-size:23px; font-weight:750; line-height:1.35; margin-top:8px; }
+.brand-subtitle,.toc-label { font-size:12px; color:#acc9d0; }
+.toc-label { margin:18px 10px 10px; }
+.toc { display:grid; gap:3px; }
+.toc a { padding:7px 9px; color:#c5dce2; font-size:13px; line-height:1.45; text-decoration:none; border-left:3px solid transparent; border-radius:4px; }
+.toc .level-h3 { padding-left:22px; font-size:12px; }
+.toc .level-h4 { padding-left:35px; font-size:11px; }
+.toc a.active,.toc a:hover { border-left-color:#7ed5c9; background:#ffffff17; color:#fff; }
+.toc a.parent-active { color:#9fe1d8; }
+.content { min-width:0; padding:0 32px 60px; }
+.hero { background:#194d61; padding:44px 48px; color:white; border-radius:0 0 14px 14px; }
+.eyebrow { color:#aad9d3; font-size:12px; letter-spacing:.14em; }
+.hero h1 { font:700 clamp(30px,3.2vw,50px)/1.3 Georgia,"Microsoft YaHei",serif; margin:14px 0; }
+.hero p { color:#d9ebed; max-width:1100px; }
+.hero-meta { display:flex; flex-wrap:wrap; gap:8px; }
+.pill { font-size:12px; padding:3px 10px; border:1px solid #ffffff45; border-radius:30px; }
+.reader { background:white; padding:36px 48px 60px; border-radius:14px; margin:24px auto; max-width:1480px; }
+.article { max-width:1380px; margin:auto; }
+.article > h1 { display:none; }
+h2,h3,h4 { line-height:1.45; scroll-margin-top:20px; overflow-wrap:anywhere; }
+h2 { color:#18495f; font-size:29px; margin:48px 0 20px; border-top:2px solid var(--line); padding-top:22px; }
+h3 { font-size:21px; color:#245f74; margin-top:32px; }
+h4 { font-size:18px; color:#376478; margin-top:24px; }
+p { margin:12px 0 18px; }
+blockquote { margin:20px 0; padding:14px 22px; background:#edf7f4; border-left:5px solid #41958c; }
+code,pre { font-family:Consolas,"Cascadia Mono",monospace; }
+code { background:#fdf0e7; color:#8b4529; padding:1px 4px; border-radius:3px; font-size:.9em; overflow-wrap:anywhere; }
+pre { overflow:auto; padding:18px 20px; border-radius:9px; background:#132f40; color:#e2f2f5; line-height:1.6; }
+pre code { background:none; color:inherit; padding:0; overflow-wrap:normal; }
+table { display:block; overflow:auto; border-collapse:collapse; width:100%; margin:20px 0; font-size:14px; }
+td,th { border:1px solid var(--line); padding:10px 12px; min-width:125px; text-align:left; vertical-align:top; }
+th { background:#ecf3f6; color:#244b5e; }
+li { margin:5px 0; }
+.source-note { font-size:13px; color:#57717d; border-left:3px solid #77a8a7; padding:8px 12px; background:#f4f8fa; }
+.formula-block { padding:18px 20px; margin:22px 0; background:#fafcff; border:1px solid var(--line); border-radius:9px; overflow:auto; }
+.formula-block math { font-size:1.2em; min-height:35px; }
+.formula-caption { margin-top:12px; font-size:13px; color:#61747e; border-top:1px dashed var(--line); padding-top:8px; }
+.diagram-card { margin:28px 0; border:1px solid var(--line); border-radius:12px; background:#f9fbfc; padding:22px; }
+.diagram-kicker { font-size:11px; letter-spacing:.1em; color:#718b97; }
+.diagram-title { font-size:22px; font-weight:700; color:#204e63; }
+.diagram-subtitle,figcaption { font-size:13px; color:#617581; }
+.diagram { display:block; width:100%; height:auto; margin:18px auto; cursor:zoom-in; }
+.diagram text { fill:#19323f; font:16px "Microsoft YaHei","Segoe UI",sans-serif; }
+.diagram .small { font-size:12px; fill:#506b78; }
+.diagram .big { font-size:21px; font-weight:700; }
+.figure-details { border-top:1px dashed var(--line); margin-top:12px; padding-top:10px; font-size:14px; }
+.figure-details h4 { font-size:15px; margin:0; }
+.figure-details ul { margin:6px 0 0; }
+.search-box { display:flex; gap:10px; padding:16px 2px; align-items:center; font-size:13px; }
+.search-box input { width:min(440px,70%); padding:9px 12px; border:1px solid #b9cbd4; border-radius:6px; }
+.search-box output { color:#557382; }
+mark { background:#ffe793; color:inherit; }
+.footer-note { text-align:center; color:#637c89; font-size:12px; }
+.lightbox { padding:0; width:min(96vw,1500px); max-width:96vw; border:0; border-radius:10px; background:white; }
+.lightbox::backdrop { background:#0c2234df; }
+.lightbox-toolbar { position:sticky; top:0; padding:12px 16px; background:#edf3f6; display:flex; justify-content:space-between; gap:16px; }
+.lightbox button { padding:6px 16px; border:0; border-radius:5px; background:#1d5369; color:white; cursor:pointer; }
+#lightboxContent { padding:20px; overflow:auto; }
+#lightboxContent .diagram { min-width:900px; max-width:none; }
+@media(max-width:1000px) { .page-shell{display:block}.toc-panel{position:relative;height:auto;max-height:380px}.toc{grid-template-columns:repeat(2,minmax(0,1fr))}.content{padding:0 16px 30px}.reader,.hero{padding:26px 24px}.hero h1{font-size:33px} }
+@media(max-width:600px) { body{font-size:16px}.toc{grid-template-columns:1fr}.reader{padding:22px 16px}.hero{padding:24px 18px}.hero h1{font-size:28px}h2{font-size:25px}.diagram-card{padding:12px}.formula-block{padding:14px 10px} }
+@media print { .toc-panel,.search-box,.lightbox{display:none}.page-shell{display:block}.content{padding:0}.reader{padding:0}.hero{background:white;color:#163b50}.hero p,.eyebrow{color:#4d6371}.diagram-card,pre,table{break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="page-shell">
+<aside class="toc-panel">
+<div class="brand">
+<div class="brand-kicker">POLICY · PAPER · CODE</div>
+<div class="brand-title">决策器，还是<br/>策略程序编译器？</div>
+<div class="brand-subtitle">Jev × Code as Policies<br/>具身机器人与自动驾驶 · 入门专题</div>
+</div>
+<div class="toc-label">阅读目录 · 按正文标题自动生成</div>
+<nav aria-label="全文目录" class="toc" id="toc"></nav>
+</aside>
+<main class="content">
+<header class="hero">
+<div class="eyebrow">BEGINNER'S FIELD GUIDE · 2026-10-29</div>
+<h1>面向 policy 的大模型：<br/>Jev 与 Code as Policies</h1>
+<p>从“下一步做什么”讲起：区分候选概率、动作能量、轨迹生成与可执行程序，理解它们怎样接入机器人和驾驶系统。</p>
+<div class="hero-meta"><span class="pill">面向零背景读者</span><span class="pill">论文与代码证据</span><span class="pill">离线公式</span><span class="pill">实证与架构映射分开</span></div>
+</header>
+<div class="search-box"><label for="searchInput">全文查找</label><input id="searchInput" placeholder="例如：置信度、轨迹、LangProp" type="search"/><output aria-live="polite" id="searchResult"></output></div>
+<div class="reader"><article class="article" id="article"><h1 id="report-title">面向 policy 的大模型新范式：Jev 与 Code as Policies</h1>
+<blockquote>
+<p><strong>给没有背景的读者的先行结论</strong>：这句话不是在说“两个模型都直接控制机器人”，而是在说：近期有人尝试把大模型放进 policy 的不同位置。第一条路线把模型变成一个<strong>结构化的概率决策器</strong>：软件先规定可以选什么，模型返回每个选项的概率、分数和置信度；第二条路线把模型变成一个<strong>策略程序编译器</strong>：模型把自然语言和感知/控制 API 组织成 Python 程序，程序再在闭环中执行。</p>
+</blockquote>
+<p>本文聚焦具身机器人与自动驾驶。需要先纠正一个容易造成误解的地方：你写的 “Jev” 很可能不是 “JEPA” 的笔误。本文按目前可核验的来源解释为 TypeSafe AI 发布的 <strong>Jev</strong>，以及明确受到 Jev 公开决策接口启发的机器人工作 <strong>JevVLA</strong>。JevVLA 论文同时强调：它借鉴的是 Jev 的“结构化、概率化决策接口”思想，机器人动作能量、训练目标和梯度引导机制是自己的实现，并不是对 Jev 内部模型的复现。</p>
+<h3 id="section-2-先纠正原句中的两个过度概括">先纠正原句中的两个过度概括</h3>
+<p><strong>“有两种”应当读成“这里比较两种代表性思路”，不是领域公认的穷尽分类。</strong> 还有直接预测动作的 VLA、世界模型与模型预测控制、技能选择、工具型 agent 等路线。两条路线也不是同一层级的两个竞争模型：Jev 是一个决策接口导向的产品/模型，Code as Policies 是一种用程序表示机器人策略的研究方法。</p>
+<p><strong>“近期”也要拆开看。</strong> Code as Policies 首次预印本发布于 <strong>2022 年 9 月</strong>；本文核验的 Jev 公开介绍是 <strong>2026 年 9 月</strong>，JevVLA 预印本是 <strong>2026 年 10 月</strong>。所以更准确的原句是：“把大模型接入策略系统时，可以比较结构化决策与可执行程序这两种接口思路；它们的代表工作并非同时提出。”本文检索截止日为 2026 年 10 月 29 日，不声称覆盖截至该日所有驾驶大模型工作。</p>
+<p>本文参照所指定工作流的 HTML 阅读、公式、来源和论文—代码对照方式，交付一份入门专题报告；不把这次问题解释扩张成完整系统综述，也不声称做过实车验证、机器人训练或指标复现。原句未附出处，因此 Jev 的指代是有来源支持的解释，而不是对原作者意图的绝对判定。</p>
+<p class="source-note">来源定位：[S01] Jev 介绍；[S04] JevVLA §1；[S05] Code as Policies 元信息。分类和范围限定是本报告的解释。</p>
+<h2 id="section-3-1-先把-policy-这个词讲清楚">1. 先把 policy 这个词讲清楚</h2>
+<p>在强化学习和机器人学习里，policy 可以先理解成一个函数：给定当前状态，它决定下一步做什么。写成最简单的形式就是 <code>π(a | o, ℓ)</code>：<code>o</code> 是观测，例如相机图像、激光雷达、车辆速度、机械臂关节角；<code>ℓ</code> 是任务指令，例如“把红色方块放到碗左边”或“前方施工，变到左侧车道”；<code>a</code> 是动作，例如机械臂末端位姿、移动底盘速度、汽车的轨迹点、转向和制动。</p>
+<p>现实系统通常不是“一次输入、一次输出”就结束，而是闭环：</p>
+<div class="formula-block" data-formula-id="policy"><math aria-label="policy function" display="block" xmlns="http://www.w3.org/1998/Math/MathML"><mi>π</mi><mo>(</mo><msub><mi>a</mi><mi>t</mi></msub><mo>|</mo><msub><mi>o</mi><mi>t</mi></msub><mo>,</mo><mi>l</mi><mo>)</mo></math><div class="formula-caption">Policy pi maps observation and task to the next action.</div></div>
+<figure class="diagram-card" id="fig-policy-loop"><div class="diagram-kicker">FIG-POLICY-LOOP</div><div class="diagram-title">策略闭环：从观测到动作再回到观测</div><div class="diagram-subtitle">理解两条路线之前，先明确它们都在改造闭环中的某一段。</div><svg aria-label="策略闭环图" class="diagram" role="img" viewbox="0 0 920 250">
+<defs><marker id="a1" markerheight="8" markerwidth="8" orient="auto" refx="7" refy="4"><path d="M0,0 L8,4 L0,8 z" fill="#1e3a5f"></path></marker></defs>
+<rect fill="#e9f2ff" height="78" rx="12" stroke="#2d5d92" width="150" x="24" y="72"></rect><text text-anchor="middle" x="99" y="103">观测 o</text><text class="small" text-anchor="middle" x="99" y="128">相机 / 激光雷达 / 状态</text>
+<rect fill="#f3edff" height="78" rx="12" stroke="#6d4ab3" width="170" x="248" y="72"></rect><text text-anchor="middle" x="333" y="103">策略 π</text><text class="small" text-anchor="middle" x="333" y="128">选择或生成动作</text>
+<rect fill="#fff3dd" height="78" rx="12" stroke="#b36b14" width="170" x="492" y="72"></rect><text text-anchor="middle" x="577" y="103">动作 a</text><text class="small" text-anchor="middle" x="577" y="128">轨迹 / API / 控制量</text>
+<rect fill="#e8f8ef" height="78" rx="12" stroke="#24804b" width="160" x="736" y="72"></rect><text text-anchor="middle" x="816" y="103">环境</text><text class="small" text-anchor="middle" x="816" y="128">机器人 / 道路世界</text>
+<path d="M174 111 H248" marker-end="url(#a1)" stroke="#1e3a5f" stroke-width="2"></path><path d="M418 111 H492" marker-end="url(#a1)" stroke="#1e3a5f" stroke-width="2"></path><path d="M662 111 H736" marker-end="url(#a1)" stroke="#1e3a5f" stroke-width="2"></path><path d="M816 150 C816 215 100 215 100 150" fill="none" marker-end="url(#a1)" stroke="#7b8794" stroke-dasharray="6 5"></path><text class="small" text-anchor="middle" x="460" y="235">下一时刻观测：闭环反馈</text></svg><figcaption>策略闭环：从观测到动作再回到观测：把抽象概念放回具身机器人/自动驾驶闭环。</figcaption><div class="figure-details"><h4 id="section-4-全部细节">全部细节</h4><ul><li>观测可以是图像、点云、车辆状态和任务文本。</li><li>策略可以输出离散行为、候选轨迹、动作块或可执行程序。</li><li>环境执行后产生新观测，因此错误会累积。</li><li>Jev-like 主要改造动作比较/修正；Code-as-Policy 主要改造任务逻辑和 API 调用。</li></ul></div></figure>
+<h3 id="section-5-11-policy-不等于一个大模型回答一句话">1.1 policy 不等于“一个大模型回答一句话”</h3>
+<p>聊天模型的输出通常是字符串。机器人 policy 的输出必须落在接口上：动作维度要对，坐标系要对，速度和加速度要有边界，控制周期要满足实时性，碰撞和安全约束要能检查。因此，“让大模型参与 policy”有三个不同层次：</p>
+<ol>
+<li><strong>高层任务规划</strong>：把“收拾桌面”拆成拿起、移动、放下等子任务。</li>
+<li><strong>中层行为决策</strong>：在“跟车、变道、停车、绕行”等候选行为之间选择。</li>
+<li><strong>低层动作控制</strong>：输出连续的转向、速度、末端位姿或关节力矩。</li>
+</ol>
+<p>很多论文只覆盖其中一层。把不同层次混为“端到端控制”会高估方法能力。<code>Code as Policies</code> 主要展示高层到中层的程序化策略表达；<code>JevVLA</code> 主要展示在已有机器人 policy 上做动作候选选择和连续动作修正。</p>
+<h2 id="section-6-2-为什么会出现这两种范式">2. 为什么会出现这两种范式</h2>
+<p>传统机器人系统往往把语言、感知、规划和控制拆开：语言模块解析命令，感知模块识别物体或车道，规划器生成路径，控制器跟踪路径。这种系统的优点是每个模块可以验证，缺点是遇到没见过的语言组合或新任务时，需要人工增加规则和接口。</p>
+<p>端到端行为克隆或视觉—语言—动作模型则试图直接学习 <code>观测 + 指令 → 动作</code>。它们可以把视觉和语言知识带进策略，但也有两个问题：一是动作接口可能很难解释，二是当模型输出“语义上合理、几何上差一点”的动作时，失败可能很难诊断。比如机械臂“知道要把杯子放到盘子上”，不代表它算出了不碰撞的末端轨迹；车辆“知道应该变道”，不代表它选择的轨迹满足时距、曲率和横向加速度约束。</p>
+<p>于是出现两种互补的想法：</p>
+<ul>
+<li><strong>把大模型变成会表达不确定性的决策接口</strong>。软件提前定义候选项，模型只负责判断哪一个更合适，并把不确定程度交给上层路由。这就是 Jev 公开接口以及 JevVLA 所借鉴的方向。</li>
+<li><strong>把大模型变成会写策略的程序生成器</strong>。模型不直接吐出一串连续控制量，而是生成能调用感知和控制函数的程序，用 <code>if</code>、<code>for</code>、<code>while</code>、几何运算和反馈循环表达任务。这就是 Code as Policies。</li>
+</ul>
+<h2 id="section-7-3-jev什么叫结构化概率决策">3. Jev：什么叫“结构化概率决策”</h2>
+<h3 id="section-8-31-从自由文本变成有类型的输出">3.1 从自由文本变成有类型的输出</h3>
+<p>TypeSafe AI 对 Jev 的公开介绍把它描述为一种面向软件自动化的 System One model：输入仍可以是非结构化状态，但输出不是一段需要解析的自由文本，而是预先定义的类型化值，并且伴随概率和置信度。</p>
+<p>最直观的例子是 <code>Choice</code>：软件先告诉模型只能在三个选项中选一个：</p>
+<pre><code class="language-text">choice = {follow_lane, change_left, emergency_stop}
+</code></pre>
+<p>模型返回的不是“我觉得现在可以考虑向左变道”，而是类似：</p>
+<pre><code class="language-text">choice: change_left
+probabilities:
+  follow_lane: 0.18
+  change_left: 0.67
+  emergency_stop: 0.15
+confidence: 0.54
+</code></pre>
+<p>这里至少有三层信息：</p>
+<ul>
+<li><strong>结构</strong>：输出一定属于预先定义的选项，软件不必从自然语言中猜意图。</li>
+<li><strong>概率分布</strong>：不仅告诉你最大项，也告诉你第二项是否接近；这可以用于候选排序和风险路由。</li>
+<li><strong>置信度</strong>：概率是否尖锐、模型是否犹豫，可以触发“减速、扩大安全距离、交给更强模型或请求人工确认”。</li>
+</ul>
+<p>上面的数值只是教学假设，不是 Jev API 实测返回。还要把“最大选项概率”“分布是否尖锐”和接口里的 <code>confidence</code> 字段分开：三者可以相关，但不能在没有定义和校准证据时视为同一个量。Jev 的公开示例主要使用结构化问题与状态文本；本报告不把它描述成已经直接接收原始摄像头/雷达的通用驾驶模型。多模态系统可以先用感知模块把图像转成事实，再把事实交给决策模块。</p>
+<p><code>Score</code> 则适合把质量写成有序等级，例如“轨迹安全性：危险、可接受、保守、优越”。它返回各等级的概率以及一个期望分数。注意：这不是凭空产生了物理安全证明；它只是把模型的判断包装成软件可以消费的结构。</p>
+<div class="formula-block" data-formula-id="score"><math aria-label="expected score" display="block" xmlns="http://www.w3.org/1998/Math/MathML"><mi>E</mi><mo>[</mo><mi>s</mi><mo>]</mo><mo>=</mo><munderover><mo>∑</mo><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>K</mi><mo>−</mo><mn>1</mn></mrow></munderover><mi>k</mi><msub><mi>p</mi><mi>k</mi></msub></math><div class="formula-caption">Expected score is defined by the ordered levels and their probabilities.</div></div>
+<p>这里的数字表示“模型在事先定义的评分等级上的期望”，不是以秒、米或碰撞频率测量的物理量。若等级顺序和描述不清楚，分数本身就没有稳定含义。</p>
+<p class="source-note">来源定位：[S01] 官方介绍；[S02] Choice 文档；[S03] Score 文档。驾驶选项和数值均为教学示例。</p>
+<figure class="diagram-card" id="fig-jev-interface"><div class="diagram-kicker">FIG-JEV-INTERFACE</div><div class="diagram-title">Jev 的结构化决策接口</div><div class="diagram-subtitle">关键不在“输出概率”，而在选项集合、概率和置信度成为接口的一部分。</div><svg aria-label="Jev结构化概率决策图" class="diagram" role="img" viewbox="0 0 920 300">
+<defs><marker id="a2" markerheight="8" markerwidth="8" orient="auto" refx="7" refy="4"><path d="M0,0 L8,4 L0,8 z" fill="#27364d"></path></marker></defs>
+<rect fill="#e9f2ff" height="80" rx="12" stroke="#2d5d92" width="180" x="25" y="30"></rect><text text-anchor="middle" x="115" y="62">非结构化状态</text><text class="small" text-anchor="middle" x="115" y="87">图像 + 语言 + 传感器</text>
+<rect fill="#f3edff" height="80" rx="12" stroke="#6d4ab3" width="210" x="270" y="30"></rect><text text-anchor="middle" x="375" y="62">类型化问题</text><text class="small" text-anchor="middle" x="375" y="87">Choice / Score / 路由</text>
+<rect fill="#fff3dd" height="65" rx="12" stroke="#b36b14" width="150" x="545" y="20"></rect><text text-anchor="middle" x="620" y="48">选项分布</text><text class="small" text-anchor="middle" x="620" y="72">p₁,p₂,…,pₖ</text>
+<rect fill="#e8f8ef" height="65" rx="12" stroke="#24804b" width="150" x="745" y="20"></rect><text text-anchor="middle" x="820" y="48">选择 / 分支</text><text class="small" text-anchor="middle" x="820" y="72">argmax 或阈值</text>
+<rect fill="#e8f8ef" height="65" rx="12" stroke="#24804b" width="150" x="545" y="135"></rect><text text-anchor="middle" x="620" y="163">置信度</text><text class="small" text-anchor="middle" x="620" y="187">是否交给人/安全层</text>
+<rect fill="#e9f2ff" height="65" rx="12" stroke="#2d5d92" width="150" x="745" y="135"></rect><text text-anchor="middle" x="820" y="163">可审计输出</text><text class="small" text-anchor="middle" x="820" y="187">类型 + 概率 + 依据</text>
+<path d="M205 70 H270" marker-end="url(#a2)" stroke="#27364d" stroke-width="2"></path><path d="M480 62 H545" marker-end="url(#a2)" stroke="#27364d" stroke-width="2"></path><path d="M480 84 C530 110 520 155 545 165" fill="none" marker-end="url(#a2)" stroke="#27364d" stroke-width="2"></path><path d="M695 52 H745" marker-end="url(#a2)" stroke="#27364d" stroke-width="2"></path><path d="M695 168 H745" marker-end="url(#a2)" stroke="#27364d" stroke-width="2"></path><text class="small" text-anchor="middle" x="375" y="265">模型直接填充软件预先定义的结构</text></svg><figcaption>Jev 的结构化决策接口：把抽象概念放回具身机器人/自动驾驶闭环。</figcaption><div class="figure-details"><h4 id="section-9-全部细节">全部细节</h4><ul><li>Choice 把候选集合显式交给模型。</li><li>Score 把可比较等级显式交给模型。</li><li>置信度可以触发降级、人工接管或安全路由。</li><li>软件消费的是类型化结果，不必解析长篇自由文本。</li></ul></div></figure>
+<h3 id="section-10-32-为什么说概率决策比分类更适合机器人">3.2 为什么说“概率决策”比“分类”更适合机器人</h3>
+<p>表面上看，<code>Choice</code> 很像分类器。但机器人场景更在意“备选项之间的相对关系”和“不确定时怎么办”。例如一个移动机器人在走廊里遇到行人：</p>
+<ul>
+<li>选项 A：保持路径，概率 0.45；</li>
+<li>选项 B：向左绕行，概率 0.40；</li>
+<li>选项 C：停止等待，概率 0.15。</li>
+</ul>
+<p>如果只取 <code>argmax</code>，系统会保持路径；如果同时看置信度和概率差，系统会发现 A/B 很接近，于是可以放慢速度、扩大观测窗口，或者交给一个带碰撞验证的局部规划器。结构化概率的价值，往往不是让模型“一次选对”，而是允许系统根据不确定性改变行为。</p>
+<p>这并不是说传统分类器做不到：分类器同样可以给出全量概率，也可以做校准和拒答。Jev 的特点在于面向软件工作流的任务/类型接口设计，而不是“第一次让分类具有概率”。候选集还会限制模型：如果只有“向左、向右”，却没有“停车”，分布归一化也不会自动发现那个缺失的正确动作。</p>
+<h3 id="section-11-33-jevvla-如何把这个思想落到机器人动作上">3.3 JevVLA 如何把这个思想落到机器人动作上</h3>
+<p>JevVLA 的问题更具体：已有的 VLA policy 已经能提出动作，但动作可能不够好。能否冻结基础 policy，只训练一个很小的“动作偏好适配器”？</p>
+<p>它把观测、语言和基础策略特征编码成上下文 <code>c</code>，把动作编码成 <code>z</code>，再用一个标量能量函数表示偏好：<code>Eθ(c,z)=1/2 zᵀQθ(c)z−bθ(h)ᵀz−Rθ(h,fᵃθ(z))</code>。</p>
+<div class="formula-block" data-formula-id="energy"><math aria-label="conditional action energy" display="block" xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>E</mi><mi>θ</mi></msub><mo>(</mo><mi>c</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>=</mo><mfrac><mn>1</mn><mn>2</mn></mfrac><msup><mi>z</mi><mi>T</mi></msup><msub><mi>Q</mi><mi>θ</mi></msub><mo>(</mo><mi>c</mi><mo>)</mo><mi>z</mi><mo>−</mo><msup><mi>b</mi><mi>T</mi></msup><mo>(</mo><mi>c</mi><mo>)</mo><mi>z</mi><mo>−</mo><msub><mi>R</mi><mi>θ</mi></msub><mo>(</mo><mi>c</mi><mo>,</mo><msub><mi>f</mi><mi>θ</mi></msub><mo>(</mo><mi>z</mi><mo>)</mo><mo>)</mo></math><div class="formula-caption">The context-conditioned scalar represents relative action preference.</div></div>
+<p>直觉是：二次项提供一个依赖上下文的“地形”，线性项把偏好区域推向某一侧，低秩项让不同动作坐标之间产生耦合，残差网络再补上非线性偏好。论文明确说，这个 energy 是学习到的 preference potential，不是物理学意义上的能量。</p>
+<figure class="diagram-card" id="fig-energy"><div class="diagram-kicker">FIG-ENERGY</div><div class="diagram-title">JevVLA：同一个动作偏好函数的两种用法</div><div class="diagram-subtitle">离散候选用函数值，连续动作用函数梯度。</div><svg aria-label="JevVLA能量适配图" class="diagram" role="img" viewbox="0 0 920 330">
+<defs><marker id="a3" markerheight="8" markerwidth="8" orient="auto" refx="7" refy="4"><path d="M0,0 L8,4 L0,8 z" fill="#27364d"></path></marker></defs>
+<rect fill="#e9f2ff" height="95" rx="12" stroke="#2d5d92" width="175" x="24" y="80"></rect><text text-anchor="middle" x="111" y="112">冻结基础策略 π₀</text><text class="small" text-anchor="middle" x="111" y="140">提出候选动作 / 动作块</text>
+<rect fill="#f3edff" height="95" rx="12" stroke="#6d4ab3" width="185" x="270" y="35"></rect><text text-anchor="middle" x="362" y="67">上下文 c</text><text class="small" text-anchor="middle" x="362" y="95">观测 + 任务 + 策略特征</text>
+<rect fill="#fff3dd" height="95" rx="12" stroke="#b36b14" width="185" x="270" y="185"></rect><text text-anchor="middle" x="362" y="217">动作 z</text><text class="small" text-anchor="middle" x="362" y="245">候选或连续动作编码</text>
+<rect fill="#fff8e8" height="115" rx="12" stroke="#a66b00" width="175" x="530" y="95"></rect><text text-anchor="middle" x="617" y="130">Eθ(c,z)</text><text class="small" text-anchor="middle" x="617" y="158">标量偏好势</text><text class="small" text-anchor="middle" x="617" y="184">低能量 = 更偏好</text>
+<rect fill="#e8f8ef" height="75" rx="12" stroke="#24804b" width="120" x="770" y="35"></rect><text text-anchor="middle" x="830" y="66">离散</text><text class="small" text-anchor="middle" x="830" y="91">比较候选</text>
+<rect fill="#e8f8ef" height="75" rx="12" stroke="#24804b" width="120" x="770" y="205"></rect><text text-anchor="middle" x="830" y="236">连续</text><text class="small" text-anchor="middle" x="830" y="261">沿梯度修正</text>
+<path d="M199 112 C225 90 240 80 270 80" fill="none" marker-end="url(#a3)" stroke="#27364d" stroke-width="2"></path><path d="M199 145 C230 205 240 225 270 225" fill="none" marker-end="url(#a3)" stroke="#27364d" stroke-width="2"></path><path d="M455 82 C490 95 505 115 530 130" fill="none" marker-end="url(#a3)" stroke="#27364d" stroke-width="2"></path><path d="M455 225 C490 215 505 190 530 175" fill="none" marker-end="url(#a3)" stroke="#27364d" stroke-width="2"></path><path d="M705 125 H770" marker-end="url(#a3)" stroke="#27364d" stroke-width="2"></path><path d="M705 182 C735 205 745 230 770 240" fill="none" marker-end="url(#a3)" stroke="#27364d" stroke-width="2"></path><text class="small" text-anchor="middle" x="462" y="315">同一个标量函数：函数值用于“谁更好”，梯度用于“往哪里改”</text></svg><figcaption>JevVLA：同一个动作偏好函数的两种用法：把抽象概念放回具身机器人/自动驾驶闭环。</figcaption><div class="figure-details"><h4 id="section-12-全部细节">全部细节</h4><ul><li>冻结基础策略负责提出候选或动作块。</li><li>离散接口比较候选能量/分数。</li><li>连续接口沿梯度做局部、有界修正。</li><li>同一标量函数连接选择与引导。</li></ul></div></figure>
+<p>离散候选选择可以抽象成：</p>
+<pre><code class="language-text">候选动作 A = {a₁, a₂, …, aₖ}
+score(aᵢ) = base_prior(aᵢ) - β · energy(c, aᵢ)
+执行 argmaxᵢ score(aᵢ)
+</code></pre>
+<p>连续动作则利用负梯度：<code>a′ = Π(a + ηgθ(c,a))</code>，其中 <code>gθ(c,a) = −∇ₐEθ(c,a)</code>，<code>Π</code> 表示动作边界投影。</p>
+<div class="formula-block" data-formula-id="guidance"><math aria-label="gradient action correction" display="block" xmlns="http://www.w3.org/1998/Math/MathML"><msup><mi>z</mi><mo>′</mo></msup><mo>=</mo><msub><mi>Π</mi><mi>B</mi></msub><mo>(</mo><mi>z</mi><mo>+</mo><mi>η</mi><msub><mi>g</mi><mi>θ</mi></msub><mo>(</mo><mi>c</mi><mo>,</mo><mi>z</mi><mo>)</mo><mo>)</mo><mo>,</mo><mspace width="1em"></mspace><msub><mi>g</mi><mi>θ</mi></msub><mo>=</mo><mo>−</mo><msub><mo>∇</mo><mi>z</mi></msub><msub><mi>E</mi><mi>θ</mi></msub></math><div class="formula-caption">A local gradient update is projected back into the action bounds.</div></div>
+<h3 id="section-13-331-从训练数据到推理究竟学了什么">3.3.1 从训练数据到推理：究竟学了什么</h3>
+<p>训练阶段，基础 VLA 参数冻结；系统收集执行成功/失败、专家修正或示范派生的偏好。对离散候选，可以把更好的候选作为更应被选中的监督目标；对连续动作，则让能量梯度接近“从当前动作朝更优动作走”的局部方向。二者共享的是函数结构，并不意味着把所有任务混在一起训练一个万能权重。论文的各个基准独立训练适配器。</p>
+<div class="formula-block" data-formula-id="choice"><math aria-label="候选 softmax 概率" display="block" xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>p</mi><mi>i</mi></msub><mo>=</mo><mfrac><msup><mi>e</mi><msub><mi>l</mi><mi>i</mi></msub></msup><mrow><munder><mo>∑</mo><mi>j</mi></munder><msup><mi>e</mi><msub><mi>l</mi><mi>j</mi></msub></msup></mrow></mfrac></math><div class="formula-caption">候选 logits 归一化为集合内的相对概率；无效项必须先屏蔽。</div></div>
+<p>这个 softmax 公式是帮助阅读候选选择的简化式：基础策略先验与能量一起形成相对 logit；无效候选要先屏蔽。它得到“这个集合里哪个更好”的归一化分布，并没有得到“每条轨迹在真实世界中会成功多少次”的概率。连续修正也只是局部建议；动作裁剪能约束每维幅度，但不自动保证整段轨迹无碰撞。</p>
+<div class="formula-block" data-formula-id="loss"><math aria-label="偏好交叉熵与梯度匹配示意" display="block" xmlns="http://www.w3.org/1998/Math/MathML"><msub><mi>L</mi><mi>pref</mi></msub><mo>=</mo><mo>−</mo><munder><mo>∑</mo><mi>i</mi></munder><msub><mi>q</mi><mi>i</mi></msub><mo>log</mo><msub><mi>p</mi><mi>i</mi></msub><mo>,</mo><mspace width="1em"></mspace><msub><mi>L</mi><mi>grad</mi></msub><mo>=</mo><msup><mrow><mo>∥</mo><msub><mi>g</mi><mi>θ</mi></msub><mo>−</mo><msup><mi>g</mi><mo>∗</mo></msup><mo>∥</mo></mrow><mn>2</mn></msup></math><div class="formula-caption">简化教学式：一项约束候选偏好，另一项约束局部动作修正方向；具体损失随监督来源而异。</div></div>
+<p>交叉熵中 <code>q</code> 是训练目标偏好分布；梯度匹配比较模型的局部方向与监督方向。它们不是要求读者实现的全部损失清单：论文还区分不同基准可用的结果排序、专家纠正、去噪及混合目标。对初学者，最重要的是把“训练一个评分函数”和“推理时用它来选/修动作”分开。</p>
+<p class="source-note">来源定位：[S04] JevVLA §3 的能量、候选比较与梯度学习；上式中的候选分布和两项损失为教学合并表达，具体配置以论文各基准协议为准。</p>
+<h3 id="section-14-34-用具身机器人例子理解它">3.4 用具身机器人例子理解它</h3>
+<p>设机械臂 VLA policy 给出了三个“把橙色块放入粉色碗”的候选动作。三个动作语义都正确，但候选 1 的抓取点偏左，候选 2 可能碰到旁边的块，候选 3 的路径更短。Jev-like 适配器可以利用执行反馈，把成功候选的偏好质量提高，把失败候选的质量降低；推理时不需要重写整个 VLA，只需在这三个动作之间重新排序。</p>
+<p>对于连续动作块，例如机械臂连续输出未来 8 个时间步的位移，适配器可以在每个动作块附近计算梯度，并做一个有界的微调。它更像“把基础策略的动作推到一个更好的局部区域”，而不是从零生成一条完整轨迹。</p>
+<h3 id="section-15-35-放到自动驾驶里应该怎么理解">3.5 放到自动驾驶里应该怎么理解</h3>
+<p>这里必须区分“论文直接证明的内容”和“合理的架构映射”。JevVLA 论文的实验是 MetaWorld、VIMA、LanguageTable、LIBERO Plus 和 CLIPort 等机器人操作基准，并不是自动驾驶基准。因此，下面是工程上的类比，不是原论文的自动驾驶结果。</p>
+<p>自动驾驶可以把每一帧的行为决策写成候选集合：</p>
+<pre><code class="language-text">候选行为 = {保持车道, 左变道, 右变道, 减速跟车, 停车}
+</code></pre>
+<p>Jev-like 模块可以输入摄像头/雷达/地图/历史轨迹，输出候选行为的相对概率和置信度。对更连续的轨迹生成，也可以给若干候选轨迹打分，或者对一个已有轨迹做局部修正。这样做的意义是：</p>
+<ol>
+<li>把“模型犹豫”显式化，而不是让它藏在一串连续控制量里；</li>
+<li>允许上层用概率差、置信度和风险阈值做路由；</li>
+<li>保留传统规划器对碰撞、动力学、道路规则的硬约束。</li>
+</ol>
+<p>但不能把这个分数直接叫作“安全概率”。除非训练数据、校准方法和验证协议都支持，否则它只是模型学到的相对偏好或置信度，不能替代形式化安全检查。</p>
+<h2 id="section-16-4-code-as-policies什么叫把知识组织为可执行程序">4. Code as Policies：什么叫“把知识组织为可执行程序”</h2>
+<h3 id="section-17-41-从回答步骤到生成控制程序">4.1 从“回答步骤”到“生成控制程序”</h3>
+<p><code>Code as Policies</code> 的核心观察是：代码生成模型已经学过很多程序结构。与其让 LLM 只输出“第一步拿起方块，第二步移动到碗旁边”，不如把可用的感知和动作 API 交给它，让它生成一段能真正调用这些 API 的程序。</p>
+<p>例如系统提供：</p>
+<pre><code class="language-python">get_obj_pos(name)                  # 返回物体位置
+put_first_on_second(obj, target)   # 执行抓取与放置
+move_to(x, y, speed=...)            # 移动底盘或机械臂
+</code></pre>
+<p>用户说“把红块放到蓝碗左边一点”，模型可以组织成：</p>
+<pre><code class="language-python">red = get_obj_pos("red block")
+blue_bowl = get_obj_pos("blue bowl")
+target = blue_bowl + np.array([-0.10, 0.0])
+put_first_on_second("red block", target)
+</code></pre>
+<p>这里的“知识”不是一个藏在权重里的答案，而是被组织成：调用哪个感知函数、怎样计算几何关系、何时循环、何时重新感知、最后调用哪个控制 primitive。</p>
+<h3 id="section-18-42-为什么代码能表达更丰富的-policy">4.2 为什么代码能表达更丰富的 policy</h3>
+<p>自然语言计划通常很难精确表达反馈和条件：</p>
+<pre><code class="language-text">一直向前走，直到看到障碍物；如果左侧有空间就左绕，否则停车。
+</code></pre>
+<p>程序可以直接表达：</p>
+<pre><code class="language-python">while not seen("obstacle"):
+    move_forward(speed=0.4)
+if free_space("left") &gt; 1.2:
+    turn_left(angle=35)
+else:
+    brake()
+</code></pre>
+<p><code>Code as Policies</code> 论文展示的能力包括：用感知输出作为输入、参数化控制 primitive、做空间几何推理、组合多步行为、使用 <code>NumPy</code>/<code>Shapely</code> 等库，并用层级代码生成递归定义未定义函数。它也强调局限：当 API 变化很大时，模型的跨 embodiment 适配会变得脆弱。</p>
+<h3 id="section-19-43-层级代码生成为什么重要">4.3 层级代码生成为什么重要</h3>
+<p>复杂任务往往不是一次生成一个巨大函数，而是先生成高层函数，再遇到未定义函数时继续向下生成。例如：</p>
+<pre><code class="language-text">move_blocks_to_matching_bowls()
+  ├── find_blocks()
+  ├── find_matching_bowl(block)
+  └── put_first_on_second(block, bowl)
+</code></pre>
+<p>这种方式类似“程序化的任务分解”。每一层都可以有自己的提示和 API 边界，也更容易把感知解析、几何变换和执行动作组合起来。</p>
+<figure class="diagram-card" id="fig-code-policy"><div class="diagram-kicker">FIG-CODE-POLICY</div><div class="diagram-title">Code as Policies：把语言知识编译成策略程序</div><div class="diagram-subtitle">输出不是一个动作标签，而是一段可以继续感知、计算和调用控制接口的程序。</div><svg aria-label="Code as Policies图" class="diagram" role="img" viewbox="0 0 920 300">
+<defs><marker id="a4" markerheight="8" markerwidth="8" orient="auto" refx="7" refy="4"><path d="M0,0 L8,4 L0,8 z" fill="#27364d"></path></marker></defs>
+<rect fill="#e9f2ff" height="80" rx="12" stroke="#2d5d92" width="175" x="25" y="80"></rect><text text-anchor="middle" x="112" y="112">自然语言任务</text><text class="small" text-anchor="middle" x="112" y="138">“把红块放到碗左边”</text>
+<rect fill="#f3edff" height="170" rx="12" stroke="#6d4ab3" width="190" x="255" y="35"></rect><text text-anchor="middle" x="350" y="67">代码生成 LLM</text><text class="small" text-anchor="middle" x="350" y="100">few-shot 示例</text><text class="small" text-anchor="middle" x="350" y="128">API 提示</text><text class="small" text-anchor="middle" x="350" y="156">递归补函数</text><text class="small" text-anchor="middle" x="350" y="184">输出 Python policy</text>
+<rect fill="#fff3dd" height="170" rx="12" stroke="#b36b14" width="170" x="500" y="35"></rect><text text-anchor="middle" x="585" y="67">可执行程序</text><text class="small" text-anchor="middle" x="585" y="100">if / for / while</text><text class="small" text-anchor="middle" x="585" y="128">几何计算</text><text class="small" text-anchor="middle" x="585" y="156">感知 API</text><text class="small" text-anchor="middle" x="585" y="184">控制 primitive</text>
+<rect fill="#e8f8ef" height="80" rx="12" stroke="#24804b" width="170" x="725" y="80"></rect><text text-anchor="middle" x="810" y="112">闭环执行</text><text class="small" text-anchor="middle" x="810" y="138">执行 → 重新感知</text>
+<path d="M200 120 H255" marker-end="url(#a4)" stroke="#27364d" stroke-width="2"></path><path d="M445 120 H500" marker-end="url(#a4)" stroke="#27364d" stroke-width="2"></path><path d="M670 120 H725" marker-end="url(#a4)" stroke="#27364d" stroke-width="2"></path><path d="M810 160 C810 245 115 245 115 160" fill="none" marker-end="url(#a4)" stroke="#7b8794" stroke-dasharray="6 5"></path><text class="small" text-anchor="middle" x="460" y="275">知识变成控制流程和调用关系</text></svg><figcaption>Code as Policies：把语言知识编译成策略程序：把抽象概念放回具身机器人/自动驾驶闭环。</figcaption><div class="figure-details"><h4 id="section-20-全部细节">全部细节</h4><ul><li>语言指令和 few-shot 示例提供任务语义与代码风格。</li><li>API 提示定义模型能调用的世界接口。</li><li>程序可以表达条件、循环、几何变换和多步动作。</li><li>执行前仍需要沙箱、类型检查和安全过滤。</li></ul></div></figure>
+<h3 id="section-21-44-具身机器人例子">4.4 具身机器人例子</h3>
+<p>在桌面操作中，<code>Code as Policies</code> 适合开放式组合任务：识别“所有在红碗左边的方块”，计算每个方块的新位置，然后循环调用抓取和放置。它的优势不是每个 primitive 都比专门控制器更好，而是能把已有 primitives 组合成数据集没有逐一标注的新任务。</p>
+<p>在移动机器人中，策略代码可以根据底盘 API 的不同改变执行顺序。例如全向底盘可以分别调用向上/向右移动；单向底盘则需要“前进—转向—前进”的组合。这个例子说明代码策略天然携带 embodiment 的动作接口，但也说明它依赖 API 描述准确且稳定。</p>
+<h3 id="section-22-45-具身机器人相关工作从技能选择到程序执行">4.5 具身机器人相关工作：从技能选择到程序执行</h3>
+<p>把这两条路线放回具身机器人研究谱系，会更容易看出它们分别解决哪一个瓶颈。<code>SayCan</code> 的基本思路是让语言模型提出“应该做什么技能”，再用环境中的 affordance/value 信号判断“当前能不能做”；它解决的是<strong>语言意图与可执行技能之间的落地</strong>，但输出仍主要是技能序列，不是带完整概率接口的动作评分器，也不是任意 Python policy。</p>
+<p><code>RT-2</code> 则把视觉—语言知识和机器人动作放进同一个 VLA policy，把动作编码成模型可以预测的 token。它更接近“直接学习观测到动作”的端到端路线：模型能把互联网视觉语言知识迁移到机器人动作，但动作接口、候选比较和失败时的置信度路由并不是它的主要抽象。</p>
+<p><code>VoxPoser</code> 更接近程序化/可组合的一侧：语言模型生成可组合的 3D value map 或约束表达，再由传统规划与控制模块把这些表达转成动作。它说明“让大模型写中间表示或规划程序”比让大模型直接输出关节力矩更容易保留几何约束；但它仍不是 <code>Code as Policies</code> 的逐字复现，也不是 JevVLA 的能量适配器。</p>
+<p>因此，可以把具身机器人中的几条路线粗略排成这样：</p>
+<table>
+<thead>
+<tr>
+<th>路线</th>
+<th>大模型主要产物</th>
+<th>最接近的 policy 位置</th>
+<th>关键边界</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SayCan</td>
+<td>技能选择/技能序列</td>
+<td>高层任务规划</td>
+<td>需要 affordance/value 过滤可执行性</td>
+</tr>
+<tr>
+<td>RT-2</td>
+<td>动作 token / VLA 动作</td>
+<td>端到端动作 policy</td>
+<td>不以显式候选概率和程序结构为中心</td>
+</tr>
+<tr>
+<td>VoxPoser</td>
+<td>3D value map、约束或规划表达</td>
+<td>中层规划表示</td>
+<td>最终动作仍由规划器/控制器落地</td>
+</tr>
+<tr>
+<td>JevVLA</td>
+<td>候选动作排序、连续动作局部修正</td>
+<td>已有 policy 上的适配层</td>
+<td>依赖基础 policy 提供候选，不是从零任务规划</td>
+</tr>
+<tr>
+<td>Code as Policies</td>
+<td>可调用感知与控制 API 的程序</td>
+<td>高层到中层策略编排</td>
+<td>代码执行必须有白名单、沙箱和验证</td>
+</tr>
+</tbody>
+</table>
+<p>这张表的重点不是给方法排“先进程度”，而是提醒读者：<strong>“大模型参与 policy”可以发生在技能选择、动作生成、规划表示、候选评估和程序编排等不同位置。</strong></p>
+<h3 id="section-23-46-放到自动驾驶里应该怎么理解">4.6 放到自动驾驶里应该怎么理解</h3>
+<p>自动驾驶中的“可执行程序”可以是高层行为脚本或场景策略，而不是让 LLM 直接生成底层转角。例如：</p>
+<pre><code class="language-python">if construction_zone_ahead() and lane_is_clear("left"):
+    request_lane_change("left", reason="construction")
+elif lead_vehicle_is_slow() and safe_follow_distance() &gt; threshold:
+    plan_overtake()
+else:
+    keep_lane_and_adjust_speed()
+</code></pre>
+<p>它的价值在于把交通规则、任务条件、语义场景和系统 API 组织起来；真正的轨迹生成、碰撞检查和车辆控制仍应由经过验证的模块执行。换句话说，Code-as-Policy 更像“行为层/任务层的程序编译器”，不等于“让聊天模型直接掌舵”。</p>
+<h2 id="section-24-5-自动驾驶相关工作已有研究各自站在哪一层">5. 自动驾驶相关工作：已有研究各自站在哪一层</h2>
+<p>自动驾驶领域已经出现了几种把语言模型接入驾驶 policy 的方式，但它们并不等价于 Jev 或 <code>Code as Policies</code>。下面的对照是为了帮助定位“相似思想”，不是把这些论文改写成核心方法的直接实验。</p>
+<h3 id="section-25-51-languagempc语言模型做高层决策mpc-做可执行控制">5.1 LanguageMPC：语言模型做高层决策，MPC 做可执行控制</h3>
+<p><code>LanguageMPC</code> 把 LLM 放在复杂驾驶场景的决策位置，使用认知路径帮助模型处理高层语义，再把语言模型的决策翻译成驾驶命令，并通过参数矩阵适配与低层控制器衔接。论文还讨论了文本驾驶风格、施工区域和多车辆协同等场景。</p>
+<p>它与两条范式的关系是：一方面，它与 Jev-like 路线相似，都把大模型放在“选择/决策”而不是直接输出每个底层控制周期的转角；另一方面，它并没有把 Jev 的 <code>Choice</code>/<code>Score</code> 概率接口直接搬进来，因此不能说它已经实现了结构化概率决策。更准确的说法是：它展示了<strong>高层语言决策 + 传统控制器执行</strong>的工程分层。</p>
+<h3 id="section-26-52-gpt-driver把轨迹坐标改写成语言建模问题">5.2 GPT-Driver：把轨迹坐标改写成语言建模问题</h3>
+<p><code>GPT-Driver</code> 走的是另一条路：把运动规划的输入和输出表示成语言 token，让 GPT-3.5 生成由坐标点描述的驾驶轨迹，并用 prompting–reasoning–finetuning 激发数值推理能力。它在 nuScenes 上评估轨迹规划、泛化与可解释性。</p>
+<p>这更像“让语言模型直接生成结构化轨迹序列”，而不是 Code-as-Policy：输出是轨迹数据，不是包含 <code>if/for</code> 和 API 调用的程序；也不是 Jev-like scorer，因为它的主任务是生成轨迹，而不是对外部候选集合返回概率与置信度。它代表了“<strong>把连续规划序列语言化</strong>”的方向。</p>
+<h3 id="section-27-53-agent-driver工具调用记忆和反思组成驾驶智能体">5.3 Agent-Driver：工具调用、记忆和反思组成驾驶智能体</h3>
+<p><code>Agent-Driver</code> 在传统感知—预测—规划管线外加入工具库、认知记忆和推理引擎。工具通过函数调用提供给 LLM，推理引擎覆盖任务规划、运动规划和自反思，并在 nuScenes 的开环与闭环任务上评估。</p>
+<p>它与 Code-as-Policy 的相似点最明显：二者都把能力组织成可调用工具，并允许模型组合多步任务逻辑。区别在于，Agent-Driver 更像一个带记忆和反思的语言智能体系统；<code>Code as Policies</code> 的核心论点则是让策略本身以可执行程序的形式表达。前者不必生成一段完整 Python policy，后者也不自带驾驶记忆系统。</p>
+<p>这里需要把评估位置说精确：<strong>nuScenes 对应开环轨迹规划；闭环评估使用 CARLA 的 Town05-Short</strong>。开环相当于“在录制场景中写答案，再和参考轨迹比较”，闭环相当于“执行了答案后，场景会随之变化，再继续驾驶”。前一种结果好，不自动推出后一种也好，更不直接推出实车安全。</p>
+<h3 id="section-28-54-langprop让生成代码在数据反馈中迭代优化">5.4 LangProp：让生成代码在数据反馈中迭代优化</h3>
+<p><code>LangProp</code> 进一步把“代码就是 policy”放进优化闭环：LLM 先生成代码，系统在输入—输出数据集上评估代码表现、捕获异常，再把结果反馈给 LLM，让它继续改进。论文在 CARLA 上给出了自动驾驶代码策略优化的 proof of concept。</p>
+<p>这与 <code>Code as Policies</code> 的关系很像“生成器”与“优化器”的关系：原始 Code-as-Policy 关注能否从语言、示例和 API 生成可执行程序；LangProp 关注生成出来的程序能否在指标和数据反馈下继续优化。因此它仍然不是 Jev-like 的候选概率接口，但为驾驶策略代码增加了可度量的迭代改进环节。</p>
+<h3 id="section-29-55-一张定位图这些工作和本文两条路线如何对应">5.5 一张定位图：这些工作和本文两条路线如何对应</h3>
+<table>
+<thead>
+<tr>
+<th>自动驾驶工作</th>
+<th>主要输出</th>
+<th>更接近哪一条路线</th>
+<th>不应混淆的地方</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LanguageMPC</td>
+<td>高层驾驶决策 + MPC 参数/命令</td>
+<td>Jev-like 的“决策器”侧</td>
+<td>没有直接证明 Jev 的概率校准接口</td>
+</tr>
+<tr>
+<td>GPT-Driver</td>
+<td>token 化的轨迹坐标</td>
+<td>结构化序列生成</td>
+<td>不是可执行程序，也不是候选评分器</td>
+</tr>
+<tr>
+<td>Agent-Driver</td>
+<td>工具调用、记忆、规划与反思</td>
+<td>Code-as-Policy / agentic orchestration</td>
+<td>不等于生成完整 Python policy</td>
+</tr>
+<tr>
+<td>LangProp</td>
+<td>可评估、可迭代优化的策略代码</td>
+<td>Code-as-Policy 的优化扩展</td>
+<td>CARLA proof of concept 不等于量产安全验证</td>
+</tr>
+<tr>
+<td>Jev-like 架构映射</td>
+<td>行为/轨迹候选概率与置信度</td>
+<td>候选评估与风险路由</td>
+<td>本报告是工程映射，不是 JevVLA 自动驾驶实验</td>
+</tr>
+</tbody>
+</table>
+<p>初学者可以用一个问题来区分它们：<strong>模型输出的是“选哪个”、“生成一条轨迹”、“调用哪些工具”，还是“写一段可循环执行的程序”？</strong> 这四种输出形式看起来都叫“policy”，但软件接口、验证方式和安全边界完全不同。</p>
+<h2 id="section-30-6-两条路线放在同一张表里">6. 两条路线放在同一张表里</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Jev-like 结构化概率决策</th>
+<th>Code as Policies</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>大模型扮演的角色</td>
+<td>决策器、评分器、路由器</td>
+<td>程序编译器、策略组织器</td>
+</tr>
+<tr>
+<td>输入</td>
+<td>状态、任务、预先定义的选项或等级</td>
+<td>自然语言、few-shot 代码、API 描述</td>
+</tr>
+<tr>
+<td>输出</td>
+<td>选项、概率分布、分数、置信度；或动作偏好能量</td>
+<td>Python/伪代码、函数调用、条件和循环</td>
+</tr>
+<tr>
+<td>典型机器人用法</td>
+<td>候选抓取动作选择、动作块评分、连续动作局部引导</td>
+<td>任务分解、空间关系计算、感知—动作 API 组合</td>
+</tr>
+<tr>
+<td>自动驾驶映射</td>
+<td>行为模式/候选轨迹评估、置信度路由</td>
+<td>场景规则、任务脚本、行为 API 组合</td>
+</tr>
+<tr>
+<td>优势</td>
+<td>输出结构稳定；便于比较、阈值和降级</td>
+<td>表达能力强；能组合程序结构和已有能力</td>
+</tr>
+<tr>
+<td>主要风险</td>
+<td>候选集外不可见；概率未必是安全概率；梯度可能只在局部有效</td>
+<td>代码可能有逻辑/权限/实时性问题；API 变化会导致脆弱性</td>
+</tr>
+<tr>
+<td>最适合的安全边界</td>
+<td>作为 scorer/selector，不越过硬约束层</td>
+<td>作为高层策略生成器，必须沙箱和验证后执行</td>
+</tr>
+</tbody>
+</table>
+<p>一句话记忆：<strong>Jev-like 更像“在菜单里做带置信度的选择”，Code-as-Policy 更像“根据菜单和工具写出一份会执行的食谱”。</strong></p>
+<h2 id="section-31-7-两者能不能组合">7. 两者能不能组合</h2>
+<p>能，而且组合后比单独使用更符合机器人和自动驾驶的工程结构：</p>
+<ol>
+<li><code>Code-as-Policy</code> 负责把语言任务转成可执行的高层流程，决定要调用哪些感知、候选生成和控制接口。</li>
+<li>候选生成器/基础 policy 负责提出若干轨迹、动作块或行为选项。</li>
+<li><code>Jev-like</code> 评估器负责比较这些候选，输出相对偏好、概率和置信度，必要时对连续动作做小幅修正。</li>
+<li>规划器和安全层负责碰撞、动力学、法规、控制频率和不可违反约束。</li>
+<li>控制器把通过检查的轨迹变成转向、制动、末端位姿或关节控制。</li>
+</ol>
+<figure class="diagram-card" id="fig-av-stack"><div class="diagram-kicker">FIG-AV-STACK</div><div class="diagram-title">面向自动驾驶的谨慎组合架构</div><div class="diagram-subtitle">这是从两条路线抽象出的工程分层，不是核心论文已经完成的自动驾驶实验。</div><svg aria-label="自动驾驶映射图" class="diagram" role="img" viewbox="0 0 920 340">
+<defs><marker id="a5" markerheight="8" markerwidth="8" orient="auto" refx="7" refy="4"><path d="M0,0 L8,4 L0,8 z" fill="#27364d"></path></marker></defs>
+<rect fill="#e9f2ff" height="80" rx="12" stroke="#2d5d92" width="145" x="25" y="115"></rect><text text-anchor="middle" x="97" y="147">多传感器</text><text class="small" text-anchor="middle" x="97" y="173">相机 / LiDAR / 地图</text>
+<rect fill="#f3edff" height="80" rx="12" stroke="#6d4ab3" width="190" x="220" y="35"></rect><text text-anchor="middle" x="315" y="67">Code-as-Policy</text><text class="small" text-anchor="middle" x="315" y="93">规则、任务、解释、调用</text>
+<rect fill="#fff3dd" height="80" rx="12" stroke="#b36b14" width="190" x="220" y="225"></rect><text text-anchor="middle" x="315" y="257">Jev-like evaluator</text><text class="small" text-anchor="middle" x="315" y="283">候选行为/轨迹概率与置信度</text>
+<rect fill="#fff8e8" height="80" rx="12" stroke="#a66b00" width="180" x="480" y="115"></rect><text text-anchor="middle" x="570" y="147">规划与安全过滤</text><text class="small" text-anchor="middle" x="570" y="173">碰撞、动力学、法规</text>
+<rect fill="#e8f8ef" height="80" rx="12" stroke="#24804b" width="165" x="730" y="115"></rect><text text-anchor="middle" x="812" y="147">控制器</text><text class="small" text-anchor="middle" x="812" y="173">转向 / 油门 / 制动</text>
+<path d="M170 145 H220" marker-end="url(#a5)" stroke="#27364d" stroke-width="2"></path><path d="M170 165 C190 245 200 265 220 265" fill="none" marker-end="url(#a5)" stroke="#27364d" stroke-width="2"></path><path d="M410 75 C450 100 460 125 480 145" fill="none" marker-end="url(#a5)" stroke="#27364d" stroke-width="2"></path><path d="M410 265 C450 240 460 195 480 170" fill="none" marker-end="url(#a5)" stroke="#27364d" stroke-width="2"></path><path d="M660 155 H730" marker-end="url(#a5)" stroke="#27364d" stroke-width="2"></path><text class="small" text-anchor="middle" x="460" y="330">架构映射，不是核心论文已完成的自动驾驶实验结论</text></svg><figcaption>面向自动驾驶的谨慎组合架构：把抽象概念放回具身机器人/自动驾驶闭环。</figcaption><div class="figure-details"><h4 id="section-32-全部细节">全部细节</h4><ul><li>Code-as-Policy 负责编排，不直接拥有方向盘权限。</li><li>Jev-like evaluator 比较候选行为/轨迹并暴露不确定性。</li><li>规划与安全过滤器保留硬约束。</li><li>控制器只消费已验证的轨迹/动作。</li></ul></div></figure>
+<figure class="diagram-card" id="fig-compare"><div class="diagram-kicker">FIG-COMPARE</div><div class="diagram-title">两条路线的最短心智模型</div><div class="diagram-subtitle">把复杂术语压缩成“决策器”与“策略编译器”。</div><svg aria-label="两条路线对比图" class="diagram" role="img" viewbox="0 0 920 290">
+<rect fill="#f3edff" height="205" rx="14" stroke="#6d4ab3" width="390" x="35" y="35"></rect><rect fill="#fff3dd" height="205" rx="14" stroke="#b36b14" width="390" x="495" y="35"></rect>
+<text class="big" text-anchor="middle" x="230" y="72">Jev-like</text><text class="big" text-anchor="middle" x="690" y="72">Code-as-Policy</text>
+<text x="70" y="112">输入：状态 + 已定义选项</text><text x="70" y="142">输出：概率、分数、置信度</text><text x="70" y="172">核心动作：选择、排序、拒答</text><text x="70" y="202">长处：校准、可路由、低延迟</text>
+<text x="530" y="112">输入：语言 + API/示例</text><text x="530" y="142">输出：程序、调用链、循环</text><text x="530" y="172">核心动作：组合、计算、执行</text><text x="530" y="202">长处：开放式任务、可组合性</text>
+<text class="small" text-anchor="middle" x="460" y="274">一个更像“决策器”，一个更像“策略编译器”</text></svg><figcaption>两条路线的最短心智模型：把抽象概念放回具身机器人/自动驾驶闭环。</figcaption><div class="figure-details"><h4 id="section-33-全部细节">全部细节</h4><ul><li>Jev-like 的基本单位是预先定义的候选/等级。</li><li>Code-as-Policy 的基本单位是函数、调用关系、条件和循环。</li><li>前者强调不确定性，后者强调知识的可执行组织。</li><li>两者都需要外部接口和安全层。</li></ul></div></figure>
+<h2 id="section-34-8-论文和代码到底证明了什么">8. 论文和代码到底证明了什么</h2>
+<h3 id="section-35-81-jev--jevvla-的证据边界">8.1 Jev / JevVLA 的证据边界</h3>
+<p>TypeSafe AI 的 Jev 页面和文档证明了公开的接口理念：<code>Choice</code> 返回选项概率与 confidence，<code>Score</code> 返回等级概率、分数与 confidence。它们没有公开一个足以让外部复现完整 Jev 内部训练过程的论文级模型细节。因此，不能把 Jev 的产品介绍写成“已经证明概率一定校准”。</p>
+<p>JevVLA 是一篇明确的机器人论文和一个公开代码仓库。论文给出了能量函数、偏好损失、梯度匹配、动作选择和连续引导公式；代码中可以核对：<code>UnifiedQuadraticEnergy.raw_energy</code> 计算条件二次项和 residual，<code>candidate_probabilities</code> 对候选 logits 做 softmax，<code>select_candidate</code> 执行候选选择，<code>correct_action</code> 通过自动微分得到连续修正方向。</p>
+<p>它的实验覆盖五个机器人操作基准，报告相对于匹配 Direct 基线的成功率提升。但这些结果只支持“这种轻量能量适配器在这些机器人设置中可行”，不支持“它已经是自动驾驶通用决策器”。</p>
+<h3 id="section-36-82-code-as-policies-的证据边界">8.2 Code as Policies 的证据边界</h3>
+<p><code>Code as Policies</code> 论文和官方项目页证明了：代码生成 LLM 可以根据自然语言、few-shot 示例和 API 提示生成机器人策略程序，并在桌面操作、形状绘制、移动机器人等设置中展示空间几何、反应式控制和跨 embodiment 示例。官方仓库目前以 Colab notebooks 和提示文件为主，读者应把它看作研究演示/实验材料，而不是一个已经封装好的安全生产运行时。</p>
+<p>论文还明确指出，跨 embodiment 的适配对 API 描述很敏感；当动作接口变化很大时，现有 LLM 可能不够稳健。这个边界对自动驾驶尤其重要：车辆的控制 API、坐标系、时延和法规约束不能只靠自然语言提示维护。</p>
+<h2 id="section-37-9-对初学者最重要的四个判断">9. 对初学者最重要的四个判断</h2>
+<h3 id="section-38-判断一结构化概率不是模型更聪明而是接口更适合软件">判断一：结构化概率不是“模型更聪明”，而是“接口更适合软件”</h3>
+<p>普通 LLM 也可以被要求输出 JSON，但如果模型本质上仍在生成字符串，解析错误、字段缺失和过度自信仍可能存在。结构化决策范式的重点是训练和接口都围绕固定类型、候选分布和置信度设计，让软件有稳定的消费方式。</p>
+<h3 id="section-39-判断二可执行程序不是把模型输出直接-exec">判断二：可执行程序不是“把模型输出直接 exec”</h3>
+<p>Code-as-Policy 的思想是让代码表达 policy，但工程上必须加沙箱、白名单 API、类型/语法检查、资源限制、超时、仿真回放、碰撞检查和人工审批。研究中的 <code>exec</code> 示例是为了验证生成程序，不能直接视为生产部署方案。</p>
+<h3 id="section-40-判断三候选评估和程序生成解决的是不同瓶颈">判断三：候选评估和程序生成解决的是不同瓶颈</h3>
+<p>如果系统已经有一个不错的候选轨迹生成器，但总在几个候选之间选错，Jev-like scorer 可能更合适；如果系统缺的是任务组合、规则表达和多步 API 编排，Code-as-Policy 更合适。前者不自动创造候选，后者不自动保证候选安全。</p>
+<h3 id="section-41-判断四自动驾驶更可能采用混合式而不是二选一">判断四：自动驾驶更可能采用混合式，而不是二选一</h3>
+<p>驾驶系统通常需要同时处理开放语义和严格物理约束。更现实的组合是：大模型负责理解任务和场景、产生结构化意图或候选行为；专门模型/规划器生成并验证轨迹；概率决策模块负责排序、置信度与降级；控制器执行最终动作。</p>
+<h2 id="section-42-10-术语表">10. 术语表</h2>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>白话解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>policy</td>
+<td>从当前状态到下一步动作的规则/模型</td>
+</tr>
+<tr>
+<td>VLA</td>
+<td>Vision-Language-Action，视觉—语言—动作模型</td>
+</tr>
+<tr>
+<td>action chunk</td>
+<td>一次预测一小段未来动作，而不是只预测一个时刻</td>
+</tr>
+<tr>
+<td>candidate</td>
+<td>候选动作、候选轨迹或候选行为</td>
+</tr>
+<tr>
+<td>energy model</td>
+<td>用一个标量表示相对偏好；这里低能量代表更偏好</td>
+</tr>
+<tr>
+<td>score / utility</td>
+<td>便于比较的偏好分数；不必等同于物理奖励</td>
+</tr>
+<tr>
+<td>confidence</td>
+<td>对判断稳定程度的概括；不能自动等同于安全概率</td>
+</tr>
+<tr>
+<td>structured output</td>
+<td>字段、类型和候选集合预先定义的输出</td>
+</tr>
+<tr>
+<td>control primitive</td>
+<td>可被程序调用的基础动作，如抓取、移动、制动</td>
+</tr>
+<tr>
+<td>closed loop</td>
+<td>执行动作后重新感知，再决定下一步</td>
+</tr>
+<tr>
+<td>behavior layer</td>
+<td>保持车道、变道、停车等中高层行为决策</td>
+</tr>
+<tr>
+<td>safety filter</td>
+<td>对候选动作做碰撞、动力学、规则和权限检查的模块</td>
+</tr>
+</tbody>
+</table>
+<h2 id="section-43-11-学完后如何继续读论文">11. 学完后如何继续读论文</h2>
+<p>推荐按下面顺序回看：</p>
+<ol>
+<li>先读 <code>Code as Policies</code> 的 Introduction，理解它为什么不满足于“LLM 只做技能序列规划”。</li>
+<li>再读 Jev 的 <code>Choice</code>/<code>Score</code> 文档，亲自看一个结构化概率输出长什么样。</li>
+<li>再读 <code>JevVLA</code> 的第 3 节，把 <code>Eθ(c,z)</code>、候选选择和动作梯度放回 VLA policy 适配场景。</li>
+<li>最后打开代码 crosswalk，沿着 <code>raw_energy → logits → select_candidate/correct_action</code> 追一遍调用链。</li>
+</ol>
+<p>如果只记住一个总图：<strong>Code-as-Policy 负责“把任务写成能执行的流程”，Jev-like 负责“在候选决策中表达偏好和不确定性”；具身机器人和自动驾驶的安全层负责“什么动作最终允许执行”。</strong></p>
+<h2 id="section-44-附录-a--从问题追到代码">附录 A · 从问题追到代码</h2>
+<h3 id="section-45-论文问题台账与源码回答">论文问题台账与源码回答</h3>
+<h4 id="section-46-q1jev-到底是什么是否就是-jepa">Q1：Jev 到底是什么，是否就是 JEPA？</h4>
+<p><strong>答案：不是。</strong> 本报告中的 Jev 指 TypeSafe AI 公开的 System One model；JevVLA 论文引用的是 Jev 的公开决策接口思想。JEPA 是另一类联合嵌入预测架构，不能因为拼写相近而混用。</p>
+<p><strong>证据：</strong> TypeSafe AI 的 Jev 介绍页；JevVLA 论文第 1 节明确写的是 “Jev’s structured, probabilistic decision interface”。</p>
+<h4 id="section-47-q2jevvla-是否复现了-jev-的内部模型">Q2：JevVLA 是否复现了 Jev 的内部模型？</h4>
+<p><strong>答案：不是。</strong> 论文明确把 Jev 的联系限定在决策接口层；动作编码、条件二次能量、偏好损失和梯度引导都是 JevVLA 自己的设计。</p>
+<h4 id="section-48-q3jevvla-的概率从哪里来">Q3：JevVLA 的“概率”从哪里来？</h4>
+<p><strong>答案：</strong> 对候选动作的 logits 做 softmax；logits 可以融合基础策略 prior、energy 得分、Direct margin 和有效候选 mask。推理时 <code>select_candidate</code> 取最大项；概率分布用于比较和分析，执行本身可以只需要 argmax。</p>
+<h4 id="section-49-q4连续动作为什么能用同一个模型">Q4：连续动作为什么能用同一个模型？</h4>
+<p><strong>答案：</strong> 标量函数的函数值可以比较动作，函数对动作的梯度提供局部修正方向。<code>correct_action</code> 对输入动作启用梯度，得到方向后乘 gain、做 coordinate mask、component clip 和上下界裁剪。</p>
+<h4 id="section-50-q5code-as-policies-的知识具体存在哪里">Q5：Code as Policies 的“知识”具体存在哪里？</h4>
+<p><strong>答案：</strong> 一部分在代码生成模型的预训练能力中，另一部分被显式放进 prompt 的 API、示例和当前感知状态中；最终知识以函数调用、几何计算、条件和循环的形式落进生成程序。</p>
+<h4 id="section-51-q6code-as-policies-是否等于安全地执行任意代码">Q6：Code as Policies 是否等于安全地执行任意代码？</h4>
+<p><strong>答案：</strong> 不等于。论文/Notebook 使用受限执行演示能力，生产系统需要沙箱和白名单。尤其自动驾驶不能让生成代码直接绕过碰撞、动力学和法规检查。</p>
+<h4 id="section-52-q7这两条路线哪个更适合自动驾驶">Q7：这两条路线哪个更适合自动驾驶？</h4>
+<p><strong>答案：</strong> 不是单选。开放式场景理解和行为编排更接近 Code-as-Policy；候选行为/轨迹排序、不确定性路由和有限动作修正更接近 Jev-like。最终控制仍需要专门规划与控制栈。</p>
+<h2 id="section-53-附录-b--论文代码-crosswalk">附录 B · 论文—代码 crosswalk</h2>
+<h3 id="section-54-论文代码-crosswalk">论文—代码 crosswalk</h3>
+<table>
+<thead>
+<tr>
+<th>论文机制</th>
+<th>代码证据</th>
+<th>读者应观察什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>条件动作偏好 <code>Eθ(c,z)</code></td>
+<td><code>src/jevvla/model.py:UnifiedQuadraticEnergy.raw_energy</code></td>
+<td>context MLP、action MLP、quadratic、low-rank coupling、residual 如何合成标量</td>
+</tr>
+<tr>
+<td>动作编码与边界</td>
+<td><code>src/jevvla/model.py:pad_context</code>、<code>bounded_action_features</code></td>
+<td>32/128 维约束和 tanh 有界编码</td>
+</tr>
+<tr>
+<td>候选概率</td>
+<td><code>src/jevvla/inference.py:candidate_logits</code>、<code>src/jevvla/model.py:logits</code></td>
+<td>prior、mask、gain、Direct margin 如何进入 logits，再 softmax</td>
+</tr>
+<tr>
+<td>离散动作执行</td>
+<td><code>src/jevvla/inference.py:select_candidate</code></td>
+<td><code>argmax</code> 选候选；Direct 分数并列时保留 Direct</td>
+</tr>
+<tr>
+<td>连续动作修正</td>
+<td><code>src/jevvla/inference.py:correct_action</code></td>
+<td>自动微分求方向，随后做坐标 mask、裁剪和上下界投影</td>
+</tr>
+<tr>
+<td>偏好监督</td>
+<td><code>src/jevvla/losses.py:masked_preference_cross_entropy</code>、<code>pairwise_outcome_loss</code></td>
+<td>分布监督和结果排序</td>
+</tr>
+<tr>
+<td>梯度监督</td>
+<td><code>src/jevvla/losses.py:gradient_matching_loss</code>、<code>denoising_score_matching_loss</code></td>
+<td>Gaussian target、梯度匹配和去噪分数匹配</td>
+</tr>
+<tr>
+<td>Code-as-Policy 函数生成</td>
+<td>官方仓库 <code>code_as_policies/LMP Examples.ipynb</code> cells 5-6、41-52</td>
+<td>prompt 以注释形式给出函数示例，模型补全函数并递归补未定义函数</td>
+</tr>
+<tr>
+<td>反应式控制</td>
+<td>官方仓库 <code>Experiment_ Reactive Controllers on Toy Tasks.ipynb</code> cells 5-6</td>
+<td>生成代码被解析、受限执行，再用于 toy controller 评测</td>
+</tr>
+<tr>
+<td>官方代码状态</td>
+<td>Google Research tree <code>1ae1fded5c616deb6b4652818588577e8fca0f06</code></td>
+<td>以 Notebook/prompt 为主，不应假设存在一个完整生产 SDK</td>
+</tr>
+</tbody>
+</table>
+<h2 id="section-55-附录-c--实验该怎样读">附录 C · 实验该怎样读</h2>
+<h3 id="section-56-实验联合阅读">实验联合阅读</h3>
+<h4 id="section-57-jevvla">JevVLA</h4>
+<p>JevVLA 的实验问题不是“Jev 能不能聊天”，而是：在冻结基础 VLA 的前提下，一个约 8 万参数的能量适配器能不能改善动作选择和连续动作引导。五个基准覆盖两种接口：CLIPort/VIMA 更接近有限候选选择，LanguageTable/MetaWorld 等包含连续动作修正或 action chunk guidance，LIBERO Plus 同时考察复杂操作。</p>
+<p>论文报告的测试集增益为：MetaWorld MT50 +1.28 个百分点、VIMA +2.31、LanguageTable +1.60、LIBERO Plus +1.52、CLIPort +1.28。这里的正确阅读方式是“相对于各自 Direct 对照的成功率差”，不是跨基准可直接比较的绝对能力排名。</p>
+<p>论文还做了结构消融：去掉 quadratic、residual、low-rank coupling 会带来不同程度下降；偏好标签打乱、特征打乱和随机初始化也会损失性能。这些实验支持“学习到的上下文—动作偏好关系确实有用”，但不能证明概率已经完美校准，也不能证明能量分数具有物理意义。</p>
+<h4 id="section-58-code-as-policies">Code as Policies</h4>
+<p>Code as Policies 关注的是生成程序是否能表达更复杂的机器人策略。实验/Notebook 覆盖 HumanEval、反应式 toy controller、形状绘制、桌面操作和移动机器人/移动操作场景。论文强调的结果包括：生成代码可以使用感知 API 和控制 primitive，进行几何推理，处理未见过的指令组合，并用层级代码生成补全未定义函数。</p>
+<p>这些实验更像“程序表达能力与零样本/少样本组合能力”的证明，不是对任意机器人平台安全部署的证明。代码的正确性、API 适配和执行安全仍是系统集成问题。</p>
+<h4 id="section-59-自动驾驶解读">自动驾驶解读</h4>
+<p>两篇核心来源都不能被表述为自动驾驶实验论文。因此自动驾驶部分只给出架构映射：</p>
+<ul>
+<li>Jev-like：对有限行为/轨迹候选做相对评估、输出置信度、决定是否降级或交给安全规划器。</li>
+<li>Code-as-Policy：把场景语义和规则编译成高层行为 API 调用。</li>
+<li>规划器/控制器：负责硬约束和实时执行。</li>
+</ul>
+<h2 id="section-60-附录-d--未公开细节与证据边界">附录 D · 未公开细节与证据边界</h2>
+<h3 id="section-61-实现边界遗漏与风险">实现边界、遗漏与风险</h3>
+<table>
+<thead>
+<tr>
+<th>细节</th>
+<th>论文/官方材料说什么</th>
+<th>代码/来源实际边界</th>
+<th>影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Jev 内部训练配方</td>
+<td>公开材料强调结构化决策、概率和 confidence</td>
+<td>没有公开足以复现完整内部模型的训练细节</td>
+<td>不能把 JevVLA 写成 Jev 的复现</td>
+</tr>
+<tr>
+<td>概率是否等于真实成功率</td>
+<td>接口返回概率和 confidence</td>
+<td>JevVLA 候选概率来自 energy/prior 的 softmax</td>
+<td>需要独立校准，不能直接称安全概率</td>
+</tr>
+<tr>
+<td>候选集外动作</td>
+<td>候选选择接口只比较给定选项</td>
+<td><code>candidate</code> 张量的 K 个候选决定可见搜索空间</td>
+<td>候选生成器质量成为上限</td>
+</tr>
+<tr>
+<td>连续梯度的全局有效性</td>
+<td>论文给出局部一阶下降解释</td>
+<td><code>correct_action</code> 是一次有界局部修正</td>
+<td>不等于全局最优轨迹规划</td>
+</tr>
+<tr>
+<td>Code-as-Policy 执行安全</td>
+<td>论文展示生成与执行演示</td>
+<td>Notebook 的受限执行逻辑不是生产沙箱</td>
+<td>需要白名单、审计、超时、回放和安全过滤</td>
+</tr>
+<tr>
+<td>自动驾驶实验</td>
+<td>两篇核心来源不以自动驾驶为主要实验对象</td>
+<td>本报告仅做架构映射</td>
+<td>不得把映射写成已验证结果</td>
+</tr>
+<tr>
+<td>跨 embodiment</td>
+<td>Code as Policies 展示 API 提示可改变计划，同时指出脆弱性</td>
+<td>API、坐标系和动作语义需要准确描述</td>
+<td>API 改动可能让生成程序失效</td>
+</tr>
+</tbody>
+</table>
+<h2 id="section-62-附录-e--实现边界阅读指南">附录 E · 实现边界阅读指南</h2>
+<h3 id="section-63-方法边界阅读指南">方法边界阅读指南</h3>
+<p>本文不修改目标仓库；下面只说明如果读者要追踪或替换机制，应从哪里看。</p>
+<table>
+<thead>
+<tr>
+<th>学习目标</th>
+<th>文件/符号边界</th>
+<th>最小变化说明</th>
+<th>不变量</th>
+<th>只读 smoke test</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>理解候选动作偏好</td>
+<td><code>src/jevvla/model.py:UnifiedQuadraticEnergy.raw_energy</code>、<code>src/jevvla/inference.py:candidate_logits</code></td>
+<td>改变 energy/logit 组合会改变候选排序；本文不执行修改。</td>
+<td>context/candidate 维度、mask、Direct index 合法</td>
+<td>静态检查 logits 形状与 mask 行为。</td>
+</tr>
+<tr>
+<td>理解连续动作引导</td>
+<td><code>src/jevvla/inference.py:correct_action</code></td>
+<td>改变 gain、clip、bounds 会改变局部修正幅度；本文不执行修改。</td>
+<td>动作不越过上下界；修正张量有限</td>
+<td>检查 correction 维度、有限性和边界。</td>
+</tr>
+<tr>
+<td>理解程序化策略</td>
+<td><code>code_as_policies/LMP Examples.ipynb</code> cells 5-6, 41-52</td>
+<td>改变 API prompt 会改变生成程序调用图；本文不执行修改。</td>
+<td>只允许白名单函数；执行可解析、可超时</td>
+<td>静态检查危险调用并回放 toy task。</td>
+</tr>
+<tr>
+<td>设计自动驾驶组合层</td>
+<td>高层 policy API + candidate evaluator + safety filter</td>
+<td>组合而非替换已有规划控制栈；本文不执行修改。</td>
+<td>生成逻辑不得绕过碰撞、动力学、法规层</td>
+<td>用仿真回放检查每个候选均经过安全过滤。</td>
+</tr>
+</tbody>
+</table>
+<h2 id="section-64-附录-f--教学解释图的身份">附录 F · 教学解释图的身份</h2>
+<h3 id="section-65-图示说明">图示说明</h3>
+<p>本报告使用六张内嵌 SVG 示意图，均为当前任务内生成的解释性图，不冒充论文原图：</p>
+<ol>
+<li><code>fig-policy-loop</code>：policy 的观测—动作—环境闭环。</li>
+<li><code>fig-jev-interface</code>：Jev 的 Choice/Score 结构化输出。</li>
+<li><code>fig-energy</code>：JevVLA 的 scalar energy 如何同时支持候选比较和连续梯度修正。</li>
+<li><code>fig-code-policy</code>：Code as Policies 的语言—程序—API—执行链。</li>
+<li><code>fig-av-stack</code>：把两种思想映射到自动驾驶时的谨慎分层。</li>
+<li><code>fig-compare</code>：两个范式的最短心智模型。</li>
+</ol>
+<p>图中没有使用历史图片或外部图片资产；所有文字、箭头和分区直接嵌入最终 HTML，便于离线审阅。</p>
+<h2 id="section-66-附录-g--来源版本与核验记录">附录 G · 来源、版本与核验记录</h2>
+<h3 id="section-67-来源与版本">来源与版本</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2610.35010">JevVLA: Jev-Inspired Energy-Based Adaptation for Vision-Language-Action Policies</a>，arXiv v1，2026-10-26；官方代码：<a href="https://github.com/ZJU4EmbodiedAI/JevVLA">ZJU4EmbodiedAI/JevVLA</a>，本文核验仓库 HEAD <code>a8d9f138446467c35e6ff017263a08bf0e9f5e9c</code>。</li>
+<li><a href="https://typesafe.ai/blog/introducing-system-one-models-and-jev">Introducing System One Models &amp; Jev</a>，TypeSafe AI，2026-09-15。</li>
+<li><a href="https://docs.typesafe.ai/primitives/choice">Choice</a> 与 <a href="https://docs.typesafe.ai/primitives/score">Score</a> 官方文档。</li>
+<li><a href="https://arxiv.org/abs/2209.07753">Code as Policies: Language Model Programs for Embodied Control</a>，arXiv v4；项目页：<a href="https://code-as-policies.github.io/">code-as-policies.github.io</a>。</li>
+<li>官方代码：<a href="https://github.com/google-research/google-research/tree/master/code_as_policies">google-research/google-research/code_as_policies</a>，本文核验 tree commit <code>1ae1fded5c616deb6b4652818588577e8fca0f06</code>。</li>
+<li>本地工作流：<code>C:\Users\tianxl\paper-code-close-reading-workflow_v1.md</code>。</li>
+</ul>
+<h2 id="section-68-附录-h--交付与验证说明">附录 H · 交付与验证说明</h2>
+<h3 id="section-69-验证报告">验证报告</h3>
+<h4 id="section-70-已执行检查">已执行检查</h4>
+<ul>
+<li>来源文件存在且字节数大于 0：通过。</li>
+<li>固定 Markdown 文件全部生成：通过。</li>
+<li><code>analysis_bundle.json</code> 结构字段齐全：通过（由 <code>validate_report.py</code> 检查）。</li>
+<li>HTML 使用静态 MathML：通过；不依赖 CDN。</li>
+<li>正文标题能够生成唯一锚点和动态目录：通过（由 <code>browser_audit.py</code> 检查）。</li>
+<li>HTML 中不存在可见原始 TeX 定界符：通过。</li>
+<li>HTML 可被 <code>file://</code> 浏览器加载：通过（由 Playwright 审计）。</li>
+</ul>
+<h4 id="section-71-未完成或明确边界">未完成或明确边界</h4>
+<ul>
+<li>未训练 JevVLA、未运行机器人环境、未复现论文指标。</li>
+<li>未把两篇核心来源扩展成自动驾驶实验结论；自动驾驶章节是有边界的架构映射。</li>
+<li>未生成论文原图；内嵌 SVG 仅用于本报告教学解释。</li>
+</ul>
+<h4 id="section-72-最终验收附录2026-10-29">最终验收附录（2026-10-29）</h4>
+<ul>
+<li><code>build_report.py</code> 成功生成 <code>11_html/policy-llm-paradigms-report.html</code>、<code>site/index.html</code>、<code>paper_reading_report.md</code>、<code>analysis_bundle.json</code> 和构建收据；最终页面包含 71 个正文标题、6 个静态 MathML 公式和 6 张内嵌 SVG 教学图。</li>
+<li><code>validate_report.py</code> 通过内容保全、UTF-8、目录链接、公式节点、SVG 数量和可见原始 TeX 检查；收据为 <code>receipts/validation.json</code>，<code>passed: true</code>。</li>
+<li><code>browser_audit.py</code> 通过 <code>file://</code> 离线加载、深层标题 hash 跳转、初始 hash、目录滚动高亮、搜索和 SVG 灯箱交互检查；浏览器未发出外部网络请求；收据为 <code>receipts/browser_audit.json</code>。</li>
+<li><code>validate_bundle.py analysis_bundle.json</code> 返回 <code>VALID analysis_bundle.json</code>；关键构建文件的 SHA-256 已记录在 <code>receipts/build_receipt.json</code>。</li>
+<li>本报告不宣称训练、仿真、闭环自动驾驶或实车安全验证；JevVLA 和 Code as Policies 的自动驾驶部分仍明确标注为相关工作的架构映射。</li>
+</ul></article></div>
+<footer class="footer-note">阅读版由本任务的 Markdown、固定来源和构建脚本生成。解释图不是论文原图；未训练、未复现论文指标、未进行实车验证。</footer>
+</main>
+</div>
+<dialog aria-label="放大阅读解释图" class="lightbox" id="lightbox">
+<div class="lightbox-toolbar"><span id="lightboxTitle">解释图</span><button id="closeLightbox" type="button">关闭 / Esc</button></div>
+<div id="lightboxContent"></div>
+</dialog>
+<script>(() => {
+  const article = document.getElementById("article");
+  const toc = document.getElementById("toc");
+  const headings = [...article.querySelectorAll("h2,h3,h4")];
+  const links = new Map();
+  let lockedUntil = 0;
+  let fallbackTimer;
+  const activate = (headingId) => {
+    const current = document.getElementById(headingId);
+    const currentIndex = headings.indexOf(current);
+    const parentIds = new Set();
+    if (currentIndex >= 0) {
+      let parentLevel = Number(current.tagName.slice(1));
+      for (let index = currentIndex - 1; index >= 0; index -= 1) {
+        const level = Number(headings[index].tagName.slice(1));
+        if (level < parentLevel) { parentIds.add(headings[index].id); parentLevel = level; }
+      }
+    }
+    links.forEach((link, ident) => {
+      link.classList.toggle("active", ident === headingId);
+      link.classList.toggle("parent-active", parentIds.has(ident));
+      if (ident === headingId) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    });
+    const link = links.get(headingId);
+    if (link && window.innerWidth > 1000) link.scrollIntoView({block:"nearest", behavior:"auto"});
+  };
+  const jump = (headingId, updateHistory = false, smooth = false) => {
+    const target = document.getElementById(headingId);
+    if (!target) return;
+    lockedUntil = performance.now() + 950;
+    activate(headingId);
+    target.setAttribute("tabindex", "-1");
+    target.focus({preventScroll:true});
+    target.scrollIntoView({behavior:smooth ? "smooth" : "auto", block:"start"});
+    if (updateHistory) {
+      try { history.pushState(null, "", "#" + encodeURIComponent(headingId)); }
+      catch { location.hash = headingId; }
+    }
+    clearTimeout(fallbackTimer);
+    fallbackTimer = setTimeout(() => {
+      if (Math.abs(target.getBoundingClientRect().top - 20) > 100) {
+        window.scrollTo({top:target.getBoundingClientRect().top + window.scrollY - 20, behavior:"instant"});
+      }
+      activate(headingId);
+    }, smooth ? 800 : 50);
+  };
+  headings.forEach((heading) => {
+    const link = document.createElement("a");
+    link.href = "#" + heading.id;
+    link.dataset.target = heading.id;
+    link.className = "level-" + heading.tagName.toLowerCase();
+    link.textContent = heading.textContent.trim();
+    links.set(heading.id, link);
+    toc.append(link);
+  });
+  toc.addEventListener("click", (event) => {
+    const link = event.target.closest("a[data-target]");
+    if (link) { event.preventDefault(); jump(link.dataset.target, true, true); }
+  });
+  toc.addEventListener("keydown", (event) => {
+    const link = event.target.closest("a[data-target]");
+    if (link && ["Enter", " "].includes(event.key)) { event.preventDefault(); jump(link.dataset.target, true, true); }
+  });
+  const restoreHash = () => {
+    try { jump(decodeURIComponent(location.hash.slice(1))); } catch { return; }
+  };
+  window.addEventListener("hashchange", restoreHash);
+  window.addEventListener("popstate", restoreHash);
+  let scrollPending = false;
+  window.addEventListener("scroll", () => {
+    if (scrollPending || performance.now() < lockedUntil) return;
+    scrollPending = true;
+    requestAnimationFrame(() => {
+      let current = headings[0];
+      for (const heading of headings) {
+        if (heading.getBoundingClientRect().top <= 140) current = heading;
+        else break;
+      }
+      if (current) activate(current.id);
+      scrollPending = false;
+    });
+  }, {passive:true});
+  if (location.hash) setTimeout(restoreHash, 80);
+  else if (headings[0]) activate(headings[0].id);
+  const dialog = document.getElementById("lightbox");
+  article.querySelectorAll("svg.diagram").forEach((diagram) => {
+    diagram.setAttribute("tabindex", "0");
+    diagram.setAttribute("aria-label", diagram.getAttribute("aria-label") + "，点击或按回车放大");
+    const open = () => {
+      const clone = diagram.cloneNode(true);
+      clone.querySelectorAll("[id]").forEach((node) => { node.id = "zoom-" + node.id; });
+      clone.querySelectorAll("[marker-end]").forEach((node) => node.setAttribute("marker-end", node.getAttribute("marker-end").replace("#", "#zoom-")));
+      document.getElementById("lightboxContent").replaceChildren(clone);
+      document.getElementById("lightboxTitle").textContent = diagram.closest("figure").querySelector(".diagram-title").textContent;
+      dialog.showModal();
+    };
+    diagram.addEventListener("click", open);
+    diagram.addEventListener("keydown", (event) => { if (event.key === "Enter") open(); });
+  });
+  const close = () => { dialog.close(); document.getElementById("lightboxContent").replaceChildren(); };
+  document.getElementById("closeLightbox").addEventListener("click", close);
+  dialog.addEventListener("close", () => document.getElementById("lightboxContent").replaceChildren());
+  document.getElementById("searchInput").addEventListener("input", (event) => {
+    article.querySelectorAll("mark").forEach((node) => node.replaceWith(document.createTextNode(node.textContent)));
+    article.normalize();
+    const query = event.target.value.trim().toLowerCase();
+    const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
+    const nodes = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (query && !node.parentElement.closest("svg,math,script,style") && node.textContent.toLowerCase().includes(query)) nodes.push(node);
+    }
+    let count = 0;
+    nodes.forEach((node) => {
+      const fragment = document.createDocumentFragment();
+      const text = node.textContent;
+      let cursor = 0;
+      let found = text.toLowerCase().indexOf(query);
+      while (found !== -1) {
+        fragment.append(text.slice(cursor, found));
+        const mark = document.createElement("mark"); mark.textContent = text.slice(found, found + query.length); fragment.append(mark);
+        cursor = found + query.length; count += 1; found = text.toLowerCase().indexOf(query, cursor);
+      }
+      fragment.append(text.slice(cursor)); node.replaceWith(fragment);
+    });
+    document.getElementById("searchResult").textContent = query ? count + " 处匹配" : "";
+  });
+})();
+</script>
+</body>
+</html>

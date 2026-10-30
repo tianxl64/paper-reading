@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="F4 三阶段训练拓扑">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L9,3 z" fill="#4B5565"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="720" fill="#FFFFFF"/>
+<text x="54" y="48" font-family="Microsoft YaHei, Arial, sans-serif" font-size="23" font-weight="700" fill="#172033">F4 三阶段训练拓扑</text>
+<text x="54" y="76" font-family="Microsoft YaHei, Arial, sans-serif" font-size="13" font-weight="500" fill="#596579">训练顺序是方法条件，不是普通工程细节</text>
+<rect x="70" y="188" width="230" height="122" rx="10" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="86" y="216" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">预训练 reader</text>
+<text x="86" y="242" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="86" dy="0">视觉 decoder 先验</tspan>
+<tspan x="86" dy="17">未来 token 任务</tspan>
+</text>
+<rect x="360" y="188" width="230" height="122" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="376" y="216" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">Stage 0</text>
+<text x="376" y="242" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="376" dy="0">主 VLM warmup</tspan>
+<tspan x="376" dy="17">latent answer 路由</tspan>
+</text>
+<rect x="650" y="188" width="230" height="122" rx="10" fill="#FFF3DF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="666" y="216" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">Stage 1</text>
+<text x="666" y="242" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="666" dy="0">冻结主模型</tspan>
+<tspan x="666" dy="17">校准双 reader</tspan>
+</text>
+<rect x="940" y="188" width="230" height="122" rx="10" fill="#EEF7F3" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="956" y="216" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">Stage 2</text>
+<text x="956" y="242" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="956" dy="0">联合微调</tspan>
+<tspan x="956" dy="17">hidden state 塑形</tspan>
+</text>
+<path d="M300,249 L360,249" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="366" y="241" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">先验</text>
+<path d="M590,249 L650,249" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="656" y="241" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">freeze</text>
+<path d="M880,249 L940,249" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="946" y="241" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">unfreeze</text>
+<polygon points="650,402 780,462 650,522 520,462" fill="#FFF3DF" stroke="#AEB8C6" stroke-width="1.5"/>
+<text x="554" y="458" font-family="Microsoft YaHei, Arial, sans-serif" font-size="14" font-weight="700" fill="#172033">跳过阶段</text>
+<text x="562" y="482" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="500" fill="#596579">
+<tspan x="562" dy="0">moving target</tspan>
+<tspan x="562" dy="16">梯度冲击</tspan>
+</text>
+<path d="M765,310 L650,310 L650,402" fill="none" stroke="#4B5565" stroke-width="2" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="656" y="302" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">w/o stage</text>
+<rect x="210" y="540" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="224" y="561" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">Full</text>
+<text x="224" y="583" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">88.84</text>
+<rect x="570" y="540" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="584" y="561" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">w/o staged</text>
+<text x="584" y="583" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">67.13</text>
+<rect x="930" y="540" width="150" height="54" rx="9" fill="#F2EDFF" stroke="#AEB8C6" stroke-width="1.2"/>
+<text x="944" y="561" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="700" fill="#596579">风险</text>
+<text x="944" y="583" font-family="Microsoft YaHei, Arial, sans-serif" font-size="15" font-weight="700" fill="#172033">训练显存高</text>
+<line x1="54" y1="660" x2="1226" y2="660" stroke="#AEB8C6" stroke-width="1"/>
+<text x="54" y="686" font-family="Microsoft YaHei, Arial, sans-serif" font-size="12" font-weight="600" fill="#596579">最大消融下降来自训练拓扑，说明 curriculum 是方法机制的一部分。</text>
+</svg>

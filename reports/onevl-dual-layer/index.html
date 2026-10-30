@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>OneVL Dual-Layer Paper Report</title>
+<style>
+:root {
+  --ink:#172033; --muted:#596579; --line:#d7dee8; --bg:#f5f7fa; --panel:#fff;
+  --accent:#1f6feb; --legacy:#9a5b13; --synthesis:#087568; --soft:#eef3f8;
+}
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { margin:0; font-family:Arial, "Microsoft YaHei", sans-serif; color:var(--ink); background:var(--bg); line-height:1.72; }
+a { color:#0b5cad; }
+.shell { display:grid; grid-template-columns:300px minmax(0,1fr); min-height:100vh; }
+.toc { position:sticky; top:0; height:100vh; overflow:auto; padding:22px 18px; background:#fff; border-right:1px solid var(--line); }
+.toc-title { font-weight:800; margin-bottom:12px; }
+.toc-link { display:block; text-decoration:none; color:#314057; padding:5px 0; border-left:3px solid transparent; padding-left:8px; font-size:14px; }
+.toc-link.active { color:var(--accent); border-left-color:var(--accent); font-weight:700; }
+.toc-root { margin-top:10px; font-weight:700; }
+.toc-l2 { padding-left:18px; font-size:13px; }
+.toc-l3,.toc-l4 { padding-left:30px; font-size:12px; color:#627086; }
+.content { min-width:0; padding:28px clamp(18px,4vw,58px) 48px; }
+.topbar { position:sticky; top:0; z-index:20; display:flex; justify-content:flex-end; gap:10px; padding:10px 0; background:linear-gradient(to bottom, rgba(245,247,250,.98), rgba(245,247,250,.78)); backdrop-filter:blur(4px); }
+button { font:inherit; }
+.translation-toggle { border:1px solid #b8c5d8; border-radius:6px; padding:8px 13px; background:#fff; color:#172033; cursor:pointer; }
+.translation-toggle[aria-expanded="true"] { background:#e8f1ff; border-color:#75a7e8; color:#0b5cad; }
+.overview,.layer { max-width:1180px; margin:0 auto 26px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:24px; }
+.overview h1 { margin:0 0 8px; font-size:30px; line-height:1.25; }
+.sub { color:var(--muted); max-width:980px; }
+.metric-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-top:16px; }
+.metric { border:1px solid var(--line); border-radius:8px; padding:12px; background:#fbfcfe; }
+.metric b { display:block; font-size:12px; color:var(--muted); }
+.metric span { font-size:22px; font-weight:800; }
+.layer-header { border-bottom:1px solid var(--line); margin:-4px 0 22px; padding-bottom:14px; }
+.layer-header h2 { margin:0 0 6px; font-size:25px; }
+.legacy-layer { border-left:5px solid var(--legacy); }
+.synthesis-layer { border-left:5px solid var(--synthesis); }
+.reader-body { max-width:1060px; }
+.reader-body h1,.reader-body h2,.reader-body h3,.reader-body h4 { scroll-margin-top:90px; line-height:1.35; }
+.reader-body h1 { font-size:28px; }
+.reader-body h2 { font-size:23px; margin-top:32px; }
+.reader-body h3 { font-size:19px; margin-top:24px; }
+.reader-body img { display:block; max-width:min(100%, 980px); max-height:760px; width:auto; height:auto; margin:14px auto; object-fit:contain; background:#fff; border:1px solid var(--line); border-radius:6px; cursor:zoom-in; }
+.reader-body figure { margin:22px auto; text-align:center; }
+.reader-body figcaption { color:var(--muted); font-size:13px; }
+.reader-body table { width:100%; border-collapse:collapse; margin:16px 0; font-size:14px; }
+.reader-body th,.reader-body td { border:1px solid var(--line); padding:8px 10px; vertical-align:top; }
+.reader-body th { background:#eef3f8; }
+.reader-body pre { overflow:auto; padding:14px; border:1px solid var(--line); border-radius:6px; background:#f7f9fc; }
+.reader-body code { font-family:Consolas, "Courier New", monospace; }
+.translation-panel { position:fixed; top:56px; right:24px; bottom:24px; width:min(760px, calc(100vw - 48px)); z-index:45; background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 16px 42px rgba(18,30,50,.22); display:none; overflow:hidden; }
+.translation-panel.open { display:flex; flex-direction:column; }
+.translation-head { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line); background:#f8fafc; }
+.translation-head h2 { margin:0; font-size:18px; }
+.translation-close { border:1px solid #b8c5d8; border-radius:6px; padding:6px 10px; background:#fff; cursor:pointer; }
+.translation-body { flex:1 1 auto; overflow:auto; padding:18px 22px; }
+.translation-body h1 { font-size:24px; }
+.translation-body h2 { font-size:20px; }
+.lightbox { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(8,12,22,.84); z-index:60; padding:28px; }
+.lightbox.open { display:flex; }
+.lightbox img { max-width:min(96vw,1500px); max-height:90vh; object-fit:contain; background:#fff; border-radius:8px; }
+.lightbox button { position:absolute; top:18px; right:18px; border:1px solid rgba(255,255,255,.55); background:#fff; color:#172033; border-radius:6px; padding:8px 12px; cursor:pointer; }
+@media (max-width: 980px) {
+  .shell { display:block; }
+  .toc { position:relative; height:auto; max-height:44vh; border-right:0; border-bottom:1px solid var(--line); }
+  .metric-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .translation-panel { top:50px; right:12px; bottom:12px; width:calc(100vw - 24px); }
+}
+@media (max-width: 560px) {
+  .metric-grid { grid-template-columns:1fr; }
+  .content { padding-left:12px; padding-right:12px; }
+  .overview,.layer { padding:18px 14px; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside aria-label="Report table of contents" class="toc">
+<div class="toc-title">OneVL 双层报告</div>
+<a class="toc-link toc-root" href="#overview">总览与规则边界</a>
+<div class="toc-group"><a class="toc-link toc-root" href="#legacy-layer">Legacy comprehensive layer</a>
+<a class="toc-link toc-l1" href="#legacy-xiaomi-onevl-one-step-latent-reasoning-and-planning-with-vision-">Xiaomi OneVL: One-Step Latent Reasoning and Planning with Vision-Language Explanation</a>
+<a class="toc-link toc-l1" href="#legacy-0-onevl">0. 先给结论：OneVL 真正在改什么</a>
+<a class="toc-link toc-l1" href="#legacy-1-latent-cot">1. 研究问题：latent CoT 在驾驶里为什么原本不够用</a>
+<a class="toc-link toc-l1" href="#legacy-2-latent">2. 方法机制：两个 latent 通道不是装饰</a>
+<a class="toc-link toc-l1" href="#legacy-3">3. 数学与算法重构：从三个交叉熵到一个训练目标</a>
+<a class="toc-link toc-l1" href="#legacy-4-stage">4. 训练拓扑：Stage 不是小细节，而是成败条件</a>
+<a class="toc-link toc-l1" href="#legacy-5-claim">5. 实验证据审计：哪些 claim 强，哪些要打折</a>
+<a class="toc-link toc-l1" href="#legacy-6-onevl-latent-reasoning-world-model-vla">6. 横向定位：OneVL 在 latent reasoning / world model / VLA 的交叉点</a>
+<a class="toc-link toc-l1" href="#legacy-7">7. 代码与复现：主仓库是推理闭环，不是完整训练闭环</a>
+<a class="toc-link toc-l1" href="#legacy-8">8. 局限、失败条件与更强基线</a>
+<a class="toc-link toc-l1" href="#legacy-9-onevl">9. 逐模块深读：把 OneVL 当作一个训练约束系统，而不是单个模型</a>
+<a class="toc-link toc-l2" href="#legacy-9-1-latent-token-interface">9.1 Latent token interface 的真实约束</a>
+<a class="toc-link toc-l2" href="#legacy-9-2-decoder">9.2 视觉辅助 decoder 的世界模型边界</a>
+<a class="toc-link toc-l2" href="#legacy-9-3-decoder">9.3 语言辅助 decoder 的解释性边界</a>
+<a class="toc-link toc-l2" href="#legacy-9-4-mlp-deployment-head">9.4 MLP deployment head 的取舍</a>
+<a class="toc-link toc-l1" href="#legacy-10">10. 实验读法：从结果表反推作者的论证链</a>
+<a class="toc-link toc-l2" href="#legacy-10-1-navsim">10.1 NAVSIM 不是唯一证据，但它是最关键证据</a>
+<a class="toc-link toc-l2" href="#legacy-10-2-roadwork-impromptu">10.2 ROADWork 和 Impromptu 验证的是分布外韧性</a>
+<a class="toc-link toc-l2" href="#legacy-10-3-alpamayo-r1-baseline">10.3 Alpamayo-R1 暴露了强 baseline 仍有优势的角落</a>
+<a class="toc-link toc-l1" href="#legacy-11">11. 复现风险清单：哪些步骤最可能卡住</a>
+<a class="toc-link toc-l2" href="#legacy-11-1">11.1 权重、训练仓和测试数据的三段式依赖</a>
+<a class="toc-link toc-l2" href="#legacy-11-2-prompt-latent">11.2 可重复性需要锁住 prompt 模板和 latent 数</a>
+<a class="toc-link toc-l2" href="#legacy-11-3">11.3 评估脚本覆盖范围和空白</a>
+<a class="toc-link toc-l1" href="#legacy-12">12. 可操作的后续研究方向</a>
+<a class="toc-link toc-l1" href="#legacy-12-1">12.1 知乎全文证据矩阵：已读内容如何进入正文</a>
+<a class="toc-link toc-l1" href="#legacy-13">13. 图覆盖矩阵：关键实现是否都有图</a>
+<a class="toc-link toc-l1" href="#legacy-14-figure-inventory">14. 原论文图像清单 / Figure Inventory</a>
+</div>
+<div class="toc-group"><a class="toc-link toc-root" href="#synthesis-layer">Critical synthesis layer</a>
+<a class="toc-link toc-l1" href="#synthesis-paper-identity-and-cleanrun-boundary">Paper Identity And Cleanrun Boundary</a>
+<a class="toc-link toc-l1" href="#synthesis-critical-block-a-phase-1-deep-paper-reading">Critical Block A: Phase 1 Deep Paper Reading</a>
+<a class="toc-link toc-l2" href="#synthesis-phase1-core">Core Claims</a>
+<a class="toc-link toc-l2" href="#synthesis-phase1-mechanism">Mechanism: Dual Latent Tokens Are A Causal Bottleneck</a>
+<a class="toc-link toc-l2" href="#synthesis-phase1-math">Math And Algorithm Reconstruction</a>
+<a class="toc-link toc-l2" href="#synthesis-phase1-training">Training Topology</a>
+<a class="toc-link toc-l2" href="#synthesis-experiment-evidence-audit-and-critique">Experiment Evidence Audit And Critique</a>
+<a class="toc-link toc-l1" href="#synthesis-critical-block-b-phase-2-external-sources-and-synthesis">Critical Block B: Phase 2 External Sources And Synthesis</a>
+<a class="toc-link toc-l1" href="#synthesis-critical-block-c-phase-3-code-implementation">Critical Block C: Phase 3 Code Implementation</a>
+<a class="toc-link toc-l2" href="#synthesis-implementation-logic-narrative">Implementation Logic Narrative</a>
+<a class="toc-link toc-l2" href="#synthesis-code-smoke-test-boundary">Code Smoke Test Boundary</a>
+<a class="toc-link toc-l1" href="#synthesis-cross-paper-positioning-and-limitations">Cross-Paper Positioning And Limitations</a>
+<a class="toc-link toc-l1" href="#synthesis-figure-inventory-and-visual-evidence-map">Figure Inventory And Visual Evidence Map</a>
+</div>
+</aside>
+<main class="content">
+<div class="topbar">
+<button aria-controls="translation-panel" aria-expanded="false" class="translation-toggle" id="translation-toggle" type="button">翻译论文</button>
+</div>
+<section class="overview" id="overview">
+<h1>OneVL 双层最终报告</h1>
+<p class="sub">本文件把旧版完整深读与新版 critical synthesis 直接内联展示。前半部分是 Legacy comprehensive layer，后半部分是 Critical synthesis layer；全文翻译通过右上角按钮切换，不作为跳转式阅读窗口。生成时间：2026-06-22T10:01:48.845346+00:00</p>
+<div class="metric-grid">
+<div class="metric"><b>Legacy 正文字数</b><span>45075</span></div>
+<div class="metric"><b>Synthesis 正文字数</b><span>28025</span></div>
+<div class="metric"><b>Legacy 图片</b><span>16</span></div>
+<div class="metric"><b>Synthesis 图片</b><span>13</span></div>
+</div>
+</section>
+<section class="layer legacy-layer" id="legacy-layer">
+<div class="layer-header">
+<h2>Legacy comprehensive layer</h2>
+<p class="sub">保留旧版全面细致的教学式论文方法推导、逐模块代码深读、社区/issue/PR 证据融合、实验 claim 强弱审计和后续研究方向。</p>
+</div>
+<article class="reader-body legacy-body">
+<section class="hero">
+<div class="kicker">arXiv 2604.18486 · Xiaomi Embodied Intelligence Team · 2026</div>
+<h1 id="legacy-xiaomi-onevl-one-step-latent-reasoning-and-planning-with-vision-">Xiaomi OneVL: One-Step Latent Reasoning and Planning with Vision-Language Explanation</h1>
+<p class="lead">这份报告把 OneVL 拆成一个核心命题：自动驾驶 VLA 里的“思考”不一定要逐 token 写出来；只要 latent token 被语言 CoT 和未来视觉 token 双重监督，它可以在推理时保持 answer-only 的速度，同时比显式 CoT 更准。</p>
+<div class="evidence-strip">
+<span>NAVSIM 88.84 PDM / 4.46s</span>
+<span>4 visual + 2 language latent</span>
+<span>Dual auxiliary decoders</span>
+<span>MLP head 0.24s deployment</span>
+</div>
+</section>
+<figure class="visual-v2-figure generated-visual" id="legacy-sci-overall_architecture"><img alt="主图把输入、双 latent、训练期辅助读出、推理期 decoder bypass 与指标证据放在同一闭环中。" src="critical_synthesis/assets/visual_v2/v2_f0_master_graphical_abstract.svg"/><figcaption>V2-F0｜主图把输入、双 latent、训练期辅助读出、推理期 decoder bypass 与指标证据放在同一闭环中。</figcaption></figure>
+<figure class="visual-v2-figure generated-visual" id="legacy-overall_pipeline"><img alt="主图把输入、双 latent、训练期辅助读出、推理期 decoder bypass 与指标证据放在同一闭环中。" src="critical_synthesis/assets/visual_v2/v2_f0_master_graphical_abstract.svg"/><figcaption>V2-F0｜主图把输入、双 latent、训练期辅助读出、推理期 decoder bypass 与指标证据放在同一闭环中。</figcaption></figure>
+<h2 id="legacy-0-onevl">0. 先给结论：OneVL 真正在改什么</h2>
+<p>OneVL 不是把已有 VLM 接一个轨迹头那么简单。它把显式推理链拆成两类 latent token：视觉 latent 承担未来场景动力学，语言 latent 承担可读 CoT 的压缩表征。训练时两个 auxiliary decoder 都在场，分别把 latent hidden states 还原为未来视觉 token 和文字推理；推理时两个 decoder 都被丢弃，只把 latent token 预填到 prompt 中，主模型并行吃掉这些 token 后直接生成轨迹答案。</p>
+<p>这使论文的核心 claim 变成一个可审计的三段式：第一，普通 latent CoT 在驾驶上失败，因为缺少任务相关监督；第二，世界模型式视觉监督和语言解释监督能把 latent 从“黑箱压缩槽”变成“可被解码的驾驶状态”；第三，prefill 让这些 latent 不参与逐 token 自回归，因此延迟约等于 answer-only。</p>
+<aside class="blog-merge">
+<div class="blog-merge-title">知乎全文融合：社区全文如何改变本报告的开篇读法</div>
+<p>深蓝学院和 ygunoil 的知乎全文都把 OneVL 传播成 VLA、世界模型、潜空间推理三条路线的统一，而不是单点 benchmark 新闻。因此本报告在正文开头直接把 OneVL 解释成“训练期双解释监督 + 推理期 latent prefill”的系统设计；这比只复述 abstract 更利于理解为什么 0.24s、88.84 PDM 和解释性要一起读。</p>
+<p class="blog-source">来源：<a href="https://zhuanlan.zhihu.com/p/2042652418039603267" rel="noreferrer" target="_blank">小米自动驾驶大模型 OneVL 全面开源，推理延迟低至 0.24 秒</a>；<a href="https://www.zhihu.com/question/2037963527441397074/answer/2038072891858740574" rel="noreferrer" target="_blank">小米开源 xiaomionevl 自动驾驶模型，率先实现多技术路线统</a></p>
+</aside>
+<table><caption>前置概念速查表</caption><thead><tr><th>术语</th><th>含义</th><th>在 OneVL 中的作用</th></tr></thead><tbody><tr><td>VLA</td><td>Vision-Language-Action，把视觉、语言指令和动作预测放进同一模型接口</td><td>OneVL 的上层任务范式</td></tr><tr><td>Latent CoT</td><td>把推理链压缩成连续/隐式 latent，而不是逐 token 输出文本</td><td>OneVL 要证明 latent 不必牺牲精度和解释性</td></tr><tr><td>Explicit CoT</td><td>显式生成完整文字推理链，再输出轨迹</td><td>性能基线，慢但语言解释质量最高</td></tr><tr><td>Prefill</td><td>把 latent token 作为提示上下文一次性并行处理</td><td>OneVL 低延迟的关键</td></tr><tr><td>Visual auxiliary decoder</td><td>从视觉 latent hidden states 预测未来帧视觉 token</td><td>世界模型监督来源</td></tr><tr><td>Language auxiliary decoder</td><td>从语言 latent hidden states 重构文字 CoT</td><td>解释性监督来源</td></tr><tr><td>Qwen3-VL-4B</td><td>4B 级视觉语言 backbone</td><td>主模型，推理部署时保留</td></tr><tr><td>Emu3.5 IBQ</td><td>离散视觉 tokenizer/decoder</td><td>未来帧 visual token 监督与可视化解码</td></tr><tr><td>NAVSIM PDM</td><td>Non-reactive driving planning score</td><td>主 benchmark 指标</td></tr><tr><td>ADE/FDE</td><td>平均/终点轨迹误差</td><td>ROADWork、Impromptu、Alpamayo-R1 指标</td></tr><tr><td>MLP head</td><td>从 latent hidden state 回归 waypoint 的轻量头</td><td>部署降延迟版本</td></tr><tr><td>Stage training</td><td>预训练/主 VLM warmup/辅助解码器 warmup/联合调优</td><td>消融显示是稳定训练的必要条件</td></tr></tbody></table>
+<figure id="legacy-fig-teaser">
+<img alt="fig:teaser" src="legacy_full/figures/fig_01_fig_teaser.png"/>
+<figcaption><strong>论文原图 1 / fig:teaser.</strong> Accuracy and efficiency comparison across four benchmarks. Existing latent CoT methods underperform explicit CoT. OneVL is the first to surpass it while matching answer-only prediction latency.</figcaption>
+</figure>
+<p class="figure-reading">这张图是论文的总 claim：OneVL 同时站在高精度与低延迟角落。解读时要注意它比较的是 SFT 设定下的 VLA/latent CoT 方法，不等价于证明闭环驾驶安全性。</p>
+<figure id="legacy-fig-cot-comparison">
+<img alt="fig:cot_comparison" src="legacy_full/figures/fig_02_fig_cot_comparison.png"/>
+<figcaption><strong>论文原图 2 / fig:cot_comparison.</strong> Comparison of CoT paradigms. (a) Explicit CoT: the model generates a full chain of discrete reasoning tokens before the answer. (b) Implicit CoT: reasoning is compressed into a small number of opaque latent vectors Z. (c) OneVL (Ours): two types of latent tokens (Z_v, red!70red) and language (Z_l, orange!80salmon); during training, dual auxiliary decoders decode these into future-frame visual tokens and CoT text, respectively, providing rich text and world model supervision. During inference, the decoders are discarded, and the latent tokens are prefilled into the prompt context, matching the speed of answer-only prediction while keeping the interpretability of (a) in both vision and language.</figcaption>
+</figure>
+<p class="figure-reading">这张范式图最关键的不是“三种 CoT”标签，而是训练/推理路径的分离：训练阶段可解释 decoder 约束 latent，推理阶段 decoder 不上车。</p>
+<h2 id="legacy-1-latent-cot">1. 研究问题：latent CoT 在驾驶里为什么原本不够用</h2>
+<figure class="visual-v2-figure generated-visual" id="legacy-latent_failure"><img alt="对比纯语言 latent CoT 与 OneVL 的 visual+language 双 latent，突出因果约束差异。" src="critical_synthesis/assets/visual_v2/v2_f1_core_claim_contrast.svg"/><figcaption>V2-F1｜对比纯语言 latent CoT 与 OneVL 的 visual+language 双 latent，突出因果约束差异。</figcaption></figure>
+<p>论文把问题定位在 VLA 自动驾驶的一个矛盾上：显式 CoT 可解释但慢，answer-only 快但缺少中间监督，通用 latent CoT 本该快，却在驾驶任务中低于 answer-only 甚至显著低于显式 CoT。NAVSIM 表里 COCONUT、CODI、SIM-CoT 的 PDM 分别是 84.84、83.92、84.21，全部低于 AR Answer 的 87.47，这说明“把语言推理压进 latent”这个通用技巧直接迁移到轨迹预测并不成立。</p>
+<p>OneVL 对这个失败给出的解释是 supervision mismatch：驾驶规划不是纯语言推理题，latent token 如果只从最终轨迹损失或一般语言压缩中学习，很容易变成不可解释的瓶颈；它缺少与场景未来状态绑定的监督。因此 OneVL 用未来帧视觉 token 预测提供密集世界模型信号，用 CoT 文本重构提供语言解释信号。</p>
+<aside class="blog-merge">
+<div class="blog-merge-title">知乎全文融合：把技术问题翻译成行业问题</div>
+<p>刘杨的回答把传统规则/高精地图、显式 CoT、VLA 与世界模型路线放在同一张行业路线图里；智驾最前沿的全文则强调 VLA 自回归解释链慢、车载实时性不足。这里的增量不是论文指标，而是解释了为什么 OneVL 要同时解决“能解释”和“能实时”这两个产品矛盾。</p>
+<p class="blog-source">来源：<a href="https://www.zhihu.com/question/2037963527441397074/answer/2038331332183446982" rel="noreferrer" target="_blank">小米开源 xiaomionevl 自动驾驶模型，率先实现多技术路线统</a>；<a href="https://zhuanlan.zhihu.com/p/2039637112409027729" rel="noreferrer" target="_blank">小米智驾两年三跳？2026年有啥技术新突破？</a></p>
+</aside>
+<table><caption>主张到证据映射</caption><thead><tr><th>核心主张</th><th>论文证据位置</th><th>我的审计判断</th></tr></thead><tbody><tr><td>latent CoT 原始迁移在自动驾驶上失败</td><td>Intro + Table main_results</td><td>NAVSIM 多个 latent CoT baseline 同时低于 AR Answer，是强证据</td></tr><tr><td>双辅助 decoder 能让 latent 具备语言和视觉解释</td><td>Sec. 3 architecture + explanation quality table + visual CoT figure</td><td>可解码性成立，但解释质量低于显式 CoT</td></tr><tr><td>prefill 使推理速度接近 answer-only</td><td>Architecture + latency tables</td><td>从 4.46s vs 4.49s 看 NAVSIM 成立；其他 benchmark 也接近</td></tr><tr><td>视觉世界模型监督提高泛化</td><td>Ablation + qualitative visual CoT</td><td>w/o visual decoder -0.87 PDM，w/o staged train 崩溃，是中强证据</td></tr></tbody></table>
+<h2 id="legacy-2-latent">2. 方法机制：两个 latent 通道不是装饰</h2>
+<figure class="visual-v2-figure generated-visual" id="legacy-sci-dual_latent_supervision"><img alt="局部放大 latent block：Z_v 承接未来视觉 token，Z_l 承接语言解释，两者共同塑形轨迹 answer。" src="critical_synthesis/assets/visual_v2/v2_f2_dual_latent_zoom.svg"/><figcaption>V2-F2｜局部放大 latent block：Z_v 承接未来视觉 token，Z_l 承接语言解释，两者共同塑形轨迹 answer。</figcaption></figure>
+<figure class="visual-v2-figure generated-visual" id="legacy-dual_latent"><img alt="局部放大 latent block：Z_v 承接未来视觉 token，Z_l 承接语言解释，两者共同塑形轨迹 answer。" src="critical_synthesis/assets/visual_v2/v2_f2_dual_latent_zoom.svg"/><figcaption>V2-F2｜局部放大 latent block：Z_v 承接未来视觉 token，Z_l 承接语言解释，两者共同塑形轨迹 answer。</figcaption></figure>
+<p>OneVL 的输入是图像和结构化驾驶文本，输出序列中被插入视觉 latent token、语言 latent token 和轨迹 answer token。主 VLM 产生这些位置上的 hidden states 后，视觉 latent 的 hidden states 送入视觉辅助 decoder，语言 latent 的 hidden states 送入语言辅助 decoder。注意这里不是把 decoder 输出作为最终答案的一部分，而是把 decoder 当作训练时的可解释监督器。</p>
+<figure id="legacy-fig-architecture">
+<img alt="fig:architecture" src="legacy_full/figures/fig_03_fig_architecture.png"/>
+<figcaption><strong>论文原图 3 / fig:architecture.</strong> OneVL architecture. An image and structured text prompt (ego state, command, historical trajectory) are fed into the VLM. The output hidden states shown below the VLM, contains image tokens (T_v), text tokens (T_l), visual latent tokens (Z_v), language latent tokens (Z_l), and trajectory answer tokens (T_y). During training, hidden states H_v and H_l at the latent positions are routed to two auxiliary decoders: the Visual Aux.\ Decoder (left) directly predicts future-frame visual tokens at 0.5s and 1.0s (L_v), and the Language Aux.\ Decoder (right) predicts chain-of-thought reasoning (L_l). During inference, both decoders are discarded; latent tokens are prefilled into the prompt, matching the answer-only AR prediction latency.</figcaption>
+</figure>
+<p class="figure-reading">架构图里下方的 hidden state 路由是读懂 OneVL 的关键：H_v 和 H_l 都来自主 VLM，但监督目标不同。视觉分支绑定 t+0.5s/t+1.0s 未来帧 token；语言分支绑定 CoT 文本。</p>
+<figure class="visual-v2-figure generated-visual" id="legacy-visual_decoder"><img alt="局部放大 latent block：Z_v 承接未来视觉 token，Z_l 承接语言解释，两者共同塑形轨迹 answer。" src="critical_synthesis/assets/visual_v2/v2_f2_dual_latent_zoom.svg"/><figcaption>V2-F2｜局部放大 latent block：Z_v 承接未来视觉 token，Z_l 承接语言解释，两者共同塑形轨迹 answer。</figcaption></figure>
+<figure class="visual-v2-figure generated-visual" id="legacy-sci-visual_world_model_tokens"><img alt="局部放大 latent block：Z_v 承接未来视觉 token，Z_l 承接语言解释，两者共同塑形轨迹 answer。" src="critical_synthesis/assets/visual_v2/v2_f2_dual_latent_zoom.svg"/><figcaption>V2-F2｜局部放大 latent block：Z_v 承接未来视觉 token，Z_l 承接语言解释，两者共同塑形轨迹 answer。</figcaption></figure>
+<details open=""><summary>机制深挖：为什么视觉 decoder 比语言 decoder 更像关键部件</summary><p>消融里去掉视觉 decoder 后 PDM 从 88.84 降到 87.97，去掉语言 decoder 后降到 88.53。二者都有效，但视觉 decoder 的影响更大。原因很直接：自动驾驶轨迹预测的核心不只是解释为什么转弯，而是判断未来空间可通行性、动态障碍和道路拓扑演化。视觉 token 预测比文字 CoT 更接近这些状态变量。语言 decoder 的主要价值是让 latent 可读、可审查，并通过文本 CoT 给模型一个更稳定的语义分解目标。</p></details>
+<figure class="visual-v2-figure generated-visual" id="legacy-language_decoder"><img alt="局部放大 latent block：Z_v 承接未来视觉 token，Z_l 承接语言解释，两者共同塑形轨迹 answer。" src="critical_synthesis/assets/visual_v2/v2_f2_dual_latent_zoom.svg"/><figcaption>V2-F2｜局部放大 latent block：Z_v 承接未来视觉 token，Z_l 承接语言解释，两者共同塑形轨迹 answer。</figcaption></figure>
+<figure class="visual-v2-figure generated-visual" id="legacy-sci-prefill_vs_explicit_cot"><img alt="按调用顺序展示 prompt、tokenizer pattern、hidden states、可选 decoder 与轨迹输出。" src="critical_synthesis/assets/visual_v2/v2_f7_inference_sequence.svg"/><figcaption>V2-F7｜按调用顺序展示 prompt、tokenizer pattern、hidden states、可选 decoder 与轨迹输出。</figcaption></figure>
+<figure class="visual-v2-figure generated-visual" id="legacy-prefill_latency"><img alt="按调用顺序展示 prompt、tokenizer pattern、hidden states、可选 decoder 与轨迹输出。" src="critical_synthesis/assets/visual_v2/v2_f7_inference_sequence.svg"/><figcaption>V2-F7｜按调用顺序展示 prompt、tokenizer pattern、hidden states、可选 decoder 与轨迹输出。</figcaption></figure>
+<details open=""><summary>机制深挖：prefill 不是减少 token 数这么简单</summary><p>显式 CoT 慢，是因为中间推理文本要自回归生成，每个 token 都依赖前一个 token。OneVL 的 latent token 虽然也出现在序列中，但它们在推理时被直接预填为固定 token 块，模型只需要并行计算它们对应的 hidden states，再自回归生成轨迹 answer。因此延迟主要取决于最终 answer token，而不是 reasoning token 长度。</p></details>
+<aside class="blog-merge">
+<div class="blog-merge-title">知乎全文融合：博客全文补强的机制类比</div>
+<p>车东西全文明确提醒：OneVL 不是简单“把 CoT 藏起来”，而是用 latent token 一步激活后直接输出轨迹；深蓝学院全文则把 0.24s 与显式 CoT 超越放在同一段解释。这里被回填到机制章节，是为了避免读者把 latent prefill 误解为删掉推理，而应理解为推理表达方式从文本链变成 hidden-state 约束。</p>
+<p class="blog-source">来源：<a href="https://zhuanlan.zhihu.com/p/2042652418039603267" rel="noreferrer" target="_blank">小米自动驾驶大模型 OneVL 全面开源，推理延迟低至 0.24 秒</a>；<a href="https://zhuanlan.zhihu.com/p/2038356954725209964" rel="noreferrer" target="_blank">小米开源最新智驾模型！核心技术团队领衔，小模型搞定复杂场景</a></p>
+</aside>
+<h2 id="legacy-3">3. 数学与算法重构：从三个交叉熵到一个训练目标</h2>
+<figure class="visual-v2-figure generated-visual" id="legacy-loss_objective"><img alt="把轨迹 CE、语言解码损失、视觉 token 损失拆成三条梯度路径，而不是写成单个公式截图。" src="critical_synthesis/assets/visual_v2/v2_f3_loss_decomposition.svg"/><figcaption>V2-F3｜把轨迹 CE、语言解码损失、视觉 token 损失拆成三条梯度路径，而不是写成单个公式截图。</figcaption></figure>
+<p>论文的数学不复杂，但容易被误读成“多任务 loss 堆叠”。更准确地说，它定义了三个不同层级的监督：主轨迹答案损失 L_c 保证规划输出；语言辅助损失 L_l 迫使语言 latent 能还原 CoT；视觉辅助损失 L_v 迫使视觉 latent 能预测未来帧 token。总损失是加权和，其中 lambda_l=1.0，lambda_v=0.1。</p>
+<div class="formula" role="math">L = L_c + lambda_l L_l + lambda_v L_v,  lambda_l = 1.0, lambda_v = 0.1</div>
+<p>独立推导可以从最大似然出发：如果主答案、语言 CoT、未来视觉 token 被视为三个条件生成目标，那么联合训练的负对数似然可以分解为三项条件交叉熵。论文并没有声称三项目标独立，只是在优化上用线性加权近似多目标训练。这个推导能解释为什么 lambda_v 小于 1：视觉 token 序列长且来自离散 tokenizer，如果权重过大，模型会优先优化未来帧 token 复原而不是规划。</p>
+<details open=""><summary>核心公式独立推导</summary><p>前提 1：主 VLM 看到输入 x 和 latent prompt 后生成轨迹答案 y，最大化 P(y|x,z)。前提 2：语言辅助 decoder 看到语言 latent 表征 z_l 后生成 CoT token 序列 c。前提 3：视觉辅助 decoder 看到视觉 latent 表征 z_v 后生成未来视觉 token 序列 v。</p><div class="formula" role="math">- log P(y,c,v | x,z) approx L_c + lambda_l L_l + lambda_v L_v</div><p>若把三项目标写成 token 级条件概率，L_l 和 L_v 都是 teacher-forcing 交叉熵：每一步预测当前 token，条件包括 latent 表征和之前的目标 token。论文省略的步骤是从 token 序列概率分解到求和形式，即 P(c|z_l)=prod_i P(c_i|z_l,c_{&lt;i})。这一步是标准自回归分解，没有额外理论技巧。</p><p>推导限制：该 loss 并不保证 latent 形成因果世界模型，也不保证未来视觉 token 与真实物理状态一一对应。它只证明训练信号鼓励 latent 包含足够信息以被 decoder 还原。是否形成可泛化的驾驶表征，需要靠 ablation 和跨 benchmark 结果验证。</p></details>
+<table><caption>公式变量到工程模块映射</caption><thead><tr><th>变量/模块</th><th>数学角色</th><th>工程含义</th></tr></thead><tbody><tr><td>Z_l</td><td>语言 latent 表征</td><td>压缩 CoT 的隐空间载体</td></tr><tr><td>Z_v</td><td>视觉 latent 表征</td><td>压缩未来场景动态的隐空间载体</td></tr><tr><td>D_l</td><td>语言 auxiliary decoder</td><td>训练时重构 CoT，推理可关闭</td></tr><tr><td>D_v</td><td>视觉 auxiliary decoder</td><td>训练时预测未来视觉 token，解释时可解码为图</td></tr><tr><td>lambda_l/lambda_v</td><td>多任务权重</td><td>平衡解释/世界模型监督与主规划目标</td></tr></tbody></table>
+<h2 id="legacy-4-stage">4. 训练拓扑：Stage 不是小细节，而是成败条件</h2>
+<figure class="visual-v2-figure generated-visual" id="legacy-sci-training_topology"><img alt="用三条泳道区分主 VLM、辅助 decoder 与梯度路径，解释 staged training 为什么是成败条件。" src="critical_synthesis/assets/visual_v2/v2_f4_training_swimlanes.svg"/><figcaption>V2-F4｜用三条泳道区分主 VLM、辅助 decoder 与梯度路径，解释 staged training 为什么是成败条件。</figcaption></figure>
+<figure class="visual-v2-figure generated-visual" id="legacy-training_dag"><img alt="用三条泳道区分主 VLM、辅助 decoder 与梯度路径，解释 staged training 为什么是成败条件。" src="critical_synthesis/assets/visual_v2/v2_f4_training_swimlanes.svg"/><figcaption>V2-F4｜用三条泳道区分主 VLM、辅助 decoder 与梯度路径，解释 staged training 为什么是成败条件。</figcaption></figure>
+<p>论文训练流程包含 preliminary visual decoder pretraining、Stage 0 主 VLM warmup、Stage 1 冻结主模型只训练辅助 decoder、Stage 2 联合 fine-tuning。这个顺序背后的工程逻辑是防止辅助 decoder 在主模型尚未稳定时牵引 backbone，或者在 decoder 尚未学会解码时用噪声监督破坏 latent。</p>
+<table><caption>训练阶段拓扑</caption><thead><tr><th>Stage</th><th>训练对象</th><th>论文配置</th><th>作用</th></tr></thead><tbody><tr><td>Visual aux pretraining</td><td>视觉辅助 decoder</td><td>13040 steps, batch 256, lr 1e-4</td><td>先让 visual decoder 学会从视觉条件预测未来 token</td></tr><tr><td>Stage 0</td><td>ViT / LLM / aligner</td><td>2 epochs, batch 64, lr 4e-5</td><td>让主 VLM 适配驾驶轨迹答案</td></tr><tr><td>Stage 1</td><td>语言与视觉辅助 decoder</td><td>1 epoch, main VLM frozen</td><td>在固定 backbone 上对齐 decoder</td></tr><tr><td>Stage 2</td><td>全部模块</td><td>5 epochs, lr 1e-4</td><td>最终把主任务和双辅助监督联合收敛</td></tr></tbody></table>
+<p>消融结果里 w/o staged train 只有 67.13 PDM，降幅达到 21.71。这比任何单个 decoder 的贡献都大，说明 OneVL 的关键不是“加两个 decoder”这么机械，而是如何让 decoder 的监督在训练早期不过度干扰主 VLM。</p>
+<figure id="legacy-fig-ablation-visual-cot">
+<img alt="fig:ablation_visual_cot" src="legacy_full/figures/fig_08_fig_ablation_visual_cot.png"/>
+<figcaption><strong>论文原图 8 / fig:ablation_visual_cot.</strong> Visual CoT under full training vs.\ an overfitting visual auxiliary decoder. (a) Top row: with the full training recipe, latent visual tokens decode to future frames that remain scene-consistent and usable as spatial-temporal reasoning supervision. (b) Bottom row: when without three-stage training, decoding from the same input collapses to memorized artifacts rather than generalizing---the predicted ``future'' frames are visually irrelevant to the input image.</figcaption>
+</figure>
+<p class="figure-reading">这张消融图比表格更直观：没有正确 staged training 时，visual auxiliary decoder 预测的未来帧会变成记忆化伪影。它说明视觉解释不是自然出现的，而是训练拓扑约束出来的。</p>
+<h2 id="legacy-5-claim">5. 实验证据审计：哪些 claim 强，哪些要打折</h2>
+<figure class="visual-v2-figure generated-visual" id="legacy-claim_evidence"><img alt="把强证据、弱边界与无法访问的来源分开，避免把作者 claim 写成本地复现结果。" src="critical_synthesis/assets/visual_v2/v2_f5_evidence_conflict_matrix.svg"/><figcaption>V2-F5｜把强证据、弱边界与无法访问的来源分开，避免把作者 claim 写成本地复现结果。</figcaption></figure>
+<table><caption>四个 benchmark 主结果</caption><thead><tr><th>Benchmark</th><th>Metric</th><th>OneVL</th><th>Latency</th><th>证据解读</th></tr></thead><tbody><tr><td>NAVSIM</td><td>PDM</td><td>88.84</td><td>4.46s</td><td>超过 AR CoT 0.55，速度快 2.12s</td></tr><tr><td>ROADWork</td><td>ADE/FDE</td><td>12.49 / 28.80</td><td>4.71s</td><td>相对 AR CoT 更准且约 2.28x 快</td></tr><tr><td>Impromptu</td><td>ADE/FDE</td><td>1.34 / 3.70</td><td>4.02s</td><td>四个 1-4s L2 点均优</td></tr><tr><td>Alpamayo-R1</td><td>ADE/FDE</td><td>2.62 / 7.53</td><td>3.23s</td><td>FDE 略输 Cosmos-Reason 7.42</td></tr></tbody></table>
+<table><caption>NAVSIM answer-only / explicit CoT / latent CoT 对比</caption><thead><tr><th>方法</th><th>NAVSIM PDM</th><th>Latency</th><th>审计备注</th></tr></thead><tbody><tr><td>AR Answer</td><td>87.47</td><td>4.49</td><td>无解释，速度强</td></tr><tr><td>AR CoT+Answer</td><td>88.29</td><td>6.58</td><td>显式语言 CoT，慢</td></tr><tr><td>COCONUT</td><td>84.84</td><td>5.93</td><td>通用 latent CoT 迁移到驾驶失败</td></tr><tr><td>CODI</td><td>83.92</td><td>8.62</td><td>latent CoT 但慢且低分</td></tr><tr><td>SIM-CoT</td><td>84.21</td><td>10.86</td><td>语言可解释但低分</td></tr><tr><td>OneVL</td><td>88.84</td><td>4.46</td><td>速度约等于 answer-only，精度超过显式 CoT</td></tr></tbody></table>
+<table><caption>Ablation 审计</caption><thead><tr><th>实验项</th><th>PDM</th><th>相对 full</th><th>结论</th></tr></thead><tbody><tr><td>w/o visual decoder</td><td>87.97</td><td>-0.87</td><td>世界模型视觉监督贡献明确，但不是唯一来源</td></tr><tr><td>w/o language decoder</td><td>88.53</td><td>-0.31</td><td>文本解释监督贡献较小但稳定</td></tr><tr><td>w/o staged train</td><td>67.13</td><td>-21.71</td><td>训练拓扑是硬条件，不是工程细节</td></tr><tr><td>full</td><td>88.84</td><td>0</td><td>双辅助 + 分阶段训练共同成立</td></tr></tbody></table>
+<table><caption>Evidence-to-claim audit</caption><thead><tr><th>证据等级</th><th>论文给出的证据</th><th>我的判断</th></tr></thead><tbody><tr><td>强证据</td><td>四个 benchmark 均列出 answer-only、explicit CoT 和 latent CoT baseline</td><td>支持“精度/速度 Pareto”主张</td></tr><tr><td>弱证据</td><td>Text CoT quality 低于 AR CoT 78.27 vs 76.13</td><td>语言解释不是完全等价，只是接近</td></tr><tr><td>未充分证据</td><td>闭环真实车安全、交互式仿真 reactive feedback</td><td>NAVSIM 是 non-reactive，不能外推为闭环控制充分验证</td></tr><tr><td>部署权衡</td><td>MLP head 86.83 PDM/0.24s vs AR 88.84/4.46s</td><td>低延迟版本有精度折损，需按产品预算选择</td></tr></tbody></table>
+<figure id="legacy-fig-qualitative-navsim-main">
+<img alt="fig:qualitative_navsim_main" src="legacy_full/figures/fig_04_fig_qualitative_navsim_main.png"/>
+<figcaption><strong>论文原图 4 / fig:qualitative_navsim_main.</strong> Visualizations of prediction on NAVSIM. Each plot overlays ground-truth (green!70!blackgreen) and predicted (red!70!blackred) trajectories on the front camera view. More examples can be found in Appendix sec:appendix:navsim_qualitative.</figcaption>
+</figure>
+<p class="figure-reading">NAVSIM 可视化说明轨迹与前视图叠加，但它是 non-reactive benchmark，不能证明闭环避险。</p>
+<figure id="legacy-fig-qualitative-roadwork-main">
+<img alt="fig:qualitative_roadwork_main" src="legacy_full/figures/fig_05_fig_qualitative_roadwork_main.png"/>
+<figcaption><strong>论文原图 5 / fig:qualitative_roadwork_main.</strong> Visualizations of prediction on ROADWork. Each plot overlays ground-truth (green!70!blackgreen) and predicted (red!70!blackred) trajectories on the front camera view. More examples can be found in Appendix sec:appendix:roadwork_qualitative.</figcaption>
+</figure>
+<p class="figure-reading">ROADWork 是施工区域，能测试异常道路拓扑；OneVL 低 ADE/FDE 说明视觉世界监督对 work zone 有帮助。</p>
+<figure id="legacy-fig-qualitative-impromptu-main">
+<img alt="fig:qualitative_impromptu_main" src="legacy_full/figures/fig_06_fig_qualitative_impromptu_main.png"/>
+<figcaption><strong>论文原图 6 / fig:qualitative_impromptu_main.</strong> Visualizations of prediction on Impromptu. Each plot overlays ground-truth (green!70!blackgreen) and predicted (red!70!blackred) trajectories on the front camera view. More examples can be found in Appendix sec:appendix:impromptu_qualitative.</figcaption>
+</figure>
+<p class="figure-reading">Impromptu 关注开放词汇/多样场景，OneVL 的 L2 误差优势说明方法不只贴合 NAVSIM。</p>
+<figure id="legacy-fig-qualitative-ar1">
+<img alt="fig:qualitative_ar1" src="legacy_full/figures/fig_07_fig_qualitative_ar1.png"/>
+<figcaption><strong>论文原图 7 / fig:qualitative_ar1.</strong> Visualizations of prediction on Alpamayo-R1. Each plot overlays ground-truth (green!70!blackgreen) and predicted (red!70!blackred) trajectories on the front camera view. More examples can be found in Appendix sec:appendix:apr1_qualitative.</figcaption>
+</figure>
+<p class="figure-reading">Alpamayo-R1 上 OneVL ADE 最优但 FDE 略输 Cosmos-Reason，提示长尾终点预测仍有改进空间。</p>
+<details open=""><summary>反驳视角：为什么不能只看 88.84</summary><p>第一，OneVL 的显式语言解释质量平均分 76.13，低于 AR CoT 的 78.27。它恢复了大部分解释能力，但不是完全等价。</p><p>第二，NAVSIM 的 PDM-score 是 non-reactive planning benchmark，无法覆盖交互闭环、对抗车辆和真实执行器噪声。</p><p>第三，MLP head 把延迟降到 0.24s 但 PDM 降到 86.83。如果产品目标是实时部署，不能直接拿 full AR OneVL 的 88.84 当部署性能。</p></details>
+<h2 id="legacy-6-onevl-latent-reasoning-world-model-vla">6. 横向定位：OneVL 在 latent reasoning / world model / VLA 的交叉点</h2>
+<p>Semantic Scholar 查询到该论文当前 citationCount=1、influentialCitationCount=0；这符合 2026 年新论文状态。其 top references 混合了 Transformer/VLM 基础、latent CoT、世界模型和自动驾驶 benchmark。TLDR 认为 OneVL 是第一个在四个 benchmark 上超过 explicit CoT 的 latent CoT 方法，并把原因归结为 world model supervision。</p>
+<table><caption>Semantic Scholar refs top-5 摘要</caption><thead><tr><th>参考论文/方向</th><th>citationCount</th><th>OneVL 借用的东西</th></tr></thead><tbody><tr><td>Attention is All you Need</td><td>180672</td><td>基础影响力参考</td></tr><tr><td>KITTI</td><td>10437</td><td>基础影响力参考</td></tr><tr><td>Visual Instruction Tuning</td><td>9861</td><td>基础影响力参考</td></tr><tr><td>nuScenes</td><td>8260</td><td>基础影响力参考</td></tr><tr><td>Qwen-VL</td><td>2116</td><td>基础影响力参考</td></tr></tbody></table>
+<table><caption>与本地已读论文的交叉对比</caption><thead><tr><th>飞书已有文档/方法族</th><th>核心路线</th><th>与 OneVL 的差异</th></tr></thead><tbody><tr><td>Alpamayo-R1</td><td>显式 reasoning/action 长尾驾驶</td><td>OneVL 用 latent+aux decoder 试图保留解释但降低延迟</td></tr><tr><td>DynVLA</td><td>学习世界动态用于 action reasoning</td><td>OneVL 的世界模型不是独立 rollout planner，而是视觉 latent 的辅助监督</td></tr><tr><td>LAW / latent world model</td><td>用 latent world model 增强端到端驾驶</td><td>OneVL 把未来视觉 token 预测压到训练监督中，推理时不保留模型</td></tr><tr><td>AdaThinkDrive</td><td>自适应思考/推理预算</td><td>OneVL 的路径是固定少量 latent prefill，不走可变长思考</td></tr><tr><td>DriveVLA-W0 / world-model scaling</td><td>密集世界模型监督缓解动作标签稀疏</td><td>OneVL 给出同类结论但落在 latent CoT 解释性上</td></tr></tbody></table>
+<p>外部社区层面，官方项目页和 GitHub README 基本复述了论文 claim；Hugging Face papers/collection 页面本轮访问超时，不能作为已读证据；CSDN 的一条二手摘要把 OneVL 描述成通用视觉任务模型，这与论文明确的 autonomous driving trajectory prediction 定位不一致，说明这篇论文的传播中容易丢失“驾驶 VLA / 轨迹预测 / 世界模型监督”三个限定条件。</p>
+<aside class="blog-merge">
+<div class="blog-merge-title">知乎全文融合：行业定位不是附录，而是方法边界</div>
+<p>刘杨的全文把 OneVL 放到特斯拉、Waymo/Cruise、新势力和学术路线的冲突中，指出它更像“开源共治”的技术战略；建约日报则保留了官方开源权重、训练和推理代码的产业信息。这里回填到横向定位章节，用于提醒读者：OneVL 的价值不仅是单模型分数，也包括路线统一和生态扩散，但这些行业判断不能替代闭环安全证据。</p>
+<p class="blog-source">来源：<a href="https://www.zhihu.com/question/2037963527441397074/answer/2038331332183446982" rel="noreferrer" target="_blank">小米开源 xiaomionevl 自动驾驶模型，率先实现多技术路线统</a>；<a href="https://zhuanlan.zhihu.com/p/2038368116091129904" rel="noreferrer" target="_blank">「建约日报 05.14」小米开源Xiaomi OneVL自动驾驶模型</a></p>
+</aside>
+<h2 id="legacy-7">7. 代码与复现：主仓库是推理闭环，不是完整训练闭环</h2>
+<figure class="visual-v2-figure generated-visual" id="legacy-sci-paper_vs_code_map"><img alt="用双栏连接展示 claim、文件、函数和实现边界，强调这是代码细节阅读，不是项目复现。" src="critical_synthesis/assets/visual_v2/v2_f6_code_map_bipartite.svg"/><figcaption>V2-F6｜用双栏连接展示 claim、文件、函数和实现边界，强调这是代码细节阅读，不是项目复现。</figcaption></figure>
+<figure class="visual-v2-figure generated-visual" id="legacy-repo_pipeline"><img alt="用双栏连接展示 claim、文件、函数和实现边界，强调这是代码细节阅读，不是项目复现。" src="critical_synthesis/assets/visual_v2/v2_f6_code_map_bipartite.svg"/><figcaption>V2-F6｜用双栏连接展示 claim、文件、函数和实现边界，强调这是代码细节阅读，不是项目复现。</figcaption></figure>
+<table><caption>Paper vs Code 对照表</caption><thead><tr><th>模块</th><th>论文主张</th><th>代码证据</th><th>回填状态</th></tr></thead><tbody><tr><td>Latent token placement</td><td>论文：4 visual + 2 language latent tokens</td><td>run_infer.sh:26-39; infer_onevl.py:676-682</td><td>一致</td></tr><tr><td>Latent position detection</td><td>按 latent 标记从 hidden states 取位置</td><td>infer_onevl.py:170-177</td><td>推理代码显式实现</td></tr><tr><td>Aux decoder loading</td><td>训练后保留权重供解释，但推理规划可丢弃</td><td>infer_onevl.py:215-225</td><td>解释模式需要 checkpoint prefix</td></tr><tr><td>Visual explanation</td><td>视觉辅助 decoder 预测 visual token，再转图</td><td>infer_onevl.py:489-505; scripts/visualize_predict_image_tokens.py:40-91</td><td>代码提供后处理脚本</td></tr><tr><td>MLP deployment</td><td>MLP head 将轨迹生成降为回归</td><td>infer_onevl.py:636-643; scripts/infer_navsim_mlp.sh:37-51</td><td>对应 0.24s 版本</td></tr><tr><td>Training implementation</td><td>论文有四阶段训练表</td><td>README 指向 GeorgeLuImmortal/OneVL_training</td><td>主仓库不是完整训练仓，需另取训练仓</td></tr></tbody></table>
+<figure class="visual-v2-figure generated-visual" id="legacy-latent_position"><img alt="按调用顺序展示 prompt、tokenizer pattern、hidden states、可选 decoder 与轨迹输出。" src="critical_synthesis/assets/visual_v2/v2_f7_inference_sequence.svg"/><figcaption>V2-F7｜按调用顺序展示 prompt、tokenizer pattern、hidden states、可选 decoder 与轨迹输出。</figcaption></figure>
+<p>官方仓库的推理代码较完整：latent token prefix、辅助 decoder 解释、visual token 解码、ROADWork/Impromptu/AR1 评估和 NAVSIM 格式转换都能找到。但训练实现被 README 指向另一个 OneVL_training 仓库；因此仅凭 xiaomi-research/OneVL 主仓库不能复现实验训练，只能做模型权重推理、解释可视化和部分 benchmark 评估。</p>
+<figure class="visual-v2-figure generated-visual" id="legacy-mlp_head"><img alt="用小型 Pareto 面板说明 MLP head 提速但牺牲少量 PDM，不能和完整 AR 配置混读。" src="critical_synthesis/assets/visual_v2/v2_f8_mlp_tradeoff_plot.svg"/><figcaption>V2-F8｜用小型 Pareto 面板说明 MLP head 提速但牺牲少量 PDM，不能和完整 AR 配置混读。</figcaption></figure>
+<figure class="visual-v2-figure generated-visual" id="legacy-sci-mlp_deployment_tradeoff"><img alt="用小型 Pareto 面板说明 MLP head 提速但牺牲少量 PDM，不能和完整 AR 配置混读。" src="critical_synthesis/assets/visual_v2/v2_f8_mlp_tradeoff_plot.svg"/><figcaption>V2-F8｜用小型 Pareto 面板说明 MLP head 提速但牺牲少量 PDM，不能和完整 AR 配置混读。</figcaption></figure>
+<details open=""><summary>复现 cheatsheet</summary><p>环境：Python 3.10+，transformers 4.57.0，torch 2.10.0，Qwen3-VL 支持，视觉解释还需要 Emu3.5 VisionTokenizer 权重。</p><p>核心参数：NUM_LATENT=2，NUM_LATENT_VIS=4，MAX_NEW_TOKENS=1024；NAVSIM MLP head 使用 FLOAT_HEAD_TYPE=mlp，输出维度 24，即 8 waypoints * 3。</p><p>评估：ROADWork、Impromptu、AR1 可用 eval_results.py 直接评估；NAVSIM 需要先 convert_to_eval.py，再用官方 NAVSIM v1.0 pipeline。</p><p>复现风险：训练 code 与 inference repo 分离，模型权重和训练数据授权、NAVSIM 官方环境、Emu3.5 tokenizer 权重路径都会成为实际阻塞点。</p></details>
+<h2 id="legacy-8">8. 局限、失败条件与更强基线</h2>
+<figure class="visual-v2-figure generated-visual" id="legacy-sci-explanation_consistency_audit"><img alt="把 trajectory、CoT 和 future visual token 作为三路审计信号，而不是把解释文本当成证明。" src="critical_synthesis/assets/visual_v2/v2_f9_debug_audit_protocol.svg"/><figcaption>V2-F9｜把 trajectory、CoT 和 future visual token 作为三路审计信号，而不是把解释文本当成证明。</figcaption></figure>
+<figure class="visual-v2-figure generated-visual" id="legacy-explanation_consistency"><img alt="把 trajectory、CoT 和 future visual token 作为三路审计信号，而不是把解释文本当成证明。" src="critical_synthesis/assets/visual_v2/v2_f9_debug_audit_protocol.svg"/><figcaption>V2-F9｜把 trajectory、CoT 和 future visual token 作为三路审计信号，而不是把解释文本当成证明。</figcaption></figure>
+<p>OneVL 的最大局限是它把“可解释 latent”定义为可被辅助 decoder 还原，而不是人类可直接检验 latent 的因果含义。视觉 decoder 能生成未来帧 token，不代表 latent 内部按物理状态变量分解；语言 decoder 能生成 CoT，不代表轨迹决策真正依赖这些文字因果链。</p>
+<table><caption>局限与验证方案</caption><thead><tr><th>潜在失败条件</th><th>为什么会失败</th><th>应如何验证</th></tr></thead><tbody><tr><td>闭环交互场景</td><td>Non-reactive benchmark 不反馈 ego 行为对其他交通体的影响</td><td>CARLA/nuPlan reactive closed-loop 或真实车回放</td></tr><tr><td>极端长尾天气/夜间施工</td><td>未来帧 token 预测可能依赖训练分布纹理</td><td>WorldLens/Corner case 分层评估</td></tr><tr><td>解释与规划不一致</td><td>语言 decoder 只是从 latent 还原文字，不保证文字是决策因果链</td><td>遮挡/反事实干预 latent 后看轨迹与解释是否同步变化</td></tr><tr><td>MLP 低延迟部署</td><td>0.24s head 损失 2.01 PDM</td><td>在目标平台上测 full AR 与 MLP head 的安全指标差异</td></tr></tbody></table>
+<details open=""><summary>三个理论反驳</summary><p>反驳 1：如果未来视觉 token 的预测质量与规划目标弱相关，那么视觉 auxiliary decoder 只是在学 reconstruction，而不是驾驶动力学。移除的假设是“未来视觉 token 是规划充分统计量”。</p><p>反驳 2：如果 CoT 文本本身来自模板化标注或弱 teacher，那么语言 auxiliary decoder 可能只学到解释风格，不学到可迁移 reasoning。移除的假设是“文字 CoT 含有真实决策因果结构”。</p><p>反驳 3：如果 benchmark 的 latency 主要由输出长度控制，那么 OneVL 的速度优势可能来自 answer 格式短，而不是 latent 本身更优。需要对相同 answer 格式、相同 decoding budget 做硬件一致性测量。</p></details>
+<h2 id="legacy-9-onevl">9. 逐模块深读：把 OneVL 当作一个训练约束系统，而不是单个模型</h2>
+<h3 id="legacy-9-1-latent-token-interface">9.1 Latent token interface 的真实约束</h3>
+<p>OneVL 的 latent token interface 有一个容易被忽略的工程选择：它没有新增不可见的连续变量，而是使用现有 vocabulary 里的标记块来定位 latent 区间。这样做的收益是推理代码可以保持标准 VLM token 流，checkpoint 与 tokenizer 的兼容性更高；代价是 latent 的表达能力并不是“无限连续记忆槽”，而是由这些 token 位置上的 hidden states 承担。换句话说，token 本身只是定位符，真正被监督的是该位置经过 VLM 计算后的 hidden state。</p>
+<p>这也解释了为什么代码里要专门做 latent position detection。`infer_onevl.py:170-177` 不是普通字符串处理，而是在原始 vocabulary token 序列里定位 visual/text latent block 的精确位置。辅助 decoder 需要从这些位置抽取 hidden state；如果 tokenization 变动、特殊标记被拆分、或 prompt 模板和训练不一致，decoder 读到的 hidden state 就会偏移。这是复现时很容易出错的隐藏依赖。</p>
+<p>从表征学习角度看，OneVL 的 latent token 像一个被多重约束的 bottleneck：主轨迹损失要求它对 answer 有用，语言 decoder 要求它能还原文字 reasoning，视觉 decoder 要求它能还原未来场景 token。这个 bottleneck 的价值不在于压缩本身，而在于压缩目标被任务化了。COCONUT/CODI/SIM-CoT 在驾驶上低于 AR Answer，说明“压缩推理链”这个抽象目标不足以产生驾驶可用 latent；OneVL 的关键是让压缩对象变成未来视觉和驾驶解释。</p>
+<h3 id="legacy-9-2-decoder">9.2 视觉辅助 decoder 的世界模型边界</h3>
+<p>视觉辅助 decoder 预测的是未来帧的 visual token，而不是显式 3D occupancy、BEV flow 或 agent trajectories。因此它更准确的名字是 weak visual world-model supervision，而不是完整 world model planner。它通过 Emu3.5/IBQ 这样的离散视觉 token space，把未来图像压成可预测的离散序列，使 VLM hidden states 被迫携带未来场景外观、道路结构和动态对象线索。</p>
+<p>这种设计的优点是监督密度高：单条样本的未来帧 token 比最终轨迹坐标提供更多局部视觉约束。它还绕开了显式建模所有交通体状态的复杂标注需求。缺点同样明显：future image token 对规划是否充分没有理论保证。视觉 token 可能主要重构纹理、光照或背景，而不是影响轨迹的关键对象；如果 tokenizer 对小目标或交通灯状态不敏感，视觉辅助监督也会丢失这些决策变量。</p>
+<p>论文用 Fig. ablation_visual_cot 试图支撑视觉 decoder 的有效性：完整训练下未来帧保持场景一致，错误训练下出现记忆化伪影。这个证据说明 staged training 能避免 decoder 过拟合，但还不能证明 decoder 生成的是规划因果状态。更强验证应当做反事实：遮挡一个关键障碍物、改变红绿灯或施工锥桶，再观察 visual latent 解码和轨迹是否同步变化。</p>
+<h3 id="legacy-9-3-decoder">9.3 语言辅助 decoder 的解释性边界</h3>
+<p>语言辅助 decoder 把 language latent hidden states 解码回 CoT 文本，它给 OneVL 带来两层价值。第一层是训练价值：让 latent 学到与显式 reasoning 文本相关的语义结构。第二层是审计价值：推理后可以打开 decoder 生成文字解释，帮助人检查模型为什么给出该轨迹。</p>
+<p>但这两层价值不等同于因果解释。语言 decoder 的输出是从 latent 重构出来的文本，它可能是 post-hoc rationalization，而非真正决定轨迹的因果链。论文的 explanation quality 表显示 OneVL avg 76.13，接近但低于 AR CoT 的 78.27；这说明它恢复了大部分可读性，但仍存在语义细节损失。尤其在安全关键场景，解释稍弱可能意味着漏掉关键危险对象、优先级判断或交通规则描述。</p>
+<p>因此这份报告建议把 OneVL 的语言解释看作“latent 可读性 probe”，而不是“安全证明”。如果用于工程诊断，可以比较 language aux decoder 的解释与 visual aux decoder 的未来帧是否一致：文字说前方施工需要绕行，视觉 token 解码是否也显示施工区域；文字说保持车道，预测轨迹是否真的不越线。三者一致时解释更可信，不一致时应优先暴露给 reviewer。</p>
+<h3 id="legacy-9-4-mlp-deployment-head">9.4 MLP deployment head 的取舍</h3>
+<p>OneVL 论文和 README 都强调 full AR OneVL 在 NAVSIM 达到 88.84 PDM / 4.46s，而 MLP head 变体达到 86.83 PDM / 0.24s。这个结果对产品部署非常重要，因为它把 OneVL 分成两个模式：研究模式用 autoregressive answer 追求最高分并保留更完整解释；部署模式用 latent hidden state 接 MLP 直接回归 waypoints，把延迟压到实时系统更可接受的范围。</p>
+<p>这不是免费午餐。MLP head 比 full AR 少了 2.01 PDM，说明自回归答案仍携带有用的序列建模能力。若部署目标是高速闭环控制，0.24s 可能比 88.84 的离线分数更有价值；若目标是 benchmark SOTA 或离线规划，full AR 更强。工程上不能简单说 OneVL 延迟就是 4.46s 或 0.24s，而要明确使用哪个 head、是否启用解释 decoder、是否跑 visual decoding 后处理。</p>
+<p>代码也支持这个分歧：`infer_onevl.py:636-643` 的 float_head_type 只支持 mlp，并明确 flow-matching head unsupported；`scripts/infer_navsim_mlp.sh:37-51` 仍保留 language/visual explanation toggles。这意味着低延迟部署和解释生成可以组合，但解释生成本身会增加额外计算，不应混入主轨迹 latency 统计。</p>
+<h2 id="legacy-10">10. 实验读法：从结果表反推作者的论证链</h2>
+<h3 id="legacy-10-1-navsim">10.1 NAVSIM 不是唯一证据，但它是最关键证据</h3>
+<p>NAVSIM 表承担了论文最强的 claim：OneVL 是 latent CoT 中唯一同时超过 AR CoT 和 answer-only 的方法。这个 claim 之所以有力度，是因为作者把三类基线放在同一张表：已有 VLA/自适应思考方法、Qwen3-VL 4B 下的 AR Answer/AR CoT、以及通用 latent CoT 方法。这样可以排除两个简单解释：不是因为模型更大，也不是因为只比较了弱 baseline。</p>
+<p>不过 NAVSIM 的限制也必须同时读出来。它是 data-driven non-reactive benchmark，指标 PDM 关注规划轨迹与规则/舒适性等综合评分，但场景不会因为 ego 动作产生新的交互反馈。OneVL 在这里的优势说明它学到了更好的离线规划表示；它不直接说明模型在真实交通互动中能处理抢行、礼让、插队或多车博弈。</p>
+<p>最值得注意的是 AR Answer 87.47 / 4.49s 与 OneVL 88.84 / 4.46s 的对比。二者延迟几乎相同，但 OneVL 高 1.37 PDM。这是 prefill latent 的核心证据：latent token 不带来显式 CoT 的自回归延迟，却能提供类似中间推理的表征收益。如果只看 OneVL vs AR CoT 的速度差，容易误以为优势来自少生成文本；OneVL vs AR Answer 才真正说明 latent prefill 增加了有效信息。</p>
+<h3 id="legacy-10-2-roadwork-impromptu">10.2 ROADWork 和 Impromptu 验证的是分布外韧性</h3>
+<p>ROADWork 关注施工区，场景包含临时锥桶、路障、工区改道等普通自动驾驶数据中较少出现的结构。OneVL 在 ROADWork 上 ADE 12.49、FDE 28.80，优于 AR CoT 的 13.18/29.98，并且 latency 4.71s 显著低于 10.74s。这里支撑的是视觉世界监督对异常道路拓扑有帮助，而不是单纯 NAVSIM 调参。</p>
+<p>Impromptu 则偏开放场景与 nuScenes 轨迹预测式评估。OneVL 的 1.34 ADE、3.70 FDE 比 AR Answer、AR CoT 和 latent CoT baselines 都好。尤其 SIM-CoT 在 Impromptu 上 2.43/6.10 明显落后，说明通用 supervised implicit CoT 在视觉驾驶上的压缩可能丢失关键空间信息。</p>
+<p>这两个 benchmark 合在一起支持“latent 被视觉未来监督后更泛化”的主张。但还缺一类实验：如果只换掉 visual tokenizer 或只预测 BEV/occupancy token，是否比未来 RGB token 更好？论文没有做这个替代实验，因此无法判断收益来自“未来视觉监督”本身，还是来自 Emu3.5 IBQ token space 的特殊性质。</p>
+<h3 id="legacy-10-3-alpamayo-r1-baseline">10.3 Alpamayo-R1 暴露了强 baseline 仍有优势的角落</h3>
+<p>Alpamayo-R1 表里 OneVL ADE 2.62 最优，但 FDE 7.53 略输 Cosmos-Reason 的 7.42。这个细节重要，因为 FDE 更关注终点偏差，常反映长时规划意图是否准确。OneVL 在平均路径上更准，但终点并非绝对最好，说明 latent+visual supervision 仍可能在较长时域目标选择上输给更强的语言/世界知识 reasoning baseline。</p>
+<p>如果要继续改进 OneVL，一个自然方向是把 visual latent 的预测时域从 0.5s/1.0s 延长到更长 horizon，或者引入多尺度 future token：近未来用于碰撞/车道保持，远未来用于意图和目标区域。当前论文的视觉监督更像短时动态，而不是完整路线级 planning。</p>
+<h2 id="legacy-11">11. 复现风险清单：哪些步骤最可能卡住</h2>
+<figure class="visual-v2-figure generated-visual" id="legacy-repro_stack"><img alt="把已完成的代码证据、最小 smoke、缺失 torch/权重/数据和 benchmark 复现分层显示。" src="critical_synthesis/assets/visual_v2/v2_f10_boundary_stack.svg"/><figcaption>V2-F10｜把已完成的代码证据、最小 smoke、缺失 torch/权重/数据和 benchmark 复现分层显示。</figcaption></figure>
+<h3 id="legacy-11-1">11.1 权重、训练仓和测试数据的三段式依赖</h3>
+<p>主仓库 README 标注 model weights、inference code、training code 都公开，但它们分散在 Hugging Face collection、xiaomi-research/OneVL 和 GeorgeLuImmortal/OneVL_training。复现者如果只 clone 主仓库，会得到推理和评估闭环，却拿不到完整训练脚本。这个边界必须明确，否则容易把“能跑 inference”误当成“能复现实验”。</p>
+<p>测试数据也有区分：repo 自带 test_data 样例，可用于 smoke test；真实 NAVSIM/ROADWork/Impromptu/AR1 benchmark 需要各自数据集和格式转换。尤其 NAVSIM 不是直接由 eval_results.py 评估，而要先 `output/navsim/convert_to_eval.py` 转成官方 NAVSIM pipeline 输入。这是报告必须写清楚的下游依赖。</p>
+<p>视觉解释还有额外依赖：`scripts/visualize_predict_image_tokens.py` 需要 Emu3.5 VisionTokenizer 的 config.yaml 和 model.ckpt。也就是说，即使轨迹推理成功，visual CoT 解码也可能因为 tokenizer 权重缺失而失败。对于调试，应该先跑 trajectory-only，再打开 language decoder，最后打开 visual decoder 和图像解码。</p>
+<h3 id="legacy-11-2-prompt-latent">11.2 可重复性需要锁住 prompt 模板和 latent 数</h3>
+<p>`run_infer.sh` 中 NUM_LATENT=2、NUM_LATENT_VIS=4 看似只是默认参数，实际上必须与训练 checkpoint 对齐。latent 数变化会改变 prefix 长度和 hidden state 位置，辅助 decoder 的输入维度/位置语义都可能不匹配。答案 prefix 也有 benchmark 差异：NAVSIM 常用 `[`，APR1/嵌套列表可能用 `[[`。这些不是格式美观问题，而是输出解析和 metric 计算的前置条件。</p>
+<p>因此复现 cheatsheet 应当固定：模型 checkpoint 路径、测试集路径、image_base_path、NUM_LATENT、NUM_LATENT_VIS、ANSWER_PREFIX、PREFIX_K、是否开启 decoder_explain、是否开启 visual_decoder_explain、max token 数。任何 sweep 如果改变这些参数，都应该被视为新实验，而不是同一设置下的误差。</p>
+<h3 id="legacy-11-3">11.3 评估脚本覆盖范围和空白</h3>
+<p>`eval_results.py` 明确支持 roadwork、impromptu、ar1 三类任务，并在文件头说明 NAVSIM 另走官方 pipeline。报告里把 NAVSIM 与其他 benchmark 混写会误导复现者。正确做法是把 NAVSIM 作为独立评估链：OneVL inference JSON -&gt; convert_to_eval.py -&gt; NAVSIM v1.0 official eval。</p>
+<p>此外，开源仓库主要覆盖 inference outputs 的评估，没有提供完整训练日志、随机种子多次运行方差或统计显著性分析。论文结果表看起来完整，但严格复现时仍需要确认 checkpoint 是否唯一、是否有 model selection、是否有不同 seed 的 variance。这里是 OneVL 作为新发布论文的可重复性空白。</p>
+<h2 id="legacy-12">12. 可操作的后续研究方向</h2>
+<figure class="visual-v2-figure generated-visual" id="legacy-probing_protocol"><img alt="把 trajectory、CoT 和 future visual token 作为三路审计信号，而不是把解释文本当成证明。" src="critical_synthesis/assets/visual_v2/v2_f9_debug_audit_protocol.svg"/><figcaption>V2-F9｜把 trajectory、CoT 和 future visual token 作为三路审计信号，而不是把解释文本当成证明。</figcaption></figure>
+<p>第一，做 causal probing：对 visual latent hidden states 做局部扰动，观察 decoded future frame、language explanation 和 trajectory 是否一致变化。如果三者不同步，就说明解释 decoder 可能只是可读投影，而不是决策因果链。</p>
+<p>第二，比较不同未来监督目标：RGB visual token、BEV occupancy token、agent motion token、map element token。OneVL 证明未来视觉 token 有用，但没有证明它是最优世界模型监督。自动驾驶场景中，BEV/occupancy 可能比前视 RGB 更贴近规划约束。</p>
+<p>第三，做 latency accounting：分开统计主 VLM prefill、answer generation、language decoder explanation、visual decoder token generation、VQ decode 成图各自耗时。论文主结果统计 planning latency；解释生成如果在线展示，应另列预算，避免把离线解释成本隐藏起来。</p>
+<p>第四，接入 reactive closed-loop：把 OneVL 轨迹放入能反馈其他交通体行为的仿真中，评估它是否因为短时未来视觉监督而更保守或更鲁棒。若闭环中表现下降，说明 non-reactive benchmark 上的视觉世界监督仍不足以覆盖交互因果。</p>
+<p>第五，训练一个更小的 ablation：固定 Qwen3-VL backbone，只比较 language-only latent、visual-only latent、dual latent、以及 answer-only，在同一数据、同一输出格式和同一 latency measurement 下跑。论文已有 ablation，但更细的训练曲线和样本效率曲线能回答“哪个监督在低数据下最重要”。</p>
+<p>第六，建立解释一致性验证协议。对每个样本同时保存三类输出：轨迹坐标、language aux decoder 的文字解释、visual aux decoder 解码出的未来帧。然后按对象、行为、空间关系三类标签检查一致性：文字是否提到图中可见的风险对象，未来帧是否保留该对象，轨迹是否避让或跟随相应道路结构。这个协议比单独看 LLM Judge 分数更接近安全审计，因为它要求三种解释通道互相约束。若三者冲突，应该把该样本标为 latent explanation failure，而不是只按轨迹 ADE/FDE 计为成功。</p>
+<p>第七，把 OneVL 的 latent 监督和数据规模做交互实验。论文证明 full setting 有效，但没有回答视觉辅助监督在低数据、中数据和高数据区间的边际收益是否一致。如果视觉 decoder 主要提供数据效率，它应在低数据区间收益最大；如果它主要提供泛化 inductive bias，则在分布外 benchmark 上收益更明显。这个分析能把 OneVL 从单点 SOTA 推向可预测的 scaling rule。</p>
+<h2 id="legacy-12-1">12.1 知乎全文证据矩阵：已读内容如何进入正文</h2>
+<table><caption>Zhihu full-text read-back and integration matrix</caption><thead><tr><th>ID</th><th>标题/URL</th><th>正文字符</th><th>质量</th><th>全文 JSON</th><th>正文融合位置</th></tr></thead><tbody><tr><td>zhihu_02_deepblue_open_source</td><td><a href="https://zhuanlan.zhihu.com/p/2042652418039603267" rel="noreferrer" target="_blank">小米自动驾驶大模型 OneVL 全面开源，推理延迟低至 0.24 秒！</a></td><td>3853</td><td>core_fulltext</td><td>C:\Users\tianxl\.cache\arxiv_papers\2604.18486\zhihu_fulltext\zhihu_02_deepblue_open_source.json</td><td>0/2 方法机制：三路线统一、0.24s、开源权重代码</td></tr><tr><td>zhihu_03_question_ygunoil</td><td><a href="https://www.zhihu.com/question/2037963527441397074/answer/2038072891858740574" rel="noreferrer" target="_blank">小米开源 xiaomionevl 自动驾驶模型，率先实现多技术路线统一，这意味着什么？ - yg</a></td><td>6127</td><td>core_fulltext</td><td>C:\Users\tianxl\.cache\arxiv_papers\2604.18486\zhihu_fulltext\zhihu_03_question_ygunoil.json</td><td>0/1 结论与问题定义：三项第一、速度叙事</td></tr><tr><td>zhihu_04_question_liuyang</td><td><a href="https://www.zhihu.com/question/2037963527441397074/answer/2038331332183446982" rel="noreferrer" target="_blank">小米开源 xiaomionevl 自动驾驶模型，率先实现多技术路线统一，这意味着什么？ - 刘杨</a></td><td>2087</td><td>core_fulltext</td><td>C:\Users\tianxl\.cache\arxiv_papers\2604.18486\zhihu_fulltext\zhihu_04_question_liuyang.json</td><td>1/6 横向定位：路线冲突、生态战略、跨具身数据飞轮</td></tr><tr><td>zhihu_05_xiaomi_tech_breakthrough</td><td><a href="https://zhuanlan.zhihu.com/p/2039637112409027729" rel="noreferrer" target="_blank">小米智驾两年三跳？2026年有啥技术新突破？</a></td><td>4274</td><td>core_fulltext</td><td>C:\Users\tianxl\.cache\arxiv_papers\2604.18486\zhihu_fulltext\zhihu_05_xiaomi_tech_breakthrough.json</td><td>1/2 方法机制：VLA 自回归慢、车端实时性与 Thor/电子电气架构</td></tr><tr><td>zhihu_06_chedongxi_open_source</td><td><a href="https://zhuanlan.zhihu.com/p/2038356954725209964" rel="noreferrer" target="_blank">小米开源最新智驾模型！核心技术团队领衔，小模型搞定复杂场景</a></td><td>4082</td><td>core_fulltext</td><td>C:\Users\tianxl\.cache\arxiv_papers\2604.18486\zhihu_fulltext\zhihu_06_chedongxi_open_source.json</td><td>2/7 机制与代码：不是藏 CoT、MLP 部署速度/精度取舍</td></tr><tr><td>zhihu_11_jianyue_daily</td><td><a href="https://zhuanlan.zhihu.com/p/2038368116091129904" rel="noreferrer" target="_blank">「建约日报 05.14」小米开源Xiaomi OneVL自动驾驶模型；宝马集团董事长齐普策正式退</a></td><td>4103</td><td>core_fulltext</td><td>C:\Users\tianxl\.cache\arxiv_papers\2604.18486\zhihu_fulltext\zhihu_11_jianyue_daily.json</td><td>6 横向定位：开源权重、训练/推理代码和产业时间线</td></tr></tbody></table>
+<h2 id="legacy-13">13. 图覆盖矩阵：关键实现是否都有图</h2>
+<p>图示审计细节已移入 figure_coverage_matrix_visual_v2.json；正文只保留图示索引与必要 caption。</p><table><thead><tr><th>图号</th><th>图型</th><th>对应章节</th><th>绘制上下文</th></tr></thead><tbody><tr><td>V2-F0</td><td>closed_loop_feedback + method_overview</td><td>全局总览</td><td>paper §§3-5；README inference path；training Stage 0/1/2 scripts</td></tr><tr><td>V2-F1</td><td>contrastive_method</td><td>核心 claim</td><td>paper Fig. 1/2；NAVSIM latency/PDM claims</td></tr><tr><td>V2-F2</td><td>mechanism_zoom_in</td><td>机制</td><td>paper §3.2 latent token design；aux decoder code evidence</td></tr><tr><td>V2-F3</td><td>loss_computation_graph</td><td>数学/算法</td><td>paper combined objective；training loss weights</td></tr><tr><td>V2-F4</td><td>training_swimlane</td><td>训练结构</td><td>paper §4；OneVL_training README and stage scripts</td></tr><tr><td>V2-F5</td><td>evidence_matrix</td><td>外部来源与证据审计</td><td>source_search_log.json；issue_pr_evidence.json；COMPLETENESS_GATE.json</td></tr><tr><td>V2-F6</td><td>paper_vs_code_bipartite_map</td><td>代码实现</td><td>code_evidence_index.json；OneVL commit；OneVL_training commit</td></tr><tr><td>V2-F7</td><td>code_call_sequence</td><td>推理逻辑</td><td>infer_onevl.py；run_infer.sh</td></tr><tr><td>V2-F8</td><td>experimental_tradeoff_panel</td><td>输出头与部署</td><td>deployment_mlp table；FloatMLPHead code evidence</td></tr><tr><td>V2-F9</td><td>debug_runtime_evidence</td><td>解释一致性</td><td>failure analysis sections；visual/language decoder evidence</td></tr><tr><td>V2-F10</td><td>implementation_boundary_stack</td><td>边界与风险</td><td>code_smoke_test boundary；issue_pr_evidence.json</td></tr></tbody></table>
+<h2 id="legacy-14-figure-inventory">14. 原论文图像清单 / Figure Inventory</h2>
+<table><caption>Original paper figures copied from rendered PDF/source assets</caption><thead><tr><th>#</th><th>Label</th><th>Local file</th><th>Size</th><th>Caption</th></tr></thead><tbody><tr><td>1</td><td>fig:teaser</td><td>fig_01_fig_teaser.png</td><td>4006x884</td><td>Accuracy and efficiency comparison across four benchmarks. Existing latent CoT methods underperform explicit CoT. OneVL is the first to surpass it while matching answer-only predic</td></tr><tr><td>2</td><td>fig:cot_comparison</td><td>fig_02_fig_cot_comparison.png</td><td>1803x877</td><td>Comparison of CoT paradigms. (a) Explicit CoT: the model generates a full chain of discrete reasoning tokens before the answer. (b) Implicit CoT: reasoning is compressed into a sma</td></tr><tr><td>3</td><td>fig:architecture</td><td>fig_03_fig_architecture.png</td><td>2250x1073</td><td>OneVL architecture. An image and structured text prompt (ego state, command, historical trajectory) are fed into the VLM. The output hidden states shown below the VLM, contains ima</td></tr><tr><td>4</td><td>fig:qualitative_navsim_main</td><td>fig_04_fig_qualitative_navsim_main.png</td><td>1166x1226</td><td>Visualizations of prediction on NAVSIM. Each plot overlays ground-truth (green!70!blackgreen) and predicted (red!70!blackred) trajectories on the front camera view. More examples c</td></tr><tr><td>5</td><td>fig:qualitative_roadwork_main</td><td>fig_05_fig_qualitative_roadwork_main.png</td><td>1162x1086</td><td>Visualizations of prediction on ROADWork. Each plot overlays ground-truth (green!70!blackgreen) and predicted (red!70!blackred) trajectories on the front camera view. More examples</td></tr><tr><td>6</td><td>fig:qualitative_impromptu_main</td><td>fig_06_fig_qualitative_impromptu_main.png</td><td>1298x1060</td><td>Visualizations of prediction on Impromptu. Each plot overlays ground-truth (green!70!blackgreen) and predicted (red!70!blackred) trajectories on the front camera view. More example</td></tr><tr><td>7</td><td>fig:qualitative_ar1</td><td>fig_07_fig_qualitative_ar1.png</td><td>1172x882</td><td>Visualizations of prediction on Alpamayo-R1. Each plot overlays ground-truth (green!70!blackgreen) and predicted (red!70!blackred) trajectories on the front camera view. More examp</td></tr><tr><td>8</td><td>fig:ablation_visual_cot</td><td>fig_08_fig_ablation_visual_cot.png</td><td>2038x636</td><td>Visual CoT under full training vs.\ an overfitting visual auxiliary decoder. (a) Top row: with the full training recipe, latent visual tokens decode to future frames that remain sc</td></tr><tr><td>9</td><td>fig:navisim_example2</td><td>fig_09_fig_navisim_example2.png</td><td>1166x1224</td><td>NAVSIM qualitative example 1.</td></tr><tr><td>10</td><td>fig:navisim_example3</td><td>fig_10_fig_navisim_example3.png</td><td>1166x1226</td><td>NAVSIM qualitative example 2.</td></tr><tr><td>11</td><td>fig:navisim_example4</td><td>fig_11_fig_navisim_example4.png</td><td>1166x1224</td><td>NAVSIM qualitative example 3.</td></tr><tr><td>12</td><td>fig:navisim_example5</td><td>fig_12_fig_navisim_example5.png</td><td>1166x1224</td><td>NAVSIM qualitative example 4.</td></tr><tr><td>13</td><td>fig:navisim_example6</td><td>fig_13_fig_navisim_example6.png</td><td>1166x1226</td><td>NAVSIM qualitative example 5.</td></tr><tr><td>14</td><td>fig:navisim_example7</td><td>fig_14_fig_navisim_example7.png</td><td>1166x1226</td><td>NAVSIM qualitative example 6.</td></tr><tr><td>15</td><td>fig:navisim_example8</td><td>fig_15_fig_navisim_example8.png</td><td>1166x1226</td><td>NAVSIM qualitative example 7.</td></tr><tr><td>16</td><td>fig:navisim_example9</td><td>fig_16_fig_navisim_example9.png</td><td>1166x1234</td><td>NAVSIM qualitative example 8.</td></tr><tr><td>17</td><td>fig:navisim_example10</td><td>fig_17_fig_navisim_example10.png</td><td>1166x1224</td><td>NAVSIM qualitative example 9.</td></tr><tr><td>18</td><td>fig:roadwork_example2</td><td>fig_18_fig_roadwork_example2.png</td><td>1164x1062</td><td>ROADWork qualitative example 1.</td></tr><tr><td>19</td><td>fig:roadwork_example3</td><td>fig_19_fig_roadwork_example3.png</td><td>1164x1086</td><td>ROADWork qualitative example 2.</td></tr><tr><td>20</td><td>fig:nuScences_678_8198</td><td>fig_20_fig_nuScences_678_8198.png</td><td>1464x1182</td><td>Impromptu qualitative example 1.</td></tr><tr><td>21</td><td>fig:nuScences_927_10990</td><td>fig_21_fig_nuScences_927_10990.png</td><td>1305x1044</td><td>Impromptu qualitative example 2.</td></tr><tr><td>22</td><td>fig:ar1_appendix_example1</td><td>fig_22_fig_ar1_appendix_example1.png</td><td>1164x882</td><td>Alpamayo-R1 qualitative example.</td></tr></tbody></table>
+<p class="sentinel">ONEVL_PAPER_LEARNING_SENTINEL_2604_18486_20260618</p>
+</article>
+</section>
+<section class="layer synthesis-layer" id="synthesis-layer">
+<div class="layer-header">
+<h2>Critical synthesis layer</h2>
+<p class="sub">保留新版从零 cleanrun 的三大 critical blocks、master-first 科研图示、代码实现逻辑和证据边界。它是 synthesis overlay，不替代 legacy 内容。</p>
+</div>
+<article class="reader-body synthesis-body">
+<section id="synthesis-identity"><h2 id="synthesis-paper-identity-and-cleanrun-boundary">Paper Identity And Cleanrun Boundary</h2><p>本报告是 2604.18486_newskill_cleanrun 的从零执行版本。主输入来自本目录中新下载的 arXiv PDF、e-print TeX、arXiv HTML，以及新 clone 的 xiaomi-research/OneVL 和 GeorgeLuImmortal/OneVL_training。旧目录只在最后的正式对比表中读取指标，不复用旧 HTML、旧 gate 或旧证据 JSON。</p><table><thead><tr><th>项目</th><th>cleanrun 证据</th></tr></thead><tbody><tr><td>arXiv</td><td>paper.pdf, source.tar.gz, tex_source/, raw_sources/arxiv_html.html</td></tr><tr><td>代码</td><td>OneVL commit f4e6f05572b2f66611259bcd5563529833f30469; training commit fe4e92e62e6000de8ecab50f0b6dd5f66a45a0b6</td></tr><tr><td>外部来源</td><td>GitHub API issues/PRs 可访问；项目页和 HuggingFace collection 当前网络超时/不可解析，已记为负证据</td></tr><tr><td>Feishu</td><td>feishu_doc=false; 未创建、未更新、未评论飞书文档；仅允许只读检索</td></tr></tbody></table><figure><img alt="论文原图： accuracy-efficiency comparison across OneVL benchmarks" src="critical_synthesis/assets/paper_teaser_bar.png"/><figcaption>论文原图： accuracy-efficiency comparison across OneVL benchmarks</figcaption></figure><figure><img alt="Master graphical abstract: OneVL visual language, information hierarchy and deployment boundary" src="critical_synthesis/assets/generated_f0_master_graphical_abstract.svg"/><figcaption>Master graphical abstract: OneVL visual language, information hierarchy and deployment boundary</figcaption></figure></section><section id="synthesis-phase1"><h2 id="synthesis-critical-block-a-phase-1-deep-paper-reading">Critical Block A: Phase 1 Deep Paper Reading</h2><h3 id="synthesis-phase1-core">Core Claims</h3><p>如果只从摘要看，OneVL 很容易被误读成“把 CoT 隐藏起来的又一个 latent CoT 方法”。cleanrun 的证据链显示，它的关键并不是 hidden reasoning 本身，而是把压缩目标从语言摘要迁移到短时未来视觉演化。语言 CoT 可以描述车道、障碍物和意图，但它会丢掉连续空间几何、相对速度和场景演化的因果细节；视觉辅助解码器让 latent 必须保留这些几何动态，否则无法还原 t+0.5s 和 t+1.0s 的视觉 token。</p><p>这也解释了为什么 prior latent CoT 在驾驶任务上整体弱于 explicit CoT。COCONUT、CODI、SIM-CoT 的共同假设是语言推理轨迹可以被压缩成连续状态；在数学题或纯语言任务上，这个假设较合理。但驾驶规划的答案是轨迹，监督目标天然是空间和时间。OneVL 把 visual latent 放到 language latent 之前，相当于先用可行动的世界状态约束推理瓶颈，再用 language latent 给语义解释补证。</p><p>三阶段训练不是可选工程技巧。Stage 0 先让主 VLM 在带 latent 标记的回答格式中学会轨迹预测；Stage 1 冻结主模型，只训练两个辅助解码器去读稳定的 latent hidden state；Stage 2 再把双辅助 loss 的梯度放回主模型。论文 ablation 中去掉 staged training 会从 88.84 PDM 掉到 67.13，这个幅度说明直接端到端联合训练会让 auxiliary decoder 和主模型互相追逐不稳定目标。</p><p>Prefill inference 的细节也需要谨慎理解。OneVL 不是非自回归输出完整轨迹，轨迹 answer token 仍然由语言模型头生成；它消除的是“生成推理 token”的额外串行成本。MLP head 变体进一步把轨迹也转成一次前馈回归，延迟降到 0.24s，但 PDM 从 88.84 降到 86.83。也就是说 paper 的部署路线其实有两档：高精度解释型 OneVL，以及低延迟 MLP head。</p><p>OneVL 的核心命题可以拆成三层。第一层是效率命题：显式 CoT 在 VLA 规划里要先生成长推理链，再生成轨迹答案，延迟随推理 token 数增长；如果驾驶系统要接近实时闭环，这种串行开销很难接受。第二层是表征命题：纯语言 latent CoT 把推理压进 hidden state，但压缩目标仍然是语言链，因此学到的更多是语义标签和描述顺序，而不是车辆和道路的连续物理演化。第三层是监督命题：把未来视觉 token 作为训练期辅助目标，可以让同一个 latent bottleneck 同时被轨迹答案、语言解释和未来场景约束，因而比只蒸馏文本 CoT 更接近驾驶任务所需的因果结构。</p><p>论文把 compression drives generalization 作为解释框架，但真正可审计的机制是 dual auxiliary decoder。压缩本身既可能帮助泛化，也可能损失信息；只有当压缩目标与下游任务因果变量一致时，瓶颈才会过滤噪声而不是过滤关键信息。驾驶规划的关键变量包括车道拓扑、可行驶区域、相邻 agent 的短时运动、施工区或遮挡导致的可达性变化。这些变量很难用短语言描述完整表达，却可以通过未来帧 token 的预测误差直接约束。</p><p>OneVL 与 DriveVLA-W0、LaST-VLA、AdaThinkDrive、Alpamayo-R1 的关系不能只看榜单。DriveVLA-W0 偏向用世界模型生成 dense self-supervision 来扩大 VLA 数据缩放效应；LaST-VLA 与 AdaThinkDrive 更强调 VLA 规划或自适应推理；Alpamayo-R1 更强调长尾动作与 reasoning trace。OneVL 的独特落点是把 world-model objective 内嵌进 latent CoT 训练，让低延迟推理链本身被未来视觉演化监督。</p><p>实验 claim 的强度需要分层。四个 benchmark 共同说明收益不是单一数据集偶然；NAVSIM 与 ROADWork 支持 accuracy-latency Pareto，Impromptu 支持开放式驾驶 VLA，APR1 支持更困难 reasoning/planning 场景。但 APR1 上 OneVL 的 FDE 不是最优，因此更准确的结论是：OneVL 在总体 Pareto 和 latent-vs-explicit CoT 比较上成立，而不是所有单项指标无条件第一。</p><p>再从因果路径看，OneVL 的收益不应理解为“把解释隐藏起来就更强”。如果只是隐藏解释，模型可能学到更短的语言模板，甚至学到数据集中的答案偏置；真正改变优化问题的是视觉未来监督把 latent 的可接受信息集合收窄到可用于驾驶动作的状态变量。换句话说，latent 的压缩不是目的，压缩后的内容必须能同时解释轨迹、解释文本 rationale、解释未来视觉 token，三者交集才是 OneVL 希望得到的规划表征。</p><p>这也给出了一个反事实测试：如果把 visual auxiliary decoder 换成与驾驶无关的辅助任务，例如只预测图像风格、天气类别或随机 mask token，压缩仍然存在，但不一定提高 PDM/ADE/FDE。论文中 visual decoder 的关键不是“多一个 loss”，而是这个 loss 指向短时未来场景演化。只有未来场景与规划动作共享因果变量时，辅助监督才有理由提升轨迹质量。</p><p>另一个容易混淆的点是 CoT 可解释性。显式 CoT 的优势是人类可读，但代价是生成长文本；latent CoT 的优势是快，但常常牺牲可读性。OneVL 在两者之间做了折中：训练期保留语言解释读出器，推理期默认不生成解释。这样获得的是“可审计潜变量”，而不是每次部署都完整输出的自然语言推理链。报告中必须保留这个 distinction，否则会把论文 claim 误写成“同时免费获得解释文本”。</p><p>从安全审计角度看，OneVL 的解释路径仍然有局限。辅助 decoder 还原的是 latent 中可被 decoder 读出的内容，不等于模型所有决策因果因素的完整列表；如果 decoder capacity 不足，或者训练数据里的 CoT 本身有偏差，language explanation 可能只是局部投影。它比完全黑箱 latent 更可读，但不应该被当成形式化证明。这个限制对自动驾驶尤其重要，因为错误解释会给调试者带来虚假的安全感。</p><p>实验表格还需要和任务定义一起读。NAVSIM 的 PDM 是规划质量综合指标，ROADWork 和 Impromptu 更偏 ADE/FDE 轨迹误差，APR1 包含更复杂 reasoning/planning setting。OneVL 在不同任务上的共同特征是速度与性能的 Pareto 改善，而不是每个单项都压倒所有 baseline。正式报告因此把 claim 写成“latent visual supervision 支撑低延迟 planning Pareto”，而不是“所有 benchmark 全面第一”。</p><p>训练拓扑的另一个深层含义是 credit assignment。Stage 1 冻结主模型时，decoder 学到的是如何从已有 latent distribution 读出语言和视觉目标；Stage 2 解冻后，decoder 的误差才对主模型 hidden states 形成明确梯度信号。若没有 Stage 1，decoder 的误差既可能表示 decoder 不会读，也可能表示主模型没把信息写进 latent，优化器无法清晰分配责任。w/o staged training 的大幅下降正符合这种 credit assignment 混乱。</p><figure><img alt="图示： OneVL core claim contrast" src="critical_synthesis/assets/generated_f1_core_claim.svg"/><figcaption>图示： OneVL core claim contrast</figcaption></figure><h3 id="synthesis-phase1-mechanism">Mechanism: Dual Latent Tokens Are A Causal Bottleneck</h3><p>论文把 latent token 分成 visual 和 language 两类。visual latent 的任务不是输出给用户看的图，而是迫使主模型把轨迹相关的空间动态压缩进少量 hidden states；language latent 的任务是让这些 hidden states 仍能还原为人类可读的 CoT。两者都接在 assistant response 中，但在训练时被不同 decoder 读取。这个设计使 latent 不再只是“短文本摘要”，而是同时接受语义和物理世界演化的双重审计。</p><p>具体到 token 数，论文表述为 4 个 visual latent 和 2 个 language latent；实现 README 进一步说明使用原词表 token 表示，visual latent 最终由 35 个原词表 token realization 承载，language latent 由 20 个 token realization 承载。这个细节很重要：如果直接添加 special tokens，repo README 说会导致性能下降；因此代码必须在 tokenizer 输出中寻找由普通 token 拼出的 latent marker。</p><p>在方法结构上，visual latent 和 language latent 的顺序也有信息。visual latent 被放在 language latent 之前，说明模型先获得一个面向未来场景的紧凑隐状态，再把语言解释作为后续语义化读出。这个顺序避免了把语言解释当成主干事实源：如果先生成语言 latent，再让视觉 latent 追随，模型可能继续走语言摘要路线；现在视觉 latent 更像是一个可行动世界状态，language latent 则把这个状态投影成可读 rationale。</p><p>辅助解码器训练期存在、推理期丢弃这一点会带来一个容易被忽略的优点：解释能力不必在部署路径上支付完整生成成本。训练时，decoder 的存在让 latent hidden state 必须含有可读信息；推理时，如果只需要轨迹，系统可以不调用 decoder。若需要调试或可视化，则可以打开 decoder_explain / visual_decoder_explain。也就是说 OneVL 把解释能力从常规推理成本中解耦出来，形成可按需读出的 latent explanation。</p><p>Visual decoder 的作用也不是让模型生成好看的未来图，而是提供一个难以被语言捷径满足的训练信号。若模型只记住语义短语，例如前方车辆、左侧车道线、施工区域，它可能能写出合理解释，却不能预测场景在短时未来如何变化。未来视觉 token 预测要求 latent 保留局部几何和运动趋势，因此能减少纯语义 latent 对驾驶规划的失真。</p><p>Language decoder 的作用则是防止 latent 完全变成不可读的控制变量。对于安全系统，只有轨迹性能不够，还需要知道模型把哪些场景因素编码成了决策依据。OneVL 的 language auxiliary decoder 不一定提高最多 PDM，但它让 latent 可以被文本读出，从而支持离线诊断、失败案例归因和人机解释界面。</p><figure><img alt="论文/代码原图： OneVL architecture" src="critical_synthesis/assets/paper_framework.png"/><figcaption>论文/代码原图： OneVL architecture</figcaption></figure><figure><img alt="图示： dual latent bottleneck mechanism" src="critical_synthesis/assets/generated_f2_dual_latent_mechanism.svg"/><figcaption>图示： dual latent bottleneck mechanism</figcaption></figure><h3 id="synthesis-phase1-math">Math And Algorithm Reconstruction</h3><p>算法可以重构为五步：第一，把图像、ego state、指令和历史轨迹转成 VLM prompt；第二，在 assistant response 的轨迹答案之前插入 visual latent block 与 language latent block；第三，主 VLM 的 hidden states 在这些位置形成 H_v 与 H_l；第四，训练时分别用 visual auxiliary decoder 和 language auxiliary decoder 解码未来视觉 token 与文本 CoT；第五，推理时丢弃两个 decoder，只保留 latent marker prefill 和轨迹 answer generation。</p><div class="formula">L = L<sub>CE</sub>(trajectory, latent positions) + λ<sub>l</sub>L<sub>language</sub>(D<sub>l</sub>(H<sub>l</sub>), CoT) + λ<sub>v</sub>L<sub>visual</sub>(D<sub>v</sub>(H<sub>v</sub>, V), future visual tokens)</div><p>上式不是论文的逐字公式，而是 cleanrun 的机制重构。它强调三个 loss 指向同一主模型 hidden-state bottleneck：CE 保证轨迹答案可用，language loss 保证语义解释可读，visual loss 保证 latent 包含未来场景动态。若 λ_v 为零，模型仍可学习语言解释，但会退回“符号世界压缩”；若 λ_l 为零，轨迹性能仍强，但人类可解释链条变弱；若 staged training 为零，辅助 decoder 和主模型的目标同时漂移，论文报告 catastrophic collapse。</p><p>从信息瓶颈角度看，OneVL 不是简单减少 token 数，而是在少量 latent 位置上施加多任务可解码约束。CE 轨迹损失保证 bottleneck 与最终 answer 对齐；语言解码损失保证 bottleneck 与 human-readable rationale 对齐；视觉解码损失保证 bottleneck 与短时未来场景对齐。三者共同定义了什么信息应该通过瓶颈，什么信息应该被丢弃。</p><p>这个机制也解释了为何 token count 不能单独判断容量。论文写 4 个 visual latent 和 2 个 language latent，但实现中用原词表 token 组合承载 marker，因此真正的上下文占用由 token realization 决定。重要的不是标记长度本身，而是主模型在这些位置形成的 hidden state 是否被后续目标有效读取和反向塑形。</p><p>若把总损失看成普通多任务学习，会忽略隐藏状态位置选择的关键性。辅助 decoder 不是读取任意 pooled feature，而是读取 latent marker 对应位置的 hidden states。这样做把监督压力集中在少数 prefill 可控位置上，推理时才可以用同样位置承载压缩 reasoning。如果监督分散到全序列，低延迟 prefill 的结构性优势会变弱。</p><figure><img alt="图示： reconstructed objective and bottleneck" src="critical_synthesis/assets/generated_f3_loss_reconstruction.svg"/><figcaption>图示： reconstructed objective and bottleneck</figcaption></figure><h3 id="synthesis-phase1-training">Training Topology</h3><p>训练拓扑由 preliminary visual decoder pretraining、Stage 0、Stage 1、Stage 2 构成。preliminary 让视觉辅助解码器先在当前帧 ViT embedding 上学习短时未来视觉先验；Stage 0 训练主 VLM 在带 latent token 的格式中做轨迹预测；Stage 1 冻结主模型，只让 auxiliary decoders 对齐稳定 latent distribution；Stage 2 解冻所有组件，把 CE、language 和 visual objectives 联合优化。</p><p>这个 curriculum 与普通多任务训练的差别在于优化顺序。普通端到端会让 visual decoder 在 latent 尚无意义时尝试预测未来帧，等价于给一个未成形 bottleneck 加上过强外部目标；OneVL 先固定 decoder prior，再固定主模型 latent distribution，最后才联合收紧。这解释了 ablation 中 gradient shock 和 task interference 的说法。</p><p>Stage 0 的必要性在于先建立 latent position 与轨迹答案之间的信息路由。没有这个 warmup，辅助 decoder 在 Stage 1 读到的 hidden states 可能只是格式占位，而不是规划相关表征。换句话说，Stage 0 不是为了直接获得最终性能，而是让 latent 位置变成主模型愿意使用的信息节点。</p><p>Stage 1 的冻结策略解决了 moving target 问题。若主模型和 decoder 同时变化，decoder 学到的映射会追逐一个不断漂移的 hidden-state distribution；冻结主模型让 decoder 先学会解释稳定 latent。这个阶段更像读出器校准，而不是最终 joint optimization。</p><p>Stage 2 才是真正把世界模型监督回传到主 VLM 的阶段。此时 decoder 已经会读 latent，主模型也已经会用 latent 做轨迹预测，双辅助 loss 的梯度才更可能改善表征，而不是造成初始化冲击。论文报告 w/o staged training 的 gradient norm 爆炸和 trajectory loss 恶化，正说明直接 joint training 破坏了这种顺序。</p><p>训练成本是 OneVL 的主要工程风险。论文提到训练期大约需要三份 4B 模型实例，虽然 DeepSpeed ZeRO-2 可以缓解，但仍然是非平凡基础设施要求。因此 OneVL 的“低延迟”主要指推理路径；阅读代码或迁移方法时必须把训练显存、checkpoint 保存策略、数据规模和 aux decoder 初始化列入设计边界。</p><figure><img alt="图示： training topology" src="critical_synthesis/assets/generated_f4_training_topology.svg"/><figcaption>图示： training topology</figcaption></figure><table><thead><tr><th>训练阶段</th><th>主模型</th><th>语言辅助解码器</th><th>视觉辅助解码器</th><th>主要风险</th></tr></thead><tbody><tr><td>Preliminary</td><td>未接入或非主角</td><td>N/A</td><td>学习未来视觉 token 先验</td><td>没有 latent conditioning，目标较干净</td></tr><tr><td>Stage 0</td><td>可训练，建立轨迹与 latent 路由</td><td>未作为主监督</td><td>未作为主监督</td><td>latent 位置若不 warm up 后续 decoder 无法读</td></tr><tr><td>Stage 1</td><td>冻结</td><td>训练</td><td>训练</td><td>decoder 对稳定 hidden distribution 对齐</td></tr><tr><td>Stage 2</td><td>可训练</td><td>可训练</td><td>可训练</td><td>多目标冲突；依赖前两阶段初始化</td></tr></tbody></table><h3 id="synthesis-experiment-evidence-audit-and-critique">Experiment Evidence Audit And Critique</h3><table><thead><tr><th>Claim</th><th>Evidence</th><th>Cleanrun critique</th></tr></thead><tbody><tr><td>latent CoT can beat explicit CoT</td><td>NAVSIM 88.84 vs 88.29; ROADWork/Impromptu/APR1 同样领先或接近</td><td>支持强，但所有结果依赖作者发布评测；本地未因缺权重/数据复现指标。</td></tr><tr><td>visual world model supervision matters</td><td>w/o visual decoder 87.97, full 88.84</td><td>增益 +0.87 大于 language decoder +0.31，符合空间任务直觉。</td></tr><tr><td>staged training is essential</td><td>w/o staged training 67.13</td><td>这是最大因果证据；仍需更细粒度区分 Stage 0/1/pretraining 哪个贡献最大。</td></tr><tr><td>MLP head is deployment-friendly</td><td>86.83 PDM, 0.24s, 5.4% AR latency</td><td>低延迟很强，但牺牲 2.01 PDM；安全场景不能只看 latency。</td></tr></tbody></table><details><summary>Design necessity and failure modes</summary><p>如果去掉 visual decoder，OneVL 会退化为带 language aux 的 latent CoT，仍比 prior latent baselines 强，但无法证明 latent 学到了物理演化。若去掉 language decoder，轨迹指标仍接近 full，但解释质量下降，模型更像一个纯 world-model-regularized planner。</p><p>如果去掉 prefill 而让 latent 自回归生成，速度优势会被 latent token generation 抵消。paper 的低延迟 claim 只对 prefilled latent 成立，不应泛化为所有 implicit reasoning 都低延迟。</p><p>如果在多摄像头、长时 horizon 或更复杂交互场景中，t+0.5s/t+1.0s 的视觉预测可能不足以覆盖远期决策因果；论文也把 multi-camera future-scene prediction 作为 future work。</p></details></section><section id="synthesis-phase2"><h2 id="synthesis-critical-block-b-phase-2-external-sources-and-synthesis">Critical Block B: Phase 2 External Sources And Synthesis</h2><p>Phase 2 的目标不是把外部来源罗列一遍，而是检验论文 claim 在项目页、GitHub README、issue/PR、HuggingFace、历史本地语料中的一致性。cleanrun 的检索结果显示，arXiv 和两个 GitHub repo 是当前最可靠主证据；GitHub API 可读 issues/PR；项目页和 HuggingFace collection 在当前网络下失败，不能作为可读外部正文来源。</p><p>外部来源的贡献首先是确认 open-source story 的分层。arXiv 提供完整理论与实验叙述；inference repo 提供 standalone 推理、评估、可视化 token 工具和样例输出；training repo 提供基于 ms-swift 的训练脚本与框架接入。三个来源互补而不是重复。若只读论文，会低估工程可用性；若只读 README，又容易把论文中的优化稳定性原因压缩成 stage0/1/2 commands。</p><p>cleanrun 对项目页和 HuggingFace collection 的处理选择了保守策略。当前网络无法解析项目页 host，HuggingFace collection 多次超时，因此报告不引用其正文内容，也不把 model weights badge 当成已验证权重。这个负证据不会否认 README 和 paper 里写到权重链接，但会影响代码执行边界：在本机当前环境下，权重可得性尚未被下层 artifact 验证。</p><p>GitHub API issues/PR 的作用是观察开源仓库外部反馈面，而不是证明方法正确。API 文件已经保存到 raw_sources，说明网络层面可以访问 repo 讨论；但 issue 标题和 PR 列表通常关注安装、脚本和文档问题，不能替代论文指标复现。因此 completion gate 把它计入 external-source evidence，而不是计入 benchmark replication。</p><p>跨来源一致性总体较好：paper 的 4 visual + 2 language latent、visual future token prediction、language CoT reconstruction、prefill inference、MLP head、三阶段训练，都能在 README 或代码里找到对应形态。真正的缺口是 full training/eval recipe 的可运行程度：training repo 很大且混有大量通用 SWIFT 能力，OneVL-specific scripts 需要从 run_script/train/navsim 与 latent_cot 相关模块中抽取。</p><p>Phase 2 的综合结论因此不是外部来源全面证实论文，而是更精确的三句话：第一，论文和开源仓库在架构/训练/推理 claim 上高度一致；第二，开源仓库足以支持代码级阅读和轻量 smoke，但不足以在无权重/无数据环境下验证 paper metrics；第三，当前网络对项目页/HF 的负证据要求我们把模型权重与完整推理标记为 blocked，而不是 pass。</p><p>Phase 2 还揭示了证据类型之间的边界。论文正文是主张来源，README 是工程入口，GitHub API 是维护和讨论证据，旧 run 是历史交付形态参照。四类证据不能互相替代：README 里的模型权重链接不能替代本地权重下载验证；旧 run 的 PASS 不能替代 cleanrun 的 validator；GitHub issue 可访问不能说明 benchmark 可复现；arXiv HTML 可读也不能说明代码实现完全一致。对每类证据设定边界，是避免 cleanrun 变成“看起来完整”的关键。</p><p>本次 cleanrun 的外部负证据反而有价值。项目页 DNS 失败和 HuggingFace 超时说明当前环境无法独立验证部分 public-facing artifacts，因此报告没有引用这些页面正文，也没有声称权重已成功获取。这个处理比强行写“项目页提供更多信息”更严谨，因为 workflow 的完成门要求下层 artifact query，而不是相信页面应该存在。负证据让最终结论更窄，但也更可审计。</p><p>读旧目录时也必须保持只读和隔离。旧 workspace 的作用是给正式对比表提供历史尺度，例如 body_text_chars、figure count、code entries、gate verdict；它不能被用来补 cleanrun 的 missing evidence。否则所谓“完全从零跑”就会被污染。private_corpus_search_log 明确记录旧目录作为 read-only corpus hit，而 build 脚本重新生成本目录的 HTML、figures、evidence JSON 和 gate，这正是 cleanrun 与 resume-run 的分界。</p><p>跨来源综合后的最大不确定性是训练 repo 的实现边界。OneVL_training 基于 ms-swift，许多目录与 OneVL 无关；理解论文实现时，需要把 stage scripts、latent_cot model/loss、demo data、checkpoint layout、visual tokenizer、Qwen3-VL base model、NAVSIM evaluator 和数据路径分层标注。当前 cleanrun 已完成代码证据索引和最小 smoke，但没有把它扩展成端到端项目执行任务。</p><p>从社区反馈角度看，issues/PRs 的价值是暴露开源仓库的维护状态和使用摩擦。若 issue 集中在安装依赖、权重路径、模型下载和 demo 脚本，说明代码阅读时应特别关注工程入口和路径约束；若 issue 集中在指标不一致，则说明 benchmark pipeline 需要单独审计。本次保存 API JSON 后，报告把这些讨论作为外部 evidence surface，而没有过度解释 issue 本身对方法优劣的证明力。</p><figure><img alt="图示： source inventory" src="critical_synthesis/assets/generated_f5_source_inventory.svg"/><figcaption>图示： source inventory</figcaption></figure><figure><img alt="图示： cross-source agreement and gaps" src="critical_synthesis/assets/generated_f6_conflict_matrix.svg"/><figcaption>图示： cross-source agreement and gaps</figcaption></figure><table><thead><tr><th>Source channel</th><th>Result</th><th>Use in report</th></tr></thead><tbody><tr><td>arXiv abs/html/e-print</td><td>成功，新下载</td><td>论文 claim、方法、训练、实验主证据</td></tr><tr><td>GitHub xiaomi-research/OneVL</td><td>成功 clone + API issues/PR</td><td>推理代码、评估脚本、assets、README result tables</td></tr><tr><td>GitHub OneVL_training</td><td>成功 clone + API issues</td><td>三阶段训练脚本、ms-swift 集成、demo data</td></tr><tr><td>Project page</td><td>DNS could not resolve</td><td>记录负证据；不使用不可读页面正文</td></tr><tr><td>HuggingFace collection</td><td>连接超时</td><td>记录模型权重存在链接，但本地不可验证权重内容</td></tr><tr><td>Local old run</td><td>只读命中旧 gate/report indices</td><td>仅用于最终对比，不作为 clean HTML 主证据</td></tr></tbody></table><p>综合结论：OneVL 的 paper、README 和代码在方法结构上高度一致。README 甚至比论文更工程化地说明了 open-source 状态、training code release date、model weights collection 和 demo data。冲突主要不是“来源互相矛盾”，而是代码阅读边界：权重和完整 benchmark 数据无法在当前本机环境直接拉通，因此 cleanrun 只把这些材料用于实现细节分析，不把它们扩展成项目复现任务。</p><p>外部来源还提示一个重要细节：OneVL repo 是 inference-first，包含 standalone inference、evaluation、visual tokenizer 和样例输出；OneVL_training 则是基于 ms-swift 的训练框架 fork，体量大且包含大量通用 SWIFT 文档。阅读代码时必须把 OneVL-specific scripts 与通用训练框架分开，否则会把普通 SWIFT 能力误认为 OneVL 特有贡献。</p><details><summary>Negative evidence and how it affects confidence</summary><p>项目页不可解析和 HuggingFace 超时不会推翻 paper/repo claim，但会降低权重可用性和可执行性的置信度。本报告因此把 full inference 标记为 blocked，而不是把 README 的 model-weight badge 当成已下载或已验证。</p><p>GitHub issues/PRs 可访问，为开源活跃度和问题面提供证据；但 issue 讨论不能代替 benchmark replication。本次报告只用它们补充代码理解，不展开项目复现计划。</p><p>本地旧 run 只作为 comparison baseline。cleanrun 的 HTML、figure、code evidence、gate 都由本目录脚本重新生成，这一点在 private_corpus_search_log 和 FORMAL_COMPARISON_TABLE 中显式记录。</p></details></section><section id="synthesis-phase3"><h2 id="synthesis-critical-block-c-phase-3-code-implementation">Critical Block C: Phase 3 Code Implementation</h2><p>代码证据显示，OneVL 的实现不是单个模型类，而是两个仓库合起来形成闭环：inference repo 负责 standalone checkpoint inference、latent marker parsing、辅助 decoder explanation、visual tokenizer decode 和 benchmark conversion；training repo 负责基于 ms-swift 的 SFT/latent-CoT training scripts、loss 接入和模型集成。</p><p>代码实现的第一层是 latent marker 的工程处理。论文写的是 visual latent tokens 和 language latent tokens，但 repo README 说明不新增 special tokens，而是用原词表 token 表示。这会让实现复杂很多：代码不能简单查一个 special token id，而要在 tokenizer ids 中寻找 start/end、latent、vis suffix、pipe 等组件构成的模式。compute_inference_latent_positions 和相关 helper 正是在解决这个定位问题。</p><p>第二层是辅助 decoder 权重加载。build_aux_decoder_from_checkpoint 和 build_projection_from_checkpoint 通过 checkpoint prefix 取出 language/visual auxiliary decoder 与 projection 权重。这个设计意味着 OneVL checkpoint 必须是一个组合 checkpoint：不仅有主 Qwen3-VL 权重，还要包含辅助 decoder、projection、可选 float head 等附加模块。若只有 backbone 或 LoRA adapter，不一定能打开解释路径。</p><p>第三层是解释解码路径。decode_latent_with_aux 将 language latent hidden states 投影为辅助语言模型的输入 embedding，然后逐 token 生成解释文本；decode_latent_with_visual_aux 对 visual latent 做类似处理，生成视觉 token 字符串。这里的可解释性不是来自主模型直接输出的普通自然语言，而是从 latent hidden state 反解出来，这一点正对应训练期辅助 decoder 认证 latent 内容的思想。</p><p>第四层是常规轨迹输出路径。默认推理不需要解释 decoder，只需要构造含 visual/text latent marker 的 assistant prefix，然后让主模型生成 answer token。输出再由评估脚本解析成 waypoint 或 benchmark JSON。这个路径解释了为什么 OneVL 能接近 answer-only latency：辅助 decoder 不在热路径上，latent marker 在 prefill 中并行处理，串行部分主要剩下轨迹 token。</p><p>第五层是 MLP head。代码中的 FloatMLPHead 只支持 mlp head_type，并通过 last latent hidden state 做 float waypoint regression。论文里 MLP variant 达到 0.24s，但 PDM 下降到 86.83；代码层面说明这不是简单打开一个 decoder，而是换了轨迹输出头。阅读指标或实现差异时必须明确是 AR trajectory head 还是 MLP head，否则 latency 和 accuracy 数字没有可比性。</p><p>第六层是 evaluation scripts。eval_results.py 覆盖 ROADWork、Impromptu、AR1 的 ADE/FDE/latency，NAVSIM 还需要 convert_to_eval 和外部 PDM evaluator。cleanrun 的最小 smoke 能证明这些 Python 文件语法正确、CLI 入口存在，但不能证明 benchmark metric 已重跑。为了避免运行等于正确的错误，code_smoke_test 明确记录 full_inference_blocked。</p><p>training repo 的阅读要警惕噪声。它是 ms-swift 体系，包含大量与 OneVL 无关的通用训练文档、GRPO、LoRA、Megatron、测试和示例。OneVL 相关证据主要在 README 的 OneVL training pipeline、demo_data/navsim、run_script/train/navsim/stage scripts，以及 latent_cot 相关 loss/model 模块。code_evidence_index 选择 18 个 entries，就是为了把这些相关入口从通用框架中分离出来。</p><p>从代码阅读角度，当前 cleanrun 最可靠的信息不是 benchmark 数字，而是实现断点：latent marker 如何定位、checkpoint prefix 如何加载、aux decoder 如何读 hidden states、trajectory parser 如何消费输出。任何关于指标的讨论都不能用 README 数字替代这些下层实现证据。</p><p>代码映射里最重要的不是文件数量，而是 claim 到实现对象的可追踪性。latent token design 对应 tokenizer pattern 和 latent position helper；visual auxiliary decoder 对应 checkpoint prefix、projection、visual tokenizer decode；language auxiliary decoder 对应 hidden-state projection 和 autoregressive explanation generation；prefill inference 对应 assistant prefix 和 decoder bypass；MLP head 对应 FloatMLPHead 与 waypoint regression。每个 claim 都必须有文件级或函数级锚点，否则只是论文复述。</p><p>infer_onevl.py 的依赖失败也有信息。`--help` 在 import torch 之前就被拦住，说明脚本没有把重依赖延迟到命令解析之后。这不是算法错误，但会影响轻量可用性：想做 CLI discovery 或参数 introspection，也需要先装 torch。code_smoke_test 因此把它标为 missing dependency blocker，而不是把 exit 1 当成正常 help 成功。这种区分符合“运行不等于正确”的规则。</p><p>eval_results.py 的 usage 行为则说明评估入口至少能被 Python 执行到 argparse/usage 层。它给 cleanrun 的证据是“评估脚本存在且语法可运行”，而不是“评估指标已复现”。完整指标还需要任务参数、预测文件、ground truth、路径转换和外部 evaluator。正式表格里保留这个边界，是为了避免把最小 smoke 的 PASS 扩大成 benchmark replication。</p><p>training repo 的 stage scripts 应被看成实现逻辑索引，而不是已验证配置。脚本中暴露的 latent counts、loss weights、freeze/unfreeze 策略和模型类型能支持论文机制解释；但实际训练还需要数据集切分、GPU 数量、ZeRO 配置、checkpoint save policy、随机种子和完整依赖版本。当前报告只记录这些边界，不把它扩展成训练计划。</p><p>如果未来另起项目执行 reproduction，才应采用分层验收；本报告当前只保留这些层级作为代码边界说明。换言之，Phase 3 的目标是解释文件、函数、配置和数据流如何承接论文 claim，而不是把 cleanrun 推进成项目复现。</p><p>代码与论文还有一个可解释的差距：论文为了清楚叙述使用 visual latent token、language latent token、decoder 等抽象名词；代码为了兼容原词表、checkpoint 和 ms-swift 训练框架，需要更多 parser、prefix、projection 和 path-handling 逻辑。这些工程细节不会改变论文思想，但会改变代码理解路径。读代码时若只找一个名为 OneVLModel 的类，很可能错过真实实现分布在 CLI、helper、decoder builder 和 training scripts 中。</p><p>MLP head 的实现还提示部署侧的二级选择。若目标是最低延迟，可以牺牲少量 PDM 使用 feed-forward waypoint regression；若目标是保留更强解释和自回归轨迹表达，则使用常规 trajectory answer generation。论文同时报告两者，是为了展示 Pareto surface，而不是要求所有应用都使用同一 head。阅读表格时必须把 head type 列为变量，否则速度/精度比较没有意义。</p><figure><img alt="图示： code implementation map" src="critical_synthesis/assets/generated_f7_code_implementation_map.svg"/><figcaption>图示： code implementation map</figcaption></figure><figure><img alt="图示： inference call flow" src="critical_synthesis/assets/generated_f8_inference_callflow.svg"/><figcaption>图示： inference call flow</figcaption></figure><table><thead><tr><th>Paper claim</th><th>Code evidence</th><th>Interpretation</th></tr></thead><tbody><tr><td>latent token design</td><td>§3.2: 4 visual + 2 language latent tokens</td><td>infer_onevl.py:170-190; run_infer.sh latent args</td><td>代码用 tokenizer pattern 定位原词表构造出的 latent 片段，吻合“无新增 special token”的实现约束。</td></tr><tr><td>visual aux decoder</td><td>§3.3/§4: future-frame visual token prediction</td><td>infer_onevl.py:489-558; visual_tokenizer/*</td><td>代码加载视觉辅助解码器和投影层，输出视觉 token 字符串；训练/解释路径存在。</td></tr><tr><td>language aux decoder</td><td>§3.4: reconstruct text CoT</td><td>infer_onevl.py:423-488</td><td>从 language latent hidden states 自回归解码解释文本，可解释性在训练/分析路径保留。</td></tr><tr><td>prefill inference</td><td>§3/§5: decoders discarded, latent tokens prefilled</td><td>README, infer_onevl.py CLI prefix</td><td>部署路径不运行辅助解码器，只把 latent 标记注入 assistant prefix。</td></tr><tr><td>three-stage training</td><td>§4: Stage 0/1/2 curriculum</td><td>OneVL_training README + stage scripts</td><td>Stage 1 冻结主模型训 aux，Stage 2 联合微调；对应论文的优化稳定性论证。</td></tr><tr><td>MLP deployment head</td><td>§5.5: 0.24s low latency variant</td><td>infer_onevl.py FloatMLPHead</td><td>实现从 last text latent hidden state 到 waypoint 的 float head。</td></tr><tr><td>benchmark evaluation</td><td>§5: ROADWork/Impromptu/APR1 metrics</td><td>eval_results.py</td><td>统一 ADE/FDE/latency 评估脚本存在；NAVSIM PDM 依赖输出转换和外部 evaluator。</td></tr></tbody></table><h3 id="synthesis-implementation-logic-narrative">Implementation Logic Narrative</h3><p>`infer_onevl.py` 首先通过 tokenizer pattern helper 找到 visual/text latent block 的位置；如果请求解释，它会额外跑一次需要 hidden states 的 forward，将 latent hidden states 投影到辅助 decoder input embedding 空间，再自回归解码文字解释或视觉 token 序列。常规轨迹预测则通过 processor.batch_decode 得到输出文本，后续评估脚本再解析 waypoint。</p><p>视觉解释路径依赖 Emu3.5/IBQ visual tokenizer。repo 中的 `visual_tokenizer/tokenization_qwen3vl_visual.py` 和 `scripts/visualize_predict_image_tokens.py` 说明视觉 token 不是普通图像像素，而是离散 visual-token vocabulary；这与论文的“predict future-frame tokens”一致。</p><p>训练仓库的 README 与 stage scripts 把论文阶段变成可执行命令。Stage 1 脚本显式暴露 latent counts、loss weights、visual conditioning 和冻结主模型的意图；Stage 2 脚本切换到 `qwen3_vl_latent_cot` 并联合优化。由于仓库是 ms-swift fork，大量文件是通用训练基础设施；本报告的 code_evidence_index 只抽取 OneVL 相关入口。</p><p>代码细节上还要注意三个容易被忽略的接口层。第一，latent marker 并不是一个新增 special token，而是由原词表 token 组合出的模式，因此定位逻辑天然比论文符号更复杂。第二，辅助 decoder 不是从任意 pooled feature 读出，而是从特定 latent position 的 hidden states 读出；这让训练监督能集中塑形少数 prefill 位置。第三，visual tokenizer 与 ordinary image decoder 不同，它处理的是离散 visual-token vocabulary；所以视觉解释路径的输出首先是 token stream，再由工具还原为可视内容。这些接口层决定了读代码时应沿 tokenizer -&gt; latent position -&gt; projection -&gt; aux decoder -&gt; output parser 的顺序，而不是只搜索一个总模型类。</p><p>训练仓库的噪声也需要在报告中显式剥离。OneVL_training 继承了大量 ms-swift 通用能力，包括通用 SFT、LoRA、分布式训练、评测和示例脚本；这些文件能解释工程环境，却不能直接证明 OneVL 方法贡献。真正与论文 claim 对齐的代码锚点是 latent_cot loss/model、NAVSIM stage scripts、demo_data/navsim、以及 README 中对 Stage 0/1/2 的参数说明。把通用框架层和 OneVL-specific 层分开，是本次代码分析比复现 checklist 更有价值的地方。</p><figure><img alt="图示： decoder and MLP implementation detail" src="critical_synthesis/assets/generated_f9_decoder_mlp_detail.svg"/><figcaption>图示： decoder and MLP implementation detail</figcaption></figure><figure><img alt="图示： implementation boundary" src="critical_synthesis/assets/generated_f10_implementation_boundary.svg"/><figcaption>图示： implementation boundary</figcaption></figure><h3 id="synthesis-code-smoke-test-boundary">Code Smoke Test Boundary</h3><p>本机 smoke test 做了三件事：`py_compile` 检查 `infer_onevl.py` 和 `eval_results.py` 语法；直接运行 `eval_results.py` 得到 usage，证明评估 CLI 可进入；运行 `infer_onevl.py --help` 被 `ModuleNotFoundError: No module named 'torch'` 挡住。这个结果不能被解释为推理失败的算法问题，只能说明当前 cleanrun 环境未安装 heavy GPU dependency。</p><table><thead><tr><th>Smoke item</th><th>Result</th><th>Completion meaning</th></tr></thead><tbody><tr><td>py_compile infer/eval</td><td>pass</td><td>代码文件语法可读</td></tr><tr><td>eval_results.py no args</td><td>expected usage, exit 1</td><td>CLI 入口存在，任务参数 roadwork/impromptu/ar1 可见</td></tr><tr><td>infer_onevl.py --help</td><td>blocked by missing torch</td><td>完整推理 blocked，需要 torch、Qwen3-VL/OneVL weights、GPU/data</td></tr></tbody></table><details><summary>Code-reading boundary checklist</summary><p>优先阅读 latent marker 定位、aux decoder checkpoint prefix、visual tokenizer decode、Stage 0/1/2 scripts 和 latent_cot loss/model wiring。</p><p>把 `infer_onevl.py --help` 的 torch 依赖失败记录为环境边界；它说明脚本重依赖较早加载，不说明算法或模型失败。</p><p>把 README 权重链接、demo data 和 benchmark 脚本视为实现上下文；除非用户明确要求复现，不把它们展开成安装/训练/评测计划。</p><p>报告中的 smoke test 只服务代码可读性和边界审计，不作为项目复现成功或失败的证据。</p></details></section><section id="synthesis-crosspaper"><h2 id="synthesis-cross-paper-positioning-and-limitations">Cross-Paper Positioning And Limitations</h2><p>相对 DriveVLA-W0、LaST-VLA、AdaThinkDrive、Alpamayo-R1 等 VLA/planning 工作，OneVL 的独特位置是“解释压缩 + 世界模型监督 + answer-only latency”。它不是最大模型路线，也不是纯 world model data scaling 路线，而是把 world-model-like future prediction 降格为训练期辅助约束，用较小成本改善 trajectory latent。</p><p>限制同样明确。第一，训练期需要约三份 4B 模型组件的显存，论文也承认约 3x memory pressure；第二，latent token count 是经验设定，缺少系统 scaling；第三，当前视觉 world model 只覆盖短时未来帧 token，未覆盖 360-degree multi-camera；第四，本地 cleanrun 没有完整权重和 benchmark 数据，因此不能独立证明作者数值，只能验证证据一致性和实现路径。</p><p>最重要的反驳点是：OneVL 的性能提升是否来自“compression drives generalization”这个高层原则，还是来自更具体的视觉未来预测辅助任务和 curriculum？论文证据更强地支持后者。compression 是解释框架，visual auxiliary + staged training 是可验证机制。若未来另起项目复现，才需要系统 ablate visual horizon、latent count、decoder capacity 和 Stage 1 freeze policy；本报告当前只把这些作为论文理解和代码阅读线索。</p><p>总体来看，OneVL 最强的证据链是：视觉未来监督显著改善 latent planner 的任务相关性，三阶段训练保证辅助目标不会破坏主模型，prefill inference 把解释生成成本移出热路径，MLP variant 展示部署速度上限。最弱的证据链是：是否所有提升都来自 compression 本身，是否能在更多摄像头、更长 horizon、更复杂交互和不同 base VLM 上稳定复现。这些弱点不是报告漏洞，而是论文后续应验证的研究问题。</p><p>本 cleanrun 的正式结论因此保持两级：学习层面，OneVL 是一个值得重点关注的 driving VLA latent reasoning 方法，因为它把世界模型监督和可读解释压入同一 latent bottleneck；代码层面，当前本机只完成资料、代码和轻量 smoke 的 evidence-backed analysis，完整推理被 torch/权重/数据阻塞，benchmark 数字仍是作者报告而非本地重跑。这个边界必须写清楚，才能让对比表和完成门都可信。</p><p>如果用工程负责人视角评估 OneVL，最应该先问的不是“PDM 是否比某个 baseline 高 0.5”，而是“这个方法把哪些风险从线上推理转移到了离线训练”。它把显式 CoT 的长文本延迟转移为训练期辅助 decoder 和视觉 token 预测，把解释读出的成本转移为按需 decoder path，把轨迹质量和解释质量的耦合转移为多阶段 curriculum。这个迁移是否划算，取决于目标系统更在意线上 latency 还是训练基础设施成本。</p><p>如果用代码审计视角评估 OneVL，最应该优先补的不是更多摘要，而是四个可验证断点：第一，latent marker 在 tokenizer ids 中的定位是否与论文设定一致；第二，aux decoder checkpoint prefix 是否完整存在；第三，demo inference 输出的 latent explanation 是否与轨迹文本同步；第四，转换后的 benchmark JSON 是否被官方 evaluator 正确读取。只有这些断点逐一通过，README 和论文表格中的 PDM/ADE/FDE 数字才有资格被进一步讨论。</p><p>因此，本次 cleanrun 与旧 run 的差别不在于结论相反，而在于证据边界更显式：旧 run 规模更大、正文更长、图表更多；cleanrun 则强调从零下载、从零 clone、从零生成，并把项目页/HF 失败、torch 缺失、权重未验证等阻塞条件写进 evidence gate。正式对比表应读成 workflow 形态对比，而不是方法学结论对比。两次都支持 OneVL 的核心机制判断，但都没有在本机完成 full benchmark reproduction。</p><p>还有一个需要在正式报告中强调的误用风险：如果只看 0.24s 的 MLP head 数字，可能会把 OneVL 误当成一个纯高速 waypoint regressor；如果只看语言解释 decoder，又可能把它误当成一个可免费输出完整 CoT 的解释系统。论文真正有价值的组合是训练期三目标约束、推理期 prefill latent、可选解释读出和可选 MLP head 四者的 Pareto 设计。不同部署目标应选择不同路径，而不是把所有数字混在同一个配置下比较。</p><p>若以后单独启动复现实验，也不应直接从最大 benchmark 开始。更稳健的路线是先重建最小闭环，再扩大数据和指标。当前报告不执行这条路线，只把它作为代码边界说明，避免把论文学习任务扩大成工程复现任务。</p><p>从论文学习角度，OneVL 的启发是：自动驾驶 VLA 的 reasoning 不一定要以人类语言链的形式完整显式化，关键是中间状态是否被任务相关监督塑形并可在需要时读出。这个思想可以迁移到其他闭环任务，例如移动机器人导航或操作规划，但迁移时必须重新选择辅助监督目标；如果目标任务的关键状态不是未来视觉 token，而是接触状态、地图拓扑或多智能体意图，那么 visual decoder 的形式也应相应改变。</p><p>最后，本报告把 code-backed analysis 和 metric reproduction 严格分开。前者已经通过新 clone 仓库、文件级证据索引和最小 smoke 支撑；后者仍需要 torch、CUDA、模型权重、视觉 tokenizer、benchmark 数据和官方 evaluator。这个分离会让结论显得更保守，但它能避免把作者发布的数字包装成本地复现结果。</p><p>因此，后续任何汇报若写到“复现成功”，都必须附带本地生成的预测文件、评估命令、evaluator 输出和指标日志；在这些 artifact 出现之前，只能称为代码证据分析完成，不能称为指标复现完成。</p><p>这个边界也是本次 cleanrun gate 的核心审计点。</p><p>后续复现必须继续沿用这个审计边界。</p></section><section id="synthesis-figures"><h2 id="synthesis-figure-inventory-and-visual-evidence-map">Figure Inventory And Visual Evidence Map</h2><table><thead><tr><th>Figure</th><th>Section</th><th>What</th><th>How</th><th>Effect</th></tr></thead><tbody><tr><td>F0</td><td>Master</td><td>定义整套图集的主视觉语言</td><td>四个功能区贯穿输入、latent、训练读出和部署路径</td><td>先确认主图信息层级，再派生章节图</td></tr><tr><td>F1</td><td>Phase 1</td><td>解释核心 claim</td><td>对比 explicit CoT、prior latent CoT 与 OneVL 的因果差别</td><td>把论文贡献定位到视觉动态监督而非隐藏文本推理</td></tr><tr><td>F2</td><td>Phase 1</td><td>解释双 latent 机制</td><td>把 visual/language latent 放在同一 bottleneck 的两个可读面</td><td>说明训练期可解释与推理期低延迟如何同时成立</td></tr><tr><td>F3</td><td>Phase 1</td><td>重构目标函数和算法逻辑</td><td>把 CE、language、visual 三类损失指向同一瓶颈</td><td>避免把视觉解码器误解为装饰性可视化模块</td></tr><tr><td>F4</td><td>Phase 1</td><td>拆开四个训练阶段</td><td>标注冻结/解冻、读出器校准和联合塑形顺序</td><td>解释 staged training 为何是必要条件</td></tr><tr><td>F5</td><td>Phase 2</td><td>展示证据来源</td><td>区分主证据、负证据和只读历史对照</td><td>让 cleanrun 的证据边界可审计</td></tr><tr><td>F6</td><td>Phase 2</td><td>合并多个来源</td><td>显式列出一致、缺口和不可替代关系</td><td>避免把外部来源摘抄误当作方法证实</td></tr><tr><td>F7</td><td>Phase 3</td><td>解释代码实现版图</td><td>把 inference repo 与 training repo 的 OneVL-specific 入口分开</td><td>服务代码细节阅读而不是项目复现</td></tr><tr><td>F8</td><td>Phase 3</td><td>展示推理入口细节</td><td>把 CLI、latent parser、decoder 读出和轨迹输出串起来</td><td>支撑代码级实现理解</td></tr><tr><td>F9</td><td>Phase 3</td><td>解释 decoder 与 MLP head 的实现差别</td><td>比较解释读出路径、自回归轨迹路径和 MLP 回归路径</td><td>帮助读代码时区分解释能力、热路径和部署折中</td></tr><tr><td>F10</td><td>Phase 3</td><td>明确代码分析边界</td><td>把代码细节阅读与项目复现执行分开</td><td>去掉复现导向，保留必要的环境边界说明</td></tr></tbody></table></section>
+</article>
+</section>
+</main>
+</div>
+<aside aria-hidden="true" class="translation-panel" id="translation-panel">
+<div class="translation-head">
+<h2>全文翻译</h2>
+<button class="translation-close" id="translation-close" type="button">关闭</button>
+</div>
+<div class="translation-body reader-body">
+<p class="meta">译文类型：原论文全文翻译；源文件：arXiv TeX/PDF；生成时间：2026-06-22T10:01:48.223615+00:00。本页按原论文顺序组织标题、图、表、公式与附录，不包含解读性正文。</p>
+<h1 id="translation-xiaomi-onevl-视觉-语言解释驱动的一步式潜在推理与规划">Xiaomi OneVL：视觉-语言解释驱动的一步式潜在推理与规划</h1>
+<p><strong>作者：</strong> Xiaomi Embodied Intelligence Team</p>
+<p><strong>项目主页：</strong> https://Xiaomi-Embodied-Intelligence.github.io/OneVL</p>
+<p><strong>GitHub 仓库：</strong> https://github.com/xiaomi-research/OneVL</p>
+<h2 id="translation-摘要">摘要</h2>
+<p>链式思维（Chain-of-Thought, CoT）推理已经成为基于 VLA 的自动驾驶轨迹预测中的重要驱动力。然而，标准 CoT 的自回归生成方式会带来明显的时延成本，这种成本对于实时部署而言通常不可接受。潜在 CoT 方法试图通过把推理压缩到连续隐藏状态中来缩小这一差距，但它们在性能上始终落后于显式 CoT。本文认为，问题的根源在于纯语言潜在表示压缩的是世界的符号化抽象，而不是实际支配驾驶行为的因果动态。</p>
+<p>为此，本文提出 <strong>OneVL</strong>，即 <strong>One-step latent reasoning and planning with Vision-Language explanations</strong>。OneVL 是一个统一的 VLA 与世界模型框架，它把推理路由到紧凑的潜在 token，并用两个辅助解码器对这些潜在表示进行监督。除重构文本 CoT 的语言解码器外，本文引入一个视觉世界模型解码器，用于预测未来帧 token，从而迫使潜在空间内化道路几何、交通参与者运动和环境变化的因果动态。</p>
+<p>OneVL 采用三阶段训练流程，逐步把潜在表示与轨迹、语言和视觉目标对齐，以保证联合优化稳定。推理时，两个辅助解码器均被丢弃，所有潜在 token 在一次并行预填充中写入上下文，使时延与仅输出答案的预测基本一致。在四个基准上，OneVL 成为第一个超过显式 CoT 的潜在 CoT 方法，并以 answer-only 的时延获得更高准确率。这些结果表明，在世界模型监督下，潜在 CoT 可以形成比逐 token 冗长推理更具泛化性的表示。</p>
+<figure class="paper-figure"><img alt="图 1：四个基准上的准确率与效率比较。已有潜在 CoT 方法低于显式 CoT；OneVL 是第一个在保持仅答案预测时延的同时超过显式 CoT 的方法。" src="legacy_full/figures/fig_01_fig_teaser.png"/><figcaption>图 1：四个基准上的准确率与效率比较。已有潜在 CoT 方法低于显式 CoT；OneVL 是第一个在保持仅答案预测时延的同时超过显式 CoT 的方法。</figcaption></figure>
+<h2 id="translation-目录">目录</h2>
+<ul><li>1 引言</li><li>2 相关工作</li><li>3 模型架构</li><li>4 三阶段训练流程</li><li>5 实验</li><li>6 结论</li><li>贡献与致谢</li><li>参考文献</li><li>附录</li></ul>
+<h2 id="translation-1-引言">1 引言</h2>
+<p>视觉-语言模型（Vision-Language Models, VLMs）已经快速成为自动驾驶中的基础构件。它们在一个模型内统一了整体场景理解、自然语言推理与端到端轨迹规划。当这些模型进一步扩展到输出轨迹航点或控制信号等动作结果时，通常被称为视觉-语言-动作模型（Vision-Language-Action models, VLAs）。</p>
+<p>近来 VLA 驾驶模型进展的一个核心推动因素是链式思维推理。模型在提交最终轨迹之前显式写出中间推理步骤，可以显著提升预测质量。通过显式呈现场景语义、预期的交通参与者行为和高层驾驶意图，CoT 监督把预测结果绑定为连贯的因果链，并明显降低规划错误。这一现象与更广泛的大语言模型 CoT 研究一致，包括数学推理、文档理解、代码合成、多模态问答、基于强化学习的深度推理和测试时扩展等方向。</p>
+<p>关于 CoT 为什么有效，一个统一解释来自“智能的压缩视角”：在下一 token 监督下，被迫表达中间步骤的模型必须把自身理解压缩成结构化、可泛化的表示，而不是记忆浅层输入-输出映射。</p>
+<p>然而，把 CoT 部署到真实驾驶系统中，会暴露解释性与效率之间的尖锐矛盾。标准自回归 CoT 必须先生成所有推理 token，随后才能生成轨迹，因此推理时延与推理链长度成正比，远高于仅输出答案的预测。在安全关键的实时场景中，这一差距通常不可接受。另一方面，显式 CoT 链高度冗余：许多 token 只是重复上下文或遵循模板化表达。这说明，关键推理内容应当可以压缩为更紧凑的形式，同时不牺牲、甚至强化泛化能力，因为更紧的压缩会迫使模型只保留真正影响预测的因果结构。</p>
+<h3 id="translation-latent-cot-及其局限">Latent CoT 及其局限</h3>
+<p>已有一系列工作正沿着这一方向推进，用紧凑潜在表示替代显式推理 token。COCONUT 通过课程学习逐步把离散推理步骤替换为连续向量；CODI 进一步采用自蒸馏，使学生模型在潜在空间中模仿教师模型的 CoT 行为；SIM-CoT 增加独立文本解码辅助解码器，在潜在训练阶段提供直接文本监督。</p>
+<p>但是，把这些方法适配到基于 VLA 的驾驶任务时，会出现关键缺陷。COCONUT、CODI 和 SIM-CoT 主要为纯语言推理设计，没有利用定义驾驶场景的丰富视觉结构。因此，它们的纯语言潜在表示不足以承担轨迹预测所需的多模态推理。图 1 显示，已有所有潜在 CoT 方法在各基准上均低于显式 CoT。</p>
+<p>更根本地，驾驶场景的自然语言描述本身就是抽象的。语言编码的是语义标签，而不是决定未来结果的时空因果动态。压缩语言的潜在向量压缩的是世界的符号化抽象，而不是世界的底层因果结构。另一个限制是，先前方法中的潜在隐藏状态通常仍以自回归方式产生，即一次生成一个潜在隐藏状态，推理依然是序列化的。本文的目标则是在一次预填充中生成所有潜在隐藏状态。图 2 对比了显式 CoT、既有隐式潜在 CoT 和 OneVL 三种范式，并给出本文设计动机。</p>
+<figure class="paper-figure"><img alt="图 2：CoT 范式比较。显式 CoT 生成完整离散推理链；隐式 CoT 把推理压缩为少量不透明潜在向量；OneVL 同时使用视觉潜在 token 与语言潜在 token，并在训练阶段用双辅助解码器分别重构未来帧视觉 token 和 CoT 文本。" src="legacy_full/figures/fig_02_fig_cot_comparison.png"/><figcaption>图 2：CoT 范式比较。显式 CoT 生成完整离散推理链；隐式 CoT 把推理压缩为少量不透明潜在向量；OneVL 同时使用视觉潜在 token 与语言潜在 token，并在训练阶段用双辅助解码器分别重构未来帧视觉 token 和 CoT 文本。</figcaption></figure>
+<h3 id="translation-onevl-一步式潜在推理与带视觉-语言解释的规划">OneVL：一步式潜在推理与带视觉-语言解释的规划</h3>
+<p>本文提出 OneVL，用两个关键创新克服既有潜在 CoT 方法的局限。第一，本文引入双模态辅助解码器：语言辅助解码器从紧凑语言潜在 token 中重构可读 CoT 推理；视觉辅助解码器从视觉潜在表示中预测未来帧。视觉解码器承担世界模型辅助的角色。通过迫使压缩潜在表示预测未来时刻的场景外观，模型的瓶颈表示会编码真正的因果场景动态，例如交通参与者轨迹、道路几何演化和新出现的危险，而不是抽象符号摘要。</p>
+<p>这正是纯语言潜在 CoT 缺失的要素。未来帧预测是一个具体的压缩目标，直接反映物理世界的因果结构；这一目标比单纯文本描述更符合智能压缩视角。由此得到的框架在同一模型中同时处理规划、语言推理和视觉解释。</p>
+<p>除解释性外，双重重构目标还有更深层作用：它们保证压缩潜在表示编码的是可泛化结构，而不是表面相关性。如果紧凑潜在 token 能同时被解码为连贯语言推理与合理未来帧，模型就必须发现可迁移的场景动态表示，而不是记忆输入-输出映射。视觉预测以物理场景动态约束 latent，语言监督以语义意图约束 latent，二者共同保证压缩表示满足稳健轨迹规划的语义与因果要求。</p>
+<p>第二，本文设计预填充推理机制。推理时，视觉与语言潜在 token 被作为固定 prompt 输入预填到模型上下文中，使所有 latent token 能在单次并行预填充中处理。这消除了迭代生成潜在 token 的开销，使推理速度基本等同于仅答案自回归预测。最终模型在统一序列中完成一步式潜在推理、视觉-语言解释和规划。实验上，OneVL 不仅匹配而且超过显式自回归 CoT 的轨迹质量，说明压缩并非必要妥协，而是更有效推理的驱动力。</p>
+<h3 id="translation-贡献">贡献</h3>
+<ul><li><strong>OneVL 框架。</strong> 本文提出一种基于“压缩驱动泛化”原则的潜在 CoT 框架，并指出既有潜在 CoT 在规划任务中的关键缺口：纯语言潜在表示过于抽象，无法满足规划任务对因果场景动态的需求。本文用语言解码器与视觉世界模型解码器共同监督紧凑 latent，使其同时编码语言推理与未来场景动态。</li><li><strong>四个基准上的优越性能。</strong> OneVL 在多个基准上取得领先表现，是唯一超过显式自回归 CoT 的潜在 CoT 方法。消融研究确认各组件均有贡献，视觉解码器、语言解码器和分阶段训练流程都很重要。</li><li><strong>预填充推理。</strong> 推理阶段丢弃辅助解码器，并把所有潜在 token 预填到 prompt 中，实现无迭代开销的一步式潜在 CoT 推理。NAVSIM 上，其时延接近 AR answer-only，并比显式自回归 CoT 快 1.5 倍；ROADWork 上，预填充时延与 answer-only 相同，并比显式 CoT 快 2.3 倍。若追加 MLP 轨迹头，时延可降至 0.24 秒，即 4.16 Hz。</li><li><strong>可解释解释。</strong> 语言辅助解码器可从压缩 latent 中恢复高质量 CoT 文本，视觉辅助解码器可生成空间上一致的未来帧预览，从语言与视觉两侧提供解释性。</li></ul>
+<h3 id="translation-组织结构">组织结构</h3>
+<p>本文其余部分组织如下。第 2 节介绍相关工作。第 3 节详细说明 OneVL 架构，包括主 VLM、潜在 token 设计和辅助解码器。第 4 节阐述三阶段训练流程及每一阶段的动机。第 5 节给出实验设置、主要结果和消融研究。第 6 节总结全文并讨论未来方向。</p>
+<h2 id="translation-2-相关工作">2 相关工作</h2>
+<h3 id="translation-2-1-隐式与潜在链式思维">2.1 隐式与潜在链式思维</h3>
+<p>由于显式 CoT 的推理开销与推理链长度成正比，越来越多研究尝试把推理内化为连续潜在表示。Deng 等提出逐步内化课程，把每个显式推理 token 逐步替换为隐式内部计算，使模型一步一步吸收 CoT。COCONUT 将这一思想推广到连续 latent thought tokens，通过分阶段课程在 LLM 隐藏状态空间中进行类似广度优先的路径探索。Compressed Chain of Thought 采用互补的蒸馏思路，把显式 CoT 轨迹压缩为少量稠密摘要向量并拼接到输入前，在显著缩短长度的同时只带来有限精度损失。</p>
+<p>CODI 采用序列级自蒸馏，使学生模型把锚点潜在隐藏状态，通常是答案前的最终隐藏表示，对齐到教师模型完整 CoT 序列，从而在保留效率的同时缩小性能差距。Token Assorted 提供一种折中方式，在同一序列中交错离散文本 token 与连续 latent token，使显式与隐式推理之间可以连续插值。SIM-CoT 指出了 latent token 数量增加时表示可能坍缩的潜在不稳定问题，并通过可插拔辅助解码器在训练阶段把每个隐式 token 与相应显式推理步骤对齐。</p>
+<p>如前文所述，这些方法均为纯语言任务开发，不能有效迁移到基于 VLA 的自动驾驶。</p>
+<h3 id="translation-2-2-面向自动驾驶的-vlm-与-vla">2.2 面向自动驾驶的 VLM 与 VLA</h3>
+<p>除基础 VLM 工作与 CoT 增强驾驶模型外，还有一条研究线关注为语言驱动驾驶建立更丰富的评测与监督信号。MapLM 提出了针对地图与交通场景理解的大规模基准，用于检验 VLM 是否能从传感器数据中解析结构化道路拓扑。Ding 等将鸟瞰特征注入 VLM，使单一多模态模型能融合相机视角与俯视空间上下文。相关工作还研究了 corner-case 评估与风险定位，以压力测试 VLM 在稀有或安全关键场景下的推理能力。</p>
+<p>更接近轨迹预测的方向中，近期 VLA 模型把语言推理与航点或动作输出结合起来。DriveVLA-W0 使用世界建模生成稠密自监督信号，从而放大 VLA 驾驶中的数据扩展规律。AdaThinkDrive 引入面向驾驶决策的自适应 CoT，LaST-VLA 在驾驶数据上训练大规模 VLA，Alpamayo-R1 则显式连接推理轨迹与长尾动作预测。OneVL 建立在这些基础上，但用双模态潜在监督和预填充推理处理显式 CoT 的时延成本，在不牺牲解释性的情况下获得竞争性能。</p>
+<h3 id="translation-2-3-自动驾驶世界模型">2.3 自动驾驶世界模型</h3>
+<p>世界模型概念源于基于模型的强化学习，其目标是模拟人类认知过程，并预测动作对环境演化的影响，尤其是在三维和四维空间中。为了增强空间推理能力，一些方法引入先进感知框架，以实现更稳健的三维环境理解。随着视频生成发展以及 Joint Embedding Predictive Architecture 的提出，世界模型的范围和应用显著扩大。在自动驾驶中，世界模型通常服务于三个目标：数据生成、闭环评估和表示学习。</p>
+<p>在数据生成方面，Cosmos 结合文本、图像、视频和运动信号等多模态输入，为机器人和自动驾驶训练合成一致数据。在闭环评估方面，DICC 利用生成式世界模型产生逼真驾驶图像，并对端到端驾驶系统进行对抗评估以提升安全性与鲁棒性。类似地，AD-R1 利用世界模型的高物理保真度，将其作为交互式模拟器进行强化学习，从而降低挑战场景中的安全违规。表示学习方面，DriveVLA-W0 引入来自世界模型的未来时序信息以提升轨迹规划，DynVLA 通过建模帧间相似性降低生成图像冗余，在保持性能的同时降低推理时延。</p>
+<p>与上述方法不同，OneVL 在单一 VLA 内部把短时未来视觉 token 预测作为训练期世界模型辅助，并与压缩潜在 CoT 结合。这一辅助信号在语言-only 隐式 CoT 不足的地方，把瓶颈表示推向因果场景动态。推理时该辅助模块被丢弃，使预填充 latent 达到 answer-only 时延。既有工作多强调数据生成、模拟器或独立表示栈，而不是以语言和视觉双重约束共同认证 latent bottleneck。</p>
+<h2 id="translation-3-模型架构">3 模型架构</h2>
+<p>OneVL 在预训练 VLM 上增加紧凑潜在 token 接口与两个用于多模态解释的辅助解码器。图 3 给出整体结构。</p>
+<figure class="paper-figure"><img alt="图 3：OneVL 架构。图像与结构化文本 prompt 输入 VLM；输出隐藏状态包括图像 token、文本 token、视觉潜在 token、语言潜在 token 和轨迹答案 token。训练时，latent 位置的隐藏状态被路由到视觉辅助解码器和语言辅助解码器；推理时两者被丢弃，latent token 预填入 prompt。" src="legacy_full/figures/fig_03_fig_architecture.png"/><figcaption>图 3：OneVL 架构。图像与结构化文本 prompt 输入 VLM；输出隐藏状态包括图像 token、文本 token、视觉潜在 token、语言潜在 token 和轨迹答案 token。训练时，latent 位置的隐藏状态被路由到视觉辅助解码器和语言辅助解码器；推理时两者被丢弃，latent token 预填入 prompt。</figcaption></figure>
+<h3 id="translation-3-1-主视觉-语言模型">3.1 主视觉-语言模型</h3>
+<p>OneVL 的主干是 Qwen3-VL-4B-Instruct。该 VLM 处理交错的图像和文本输入，由三个标准组件构成：视觉编码器（ViT）、视觉投影器（MLP 对齐器）和大语言模型（LLM）。三者均从 Qwen3-VL-4B-Instruct checkpoint 初始化，并在 Stage 0 和 Stage 2 中保持可训练。主干主要通过标准下一 token 预测目标进行优化，即对轨迹答案和下文引入的潜在推理 token 施加交叉熵损失 L_c。</p>
+<h3 id="translation-3-2-潜在-token-设计">3.2 潜在 token 设计</h3>
+<p>OneVL 的一个关键设计是引入专门的潜在 token，作为隐式推理的紧凑载体。本文定义两类潜在 token。</p>
+<p><strong>语言潜在 token。</strong> 固定长度 C_t = 2 的语言潜在 token 序列，由起止分隔符包围。这些 token 放在助手响应中、轨迹答案之前，占据标准自回归模型中显式 CoT 推理原本所在的位置。LLM 处理后在这些 token 位置抽取的隐藏状态编码模型的隐式语言推理。</p>
+<p><strong>视觉潜在 token。</strong> 固定长度 C_v = 4 的视觉潜在 token 序列，同样由起止分隔符包围，并放在语言潜在 token 之前。这些 token 用于编码关于未来场景状态的空间和时间视觉推理。</p>
+<p>两组潜在 token 都是推理载体，它们在 VLM 输出层对应的隐藏状态会被送入辅助解码器。实现中，作者发现向 VLM 词表加入专用特殊 token 会导致性能下降。因此，实际使用原始词表表示潜在 token：C_v 个视觉潜在 token 实现为 35 个普通 token，C_t 个语言潜在 token 实现为 20 个普通 token。</p>
+<h3 id="translation-3-3-语言辅助解码器">3.3 语言辅助解码器</h3>
+<p>语言辅助解码器 D_l 的目标是从紧凑语言潜在隐藏状态中恢复人类可读的 CoT 推理文本。对每个训练样本，主模型中的语言潜在 token 产生隐藏状态 H_l，维度为 C_t × d，其中 d 是 LLM 隐藏维度。此外，模型还提供来自主干当前帧 ViT patch embedding 的视觉 token V，长度为 N_v。一个 MLP 层把两个分支映射到辅助解码器的 embedding 空间，随后通过拼接形成多模态输入：</p>
+<p>Z_l = [ W_l(V), W_l(H_l) ]</p>
+<p>其中 W_l 是使 Z_l 匹配 LLM 输入维度的 MLP。Z_l 被输入语言辅助解码器 D_l。</p>
+<p>语言辅助解码器在 Z_l 条件下预测真实 CoT 推理文本 T_y_t，其训练目标是 teacher-forcing 交叉熵：</p>
+<p>L_l = - sum_i log P_D_l(T_y_t,i | Z_l, T_y_t,&lt;i)</p>
+<p>该损失鼓励主模型的语言潜在 token 编码与驾驶场景相关、且能够解码为自然语言推理的语义信息。</p>
+<h3 id="translation-3-4-视觉辅助解码器">3.4 视觉辅助解码器</h3>
+<p>视觉辅助解码器 D_v 旨在预测未来帧视觉 token。自动驾驶本质上是一个时空预测任务；未来帧视觉 token 表示近未来驾驶场景外观，是学习视觉潜在表示的自然目标。该目标作为世界模型辅助，补充纯语言潜在 CoT。预测未见配置要求模型形成稳健因果模型，而不是记忆模式，因此它也是对泛化能力的严格检验。视觉与语言解码器结合后，框架同时用物理动态和语义意图监督 latent，施加多模态约束以捕捉环境共享因果结构。</p>
+<p>设 V 表示当前帧 ViT embedding，H_v 表示主模型视觉潜在 token 的隐藏状态，W_v 是 MLP 层。视觉辅助解码器接收二者拼接：</p>
+<p>Z_v = [ W_v(V), W_v(H_v) ]</p>
+<p>这种同时依赖当前视觉上下文与 latent 状态的条件输入，使解码器能够执行条件未来帧预测。</p>
+<p>为了把图像表示为离散 token 序列，本文采用 IBQ 视觉 tokenizer，并使用 Emu3.5 tokenizer 的 131,072 个离散视觉码本。图像被缩放到最大 512 × 512 像素。为了把该视觉词表接入 OneVL，Qwen3-VL-4B 基础词表扩展了 131,072 个视觉 token ID。训练时的视觉 token 序列通过对数据集真实未来帧离线运行 IBQ tokenizer 构建，不需要额外训练前向传播。</p>
+<p>设 T_y_v 是 +0.5s 与 +1.0s 两个未来帧的离散视觉 token 拼接序列，视觉损失为：</p>
+<p>L_v = - sum_t log P_D_v(T_y_v,t | Z_v, T_y_v,&lt;t)</p>
+<h3 id="translation-3-5-联合训练目标">3.5 联合训练目标</h3>
+<p>总训练损失 L 是三个分量的加权和：</p>
+<p>L = L_c + lambda_l L_l + lambda_v L_v</p>
+<p>其中 L_c 是主模型交叉熵损失，lambda_l = 1.0 是语言解释损失权重，lambda_v = 0.1 是视觉解释损失权重。L_v 权重较低，是因为视觉 token 重构更难，较小权重可防止其主导训练信号。</p>
+<h3 id="translation-3-6-预填充推理">3.6 预填充推理</h3>
+<p>推理时，辅助解码器被丢弃。关键效率洞见是，视觉与语言潜在 token 可作为固定 token 序列预填到 prompt 上下文中，因为这些 token 的词表身份已经在训练中被模型见过。推理 prompt 由系统信息、用户查询、视觉 latent 起止符与 latent-vis 序列、语言 latent 起止符与 latent 序列共同构成。</p>
+<p>所有潜在 token 被放入预填充阶段，而不是解码阶段。现代 Transformer 能并行处理整个 prefill，因此相比已经很长的图像 patch 序列，这些额外 latent token 带来的开销可忽略。模型随后只自回归生成轨迹 token。因此，OneVL 获得近似 answer-only 自回归预测的时延，同时主模型对预填充潜在 token 的处理仍会激活训练中学到的推理路径。</p>
+<p>最终，模型输出包括：轨迹预测，即自动驾驶未来航点；语言解释，即通过辅助解码器获得的人类可读 CoT；视觉解释，即通过视觉辅助解码器获得的未来帧视觉 token。后两者可用于事后解释生成、人机协同调试、安全审计或人机交互，而轨迹预测始终是推理时的主输出。</p>
+<h2 id="translation-4-三阶段训练流程">4 三阶段训练流程</h2>
+<p>训练 OneVL 存在独特优化挑战：主 VLM、语言辅助解码器和视觉辅助解码器必须联合优化，但三者学习目标不同，初始对齐状态也不同。本文通过一个初步自监督预训练步骤和三个主阶段解决该问题。训练配置见表 8。</p>
+<h3 id="translation-4-1-初步阶段-视觉辅助解码器自监督预训练">4.1 初步阶段：视觉辅助解码器自监督预训练</h3>
+<p>在把视觉辅助解码器接入完整 OneVL 流程之前，作者首先把它作为未来帧生成器独立预训练。动机很直接：若训练早期 latent token 尚未携带信息，就立刻要求解码器在其条件下预测未来帧，会形成病态任务并阻碍学习。相反，作者先让解码器依赖当前帧 ViT embedding 学习强无条件先验，即根据当前帧预测接下来两个时间戳的场景外观，然后再引入 latent 条件信号。该阶段在概念上类似自监督视频预测：解码器仅从视觉观测中学习，不使用推理监督。</p>
+<p>此阶段视觉辅助解码器 D_v 只接收当前帧 ViT embedding V，经 Proj_v 投影后作为输入；视觉潜在 token 隐藏状态 H_v 不参与，因为主模型尚未连接。使用第 3 节定义的未来帧视觉 token 序列 T_y_v，预训练损失为：</p>
+<p>L_p = - sum_t log P_D_v(T_y_v,t | V, T_y_v,&lt;t)</p>
+<p>预训练完成后，解码器已经学习到稳健的视觉动态先验，可以仅根据当前场景预测合理未来帧。此组件因此构成模型的隐式世界模型，捕捉视觉演化规律。当它随后接入主模型时，视觉潜在 token H_v 会作为额外条件信号与 ViT embedding 一同输入。由于这些 latent token 编码了主模型推理得到的规划动作，解码器实际上从无条件下一帧生成转变为动作条件世界模型 rollout。由此，视觉 latent token 可被解释为一种紧凑、可行动的表示，用于引导世界模型预测。</p>
+<h3 id="translation-4-2-stage-0-主模型预热">4.2 Stage 0：主模型预热</h3>
+<p>辅助解码器能提供有意义监督的前提，是主模型的潜在 token 已经携带与推理内容语义对齐的信息。如果没有针对性预热，这些 token 不会产生能被辅助解码器解码的有效隐藏状态。</p>
+<p>Stage 0 通过在轨迹预测任务上端到端训练主 VLM 来解决这一问题，每个训练样本的 assistant response 中都嵌入 latent token。模型学习两件事：第一，预测准确轨迹，主交叉熵损失覆盖 latent token 与轨迹答案 token，使模型形成基础预测能力；第二，形成有意义 latent 表示，latent token 在 prompt-response 结构中与轨迹目标共同出现，模型自然会利用这些位置编码对轨迹预测有用的中间表示。同时，注意力机制允许轨迹 token 关注 latent 位置，建立后续辅助解码器可利用的信息路由路径。</p>
+<h3 id="translation-4-3-stage-1-辅助解码器预热">4.3 Stage 1：辅助解码器预热</h3>
+<p>当主模型已能产生稳定、有意义的 latent 表示后，Stage 1 专门训练辅助解码器与这些表示对齐。关键在于冻结主模型，使辅助解码器面对一致的语义分布。保持稳定性后，解码器能更有效地学习固定 latent 特征到视觉和语言推理的映射。</p>
+<p>Stage 1 中，语言辅助解码器 D_l 学习解码语言 CoT 推理文本，并用 L_l 对真实推理标注进行微调；视觉辅助解码器 D_v 用 L_v 学习预测两个未来帧。</p>
+<h3 id="translation-4-4-stage-2-联合端到端微调">4.4 Stage 2：联合端到端微调</h3>
+<p>Stage 2 使用联合损失 L 对全部三个模型组件进行共同微调。L_l 与 L_v 的梯度此时会回传到主模型，直接塑造 latent 表示，使其同时服务于轨迹预测、语言解释和视觉预测目标。这形成一个正循环：更丰富的 latent 表示帮助主模型做出更好轨迹预测，辅助解码器也会适应更新后的 latent 表示，从而提升解释质量。Stage 2 之所以可行，正是因为主模型和辅助解码器都已经充分初始化。消融实验表明，跳过三阶段训练会显著降低性能。</p>
+<h2 id="translation-5-实验">5 实验</h2>
+<p>本节在四个基准上对 OneVL 进行全面定量评估，并通过消融研究与分析分离各性能增益来源。</p>
+<h3 id="translation-5-1-数据集">5.1 数据集</h3>
+<p>本文在四个互补基准上评估 OneVL：NAVSIM、ROADWork、Impromptu 和 Alpamayo-R1。选择这些数据集，是因为它们已被证明适合 CoT 推理设置，或提供足够标签以构造显式推理轨迹。</p>
+<ul><li><strong>NAVSIM</strong> 源自 nuPlan 驾驶日志，是大规模自动驾驶基准，为非反应式仿真规划评估提供真实世界数据。</li><li><strong>ROADWork</strong> 面向道路施工区自动导航，包含临时标志、非常规车道配置、锥桶与护栏等动态障碍以及工人存在等标准驾驶基准中覆盖不足的场景。</li><li><strong>Impromptu</strong> 是从八个开放驾驶数据集中蒸馏的大规模视觉-语言-动作基准，关注四类非结构化 corner-case，并提供面向规划的问答标注与轨迹数据。</li><li><strong>Alpamayo-R1</strong> 引入 Chain of Causation 标注，包含与复杂驾驶行为对齐的决策依据推理轨迹，以增强 VLA 模型解释性和泛化能力。</li></ul>
+<h3 id="translation-5-2-cot-标注构造">5.2 CoT 标注构造</h3>
+<p>训练 OneVL 的关键挑战之一，是为每个驾驶场景获得高质量 CoT 推理标注。NAVSIM 上，本文使用 AdaThinkDrive 发布的 CoT 标注。这些标注提供自然语言推理轨迹，覆盖车道边界等场景解释、车辆和行人等关键对象分析，以及最终驾驶意图。它们由 VLM 从原始检测标签合成，作为语言辅助解码器 L_l 的监督目标。</p>
+<p>ROADWork 上，作者使用类似的内部流程构造 CoT 标注。Impromptu 上，作者从原数据集问答对构建 CoT，并为 corner-case 轨迹预测补充显式决策与根因标签。Alpamayo-R1 上，作者使用公开 checkpoint 为所有训练样本预测 CoC 标签。这些标注监督语言辅助解码器，使模型在非结构化驾驶场景中学习稳健推理和决策逻辑。</p>
+<h3 id="translation-5-3-实验设置">5.3 实验设置</h3>
+<p>NAVSIM 使用 PDM score 评价，它联合衡量轨迹安全性、舒适性和进度。ROADWork 报告 ADE 与 FDE，用于衡量航点准确性。Impromptu 除 ADE/FDE 外，还按原论文协议报告前四秒轨迹预测 L2 error。Alpamayo-R1 同样报告 ADE 与 FDE。所有方法均报告平均推理时延。</p>
+<p>本文比较两类基线，均基于 Qwen3-VL-4B-Instruct，并引入已有 SOTA 作为更强参考。自回归方法包括 AR Answer，即不使用推理、直接输出轨迹；以及 AR CoT+Answer，即先生成完整推理链再输出轨迹。潜在 CoT 方法包括适配驾驶任务的 COCONUT、基于自蒸馏的 CODI，以及带文本辅助解码器的 SIM-CoT。</p>
+<p>在 NAVSIM 监督微调设置中，已有 SOTA 包括 AdaThinkDrive 和 LaST-VLA。ROADWork 上比较 YNet，Impromptu 上比较 Impromptu VLA，Alpamayo-R1 上比较基于 flow matching 的 Cosmos-Reason。AR 基线训练 2 个 epoch，学习率 4e-5，batch size 64；潜在 CoT 基线训练 6 个 epoch，学习率 4e-5，batch size 64。若未特别说明，已有 SOTA 结果直接取自文献。</p>
+<h3 id="translation-5-4-主要结果">5.4 主要结果</h3>
+<table>
+<tr><th>基准</th><th>关键指标</th><th>OneVL 结果</th><th>对照结论</th></tr>
+<tr><td>NAVSIM</td><td>PDM score / latency</td><td>88.84 / 4.46s</td><td>超过 AR CoT+Answer 88.29，时延接近 AR Answer 4.49s</td></tr>
+<tr><td>ROADWork</td><td>ADE / FDE / latency</td><td>12.49 / 28.80 / 4.71s</td><td>显著优于 YNet 与各 AR/latent 基线</td></tr>
+<tr><td>Impromptu</td><td>ADE / FDE / latency</td><td>1.34 / 3.70 / 4.02s</td><td>优于 Impromptu VLA 与 latent CoT 基线</td></tr>
+<tr><td>Alpamayo-R1</td><td>ADE / FDE / latency</td><td>2.62 / 7.53 / 3.23s</td><td>ADE 最优，FDE 略低于 Cosmos-Reason 的 7.42</td></tr>
+</table>
+<p>OneVL 在 NAVSIM 上达到 88.84 PDM-score，超过先前监督微调 SOTA AdaThinkDrive 的 86.20 和 LaST-VLA 的 87.30。在 ROADWork 上，OneVL 获得 12.49 ADE 与 28.80 FDE，明显优于 YNet 的 22.68/80.78。Impromptu 和 Alpamayo-R1 上也观察到相同趋势。OneVL 超过所有 AR、latent CoT 以及显式 CoT 基线，说明多模态辅助监督对规划任务有效。Alpamayo-R1 上 OneVL 的 FDE 略低于 Cosmos-Reason，这是预期内结果，因为 Cosmos-Reason 使用 RL 进一步增强能力。</p>
+<h3 id="translation-5-5-预填充推理速度">5.5 预填充推理速度</h3>
+<p>NAVSIM 上，采用预填充推理的 OneVL 时延为 4.46s，与 AR answer-only 的 4.49s 基本一致。这验证了本文核心效率主张：latent token 在 prompt context 中被一次并行预填充处理，因此与顺序自回归生成显式推理 token 相比，额外开销可忽略。ROADWork、Impromptu 和 Alpamayo-R1 上也有类似效果，OneVL 分别达到 4.71s、4.02s 和 3.23s，均接近或低于 answer-only 预测，且显著快于 AR CoT+Answer。</p>
+<h3 id="translation-5-6-既有潜在-cot-方法在-vla-驾驶中失败">5.6 既有潜在 CoT 方法在 VLA 驾驶中失败</h3>
+<p>除 Alpamayo-R1 外，三种适配的潜在 CoT 方法均显著低于 answer-only AR 预测。这说明为纯文本推理设计的语言潜在 CoT 方法不能有效迁移到多模态时空轨迹预测。它们定义的紧凑语言潜在空间不足以支持精确航点预测所需的几何推理。从智能压缩视角看，这种失败是根本性的：这些方法压缩的是场景语言描述，而语言本身已经是物理世界的抽象，编码语义标签与关系，却不编码决定未来结果的时空因果动态。换言之，它们满足压缩原则的效率条件，却不满足智能条件。</p>
+<p>另一个可能因素是，这些基线没有使用 OneVL 的分阶段训练流程，因此在完整耦合优化开始时，它们的 latent 流可能尚未与轨迹和多模态监督充分对齐。OneVL 通过把压缩与验证结合克服这一限制：辅助解码器保证 latent bottleneck 保留空间和语言上有意义的内容，而不是坍缩为退化表示。三阶段训练也同样关键，因为它会在联合优化前逐步对齐 bottleneck。</p>
+<h3 id="translation-5-7-显式-cot-监督的收益">5.7 显式 CoT 监督的收益</h3>
+<p>在 NAVSIM 上，AR CoT+Answer 的 88.29 高于 AR Answer 的 87.47，提升 0.80 PDM-score。这确认显式推理监督对轨迹预测有实际帮助，也建立了潜在 CoT 方法在降低时延时应接近的质量上界。ROADWork、Impromptu 和 Alpamayo-R1 中也能观察到类似趋势。</p>
+<h3 id="translation-5-8-解释质量">5.8 解释质量</h3>
+<p>除轨迹预测准确率外，OneVL 还独特地在语言和视觉两侧提供人类可解释解释。图 4 至图 7 给出 NAVSIM、ROADWork、Impromptu 和 Alpamayo-R1 的定性示例，包括与 AR Answer 基线的轨迹预测对比、视觉辅助解码器生成的两个未来帧，以及语言辅助解码器生成的文本 CoT。</p>
+<figure class="paper-figure"><img alt="图 4：NAVSIM 预测可视化。每个图将真实轨迹与预测轨迹叠加在前视相机图像上。" src="legacy_full/figures/fig_04_fig_qualitative_navsim_main.png"/><figcaption>图 4：NAVSIM 预测可视化。每个图将真实轨迹与预测轨迹叠加在前视相机图像上。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 5：ROADWork 预测可视化。每个图将真实轨迹与预测轨迹叠加在前视相机图像上。" src="legacy_full/figures/fig_05_fig_qualitative_roadwork_main.png"/><figcaption>图 5：ROADWork 预测可视化。每个图将真实轨迹与预测轨迹叠加在前视相机图像上。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 6：Impromptu 预测可视化。每个图将真实轨迹与预测轨迹叠加在前视相机图像上。" src="legacy_full/figures/fig_06_fig_qualitative_impromptu_main.png"/><figcaption>图 6：Impromptu 预测可视化。每个图将真实轨迹与预测轨迹叠加在前视相机图像上。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 7：Alpamayo-R1 预测可视化。每个图将真实轨迹与预测轨迹叠加在前视相机图像上。" src="legacy_full/figures/fig_07_fig_qualitative_ar1.png"/><figcaption>图 7：Alpamayo-R1 预测可视化。每个图将真实轨迹与预测轨迹叠加在前视相机图像上。</figcaption></figure>
+<p>本文还量化评估语言解释质量。作者在 NAVSIM 500 个测试样本上，把语言辅助解码器生成的解释与真实 CoT 标注对比，并与自回归 AR CoT+Answer 以及具有语言解释性的 SIM-CoT 对比。三个指标分别是 Meta Action Accuracy、STS Score 和 LLM-as-Judge Score。Meta Action Accuracy 衡量最终高层驾驶决策是否与真值一致；STS 使用 BGE-reranker-v2-m3 计算语义相似度；LLM-as-Judge 使用 Gemini 模型从感知、运动状态预测、自车决策和语言流畅度四方面打分。</p>
+<table>
+<tr><th>方法</th><th>Meta Action Acc.</th><th>STS</th><th>LLM Judge</th><th>平均</th></tr>
+<tr><td>AR CoT+Answer</td><td>73.20</td><td>79.75</td><td>81.86</td><td>78.27</td></tr>
+<tr><td>SIM-CoT</td><td>67.20</td><td>76.25</td><td>78.73</td><td>74.06</td></tr>
+<tr><td>OneVL</td><td>71.00</td><td>78.26</td><td>79.13</td><td>76.13</td></tr>
+</table>
+<p>OneVL 在所有维度上均超过 SIM-CoT。Meta Action Accuracy 达到 71.00，比 SIM-CoT 高 3.8，说明其 latent 表示更有效捕捉并解码关键驾驶意图。语义对齐方面，OneVL 的 STS 为 78.26，LLM Judge 为 79.13，缩小了与 AR CoT+Answer 的差距。虽然 AR 模型仍最高，但它需要显式顺序文本生成，时延更高。OneVL 则在享受潜在推理效率的同时获得有竞争力的解释质量。</p>
+<h3 id="translation-5-9-消融研究">5.9 消融研究</h3>
+<table>
+<tr><th>变体</th><th>语言辅助解码器</th><th>视觉辅助解码器</th><th>分阶段训练</th><th>PDM score</th></tr>
+<tr><td>OneVL w/o visual decoder</td><td>有</td><td>无</td><td>有</td><td>87.97</td></tr>
+<tr><td>OneVL w/o language decoder</td><td>无</td><td>有</td><td>有</td><td>88.53</td></tr>
+<tr><td>OneVL w/o staged train</td><td>有</td><td>有</td><td>无</td><td>67.13</td></tr>
+<tr><td>OneVL full</td><td>有</td><td>有</td><td>有</td><td>88.84</td></tr>
+</table>
+<p>OneVL 去除视觉解码器后从 88.84 降至 87.97，说明视觉辅助解码器贡献 0.87 PDM-score。该结果证明，要求模型编码未来场景内容的视觉 latent 监督，能在语言推理之外提供互补收益。去除语言解码器后为 88.53，验证语言辅助解码器和语言 latent token 也有贡献，提升幅度为 0.31。</p>
+<figure class="paper-figure"><img alt="图 8：完整训练与过拟合视觉辅助解码器下的视觉 CoT 对比。完整训练时，latent visual token 解码出的未来帧保持场景一致；无三阶段训练时，预测未来帧坍缩为与输入无关的记忆化伪影。" src="legacy_full/figures/fig_08_fig_ablation_visual_cot.png"/><figcaption>图 8：完整训练与过拟合视觉辅助解码器下的视觉 CoT 对比。完整训练时，latent visual token 解码出的未来帧保持场景一致；无三阶段训练时，预测未来帧坍缩为与输入无关的记忆化伪影。</figcaption></figure>
+<p>三阶段训练的消融结论尤其强：没有三阶段训练时，PDM-score 从 88.84 灾难性下降到 67.13，降低 21.71。训练动态显示，直接端到端方法在初始化时出现严重梯度冲击，梯度范数高达 378.22，破坏预训练主干；三阶段策略则通过先预热 latent token，把梯度范数稳定在 0.28。其次，直接方法导致灾难性任务干扰，主干难以同时优化冲突目标，最终轨迹预测损失更高。图 8 进一步显示，完整训练下视觉辅助解码器能生成合理的 t+1 与 t+2 未来帧；消融设置下，解码帧与输入完全无关，引入噪声。</p>
+<h3 id="translation-5-10-面向真实部署">5.10 面向真实部署</h3>
+<p>车端闭环测试偏好极低时延轨迹预测。然而，即使 latent reasoning 被预填充，自回归解码航点仍是主要时延来源。为探索部署版本，作者在同一 Qwen3-VL-4B-Instruct 主干上追加一个紧凑 MLP head，以上一个 latent token 的隐藏状态为输入。这样模型既可用 LLM head 自回归预测轨迹，也可用 MLP head 单次前馈预测轨迹。该变体训练时仍利用多模态 latent 监督。</p>
+<table>
+<tr><th>变体</th><th>PDM score</th><th>latency</th></tr>
+<tr><td>OneVL regression</td><td>86.83</td><td>0.24s</td></tr>
+<tr><td>OneVL AR</td><td>88.84</td><td>4.46s</td></tr>
+</table>
+<p>MLP head 在 NAVSIM 上达到 86.83 PDM-score，时延 0.24s；完整 OneVL 为 88.84、4.46s。0.2405 秒约为 4.16 Hz，可满足典型车端数 Hz 预算，并相对强先前方法保持竞争性能。这支持 OneVL 的真实部署潜力。</p>
+<h3 id="translation-5-11-深入分析-收益来自何处">5.11 深入分析：收益来自何处</h3>
+<p>一个自然问题是，为什么 OneVL 的隐式潜在推理使用更少 token，却能优于显式 AR CoT+Answer。本文提出两个机制。</p>
+<p>第一是压缩收益。紧凑 latent token 迫使模型把最相关于轨迹的推理蒸馏到小型表示瓶颈中，过滤无关或冗余内容。这正是信息瓶颈原则预测的机制。更强压缩会丢弃噪声，只保留对输出有预测力的因果特征，从而形成比冗长自由 CoT 更好的泛化表示。</p>
+<p>第二是世界模型接地收益。视觉辅助解码器显式要求视觉 latent token 编码时空场景动态，即未来帧内容；这与轨迹预测直接相关。预测未来场景外观迫使 latent 内化交通参与者运动和道路几何的因果动态。显式语言 CoT 没有类似空间接地机制，它以符号方式描述世界，却把因果几何留在隐式层面。</p>
+<p>视觉辅助解码器贡献 0.87，语言辅助解码器贡献 0.31，二者差异体现了视觉解码器的世界模型角色。自动驾驶轨迹预测本质是空间预测任务，视觉 token 重构，即预测 0.5 到 1.0 秒后的场景外观，提供与几何预测本质更一致的监督。语言 CoT 从抽象符号层面描述推理过程，对语义接地很有价值，但与决定轨迹结果的物理动态仍相隔一层。</p>
+<p>预填充推理的速度优势来自现代 Transformer 对 prefill 序列的一次并行处理，而自回归解码需要顺序 token 生成。若只在 prefill 阶段增加少量 latent token，相比本就很长的图像 patch 序列，开销可以忽略。</p>
+<p>既有潜在 CoT 方法在自动驾驶中失败，是因为它们假设潜在表示可从教师文本生成中压缩推理质量，但驾驶领域需要视觉世界模型监督。没有视觉辅助解码器，latent 只能编码语言层抽象，丢失精确轨迹预测所需的几何信息。另一方面，它们也缺少 OneVL 的三阶段训练流程，导致语言 latent、视觉 latent 与轨迹预测在优化初期没有对齐。OneVL 通过视觉辅助解码器提供精确空间监督，并通过三阶段训练避免优化冲突。</p>
+<h2 id="translation-6-结论">6 结论</h2>
+<p>本文提出 OneVL，一个面向自动驾驶轨迹预测的框架，其核心假设是：压缩驱动泛化。本文的关键贡献之一，是指出既有潜在 CoT 方法为何在规划任务上失败。压缩语言并不等同于压缩场景动态。驾驶场景的自然语言描述天然抽象，它编码语义标签，而不是决定未来结果的物理因果结构。因此，压缩语言满足压缩原则的效率要求，却不满足智能要求。</p>
+<p>OneVL 通过引入视觉解码器形式的世界模型辅助来弥合这一差距。该解码器预测未来帧视觉 token。未来帧预测是具体且具有因果接地的压缩目标：能预期场景视觉演化的模型，必然已内化交通参与者运动与场景交互的动态，而这些信息仅靠语言无法可靠编码。</p>
+<p>推理时，辅助解码器被丢弃，预填充 latent token 使模型以匹配 answer-only 预测的时延完成单次轨迹生成。三阶段训练流程对实现这种压缩至关重要：Stage 0 建立有意义 latent 表示，Stage 1 在稳定 latent 空间上对齐解码器，Stage 2 通过双向联合优化从两侧收紧 bottleneck。消融结果显示，跳过该课程会使压缩坍缩为记忆，并导致灾难性性能下降。</p>
+<p>经验上，OneVL 在 NAVSIM、ROADWork、Impromptu 和 Alpamayo-R1 上获得 SOTA 结果，同时匹配 answer-only 推理速度。最值得注意的是，OneVL 是唯一超过显式自回归 CoT 的潜在 CoT 方法，直接证明当压缩同时由语言和世界模型监督接地时，更紧凑的表示能产生比逐 token 冗长生成更有效的推理。最后，通过追加轻量 MLP 回归头，OneVL 在仅 5% 原始时延下仍保持竞争性能，显示了高效真实部署的可能性。</p>
+<h3 id="translation-局限">局限</h3>
+<p>当前系统训练时需要约 3 倍显存，因为必须同时持有三个完整 4B 模型实例。虽然 DeepSpeed ZeRO-2 可以缓解这一问题，但基础设施要求仍然不低。此外，latent token 数量是经验选择的；系统研究 latent token 数量与表示容量之间的权衡，是后续工作。</p>
+<h3 id="translation-未来方向">未来方向</h3>
+<p>第一，虽然 OneVL 的预填充机制消除了 latent CoT 开销，轨迹 token 本身仍以自回归方式生成。第 5 节显示，追加 MLP head 可牺牲一定性能换取更高速度，但整体时延仍受 AR 解码约束。因此，通过并行或非自回归轨迹解码弥合这一差距，是面向安全关键驾驶系统实时部署的重要步骤。</p>
+<p>第二，把世界模型解码器扩展到多相机输入，可支持 360 度未来场景预测和更完整因果场景理解，进一步增强视觉 latent 可用的压缩目标。第三，双模态解释框架可支持新型人机界面，使驾驶员实时获得车辆规划决策的视觉与语言理由。这不仅能提升透明度与信任，也有潜力为强化学习提供更丰富训练信号，闭合世界模型预测与策略改进之间的回路。</p>
+<h2 id="translation-贡献与致谢">贡献与致谢</h2>
+<h3 id="translation-核心贡献者">核心贡献者</h3>
+<p>Jinghui Lu、Jiayi Guan、Zhijian Huang、Jinlong Li、Guang Li、Lingdong Kong、Yingyan Li、Han Wang、Shaoqing Xu、Yuechen Luo、Fang Li、Chenxu Dang、Junli Wang、Tao Xu、Jing Wu、Jianhua Wu、Xiaoshuai Hao、Wen Zhang、Tianyi Jiang、Kuiyuan Yang、Hangjun Ye、Long Chen。</p>
+<h3 id="translation-贡献者">贡献者</h3>
+<p>Lingfeng Zhang、Lei Zhou、Yingbo Tang、Jie Wang、Yinfeng Gao、Xizhou Bu、Haochen Tian、Yihang Qiu、Feiyang Jia、Lin Liu、Yigu Ge、Hanbing Li、Yuannan Shen、Jianwei Cui、Hongwei Xie、Bing Wang、Haiyang Sun、Jingwei Zhao、Jiahui Huang、Pei Liu、Zeyu Zhu、Yuncheng Jiang、Zibin Guo、Chuhong Gong、Hanchao Leng、Kun Ma、Naiyan Wang、Guang Chen。</p>
+<p><strong>致谢。</strong> 本工作使用 Qwen3-VL-4B-Instruct 模型以及 NAVSIM、ROADWork、Impromptu 和 Alpamayo-R1 数据集。作者确认这些资源严格用于学术研究目的，未参与任何商业活动。</p>
+<h2 id="translation-参考文献">参考文献</h2>
+<p>参考文献在原论文中以 BibTeX/natbib 格式给出，本文译文保留原文引用标记与引用顺序。为保持与原论文对应，正文中的作者-年份或编号引用不另行改写；读者可在原论文 PDF 或 TeX 源的 <code>main.bib</code> 与 <code>paper.bbl</code> 中查看完整条目。</p>
+<h2 id="translation-附录">附录</h2>
+<h3 id="translation-a-数据格式示例">A 数据格式示例</h3>
+<p>OneVL 的每个 NAVSIM 训练样本遵循如下结构。assistant response 中包含 4 个视觉 latent token、2 个语言 latent token 和轨迹答案。用户输入包括前视图像、驾驶命令、速度、加速度与历史轨迹。assistant 输出先给出 visual latent 起止符与 latent-vis token，再给出 language latent 起止符与 latent token，最后在 answer 标签中输出未来轨迹航点。</p>
+<p>语言辅助解码器的标签 <code>think_steps</code> 是自然语言 CoT，例如：“前方道路清晰，没有需要制动的车辆或行人。我应保持当前速度并沿车道直行。” 视觉辅助解码器的标签 <code>future_image_tokens</code> 则是未来图像 token 序列，由 image_start、若干 visual_token 和 image_end 组成。</p>
+<h3 id="translation-b-训练配置">B 训练配置</h3>
+<p>视觉辅助解码器首先进行自监督预训练：模型仅从 ViT 特征预测下一帧，而不把自回归主干接入循环。该阶段使用 13,040 个优化步骤，全局 batch size 为 256，而不是固定 epoch 数。随后进入 Stage 0，预热主 VLM 并引入 latent token；Stage 1 冻结主模型，训练辅助解码器，并通过 visual latent token 使视觉解码器变为动作条件；最后 Stage 2 对整个堆栈进行联合端到端微调。</p>
+<table>
+<tr><th>超参数</th><th>预训练</th><th>Stage 0</th><th>Stage 1</th><th>Stage 2</th></tr>
+<tr><td>Steps</td><td>13040</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>Epochs</td><td>-</td><td>2</td><td>1</td><td>5</td></tr>
+<tr><td>Global batch</td><td>256</td><td>64</td><td>64</td><td>64</td></tr>
+<tr><td>Learning rate</td><td>1e-4</td><td>4e-5</td><td>1e-4</td><td>1e-4</td></tr>
+<tr><td>LR schedule</td><td>Cosine</td><td>Cosine</td><td>Cosine</td><td>Cosine</td></tr>
+<tr><td>Optimizer</td><td>AdamW</td><td>AdamW</td><td>AdamW</td><td>AdamW</td></tr>
+<tr><td>Precision</td><td>BF16</td><td>BF16</td><td>BF16</td><td>BF16</td></tr>
+<tr><td>Parallelism</td><td>ZeRO-2</td><td>ZeRO-2</td><td>ZeRO-2</td><td>ZeRO-2</td></tr>
+<tr><td>Trainable</td><td>视觉辅助解码器</td><td>ViT、LLM、aligner</td><td>语言与视觉辅助解码器</td><td>全部</td></tr>
+<tr><td>Frozen</td><td>-</td><td>-</td><td>主 VLM</td><td>-</td></tr>
+<tr><td>lambda_l</td><td>-</td><td>-</td><td>1.0</td><td>1.0</td></tr>
+<tr><td>lambda_v</td><td>1.0</td><td>-</td><td>0.1</td><td>0.1</td></tr>
+</table>
+<h3 id="translation-c-cot-标注构造">C CoT 标注构造</h3>
+<p>ROADWork 数据集的 CoT 推理标注由内部标注流程构建，专门面向施工区驾驶场景。不同于来自 AdaThinkDrive 的 NAVSIM 标注，ROADWork CoT 需要施工区危险识别、非常规车道解释、速度与横向安全距离推理。施工区危险包括锥桶、护栏、临时标志与工人存在；车道解释包括临时车道线、窄车道和合流配置；速度与间距推理则要求说明施工区内应如何降速与保持侧向距离。</p>
+<p>Impromptu VLA 数据集的 CoT 标注由 VLM 中心标注流程构造，并采用面向非结构化驾驶场景的 CoT prompting。它需要识别四类挑战性非结构化场景，包括道路边界不清、临时交通规则改变、非常规动态障碍和困难道路条件；同时需要感知模糊路界、临时交通设施、非标准动态障碍以及恶劣道路或环境条件，并生成自车元动作、端到端轨迹和文字理由。</p>
+<p>Alpamayo-R1 的 CoT 推理标签未发布，因此作者使用公开模型 checkpoint 复现全部训练样本的 CoT 标签。航点预测方面，作者使用启发式下采样，把 64 个航点降到 8 个，同时保留最后点，因为原始 64 个航点对于自回归建模过于密集。此外，由于原论文未发布官方测试集，作者从可用视频片段中抽样 700 个样本构建测试集。</p>
+<p>附录给出四个匿名 CoT 示例，分别来自 NAVSIM、ROADWork、Impromptu 和 Alpamayo-R1。NAVSIM 示例说明右侧靠近不可行驶区域，自车需稍向左行驶，并关注前方同向快速行驶车辆；ROADWork 示例强调橙色施工警示牌、锥桶、路边停放车辆和脚手架；Impromptu 示例说明车辆应停车以避让施工障碍与行人；Alpamayo-R1 示例说明因右转灯为绿灯而在路口右转。</p>
+<h3 id="translation-d-llm-as-judge-评估提示">D LLM-as-Judge 评估提示</h3>
+<p>本文使用 Gemini 模型作为文本 CoT 质量的自动评估器。对每个样本，评估器接收前视相机图像、真实 CoT 和预测 CoT，并按照四项标准打分：感知准确性，尤其是距离与位置；运动状态预测，如快速移动、缓慢移动或静止；自车决策是否匹配真实标签；以及语言流畅度。输出必须为 JSON，包括简要扣分理由和 0 到 100 的整数分数。原始分数除以 100 归一化到 0 到 1，温度设为 0.1 以保证评分稳定。</p>
+<h3 id="translation-e-impromptu-附录结果">E Impromptu 附录结果</h3>
+<table>
+<tr><th>方法</th><th>1s L2</th><th>2s L2</th><th>3s L2</th><th>4s L2</th><th>平均</th></tr>
+<tr><td>Impromptu VLA 复现实验</td><td>0.90</td><td>2.80</td><td>3.75</td><td>5.89</td><td>3.16</td></tr>
+<tr><td>Impromptu VLA</td><td>0.14</td><td>0.60</td><td>1.45</td><td>2.67</td><td>1.22</td></tr>
+<tr><td>OneVL</td><td>0.13</td><td>0.48</td><td>1.18</td><td>2.25</td><td>1.01</td></tr>
+</table>
+<h3 id="translation-f-附录定性图">F 附录定性图</h3>
+<figure class="paper-figure"><img alt="图 9：NAVSIM 定性示例 1。" src="legacy_full/figures/fig_09_fig_navisim_example2.png"/><figcaption>图 9：NAVSIM 定性示例 1。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 10：NAVSIM 定性示例 2。" src="legacy_full/figures/fig_10_fig_navisim_example3.png"/><figcaption>图 10：NAVSIM 定性示例 2。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 11：NAVSIM 定性示例 3。" src="legacy_full/figures/fig_11_fig_navisim_example4.png"/><figcaption>图 11：NAVSIM 定性示例 3。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 12：NAVSIM 定性示例 4。" src="legacy_full/figures/fig_12_fig_navisim_example5.png"/><figcaption>图 12：NAVSIM 定性示例 4。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 13：NAVSIM 定性示例 5。" src="legacy_full/figures/fig_13_fig_navisim_example6.png"/><figcaption>图 13：NAVSIM 定性示例 5。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 14：NAVSIM 定性示例 6。" src="legacy_full/figures/fig_14_fig_navisim_example7.png"/><figcaption>图 14：NAVSIM 定性示例 6。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 15：NAVSIM 定性示例 7。" src="legacy_full/figures/fig_15_fig_navisim_example8.png"/><figcaption>图 15：NAVSIM 定性示例 7。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 16：NAVSIM 定性示例 8。" src="legacy_full/figures/fig_16_fig_navisim_example9.png"/><figcaption>图 16：NAVSIM 定性示例 8。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 17：NAVSIM 定性示例 9。" src="legacy_full/figures/fig_17_fig_navisim_example10.png"/><figcaption>图 17：NAVSIM 定性示例 9。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 18：ROADWork 定性示例 1。" src="legacy_full/figures/fig_18_fig_roadwork_example2.png"/><figcaption>图 18：ROADWork 定性示例 1。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 19：ROADWork 定性示例 2。" src="legacy_full/figures/fig_19_fig_roadwork_example3.png"/><figcaption>图 19：ROADWork 定性示例 2。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 20：Impromptu 定性示例 1。" src="legacy_full/figures/fig_20_fig_nuScences_678_8198.png"/><figcaption>图 20：Impromptu 定性示例 1。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 21：Impromptu 定性示例 2。" src="legacy_full/figures/fig_21_fig_nuScences_927_10990.png"/><figcaption>图 21：Impromptu 定性示例 2。</figcaption></figure>
+<figure class="paper-figure"><img alt="图 22：Alpamayo-R1 定性示例。" src="legacy_full/figures/fig_22_fig_ar1_appendix_example1.png"/><figcaption>图 22：Alpamayo-R1 定性示例。</figcaption></figure>
+<h3 id="translation-g-原论文表格译文补充">G 原论文表格译文补充</h3>
+<p><strong>NAVSIM 主结果表。</strong> 表中 PDM-score 越高越好，平均推理时延越低越好。已有 SOTA 中 AdaThinkDrive 为 86.20，LaST-VLA 为 87.30。AR 基线中，AR Answer 达到 87.47、4.49s；AR CoT+Answer 达到 88.29、6.58s，说明显式推理提升准确率但显著增加时延。潜在 CoT 基线中，COCONUT 为 84.84、5.93s，CODI 为 83.92、8.62s，SIM-CoT 为 84.21、10.86s，均低于 answer-only。OneVL 达到 88.84、4.46s，同时具备视觉与语言解释，是该表中兼具最高精度与最低有效推理成本的方法。</p>
+<p><strong>ROADWork 结果表。</strong> ROADWork 以像素 ADE/FDE 衡量施工区轨迹预测，越低越好。YNet 的 ADE/FDE 为 22.68/80.78。AR Answer 为 15.98/40.29，AR CoT+Answer 为 13.18/29.98。潜在 CoT 基线仍不稳定：COCONUT 为 15.44/38.60，CODI 为 16.45/44.28，SIM-CoT 为 16.49/44.32。OneVL 达到 12.49/28.80，且时延 4.71s，说明视觉世界模型监督对施工区几何和临时交通设施场景有直接帮助。</p>
+<p><strong>Impromptu ADE/FDE 表。</strong> Impromptu VLA 为 1.60 ADE、4.28 FDE、6.10s。AR Answer 为 1.46/4.03/4.24s，AR CoT+Answer 为 1.42/3.96/6.84s。COCONUT 为 1.49/4.07，CODI 为 1.86/5.18，SIM-CoT 为 2.43/6.10。OneVL 为 1.34/3.70/4.02s，说明在非结构化 corner-case 中，语言-only latent 不足，而视觉 latent 与语言 latent 的双监督更稳健。</p>
+<p><strong>Impromptu L2 表。</strong> 以 1s、2s、3s、4s 和平均 L2 error 衡量时，OneVL 分别为 0.13、0.48、1.18、2.25 和 1.01，优于 Impromptu VLA 的 0.14、0.60、1.45、2.67 和 1.22，也优于 AR Answer 与 AR CoT+Answer 的平均误差。该结果从时序误差角度进一步支持 OneVL 的轨迹精度收益。</p>
+<p><strong>Alpamayo-R1 表。</strong> Cosmos-Reason 为 2.86 ADE、7.42 FDE。AR Answer 为 3.27/9.59，AR CoT+Answer 为 2.99/8.54。COCONUT、CODI、SIM-CoT 分别为 3.29/9.48、3.22/9.25、3.40/9.85。OneVL 达到 2.62 ADE 与 7.53 FDE。它在 ADE 上最好，但 FDE 略低于 Cosmos-Reason，表明 OneVL 在短中期轨迹上优势更强，终点误差仍可能受强 RL/flow-matching 基线挑战。</p>
+<p><strong>解释质量表。</strong> Meta Action Accuracy 衡量 CoT 最终驾驶意图是否匹配真值，是最直接的安全相关指标。STS 衡量预测 CoT 与真值 CoT 的语义相似度，LLM Judge 则以视觉上下文参与综合评分。OneVL 在三项上都超过 SIM-CoT，说明语言辅助解码器不仅能生成流畅文本，也能恢复对驾驶决策有意义的语义内容。它低于 AR CoT+Answer，说明压缩 latent 的解释质量仍有上限，但在时延优势下已经具备实用价值。</p>
+<p><strong>消融表。</strong> 去除视觉辅助解码器导致 PDM 降至 87.97，去除语言辅助解码器降至 88.53，说明视觉监督贡献更大但语言监督仍有价值。去除三阶段训练降至 67.13，说明训练课程不是工程细节，而是避免梯度冲击与任务干扰的必要条件。完整模型达到 88.84，说明三者共同构成有效框架。</p>
+<p><strong>部署表。</strong> MLP 回归 head 将时延降至 0.24s，但 PDM-score 降至 86.83；完整 AR 轨迹生成保持 88.84，但时延为 4.46s。该表说明 OneVL 框架可在车端部署中按性能与时延预算选择不同输出头，且训练期的多模态 latent 监督可被保留。</p>
+<h3 id="translation-h-原论文公式与符号对齐说明">H 原论文公式与符号对齐说明</h3>
+<p>主模型损失 L_c 对轨迹答案 token 与 latent token 进行交叉熵监督；语言损失 L_l 要求语言辅助解码器在 Z_l 条件下重构真实 CoT token 序列；视觉损失 L_v 要求视觉辅助解码器在 Z_v 条件下重构未来帧离散视觉 token。三者合并时，lambda_l = 1.0，lambda_v = 0.1。较小的视觉权重并不表示视觉目标不重要，而是因为视觉 token 预测更难，若权重过大，可能在联合优化中压制轨迹与语言目标。</p>
+<p>Z_l 和 Z_v 的形式都体现了 OneVL 的核心思想：辅助解码器不只读取 latent，也读取当前视觉上下文。语言解码器输入 [W_l(V), W_l(H_l)]，视觉解码器输入 [W_v(V), W_v(H_v)]。这意味着 latent 不是孤立摘要，而是在当前帧上下文中被解释和约束的中间表示。推理时这些解码器被移除，但训练期形成的约束会通过主模型参数和 latent 位置的隐藏状态保留下来。</p>
+<p>预填充推理的关键在于区分 prefill 与 decode。prefill 阶段的所有 token 可并行处理；decode 阶段则必须逐 token 自回归生成。OneVL 把视觉和语言 latent 都放入 prefill，因此它们不产生逐步解码时延。模型只需在 decode 阶段生成轨迹 token。这正是 OneVL 可以接近 answer-only 时延的技术原因。</p>
+<h3 id="translation-i-附录示例的中文释义">I 附录示例的中文释义</h3>
+<p>NAVSIM 示例中，标注首先指出自车所在车道右侧接近不可行驶区域，因此需要略向左行驶；随后识别前方约 18.42 米、左侧 0.49 米处的同向车辆，并指出其运动状态较快；最后给出决策：基于场景理解和导航信息，自车应保持速度并保持车道。</p>
+<p>ROADWork 示例中，标注列出多个关键因素：路面前方橙色施工警示牌提示施工活动；左侧锥桶形成临时导流和车道收窄；右侧路边停放车辆压缩可通行空间；右侧脚手架或人行道施工提示正在作业。根因被总结为锥桶导流与停放车辆共同导致可用车道变窄，因此决策是纵向减速、横向保持导流车道。</p>
+<p>Impromptu 示例中，决策标签为纵向停车、横向直行。原因是存在施工障碍与横穿道路的行人，车辆需要停车以保证安全并遵守交通规则。</p>
+<p>Alpamayo-R1 示例较短，说明由于路口右转交通灯为绿色，因此应在路口右转。这类 CoC 标注强调决策与可观察因果条件之间的直接连接。</p>
+<h3 id="translation-j-与原论文版式对齐说明">J 与原论文版式对齐说明</h3>
+<p>本译文按原论文顺序排列：标题、摘要、总览图、目录、引言、相关工作、模型架构、训练流程、实验、结论、贡献与致谢、参考文献、附录。图 1 至图 22 按原论文出现位置和附录顺序插入。表格采用中文 Markdown 表达，保留原表的指标、数值和比较关系。公式以行内文本或独立公式行保留关键符号，使译文可读性优先，同时保持与原论文符号体系一致。</p>
+<h3 id="translation-k-译文覆盖范围补充">K 译文覆盖范围补充</h3>
+<p>本译文还保留了原论文中关于解释性边界的核心含义：语言解释并不是直接展示 latent 内部结构，而是通过语言辅助解码器从压缩表示中恢复可读推理；视觉解释也不是推理时必须使用的规划模块，而是训练期与事后分析可用的未来帧 token 解码结果。因此，OneVL 的解释性应理解为“可由训练期辅助目标认证和事后解码”，而不是“每个 latent 维度都可直接命名”。</p>
+<p>对于实验结论，译文按原文保留两个层次：第一，OneVL 在多个基准上同时改善精度与时延，支持 latent prefill 的效率主张；第二，消融显示 visual decoder、language decoder 和 staged training 的贡献并不对称，其中 staged training 是稳定性的必要条件，visual decoder 是世界模型接地的主要来源，language decoder 则补充语义可解释性。</p>
+<h3 id="translation-l-图表位置说明">L 图表位置说明</h3>
+<p>图 1 放在摘要后对应总览 claim；图 2 放在引言中对应 CoT 范式比较；图 3 放在模型架构节；图 4 至图 8 放在实验与消融节；图 9 至图 22 放在附录定性示例节。这样读者在翻译视图中能按原论文叙事顺序同时看到文字、表格和图像证据。</p>
+</div>
+</aside>
+<div aria-hidden="true" class="lightbox" id="figureModal">
+<button id="closeFigureModal" type="button">关闭</button>
+<img alt="" id="figureModalImage"/>
+</div>
+<script>
+const tocLinks = Array.from(document.querySelectorAll('.toc-link'));
+const sections = tocLinks
+  .map(link => document.querySelector(link.getAttribute('href')))
+  .filter(Boolean);
+let manualActiveUntil = 0;
+function setActive(id) {
+  tocLinks.forEach(link => {
+    const active = link.getAttribute('href') === '#' + id;
+    link.classList.toggle('active', active);
+    if (active) link.setAttribute('aria-current', 'true');
+    else link.removeAttribute('aria-current');
+  });
+}
+function updateActive() {
+  if (performance.now() < manualActiveUntil) return;
+  let current = sections.length ? sections[0].id : '';
+  sections.forEach(section => {
+    if (section.getBoundingClientRect().top <= 150) current = section.id;
+  });
+  if (current) setActive(current);
+}
+let ticking = false;
+window.addEventListener('scroll', () => {
+  if (!ticking) {
+    requestAnimationFrame(() => { updateActive(); ticking = false; });
+    ticking = true;
+  }
+}, { passive:true });
+tocLinks.forEach(link => {
+  link.addEventListener('click', () => {
+    const id = link.getAttribute('href').slice(1);
+    manualActiveUntil = performance.now() + 1200;
+    setActive(id);
+    setTimeout(updateActive, 1300);
+  });
+});
+updateActive();
+
+const translationToggle = document.getElementById('translation-toggle');
+const translationPanel = document.getElementById('translation-panel');
+const translationClose = document.getElementById('translation-close');
+function closeTranslation() {
+  translationPanel.classList.remove('open');
+  translationPanel.setAttribute('aria-hidden', 'true');
+  translationToggle.setAttribute('aria-expanded', 'false');
+}
+function openTranslation() {
+  translationPanel.classList.add('open');
+  translationPanel.setAttribute('aria-hidden', 'false');
+  translationToggle.setAttribute('aria-expanded', 'true');
+}
+translationToggle.addEventListener('click', () => {
+  if (translationPanel.classList.contains('open')) closeTranslation();
+  else openTranslation();
+});
+translationClose.addEventListener('click', closeTranslation);
+
+const modal = document.getElementById('figureModal');
+const modalImage = document.getElementById('figureModalImage');
+function closeModal() {
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  modalImage.removeAttribute('src');
+}
+document.querySelectorAll('img').forEach(img => {
+  img.addEventListener('click', () => {
+    modalImage.src = img.currentSrc || img.src;
+    modalImage.alt = img.alt || 'Figure preview';
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  });
+});
+document.getElementById('closeFigureModal').addEventListener('click', closeModal);
+modal.addEventListener('click', event => { if (event.target === modal) closeModal(); });
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape') {
+    closeModal();
+    closeTranslation();
+  }
+});
+</script>
+</body>
+</html>

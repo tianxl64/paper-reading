@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="760" viewBox="0 0 1280 760" role="img">
+<defs>
+<marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#556376"/></marker>
+</defs>
+<rect x="0" y="0" width="1280" height="760" fill="#FFFFFF"/>
+<text x="42" y="42" font-size="22" font-weight="700" fill="#172033">实现边界栈：代码阅读不等于完整复现</text>
+<text x="42" y="70" font-size="13" font-weight="500" text-anchor="start" fill="#596579">implementation boundary stack；分层显示已完成/未完成</text>
+<rect x="250" y="145" width="760" height="70" rx="10" fill="#ECF8F1" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="266" y="173" font-size="15" font-weight="700" text-anchor="start" fill="#172033">已完成：代码证据</text>
+<text x="266" y="199" font-size="12" font-weight="500" text-anchor="start" fill="#596579">clone / file map / issues</text>
+<rect x="250" y="245" width="760" height="70" rx="10" fill="#EAF2FF" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="266" y="273" font-size="15" font-weight="700" text-anchor="start" fill="#172033">已完成：轻量 smoke</text>
+<text x="266" y="299" font-size="12" font-weight="500" text-anchor="start" fill="#596579">py_compile / eval usage</text>
+<rect x="250" y="345" width="760" height="70" rx="10" fill="#FFF8D8" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="266" y="373" font-size="15" font-weight="700" text-anchor="start" fill="#172033">缺失：推理条件</text>
+<text x="266" y="399" font-size="12" font-weight="500" text-anchor="start" fill="#596579">torch / weights / GPU</text>
+<rect x="250" y="445" width="760" height="70" rx="10" fill="#FCEDEA" stroke="#AEB8C6" stroke-width="1.3"/>
+<text x="266" y="473" font-size="15" font-weight="700" text-anchor="start" fill="#172033">缺失：benchmark</text>
+<text x="266" y="499" font-size="12" font-weight="500" text-anchor="start" fill="#596579">NAVSIM data / evaluator</text>
+<path d="M 640 215 L 640 245" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 640 315 L 640 345" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M 640 415 L 640 445" fill="none" stroke="#556376" stroke-width="2" marker-end="url(#arrow)"/>
+<rect x="245" y="585" width="780" height="62" rx="10" fill="#FFFFFF" stroke="#B76E00" stroke-width="1.3"/>
+<text x="261" y="613" font-size="15" font-weight="700" text-anchor="start" fill="#172033">报告边界</text>
+<text x="261" y="639" font-size="12" font-weight="500" text-anchor="start" fill="#596579">当前任务关注代码细节实现逻辑；不把 smoke test 写成项目复现。</text>
+</svg>

@@ -1,0 +1,130 @@
+{
+  "schema": "paper-reading-site.v1",
+  "generated_at": "2026-10-30",
+  "owner": "tianxl64",
+  "title": "PaperReading · 论文代码精读库",
+  "subtitle": "把论文、代码、机制与证据整理成可长期访问的阅读入口。",
+  "reports": [
+    {
+      "slug": "pi0",
+      "title": "π0：通用机器人策略模型",
+      "category": "VLA / 具身智能",
+      "desc": "从 VLM 到连续动作的机器人策略：数据混合、动作专家、训练阶段与代码边界。",
+      "priority": "高",
+      "output": "reports/pi0/index.html",
+      "resource_count": 16,
+      "unresolved": [],
+      "output_sha256": "9f7b0737c27162643728c3f3c1a79e96c4579e3aca5ee261380171c3d155df2f"
+    },
+    {
+      "slug": "diffusiondrivev2",
+      "title": "DiffusionDriveV2：扩散规划与强化学习",
+      "category": "自动驾驶 / 轨迹生成",
+      "desc": "Anchor-based truncated diffusion、PDM reward、GRPO 与论文—代码实现边界。",
+      "priority": "高",
+      "output": "reports/diffusiondrivev2/index.html",
+      "resource_count": 21,
+      "unresolved": [],
+      "output_sha256": "5a022f9cf74dfabaaa5b04312edeed065d150b54c5eaf2d7e7ca1ed16e7ea7d7"
+    },
+    {
+      "slug": "drivevla-w0",
+      "title": "DriveVLA-W0：视觉语言动作驾驶模型",
+      "category": "自动驾驶 / VLA",
+      "desc": "双世界模型、联合注意力、动作 tokenizer、flow matching 与失败诊断。",
+      "priority": "高",
+      "output": "reports/drivevla-w0/index.html",
+      "resource_count": 24,
+      "unresolved": [],
+      "output_sha256": "ee8f7ef974e05010e9b031f7edcc828e54eb3307a3806108fc64348a958862af"
+    },
+    {
+      "slug": "onevl-dual-layer",
+      "title": "OneVL：双层视觉语言推理与规划",
+      "category": "VLM / 自动驾驶",
+      "desc": "双层 latent 表征、损失分解、训练拓扑、代码映射与边界审计。",
+      "priority": "高",
+      "output": "reports/onevl-dual-layer/index.html",
+      "resource_count": 46,
+      "unresolved": [],
+      "output_sha256": "5e39c44c079f3fbd457c33ace246cf828c85f284173c081c80e76286985f1bd9"
+    },
+    {
+      "slug": "xiaomi-onevl-cleanrun",
+      "title": "Xiaomi OneVL：cleanrun 深度解析",
+      "category": "VLM / 自动驾驶",
+      "desc": "OneVL 机制、训练—推理接口和实现边界的精简可读版本。",
+      "priority": "中",
+      "output": "reports/xiaomi-onevl-cleanrun/index.html",
+      "resource_count": 13,
+      "unresolved": [],
+      "output_sha256": "977d94f9e61477090d727560bb609d754e5c11b920d7a5185a22db79da7029ae"
+    },
+    {
+      "slug": "wam",
+      "title": "WAM 系列论文与代码联合精读",
+      "category": "World / Action Models",
+      "desc": "世界模型、动作模型、因果闭环、latent value planning 与驾驶评估器。",
+      "priority": "高",
+      "output": "reports/wam/index.html",
+      "resource_count": 6,
+      "unresolved": [],
+      "output_sha256": "4b0ba0789a0573e4aaee57b448fd36747e53b4e86332f14e373361dd771ce1b2"
+    },
+    {
+      "slug": "dreamer-series",
+      "title": "Dreamer 系列论文—代码联合精读",
+      "category": "World Models / 强化学习",
+      "desc": "从 RSSM、想象 rollout 到 actor-critic 的系列化机制与源码阅读。",
+      "priority": "高",
+      "output": "reports/dreamer-series/index.html",
+      "resource_count": 2,
+      "unresolved": [],
+      "output_sha256": "e9d91afff15402bce00d1ac7b755c75e23e8463be48795dad3c9731ad5ea0353"
+    },
+    {
+      "slug": "giga-drivedreamer",
+      "title": "GIGA+DriveDreamer：闭环世界模型精读",
+      "category": "World Models / 自动驾驶",
+      "desc": "GIGA 与 DriveDreamer 的方法、跨论文比较、PaperQA2 证据和正式图解。",
+      "priority": "高",
+      "output": "reports/giga-drivedreamer/index.html",
+      "resource_count": 11,
+      "unresolved": [],
+      "output_sha256": "ce2e5f4dc3bb85f46943bd42620db14d0c153e9b31b379d87310df31dbad2674"
+    },
+    {
+      "slug": "vjepa2-jepa",
+      "title": "V-JEPA 2 与 JEPA 系列论文—代码精读",
+      "category": "视觉表征 / World Models",
+      "desc": "视频联合嵌入预测、世界模型接口、训练目标、评测和源码证据。",
+      "priority": "高",
+      "output": "reports/vjepa2-jepa/index.html",
+      "resource_count": 85,
+      "unresolved": [],
+      "output_sha256": "b224d46db4dcafd32d3f948c53a2ebf9566635abcaa0186f052d125b129df1d8"
+    },
+    {
+      "slug": "policy-jev-code-as-policies",
+      "title": "面向 policy 的大模型：Jev 与 Code as Policies",
+      "category": "Agentic AI / Policy",
+      "desc": "结构化概率决策器与可执行策略程序的接口思路比较。",
+      "priority": "中",
+      "output": "reports/policy-jev-code-as-policies/index.html",
+      "resource_count": 0,
+      "unresolved": [],
+      "output_sha256": "dde7030012b13bd22545be33ceed3d551e96b85412cd104da4c8eec6bd57c3d5"
+    },
+    {
+      "slug": "qwen-drive-1.0",
+      "title": "Qwen-Drive-1.0：论文—代码闭环精读",
+      "category": "自动驾驶 / VLM",
+      "desc": "共享视觉语言表征、BEV 感知、Planning Expert、训练阶段、源码边界与跨论文证据。",
+      "priority": "旗舰",
+      "output": "reports/qwen-drive-1.0/index.html",
+      "resource_count": 0,
+      "unresolved": [],
+      "output_sha256": "baf4651d0097eb95404c1ac82218e44d9e281c38a160fccdb4c07b41afeb3dbb"
+    }
+  ]
+}
