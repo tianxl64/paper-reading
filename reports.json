@@ -125,6 +125,17 @@
       "resource_count": 0,
       "unresolved": [],
       "output_sha256": "baf4651d0097eb95404c1ac82218e44d9e281c38a160fccdb4c07b41afeb3dbb"
+    },
+    {
+      "slug": "wote",
+      "title": "WoTE：在线轨迹评价与 BEV 世界模型",
+      "category": "自动驾驶 / World Models",
+      "desc": "End-to-End Driving with Online Trajectory Evaluation via BEV World Model：候选轨迹、未来预测、在线奖励评价与代码边界。",
+      "priority": "高",
+      "output": "reports/wote/index.html",
+      "resource_count": 153,
+      "unresolved": [],
+      "output_sha256": "63ea45668260f5e1680a7bd0f09b51f0757cc2d258c128bacc827c575ad2af48"
     }
   ]
 }

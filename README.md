@@ -5,7 +5,7 @@
 - 入口：`index.html`
 - 机器可读清单：`reports.json`
 - 报告页面：`reports/<slug>/index.html`
-- 当前收录：11 篇
+- 当前收录：12 篇
 
 只发布已确认的最终 HTML 报告和其实际展示所需的资源。`.codex`、`.paseo`、子代理工作区、日志、凭据、PaperQA2 缓存和 ImageGen 候选图均不进入公开仓库。
 
