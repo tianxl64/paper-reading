@@ -1,12 +1,12 @@
 {
   "schema": "paper-reading-publication.v1",
-  "published_at": "2026-11-02T09:27:20.686838+00:00",
+  "published_at": "2026-11-02T09:32:44.208523+00:00",
   "slug": "dreamer-series",
   "source_relative_html": "11_html/report.html",
   "source_html_sha256": "4f9c0c5539c7c85796e45934fd119a1dd6963c9fe330e58e4c4fa5084e17796c",
   "upstream_stage": "delivery_complete",
   "upstream_content_revision": "r2-v4-semantic-rebind",
-  "public_html_sha256": "091ae9acfa5cd9d337219ae0e8903d296fe5d416c3d2588dd70432ed483d5384",
+  "public_html_sha256": "5f10e87c15e4d444d18bb4cb4754a891cf1d28224da536b4c0b29ed04f139c5e",
   "content_preservation": {
     "main_text": true,
     "headings": true,
@@ -18,7 +18,7 @@
   },
   "summary": {
     "title": "Dreamer 系列论文—代码联合精读 · R22候选读本",
-    "main_chars": 190189,
+    "main_chars": 190501,
     "headings": 470,
     "figure_images": 22,
     "image_nodes": 22,

@@ -1,12 +1,12 @@
 {
   "schema": "paper-reading-publication.v1",
-  "published_at": "2026-11-02T09:27:20.686838+00:00",
+  "published_at": "2026-11-02T09:32:44.208523+00:00",
   "slug": "giga-drivedreamer",
   "source_relative_html": "13_html/index.html",
   "source_html_sha256": "83773673d4e6378670f23d8310f5eb8bbe0c6b93cc619b15f6aa03a4eb0b8b9c",
   "upstream_stage": "v3_delivery_complete",
   "upstream_content_revision": "r4-v3.0-native-figures-accepted-reader",
-  "public_html_sha256": "f762086865221d535af7783a1a0d4801d53dde8949869846026f69ae9f884942",
+  "public_html_sha256": "a0a7c5c5ed43432cb237eeac946007873148b2ff505bb746028032514db96dcf",
   "content_preservation": {
     "main_text": true,
     "headings": true,
@@ -18,7 +18,7 @@
   },
   "summary": {
     "title": "GIGA+DriveDreamer 系列论文—代码联合精读",
-    "main_chars": 469890,
+    "main_chars": 470150,
     "headings": 293,
     "figure_images": 28,
     "image_nodes": 28,
