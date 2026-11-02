@@ -78,9 +78,12 @@
       "desc": "从 RSSM、想象 rollout 到 actor-critic 的系列化机制与源码阅读。",
       "priority": "高",
       "output": "reports/dreamer-series/index.html",
-      "resource_count": 2,
+      "resource_count": 86,
       "unresolved": [],
-      "output_sha256": "e9d91afff15402bce00d1ac7b755c75e23e8463be48795dad3c9731ad5ea0353"
+      "output_sha256": "091ae9acfa5cd9d337219ae0e8903d296fe5d416c3d2588dd70432ed483d5384",
+      "source_html_sha256": "4f9c0c5539c7c85796e45934fd119a1dd6963c9fe330e58e4c4fa5084e17796c",
+      "source_version": "r2-v4-semantic-rebind",
+      "publication_manifest": "reports/dreamer-series/publication.json"
     },
     {
       "slug": "giga-drivedreamer",
@@ -89,9 +92,12 @@
       "desc": "GIGA 与 DriveDreamer 的方法、跨论文比较、PaperQA2 证据和正式图解。",
       "priority": "高",
       "output": "reports/giga-drivedreamer/index.html",
-      "resource_count": 11,
+      "resource_count": 91,
       "unresolved": [],
-      "output_sha256": "ce2e5f4dc3bb85f46943bd42620db14d0c153e9b31b379d87310df31dbad2674"
+      "output_sha256": "f762086865221d535af7783a1a0d4801d53dde8949869846026f69ae9f884942",
+      "source_html_sha256": "83773673d4e6378670f23d8310f5eb8bbe0c6b93cc619b15f6aa03a4eb0b8b9c",
+      "source_version": "r4-v3.0-native-figures-accepted-reader",
+      "publication_manifest": "reports/giga-drivedreamer/publication.json"
     },
     {
       "slug": "vjepa2-jepa",
@@ -137,5 +143,6 @@
       "unresolved": [],
       "output_sha256": "63ea45668260f5e1680a7bd0f09b51f0757cc2d258c128bacc827c575ad2af48"
     }
-  ]
+  ],
+  "updated_at": "2026-11-02T09:27:20.686838+00:00"
 }
