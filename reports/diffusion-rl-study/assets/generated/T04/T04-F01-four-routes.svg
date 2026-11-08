@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="920" viewBox="0 0 1600 920" role="img" aria-labelledby="title desc">
+  <title id="title">Diffusion-RL 四条技术路线总图</title>
+  <desc id="desc">比较轨迹级策略梯度、前向过程加权匹配、guidance 策略改进和初始噪声 Q steering 分别修改扩散系统的哪一层。</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#31404a"/></marker>
+    <style>
+      .t{font-family:Segoe UI,Microsoft YaHei,sans-serif;fill:#17202a}.muted{fill:#586671}.h1{font-size:34px;font-weight:700}.h2{font-size:23px;font-weight:700}.body{font-size:17px}.small{font-size:14px}.panel{stroke:#cbd5dc;stroke-width:2}.arrow{stroke:#31404a;stroke-width:3;fill:none;marker-end:url(#arrow)}.dash{stroke-dasharray:8 8}
+    </style>
+  </defs>
+  <rect width="1600" height="920" fill="#f4f7f8"/>
+  <text x="70" y="62" class="t h1">Diffusion-RL 的四条路线：不是四种名字，而是改四个不同层级</text>
+  <text x="70" y="98" class="t body muted">统一问题：已有 diffusion / flow policy 能生成样本，reward 如何改变它，同时尽量不破坏预训练能力？</text>
+
+  <rect x="520" y="126" width="560" height="116" rx="8" fill="#ffffff" class="panel"/>
+  <text x="800" y="164" text-anchor="middle" class="t h2">预训练 diffusion / flow 基座</text>
+  <text x="800" y="197" text-anchor="middle" class="t body">条件 c + 噪声 w / x<tspan baseline-shift="sub">T</tspan> → 多步去噪 → 最终样本 x<tspan baseline-shift="sub">0</tspan></text>
+  <text x="800" y="224" text-anchor="middle" class="t small muted">监督目标通常是 score / noise / velocity matching</text>
+
+  <rect x="55" y="300" width="350" height="500" rx="8" fill="#eaf5f7" class="panel"/>
+  <text x="82" y="343" class="t h2">路线 1 · 改去噪轨迹概率</text>
+  <text x="82" y="374" class="t body">DDPO · Flow-GRPO · DanceGRPO</text>
+  <rect x="88" y="416" width="284" height="70" rx="6" fill="#fff" class="panel"/><text x="230" y="446" text-anchor="middle" class="t body">随机 transition</text><text x="230" y="472" text-anchor="middle" class="t small">pθ(x<tspan baseline-shift="sub">t-1</tspan> | x<tspan baseline-shift="sub">t</tspan>, c)</text>
+  <path d="M230 486 L230 534" class="arrow"/>
+  <rect x="88" y="536" width="284" height="70" rx="6" fill="#fff" class="panel"/><text x="230" y="565" text-anchor="middle" class="t body">终局 reward → advantage</text><text x="230" y="590" text-anchor="middle" class="t small">同一 prompt 多条 trajectory</text>
+  <path d="M230 606 L230 654" class="arrow"/>
+  <rect x="88" y="656" width="284" height="86" rx="6" fill="#fff" class="panel"/><text x="230" y="686" text-anchor="middle" class="t body">log-prob / ratio / clip</text><text x="230" y="712" text-anchor="middle" class="t small">梯度穿过每一步 policy density</text><text x="230" y="734" text-anchor="middle" class="t small muted">风险：采样系数与预训练不对齐</text>
+  <text x="82" y="778" class="t small">直接改：去噪网络参数</text>
+
+  <rect x="435" y="300" width="350" height="500" rx="8" fill="#fff5e6" class="panel"/>
+  <text x="462" y="343" class="t h2">路线 2 · 改监督 matching</text>
+  <text x="462" y="374" class="t body">AWM · DiffusionNFT</text>
+  <rect x="468" y="416" width="284" height="70" rx="6" fill="#fff" class="panel"/><text x="610" y="446" text-anchor="middle" class="t body">先生成 clean samples</text><text x="610" y="472" text-anchor="middle" class="t small">对 x<tspan baseline-shift="sub">0</tspan> 打分 / 算 optimality</text>
+  <path d="M610 486 L610 534" class="arrow"/>
+  <rect x="468" y="536" width="284" height="70" rx="6" fill="#fff" class="panel"/><text x="610" y="565" text-anchor="middle" class="t body">重新前向加噪</text><text x="610" y="590" text-anchor="middle" class="t small">构造预训练熟悉的 x<tspan baseline-shift="sub">t</tspan></text>
+  <path d="M610 606 L610 654" class="arrow"/>
+  <rect x="468" y="656" width="284" height="86" rx="6" fill="#fff" class="panel"/><text x="610" y="686" text-anchor="middle" class="t body">reward 加权 matching loss</text><text x="610" y="712" text-anchor="middle" class="t small">AWM 加权方向；NFT 学正/负方向</text><text x="610" y="734" text-anchor="middle" class="t small muted">优势：更贴近预训练数据分布</text>
+  <text x="462" y="778" class="t small">直接改：velocity / score matching 目标</text>
+
+  <rect x="815" y="300" width="350" height="500" rx="8" fill="#eef0fb" class="panel"/>
+  <text x="842" y="343" class="t h2">路线 3 · 改 guidance 算子</text>
+  <text x="842" y="374" class="t body">CFGRL / π* guidance</text>
+  <rect x="848" y="416" width="284" height="70" rx="6" fill="#fff" class="panel"/><text x="990" y="446" text-anchor="middle" class="t body">保留 base / reference</text><text x="990" y="472" text-anchor="middle" class="t small">多个预测方向可组合</text>
+  <path d="M990 486 L990 534" class="arrow"/>
+  <rect x="848" y="536" width="284" height="70" rx="6" fill="#fff" class="panel"/><text x="990" y="565" text-anchor="middle" class="t body">guidance = policy improvement</text><text x="990" y="590" text-anchor="middle" class="t small">控制混合强度，而非重写环境</text>
+  <path d="M990 606 L990 654" class="arrow"/>
+  <rect x="848" y="656" width="284" height="86" rx="6" fill="#fff" class="panel"/><text x="990" y="686" text-anchor="middle" class="t body">推理时组合 policy</text><text x="990" y="712" text-anchor="middle" class="t small">可调收益与偏离程度</text><text x="990" y="734" text-anchor="middle" class="t small muted">风险：过强 guidance 放大模型误差</text>
+  <text x="842" y="778" class="t small">直接改：采样时的组合方向</text>
+
+  <rect x="1195" y="300" width="350" height="500" rx="8" fill="#edf7ef" class="panel"/>
+  <text x="1222" y="343" class="t h2">路线 4 · 改初始噪声分布</text>
+  <text x="1222" y="374" class="t body">Latent-space Q steering</text>
+  <rect x="1228" y="416" width="284" height="70" rx="6" fill="#fff" class="panel"/><text x="1370" y="446" text-anchor="middle" class="t body">冻结 diffusion policy</text><text x="1370" y="472" text-anchor="middle" class="t small">a = π<tspan baseline-shift="sub">dp</tspan>(s,w)</text>
+  <path d="M1370 486 L1370 534" class="arrow"/>
+  <rect x="1228" y="536" width="284" height="70" rx="6" fill="#fff" class="panel"/><text x="1370" y="565" text-anchor="middle" class="t body">Q(s,a) 蒸馏为 Q(s,w)</text><text x="1370" y="590" text-anchor="middle" class="t small">评价哪种噪声会产生好动作</text>
+  <path d="M1370 606 L1370 654" class="arrow"/>
+  <rect x="1228" y="656" width="284" height="86" rx="6" fill="#fff" class="panel"/><text x="1370" y="686" text-anchor="middle" class="t body">学习 π<tspan baseline-shift="super">w</tspan>(w|s)</text><text x="1370" y="712" text-anchor="middle" class="t small">状态相关噪声替代 N(0,I)</text><text x="1370" y="734" text-anchor="middle" class="t small muted">风险：利用 Q 误差选择偏置噪声</text>
+  <text x="1222" y="778" class="t small">直接改：输入给冻结 policy 的 w</text>
+
+  <path d="M690 242 C520 270 300 260 230 300" class="arrow dash"/>
+  <path d="M760 242 C700 270 640 270 610 300" class="arrow dash"/>
+  <path d="M840 242 C900 270 950 270 990 300" class="arrow dash"/>
+  <path d="M910 242 C1080 270 1280 260 1370 300" class="arrow dash"/>
+  <rect x="55" y="834" width="1490" height="55" rx="6" fill="#fff" class="panel"/>
+  <text x="800" y="868" text-anchor="middle" class="t body">选择方法时先问：reward 作用在哪一层？需要重算 trajectory likelihood 吗？是否必须保持预训练 matching？推理时能否增加新模块？</text>
+</svg>

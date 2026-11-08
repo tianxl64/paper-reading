@@ -1,0 +1,71 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='1250' viewBox='0 0 2000 1250' role='img'>
+<title>Wan2.2 T2V 与 I2V 条件输入及共享 MoE CFG 推理流程</title>
+<metadata>task=wan22-moe-cfg-svg-redesign; generated=2026-08-07; source_commit=42bf4cfaa384bc21833865abc2f9e6c0e67233dc; diagram=t2v-i2v-conditioning</metadata>
+<defs>
+<linearGradient id='h' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='#0B132B'/><stop offset='1' stop-color='#254D91'/></linearGradient>
+<marker id='a' markerWidth='12' markerHeight='12' refX='10' refY='6' orient='auto'><path d='M0 0L12 6 0 12Z' fill='#315FC2'/></marker>
+<marker id='g' markerWidth='12' markerHeight='12' refX='10' refY='6' orient='auto'><path d='M0 0L12 6 0 12Z' fill='#16835B'/></marker>
+<marker id='p' markerWidth='12' markerHeight='12' refX='10' refY='6' orient='auto'><path d='M0 0L12 6 0 12Z' fill='#7C3AED'/></marker>
+<style>.t{font-family:Arial,sans-serif;fill:#14213D}.title{font-size:35px;font-weight:800;fill:white}.sub{font-size:16px;fill:#DCE8FF}.sec{font-size:21px;font-weight:800;fill:#213F74}.laneTitle{font-size:25px;font-weight:800}.lab{font-size:17px;font-weight:750}.body{font-size:14px}.sm{font-size:12px;fill:#5D6B82}.dim{font-family:Consolas,monospace;font-size:12px;fill:#23437A}.c{text-anchor:middle}.box{fill:white;stroke:#B4C5E7;stroke-width:2}.prompt{fill:#FFF8E7;stroke:#E2B94E;stroke-width:2}.latent{fill:#EAF2FF;stroke:#4E79D9;stroke-width:2}.cond{fill:#F1EAFF;stroke:#8466CC;stroke-width:2}.shared{fill:#E9F8F3;stroke:#2D9B76;stroke-width:2}.route{fill:#F3ECFF;stroke:#8466CC;stroke-width:2}.cfg{fill:#FFF0E5;stroke:#E18B3C;stroke-width:2}.solver{fill:#E8F8F2;stroke:#2D9B76;stroke-width:2}.t2v{fill:#EEF5FF;stroke:#4E79D9;stroke-width:2}.i2v{fill:#FFF4E8;stroke:#E28B43;stroke-width:2}.ln{fill:none;stroke:#315FC2;stroke-width:3;marker-end:url(#a)}.green{fill:none;stroke:#16835B;stroke-width:3;marker-end:url(#g)}.dash{fill:none;stroke:#7C3AED;stroke-width:3;stroke-dasharray:10 8;marker-end:url(#p)}.guide{fill:none;stroke:#99A9C5;stroke-width:2;stroke-dasharray:7 7}</style>
+</defs>
+<rect width='2000' height='1250' fill='#F2F6FC'/><rect width='2000' height='112' fill='url(#h)'/>
+<text class='t title' x='64' y='54'>Wan2.2：T2V 与 I2V 的条件输入，最后汇入同一条 MoE + CFG 采样环</text>
+<text class='t sub' x='66' y='86'>差异集中在“初始视频 latent 怎么得到、是否额外拼接 y”；文本仍通过 UMT5 → Cross-Attention 进入同一个 14B Expert</text>
+
+<rect class='box' x='40' y='140' width='920' height='450' rx='24'/>
+<rect class='t2v' x='40' y='140' width='920' height='62' rx='24'/><text class='t laneTitle' x='70' y='180'>左：T2V（Text-to-Video）</text><text class='t sm' x='720' y='178'>只提供文字，视频从随机 latent 长出来</text>
+<rect class='prompt' x='70' y='230' width='250' height='78' rx='14'/><text class='t lab c' x='195' y='260'>正向 prompt</text><text class='t dim c' x='195' y='285'>“a dog runs …”</text>
+<rect class='prompt' x='350' y='230' width='250' height='78' rx='14'/><text class='t lab c' x='475' y='260'>负向 prompt</text><text class='t dim c' x='475' y='285'>empty / n_prompt</text>
+<path class='ln' d='M320 269H338'/><path class='ln' d='M600 269H618'/>
+<rect class='cond' x='618' y='230' width='280' height='78' rx='14'/><text class='t lab c' x='758' y='260'>UMT5 编码（两份）</text><text class='t dim c' x='758' y='285'>context± [B,≤512,4096]</text>
+<text class='t sm' x='70' y='344'>文本分叉只为 CFG 准备 positive / negative 两次前向；它们共享同一份噪声状态。</text>
+<rect class='latent' x='70' y='378' width='390' height='90' rx='14'/><text class='t lab c' x='265' y='411'>随机 latent x_t</text><text class='t dim c' x='265' y='437'>[B,16,21,90,160]</text><text class='t sm c' x='265' y='456'>1280×720、81 帧示例</text>
+<path class='ln' d='M460 423H490'/>
+<rect class='shared' x='490' y='378' width='408' height='90' rx='14'/><text class='t lab c' x='694' y='411'>模型输入视频通道</text><text class='t dim c' x='694' y='437'>u=x_t → in_dim=16</text><text class='t sm c' x='694' y='456'>不携带 y，不做通道拼接</text>
+<path class='green' d='M694 468V523'/><path class='dash' d='M758 308V343H694V378'/>
+<rect class='t2v' x='70' y='500' width='828' height='58' rx='13'/><text class='t dim c' x='484' y='535'>进入 WanModel.forward：patch_embedding(u) → [B,5120,21,45,80] → token [B,75,600,5120]</text>
+
+<rect class='box' x='1040' y='140' width='920' height='450' rx='24'/>
+<rect class='i2v' x='1040' y='140' width='920' height='62' rx='24'/><text class='t laneTitle' x='1070' y='180'>右：I2V（Image-to-Video）</text><text class='t sm' x='1700' y='178'>首帧提供“锚点”，后续帧仍由扩散生成</text>
+<rect class='prompt' x='1070' y='230' width='250' height='78' rx='14'/><text class='t lab c' x='1195' y='260'>正向 prompt</text><text class='t dim c' x='1195' y='285'>动作 / 风格指令</text>
+<rect class='prompt' x='1350' y='230' width='250' height='78' rx='14'/><text class='t lab c' x='1475' y='260'>负向 prompt</text><text class='t dim c' x='1475' y='285'>empty / n_prompt</text>
+<path class='ln' d='M1320 269H1338'/><path class='ln' d='M1600 269H1618'/>
+<rect class='cond' x='1618' y='230' width='312' height='78' rx='14'/><text class='t lab c' x='1774' y='260'>UMT5 context±</text><text class='t dim c' x='1774' y='285'>[B,≤512,4096]</text>
+<rect class='i2v' x='1070' y='335' width='250' height='86' rx='14'/><text class='t lab c' x='1195' y='367'>首帧 RGB</text><text class='t dim c' x='1195' y='392'>[B,3,1,720,1280]</text><text class='t sm c' x='1195' y='408'>补零到 F 帧后送入 VAE</text>
+<path class='ln' d='M1320 378H1345'/>
+<rect class='i2v' x='1345' y='335' width='260' height='86' rx='14'/><text class='t lab c' x='1475' y='367'>VAE encode</text><text class='t dim c' x='1475' y='392'>image latent [B,16,21,90,160]</text><text class='t sm c' x='1475' y='408'>与 mask 对齐到同一网格</text>
+<path class='ln' d='M1605 378H1630'/>
+<rect class='i2v' x='1630' y='321' width='300' height='114' rx='14'/><text class='t lab c' x='1780' y='352'>y = concat(mask, image)</text><text class='t dim c' x='1780' y='378'>mask [B,4,21,90,160]</text><text class='t dim c' x='1780' y='399'>image [B,16,21,90,160]</text><text class='t dim c' x='1780' y='420'>y [B,20,21,90,160]</text>
+<rect class='latent' x='1070' y='465' width='260' height='75' rx='14'/><text class='t lab c' x='1200' y='495'>随机 latent x_t</text><text class='t dim c' x='1200' y='519'>[B,16,21,90,160]</text>
+<path class='ln' d='M1330 503H1355'/><path class='dash' d='M1780 435V503H1605'/>
+<rect class='shared' x='1355' y='465' width='575' height='75' rx='14'/><text class='t lab c' x='1642' y='495'>通道拼接：u = cat(x_t, y)</text><text class='t dim c' x='1642' y='519'>[B,36,21,90,160] · WanModel.forward 内执行</text>
+<path class='green' d='M1642 540V566'/><path class='dash' d='M1774 308V334H1642V465'/>
+<text class='t sm' x='1070' y='570'>注意：y 不是“替代文本”，而是额外的视觉条件通道；文本仍在后续 Cross-Attention 提供语义。</text>
+
+<path class='guide' d='M484 590V628H1000V590'/><path class='guide' d='M1500 590V628H1000'/>
+<text class='t sec c' x='1000' y='656'>两条路径在这里汇合：从 token 化开始，后续 MoE 路由与 CFG 完全同构</text>
+
+<rect class='box' x='40' y='680' width='1920' height='500' rx='24'/>
+<text class='t sec' x='68' y='720'>共同下游：一次 timestep 的完整数据流（T2V / I2V 只在左端输入通道不同）</text>
+<rect class='shared' x='68' y='755' width='220' height='88' rx='14'/><text class='t lab c' x='178' y='788'>Patch Embedding</text><text class='t dim c' x='178' y='813'>[B,L,5120]</text><text class='t sm c' x='178' y='831'>L=75,600</text>
+<path class='ln' d='M288 799H322'/>
+<rect class='shared' x='322' y='755' width='250' height='88' rx='14'/><text class='t lab c' x='447' y='787'>共享条件准备</text><text class='t dim c' x='447' y='812'>t→e [B,L,6,5120]</text><text class='t sm c' x='447' y='830'>context±→[B,512,5120]</text>
+<path class='ln' d='M572 799H606'/>
+<rect class='route' x='606' y='742' width='285' height='114' rx='14'/><text class='t lab c' x='748' y='775'>timestep Router</text><text class='t dim c' x='748' y='801'>t ≥ 0.875 → High-Noise</text><text class='t dim c' x='748' y='823'>t &lt; 0.875 → Low-Noise</text><text class='t sm c' x='748' y='843'>整块选择一个 14B Expert</text>
+<path class='ln' d='M891 799H925'/>
+<rect class='shared' x='925' y='755' width='300' height='88' rx='14'/><text class='t lab c' x='1075' y='787'>同一 Expert × 两次 forward</text><text class='t dim c' x='1075' y='812'>v_pos, v_neg ∈ [B,16,21,90,160]</text><text class='t sm c' x='1075' y='830'>共享 x_t / t / y / 权重</text>
+<path class='ln' d='M1225 799H1259'/>
+<rect class='cfg' x='1259' y='742' width='280' height='114' rx='14'/><text class='t lab c' x='1399' y='775'>CFG 合并</text><text class='t dim c' x='1399' y='802'>v_cfg=v_neg+s(v_pos−v_neg)</text><text class='t dim c' x='1399' y='824'>s_low=3.0 · s_high=4.0</text><text class='t sm c' x='1399' y='844'>只产生一个 solver 输入</text>
+<path class='ln' d='M1539 799H1573'/>
+<rect class='solver' x='1573' y='755' width='250' height='88' rx='14'/><text class='t lab c' x='1698' y='787'>UniPC / DPM++</text><text class='t dim c' x='1698' y='812'>v_cfg + σ_t, history</text><text class='t sm c' x='1698' y='830'>更新 x_t → x_next</text>
+<path class='green' d='M1823 799H1872V940H178V843'/>
+<text class='t sm' x='94' y='896'>循环约 40 个 timesteps；每轮只更新一个 latent 状态，下一轮重新路由并重新做 CFG。</text>
+<rect class='latent' x='68' y='936' width='360' height='88' rx='14'/><text class='t lab c' x='248' y='969'>x_next</text><text class='t dim c' x='248' y='994'>[B,16,21,90,160]</text><text class='t sm c' x='248' y='1012'>成为下一轮的 x_t</text>
+<path class='ln' d='M428 980H462'/>
+<rect class='shared' x='462' y='936' width='330' height='88' rx='14'/><text class='t lab c' x='627' y='969'>重复：router → Expert → CFG</text><text class='t dim c' x='627' y='994'>High / Low 边界由当前 t 决定</text><text class='t sm c' x='627' y='1012'>I2V 的 y 在各轮保持同一条件</text>
+<path class='ln' d='M792 980H826'/>
+<rect class='shared' x='826' y='936' width='300' height='88' rx='14'/><text class='t lab c' x='976' y='969'>VAE Decode</text><text class='t dim c' x='976' y='994'>latent → RGB</text><text class='t sm c' x='976' y='1012'>最终视频 [B,3,F,H,W]</text>
+<rect class='i2v' x='1160' y='936' width='760' height='88' rx='14'/><text class='t lab' x='1184' y='970'>本质区别</text><text class='t body' x='1184' y='996'>T2V：只靠文本约束随机世界；I2V：在同一文本约束外，额外把首帧的视觉事实写进 y，</text><text class='t body' x='1184' y='1016'>因此模型知道“从什么画面开始”，但未来帧仍由 x_t 的扩散更新生成。</text>
+
+<rect class='box' x='40' y='1080' width='1920' height='75' rx='16'/><text class='t sm' x='68' y='1110'>源码锚点：wan/image2video.py 负责 noise、mask、VAE encode 与 y；wan/modules/model.py 负责 x/y 拼接、Conv3D、token 化、时间调制、Cross-Attention 与 unpatchify。</text><text class='t dim' x='68' y='1135'>统一视角：y 是视觉条件，context 是语言条件，CFG 是采样时的条件强化，MoE 是按 timestep 选择完整 Expert。</text>
+</svg>

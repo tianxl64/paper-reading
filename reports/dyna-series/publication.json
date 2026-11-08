@@ -1,0 +1,212 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "dyna-series",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "DYNA-1_academic_deep_reading.html",
+  "source_html_sha256": "18674d3e81d645467529e3527b411a6e976c5fcdcffeca8bf0890f27961dd68b",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "960aa38849d7a5adef85ad8a13894c1effdc971614e73d28ac00e51c57a776ed",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 110,
+      "original_static_math": 0,
+      "added_static_math": 0
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 0,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "../../assets/media/3bbc5b162c724a1c7bba63432e43ac9f4ecc20cff2f86a670305ca5e6678728d.webp",
+      "source_sha256": "3bbc5b162c724a1c7bba63432e43ac9f4ecc20cff2f86a670305ca5e6678728d",
+      "sha256": "3f2ccc343768a20355b69bc3e339956f97db6fefb0cae7e19d8a488b37aacd4b",
+      "bytes": 1348072,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/4d8a7dfb6f245d72d0c1103e07a58a5c32c069bba931336eb37e5d5b2ba252bf.webp",
+      "source_sha256": "4d8a7dfb6f245d72d0c1103e07a58a5c32c069bba931336eb37e5d5b2ba252bf",
+      "sha256": "0b9058558d6a73bff98104789d763517e89ee306754bd487048f350ad0bebbae",
+      "bytes": 1225826,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/8744aa5c6763e3f0c0fb6bfd7e945243e5955816eda3fee022c167c05acf7e0c.webp",
+      "source_sha256": "8744aa5c6763e3f0c0fb6bfd7e945243e5955816eda3fee022c167c05acf7e0c",
+      "sha256": "4a6f429f2ac7a517de8671f9e7592e16e69ad7b590a5bd6d20e2f38cd93d3226",
+      "bytes": 1172774,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/cfb559676f68d037b4897ef6594fa0093eebf6b87f1e33be1b5c95b757257113.webp",
+      "source_sha256": "cfb559676f68d037b4897ef6594fa0093eebf6b87f1e33be1b5c95b757257113",
+      "sha256": "82b578c3d75167150f65faa38d8a9b51ba6eac1685e0a11fc7a2b30525099054",
+      "bytes": 1317206,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/54c9d7a7c062409d6380a095e663ff987edbfe8de8c5b1a6e422ed973929de9a.webp",
+      "source_sha256": "54c9d7a7c062409d6380a095e663ff987edbfe8de8c5b1a6e422ed973929de9a",
+      "sha256": "c644c7a3344bb83be3dd032bde5b664a1aa3b729cd30bf0bb0f6dc9ab720d49a",
+      "bytes": 1164334,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/ff494927983874cf02550204e447ca490aad5765dcd452e543c7f710dbf21306.webp",
+      "source_sha256": "ff494927983874cf02550204e447ca490aad5765dcd452e543c7f710dbf21306",
+      "sha256": "a220ab69bc009cbd7a106777095dafab4791d945214c1932a6d21a3be88ee738",
+      "bytes": 977670,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/a5eba2cd10ca8f2d29d41173a3ff4c9153d077cdedb607777507ee0dad2cba58.webp",
+      "source_sha256": "a5eba2cd10ca8f2d29d41173a3ff4c9153d077cdedb607777507ee0dad2cba58",
+      "sha256": "6be65a54a8d924504f1375fa58c577f8ad61ceca1f29100ec39edb1e3f38f4f6",
+      "bytes": 1237850,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/2478975b507096e45655a5fc59c6a22b7a4d113e9295ff179adea53af47a237a.webp",
+      "source_sha256": "2478975b507096e45655a5fc59c6a22b7a4d113e9295ff179adea53af47a237a",
+      "sha256": "91a4d099c51b6e752339a24ac5f2d5ebeebd781410f813f2a6ab6830a28dad91",
+      "bytes": 1997576,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/c1310b4809079f9e87145486d2a2f2449769c3c08fed78692a935707fa756bdb.webp",
+      "source_sha256": "c1310b4809079f9e87145486d2a2f2449769c3c08fed78692a935707fa756bdb",
+      "sha256": "c1a542fef1e0b3fa822f5e74e8df3a4e6bd31be70e99015b858e0205d75b7c66",
+      "bytes": 1413628,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/36b033e5a404bc798c3e7d4cea88ea0ca7d19244c3288432fbed9f7204d3473e.webp",
+      "source_sha256": "36b033e5a404bc798c3e7d4cea88ea0ca7d19244c3288432fbed9f7204d3473e",
+      "sha256": "a55af63b6b053eb17c8fd2c8b5502d42d89ee023fe76b1a2a26cc89bd8b6b8e4",
+      "bytes": 1480280,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/2c7e12c6f04d6c601ecc7c28b1c006f38f8dc37efef9bc3f7ea4a76d4de36972.webp",
+      "source_sha256": "2c7e12c6f04d6c601ecc7c28b1c006f38f8dc37efef9bc3f7ea4a76d4de36972",
+      "sha256": "35b639df925d258c4289cef5ce7ab2920667425a3d8f0255a1e9222382adf7d2",
+      "bytes": 1412460,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/e80b700799979d87f5b3f391564e57ef59c6773807595e6e717d5cd1dab347de.webp",
+      "source_sha256": "e80b700799979d87f5b3f391564e57ef59c6773807595e6e717d5cd1dab347de",
+      "sha256": "b895f66b966683ac63bd62dced43088c5dd75f54f10309a6c9b0eaf836aa1308",
+      "bytes": 1430490,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/69dfdab953a07dc7f897793264d403473996f35876d664f9440417ca9b4c113b.webp",
+      "source_sha256": "69dfdab953a07dc7f897793264d403473996f35876d664f9440417ca9b4c113b",
+      "sha256": "da66e6bbf477f4a51ede3b587f8b651f8c652a27fc672fdceb4dcd07e0ee93f1",
+      "bytes": 1503422,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/445c27700b4d6fd14909db7ca42ac651ca2865cbb71a3b9075f059dd8882aecc.webp",
+      "source_sha256": "445c27700b4d6fd14909db7ca42ac651ca2865cbb71a3b9075f059dd8882aecc",
+      "sha256": "6041a4eaefbdec8c56b56a57a43123f32489f81ba0241be21fca1563dea937d2",
+      "bytes": 1201214,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/53363bba8acbdaa7d0f6cc471c31ba79faf5e6c361bd168a72dd5c6889f891f5.webp",
+      "source_sha256": "53363bba8acbdaa7d0f6cc471c31ba79faf5e6c361bd168a72dd5c6889f891f5",
+      "sha256": "515ddb3ff0ccf519e118a6510b959934d4dd4eb903b812bb916baad6d768dcd2",
+      "bytes": 1208328,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/d7b2bd75c38e23e22984235b80196077b71cc534f04eb6fde60e66dc5ede5c51.webp",
+      "source_sha256": "d7b2bd75c38e23e22984235b80196077b71cc534f04eb6fde60e66dc5ede5c51",
+      "sha256": "6d0690a96478e3ec11687e44ffb4843f25f923a417599a83a16ef56245babd6c",
+      "bytes": 1135068,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/9f8f729872d85f653e661b7887421cb373e3396e69d239ff5429409edccfc548.webp",
+      "source_sha256": "9f8f729872d85f653e661b7887421cb373e3396e69d239ff5429409edccfc548",
+      "sha256": "82e4875130f050156cd670c2fd678d3c383f4c2524136c2639082c14806d71a0",
+      "bytes": 1387558,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/c24eb57672a0d61828199ac3d4b7e48a595ddbe5b067c12559c4fd22e89c54d4.webp",
+      "source_sha256": "c24eb57672a0d61828199ac3d4b7e48a595ddbe5b067c12559c4fd22e89c54d4",
+      "sha256": "202fcfe392107b9fad9d698ac1a14f77142bfc4a053a8a037b0cb86f3a9c9118",
+      "bytes": 1202306,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/727c0291c6d7aee03594158f26264f4c5f2ee017e319a9d8a2e99d990b062caa.webp",
+      "source_sha256": "727c0291c6d7aee03594158f26264f4c5f2ee017e319a9d8a2e99d990b062caa",
+      "sha256": "a1f78be00d4d4eea512c70d6e8b3596f69e7ab24f7b35a056ea5a2821b7fc2d0",
+      "bytes": 1311604,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/ffb12d4c47c075d2e9a651af4ff680db48f0599b09fd813a2e0bc44a351c0471.webp",
+      "source_sha256": "ffb12d4c47c075d2e9a651af4ff680db48f0599b09fd813a2e0bc44a351c0471",
+      "sha256": "7a55e78e783bcfff889bf8dbe14ad256476644fa77499a33cbd311e4bf7cf2d6",
+      "bytes": 1265496,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/c0c668def68cfbfc616d7cd34c36401f5fb6da4a4015f72946cf36bdcfc4c90b.webp",
+      "source_sha256": "c0c668def68cfbfc616d7cd34c36401f5fb6da4a4015f72946cf36bdcfc4c90b",
+      "sha256": "ce6a0456dd8cf3048f0499c93eb49eacaadb4e0c67ad1ba578955bcdaa30d49a",
+      "bytes": 1158084,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "18674d3e81d645467529e3527b411a6e976c5fcdcffeca8bf0890f27961dd68b",
+      "sha256": "960aa38849d7a5adef85ad8a13894c1effdc971614e73d28ac00e51c57a776ed",
+      "bytes": 87396
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

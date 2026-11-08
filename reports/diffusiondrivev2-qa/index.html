@@ -1,0 +1,4907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>DiffusionDriveV2 问答记录</title>
+<style>
+    :root {
+      --bg: #f7f7f4;
+      --paper: #ffffff;
+      --ink: #1f2933;
+      --muted: #64748b;
+      --line: #d9ded7;
+      --accent: #2563eb;
+      --accent-soft: #eaf1ff;
+      --warn: #8a5a00;
+      --warn-bg: #fff7df;
+      --code-bg: #111827;
+      --code-ink: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.72;
+    }
+    main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 32px 28px 72px;
+    }
+    .content {
+      margin-left: 320px;
+      margin-right: auto;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 28px;
+      padding-bottom: 22px;
+    }
+    h1, h2, h3, h4 { line-height: 1.28; margin: 0 0 14px; }
+    h2, h3, h4 { scroll-margin-top: 24px; }
+    h1 { font-size: 30px; }
+    h2 { font-size: 24px; margin-top: 34px; }
+    h3 { font-size: 19px; margin-top: 26px; }
+    h4 { font-size: 16px; margin-top: 20px; }
+    p { margin: 10px 0; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .qa {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 26px;
+      margin-top: 22px;
+      box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+    }
+    .question {
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+      padding: 14px 16px;
+      margin: 18px 0 22px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .note {
+      background: var(--warn-bg);
+      color: var(--warn);
+      border: 1px solid #f0d58c;
+      border-radius: 6px;
+      padding: 12px 14px;
+      margin: 16px 0;
+    }
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 296px;
+      background: #ffffff;
+      border-right: 1px solid var(--line);
+      padding: 22px 18px;
+      overflow-y: auto;
+      z-index: 20;
+    }
+    .sidebar-title {
+      font-weight: 800;
+      font-size: 17px;
+      margin-bottom: 4px;
+    }
+    .sidebar-subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    .toc-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .toc-link {
+      display: block;
+      color: var(--ink);
+      border-left: 3px solid transparent;
+      border-radius: 4px;
+      padding: 7px 8px 7px 10px;
+      font-size: 14px;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .toc-link:hover {
+      background: #f8fafc;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .toc-link.active {
+      background: var(--accent-soft);
+      border-left-color: var(--accent);
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .toc-link.level-3 {
+      padding-left: 24px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .toc-link.level-3.active {
+      color: var(--accent);
+    }
+    .toc-link.level-4 {
+      padding-left: 40px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .toc-empty {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 8px 2px;
+    }
+    .toc-mobile-toggle {
+      display: none;
+    }
+    .toc {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px 22px;
+    }
+    .toc ul { margin: 8px 0 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 20px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      vertical-align: top;
+    }
+    th {
+      background: #f1f5f9;
+      text-align: left;
+      font-weight: 700;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      background: #eef2f7;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 0.92em;
+    }
+    pre {
+      background: var(--code-bg);
+      color: var(--code-ink);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      line-height: 1.55;
+      margin: 16px 0 20px;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border-radius: 0;
+      font-size: 13px;
+    }
+    .flow {
+      white-space: pre-wrap;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      font-size: 13px;
+      line-height: 1.55;
+      overflow-x: auto;
+    }
+    .figure-wrap {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      margin: 18px 0 24px;
+      overflow-x: auto;
+    }
+    .figure-caption {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 8px 2px 0;
+    }
+    .arch-svg {
+      display: block;
+      width: 100%;
+      min-width: 980px;
+      height: auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+    .arch-title {
+      fill: #111827;
+      font-weight: 800;
+      font-size: 18px;
+    }
+    .arch-label {
+      fill: #1f2933;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .arch-small {
+      fill: #475569;
+      font-size: 11px;
+    }
+    .arch-tiny {
+      fill: #64748b;
+      font-size: 10px;
+    }
+    .zoomable-figure {
+      cursor: zoom-in;
+    }
+    .zoomable-figure:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+    .figure-lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.82);
+      padding: 28px;
+    }
+    .figure-lightbox.open {
+      display: flex;
+    }
+    .figure-lightbox-panel {
+      position: relative;
+      width: min(94vw, 1480px);
+      height: min(88vh, 980px);
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      overflow: auto;
+      padding: 18px;
+      cursor: zoom-out;
+    }
+    .figure-lightbox-content {
+      min-width: max-content;
+    }
+    .figure-lightbox-content img,
+    .figure-lightbox-content svg {
+      display: block;
+      width: auto;
+      max-width: none;
+      height: auto;
+      max-height: none;
+    }
+    .figure-lightbox-close {
+      position: fixed;
+      top: 18px;
+      right: 20px;
+      z-index: 101;
+      width: 40px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.95);
+      color: #111827;
+      font-size: 24px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .arch-box {
+      fill: #f8fafc;
+      stroke: #94a3b8;
+      stroke-width: 1.2;
+      rx: 8;
+    }
+    .arch-box-blue {
+      fill: #eaf1ff;
+      stroke: #2563eb;
+    }
+    .arch-box-green {
+      fill: #eafbf1;
+      stroke: #16a34a;
+    }
+    .arch-box-orange {
+      fill: #fff7df;
+      stroke: #d97706;
+    }
+    .arch-box-red {
+      fill: #fff1f2;
+      stroke: #e11d48;
+    }
+    .arch-box-purple {
+      fill: #f4f0ff;
+      stroke: #7c3aed;
+    }
+    .arch-arrow {
+      stroke: #334155;
+      stroke-width: 1.8;
+      fill: none;
+      marker-end: url("#arrow");
+    }
+    .arch-arrow-soft {
+      stroke: #64748b;
+      stroke-width: 1.4;
+      stroke-dasharray: 4 4;
+      fill: none;
+      marker-end: url("#arrowSoft");
+    }
+    .lane-title {
+      fill: #334155;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0;
+    }
+    .tag {
+      display: inline-block;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      border-radius: 999px;
+      padding: 2px 9px;
+      color: var(--muted);
+      font-size: 13px;
+      margin-right: 6px;
+    }
+    ul, ol { padding-left: 24px; }
+    li { margin: 6px 0; }
+    @media (max-width: 960px) {
+      .sidebar {
+        transform: none;
+        transition: transform 160ms ease;
+        box-shadow: none;
+      }
+      .sidebar.open {
+        transform: none;
+      }
+      .content {
+        margin-left: 320px;
+        padding-top: 0;
+      }
+      .toc-mobile-toggle {
+        display: none;
+        position: fixed;
+        top: 14px;
+        left: 14px;
+        z-index: 30;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        color: var(--ink);
+        font-size: 20px;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(15, 23, 42, 0.10);
+      }
+      main {
+        padding-left: 28px;
+        padding-right: 28px;
+      }
+      .figure-lightbox {
+        padding: 14px;
+      }
+      .figure-lightbox-panel {
+        width: 96vw;
+        height: 86vh;
+      }
+    }
+  </style>
+<link href="../../favicon.ico" rel="icon"/></head>
+<body>
+<button aria-controls="tocSidebar" aria-label="打开目录" class="toc-mobile-toggle" type="button">☰</button>
+<aside aria-label="全文目录" class="sidebar" id="tocSidebar">
+<div class="sidebar-title">DiffusionDriveV2 问答目录</div>
+<div class="sidebar-subtitle">点击章节跳转，滚动时自动高亮当前位置。</div>
+<nav class="toc-nav" id="tocNav">
+<div class="toc-empty">目录加载中...</div>
+</nav>
+</aside>
+<main class="content" id="content">
+<header>
+<h1>DiffusionDriveV2 问答记录</h1>
+<p class="meta">本文件用于记录后续所有问题和完整回答。每次回答都写入 HTML 正文，优先使用白话解释，再给源码证据和关键数量推导。</p>
+<div class="note">
+      记录规则：后续每个问题都必须把完整回答正文写进本 HTML，不能只写短答或摘要。回答风格以白话解释为主，先讲清楚“它到底在干什么、为什么这么做”，再补源码位置、shape、数量公式和必要的技术细节。
+    </div>
+<p class="meta">源码根目录：<code>C:\Users\tianxl\code_analysis\DiffusionDriveV2</code></p>
+<p class="meta">当前分析代码版本：<code>1cd12a1e155c34dcc471261835444c8d5587580b</code></p>
+</header>
+<article class="qa" id="q1">
+<h2>问题 1：候选的多条轨迹是如何生成和采样的？</h2>
+<p class="meta">
+      记录时间：2026-06-27；回答要求：完整白话解释，不使用短答替代正文。
+      <span class="tag">trajectory candidates</span>
+<span class="tag">truncated diffusion</span>
+<span class="tag">SEL scorer</span>
+</p>
+<div class="question">候选的多条轨迹是如何生成和采样的？</div>
+<h3>先用白话讲清楚</h3>
+<p>
+      DiffusionDriveV2 生成多条候选轨迹时，不是像普通扩散模型那样“从一团纯随机噪声里慢慢生成一条轨迹”。它的做法更像是：先准备好一批“典型驾驶意图模板”，比如直行、轻微左偏、右转、慢速前进等；然后围绕这些模板轻轻加一点噪声，让模型做小范围修正；最后再把修正出来的一大堆轨迹交给一个评分器筛选。
+    </p>
+<p>
+      这里最关键的概念是 <strong>anchor</strong>。仓库里有一个文件 <code>kmeans_navsim_traj_20.npy</code>，里面存了 20 条聚类得到的典型未来轨迹。每条 anchor 有 8 个未来点，每个点只有 <code>x, y</code> 两个坐标，所以形状是 <code>(20, 8, 2)</code>。你可以把它理解成“20 种初始驾驶意图”。
+    </p>
+<p>
+      生成多候选轨迹的核心动作就是：把这 20 条 anchor 复制很多份，每份加不同的噪声，经过短步数 DDIM 细化，再额外做乘性噪声扰动。这样一条场景输入就能得到几十条、几百条甚至 800 条候选轨迹。
+    </p>
+<h3>整体分三层：模板、扩散修正、采样扩增</h3>
+<p>可以把候选轨迹生成理解成三层：</p>
+<ol>
+<li><strong>第一层：20 条 anchor 模板。</strong>这是离线聚类出来的驾驶意图先验，不是模型临场随机想出来的。</li>
+<li><strong>第二层：group 复制。</strong>同一套 20 条 anchor 会复制多组，每组加不同噪声。复制组数不同，候选数就不同。</li>
+<li><strong>第三层：扩散细化和额外扰动。</strong>模型从轻微加噪后的 anchor 出发，只跑很少几步 DDIM，把模板修正成适合当前图像/激光/状态的轨迹；在 SEL 推理阶段，还会用 <code>add_mul_noise</code> 再做局部扰动扩增。</li>
+</ol>
+<h3>为什么说它是“围绕模板细化”，不是“从噪声生成”？</h3>
+<p>
+      因为代码不是先创建一个随机的 <code>(B, N, 8, 2)</code> 噪声轨迹，而是先加载 <code>plan_anchor</code>，再调用 scheduler 的 <code>add_noise</code> 把轻微噪声加到 anchor 上。加噪时间步是 <code>t=8</code>，而 scheduler 名义上有 1000 个 diffusion timesteps。<code>t=8</code> 非常靠近干净样本，意味着起点仍然基本保留 anchor 形状。
+    </p>
+<p>
+      换句话说，DiffusionDriveV2 不是“无中生有造轨迹”，而是“从 20 个典型轨迹意图出发，做局部扰动和修正”。这也是它能只用 2 步或 10 步 DDIM 的原因：它不需要从纯噪声恢复出轨迹流形，起点已经在轨迹流形附近。
+    </p>
+<h3>训练 RL 阶段：每个样本生成 80 条候选，再加 GT 一起评分</h3>
+<p>
+      RL 阶段对应 <code>diffusiondrivev2_model_rl.py</code> 里的 <code>TrajectoryHead.forward_train_rl</code>。这一阶段主要是训练扩散轨迹 head，让它生成 PDM 分数更高的轨迹。
+    </p>
+<p>
+      RL 训练时，配置里的 <code>num_groups=4</code> 生效。原始 anchor 是 20 条，复制 4 组以后就是：
+    </p>
+<pre><code>20 anchors * 4 groups = 80 candidate trajectories</code></pre>
+<p>
+      代码先做这样的展开：
+    </p>
+<pre><code class="language-python">plan_anchor = self.plan_anchor.unsqueeze(0).unsqueeze(0).repeat(bs, num_groups, 1, 1, 1)
+plan_anchor = plan_anchor.view(bs, num_groups * self.ego_fut_mode, *plan_anchor.shape[3:])
+# shape: (B, 4 * 20, 8, 2) = (B, 80, 8, 2)</code></pre>
+<p>
+      然后进行归一化。代码中 <code>x</code> 除以 50，<code>y</code> 除以 20。这样做是为了让轨迹坐标落在接近 <code>[-1, 1]</code> 的范围里，方便扩散模型处理。
+    </p>
+<pre><code class="language-python">odo_info_fut_x = odo_info_fut_x / 50
+odo_info_fut_y = odo_info_fut_y / 20</code></pre>
+<p>
+      接着在 <code>t=8</code> 加噪：
+    </p>
+<pre><code class="language-python">noise = torch.randn(diffusion_output.shape, device=device)
+trunc_timesteps = torch.ones((bs,), device=device, dtype=torch.long) * 8
+diffusion_output = self.diffusionrl_scheduler.add_noise(
+    original_samples=diffusion_output,
+    noise=noise,
+    timesteps=trunc_timesteps,
+)</code></pre>
+<p>
+      注意这里的 <code>add_noise</code> 是加在 anchor 上，不是从纯噪声开始。之后跑 10 个 denoising step。实际代码里 <code>step_num=10</code>，<code>step_ratio=20/step_num=2</code>，所以 roll timesteps 是近似：
+    </p>
+<pre><code>[18, 16, 14, 12, 10, 8, 6, 4, 2, 0]</code></pre>
+<p>
+      每一步都会把当前 noisy trajectory 编码成 trajectory feature，再让 <code>diff_decoder</code> 根据 BEV、agent query、ego query、time embedding 和 status 信息预测一个更干净的 <code>x_start</code>，最后由 <code>DDIMScheduler_with_logprob.step</code> 得到下一步 sample 和 log probability。
+    </p>
+<p>
+      10 步结束后，模型得到 <code>(B, 80, 8, 2)</code> 的 xy 轨迹。由于扩散过程只生成 <code>x, y</code>，不直接生成朝向 <code>yaw</code>，所以后面会用 <code>bezier_xyyaw</code> 根据 xy 曲线恢复 heading，变成 <code>(B, 80, 8, 3)</code>。
+    </p>
+<p>
+      最后，RL 阶段会把 GT 轨迹拼到候选后面，一起送入 PDM scorer：
+    </p>
+<pre><code class="language-python">target_traj = targets['trajectory'].unsqueeze(1)
+diffusion_output_with_gt = torch.cat((diffusion_output, target_traj), dim=1)
+# shape: (B, 81, 8, 3), last one is GT</code></pre>
+<p>
+      所以 RL 阶段的“候选生成”可以概括为：20 个模板，每个模板采 4 个噪声版本，跑 10 步扩散细化，得到 80 条候选；再加上 GT 做 reward baseline。
+    </p>
+<h3>SEL 训练阶段：生成 120 条 diffusion 候选，再混入 vocabulary 候选</h3>
+<p>
+      SEL 阶段对应 <code>diffusiondrivev2_model_sel.py</code>。它不是继续训练扩散生成器，而是冻结扩散生成器，训练一个 scorer 来判断哪条候选轨迹更好。
+    </p>
+<p>
+      SEL 训练时，代码里硬编码 <code>num_groups=2</code>。原始 20 条 anchor 复制 2 组：
+    </p>
+<pre><code>20 anchors * 2 groups = 40 diffusion candidates</code></pre>
+<p>
+      它同样从 <code>t=8</code> 加噪，但只跑 2 步 DDIM。因为 <code>step_num=2</code>，<code>step_ratio=20/2=10</code>，所以实际 timesteps 是：
+    </p>
+<pre><code>[10, 0]</code></pre>
+<p>
+      这 40 条候选经过扩散细化以后，还会调用 <code>add_mul_noise(n_aug=2, std_min=0.1, std_max=0.2)</code> 做乘性噪声扩增。这个函数会保留原始候选，再额外生成 2 份扰动版本，所以数量变成：
+    </p>
+<pre><code>40 original candidates * (1 original + 2 augmented copies) = 120 candidates</code></pre>
+<p>
+      这里的乘性噪声不是给每个点随便平移，而是对一整条轨迹做类似缩放的扰动。直观上，它让轨迹“整体伸长一点、缩短一点、横向幅度变一点”，比逐点乱抖更符合车辆轨迹的连续性。
+    </p>
+<p>
+      SEL 训练还有一个额外动作：混入 <code>gtrs_traj/16384.npy</code> 里的轨迹 vocabulary。这个 vocabulary 大约有 16384 条候选轨迹，但训练时不会全用，而是用 <code>dropout_ratio=0.99</code> 随机保留约 1%，也就是约 164 条：
+    </p>
+<pre><code>16384 * 1% ~= 164 vocabulary candidates</code></pre>
+<p>
+      所以 SEL 训练时 scorer 看到的大致候选池是：
+    </p>
+<pre><code>120 diffusion candidates + about 164 vocabulary candidates ~= 284 candidates</code></pre>
+<p>
+      这些 vocabulary 候选不是推理时拿来输出的，它主要是训练 scorer 用的。目的很实际：只看扩散模型生成的候选，scorer 可能只学会在“扩散模型常见轨迹”里排序；混入更广的轨迹库后，scorer 会看到更多好坏差异更明显的样本，更容易学到 PDM 子指标对应的判断规则。
+    </p>
+<h3>SEL 推理阶段：真正用于评测/部署的是 800 条候选</h3>
+<p>
+      用户通常问“候选的多条轨迹如何生成和采样”，最重要的是 SEL 推理阶段。因为最终评测时主要走 <code>diffusiondrivev2_sel_agent</code>，它会生成大量候选，然后通过 coarse/fine scorer 选出轨迹。
+    </p>
+<p>
+      SEL 推理时，代码里硬编码 <code>num_groups=10</code>。因此：
+    </p>
+<pre><code>20 anchors * 10 groups = 200 diffusion candidates</code></pre>
+<p>
+      这 200 条轨迹同样从 anchor 出发，先归一化，再在 <code>t=8</code> 加轻噪声，然后只跑 2 步 DDIM，timesteps 仍然是 <code>[10, 0]</code>。
+    </p>
+<p>
+      2 步扩散细化后，代码调用：
+    </p>
+<pre><code class="language-python">diffusion_output = self.add_mul_noise(diffusion_output)</code></pre>
+<p>
+<code>add_mul_noise</code> 默认参数是 <code>n_aug=3, std_min=0.1, std_max=0.3</code>。它保留原始 200 条，再额外生成 3 份乘性噪声版本，所以推理候选数变成：
+    </p>
+<pre><code>200 diffusion candidates * (1 original + 3 augmented copies) = 800 candidates</code></pre>
+<p>
+      这就是 DiffusionDriveV2 SEL 推理里经常说的 800 条候选轨迹来源。不是 800 个 anchor，也不是 diffusion 直接一次生成 800 个完全独立样本，而是：
+    </p>
+<pre><code>20 anchor modes * 10 noisy groups * 4 multiplicative-noise variants = 800 candidates</code></pre>
+<h3>800 条候选生成以后怎么采样/筛选？</h3>
+<p>
+      生成 800 条轨迹只是第一步，最终不能全部输出。DiffusionDriveV2 后面接了一个两级选择器：coarse scorer 和 fine scorer。
+    </p>
+<p>
+      首先，800 条轨迹会通过 <code>_get_scorer_inputs</code> 编码成 scorer 用的 trajectory feature。这里不仅编码 xy，还编码 yaw。然后 coarse scorer 对 800 条轨迹分别预测 5 个 PDM 子指标：
+    </p>
+<ul>
+<li><code>NC</code>：no collision，不碰撞。</li>
+<li><code>DAC</code>：drivable area compliance，不开出可行驶区域。</li>
+<li><code>EP</code>：ego progress，进展/前进距离。</li>
+<li><code>TTC</code>：time to collision，碰撞时间安全性。</li>
+<li><code>C</code>：comfort，舒适性。</li>
+</ul>
+<p>
+      coarse scorer 会把这 5 个预测分数组合成一个类似 PDM 的总分：
+    </p>
+<pre><code>score = sigmoid(NC) * sigmoid(DAC) *
+        (5 * sigmoid(TTC) + 5 * sigmoid(EP) + 2 * sigmoid(C)) / 12</code></pre>
+<p>
+      然后做两件事：
+    </p>
+<ol>
+<li>从 800 条里直接选出 coarse 分最高的一条，记为 <code>coarse_traj</code>。</li>
+<li>从 800 条里取 top-32，交给更重的 fine scorer 继续精排。</li>
+</ol>
+<p>
+      fine scorer 有 3 层 decoder，每层都会产生一次排序结果。代码会从每层的 fine ranking 中各取一条最优轨迹，所以 fine scorer 会给出 3 条轨迹。最后拼起来就是：
+    </p>
+<pre><code>1 coarse-best trajectory + 3 fine-best trajectories = 4 trajectories</code></pre>
+<p>
+      在 fast eval 路径中，这 4 条轨迹还会被真实 PDM simulator 再评分，得到 <code>reward_dict</code>。如果是 official submission，代码注释提示要打开 <code>return {"trajectory": traj_to_score[:,-1]}</code>，通常输出最后一层 fine scorer 选择的轨迹。
+    </p>
+<h3>一张文字流程图</h3>
+<div class="flow">SEL 推理候选轨迹生成：
+
+kmeans_navsim_traj_20.npy
+  shape = (20, 8, 2)
+  含义 = 20 种典型未来轨迹模板
+
+复制 10 组：
+  (20, 8, 2) -&gt; (B, 10, 20, 8, 2) -&gt; (B, 200, 8, 2)
+
+归一化：
+  x / 50, y / 20
+
+t = 8 轻噪声：
+  anchor_norm + small diffusion noise
+
+2 步 DDIM 细化：
+  timesteps = [10, 0]
+  diff_decoder 根据当前 BEV/agent/ego/status 修正轨迹
+
+乘性噪声扩增：
+  add_mul_noise(n_aug=3)
+  (B, 200, 8, 2) -&gt; (B, 800, 8, 2)
+
+Bezier 恢复 yaw：
+  (B, 800, 8, 2) -&gt; (B, 800, 8, 3)
+
+coarse scorer：
+  800 -&gt; coarse best 1 条 + top-32
+
+fine scorer：
+  top-32 -&gt; 3 层 fine ranking -&gt; 3 条 fine best
+
+最终参与真实 PDM re-score：
+  1 + 3 = 4 条轨迹</div>
+<h3>训练和推理的数量对比</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>anchor 数</th>
+<th>group 数</th>
+<th>扩散后数量</th>
+<th>额外扩增</th>
+<th>最终候选池</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RL 训练</td>
+<td>20</td>
+<td>4</td>
+<td>80</td>
+<td>无 SEL 的 add_mul_noise 扩增</td>
+<td>80 + GT</td>
+<td>用 PDM reward 训练扩散轨迹 head</td>
+</tr>
+<tr>
+<td>RL 推理</td>
+<td>20</td>
+<td>4</td>
+<td>80</td>
+<td>无</td>
+<td>80</td>
+<td>RL agent 自己测试，不是最终 SEL 选择路径</td>
+</tr>
+<tr>
+<td>SEL 训练</td>
+<td>20</td>
+<td>2</td>
+<td>40</td>
+<td><code>n_aug=2</code>，变 120；再混入约 164 条 vocab</td>
+<td>约 284</td>
+<td>训练 coarse/fine scorer 学 PDM 子指标排序</td>
+</tr>
+<tr>
+<td>SEL 推理/fast eval</td>
+<td>20</td>
+<td>10</td>
+<td>200</td>
+<td><code>n_aug=3</code>，变 800</td>
+<td>800 -&gt; top32 -&gt; 4</td>
+<td>最终从大量候选里选出高质量轨迹</td>
+</tr>
+</tbody>
+</table>
+<h3>为什么要这样采样，而不是直接输出一条？</h3>
+<p>
+      自动驾驶规划里，经常存在多个合理选择：前车慢时可以跟车，也可以轻微变道；路口可以保守等待，也可以在安全时通过。单条轨迹很容易变成平均化、保守化的输出。DiffusionDriveV2 用 20 个 anchor 保留多意图，再用 group 和噪声生成每个意图的多个变体，就是为了避免所有轨迹塌缩成一种行为。
+    </p>
+<p>
+      但多候选本身不够，还要能选。SEL scorer 的作用就是把“生成很多”变成“选得准”。它先用 cheap coarse scorer 快速扫 800 条，再用 fine scorer 精排 top-32，最后只留下少数轨迹。这是一个典型的“多生成、分级筛选”的工程设计。
+    </p>
+<h3>几个容易误解的点</h3>
+<table>
+<thead>
+<tr>
+<th>误解</th>
+<th>更准确的理解</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>800 条轨迹是 800 个独立 anchor</td>
+<td>不是。是 20 个 anchor，复制 10 组，再用乘性噪声扩成 4 倍，即 20 * 10 * 4 = 800。</td>
+</tr>
+<tr>
+<td>它是从纯噪声一步步生成轨迹</td>
+<td>不是。它从 k-means anchor 出发，在 t=8 做轻噪声，然后短步数细化。</td>
+</tr>
+<tr>
+<td>推理真的跑 1000 步 diffusion</td>
+<td>不是。scheduler 有 1000 步表，但实际只取 [10, 0] 两个 denoising timesteps。</td>
+</tr>
+<tr>
+<td>SEL 训练和推理候选池一样</td>
+<td>不一样。训练是 120 diffusion 候选加约 164 vocab 候选；推理是纯 800 diffusion 候选。</td>
+</tr>
+<tr>
+<td>yaw 是扩散模型直接生成的</td>
+<td>不是。扩散只生成 xy，yaw 由 Bezier 曲线后处理恢复。</td>
+</tr>
+</tbody>
+</table>
+<h3>源码证据索引</h3>
+<table>
+<thead>
+<tr>
+<th>逻辑点</th>
+<th>源码位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>加载 20 条 plan anchors</td>
+<td><code>navsim/agents/diffusiondrivev2/diffusiondrivev2_model_sel.py:816</code>；<code>diffusiondrivev2_model_rl.py:710</code></td>
+</tr>
+<tr>
+<td>RL 训练生成 80 条候选</td>
+<td><code>diffusiondrivev2_model_rl.py:800-820</code></td>
+</tr>
+<tr>
+<td>RL 训练 10 步 DDIM rollout</td>
+<td><code>diffusiondrivev2_model_rl.py:806-849</code></td>
+</tr>
+<tr>
+<td>SEL 训练使用 2 groups，生成 40 条后扩成 120 条</td>
+<td><code>diffusiondrivev2_model_sel.py:1288-1348</code></td>
+</tr>
+<tr>
+<td>SEL 推理使用 10 groups，生成 200 条</td>
+<td><code>diffusiondrivev2_model_sel.py:1390-1407</code></td>
+</tr>
+<tr>
+<td>SEL 推理 add_mul_noise 扩成 800 条</td>
+<td><code>diffusiondrivev2_model_sel.py:1270-1285</code>；调用点 <code>diffusiondrivev2_model_sel.py:1444</code></td>
+</tr>
+<tr>
+<td>coarse top-32 和 fine 选择 3 条</td>
+<td><code>diffusiondrivev2_model_sel.py:1467-1488</code></td>
+</tr>
+<tr>
+<td>官方提交返回最后一条 fine trajectory 的注释</td>
+<td><code>diffusiondrivev2_model_sel.py:1491</code></td>
+</tr>
+</tbody>
+</table>
+<h3>一句话收束</h3>
+<p>
+      DiffusionDriveV2 的多候选轨迹生成，本质是“20 个聚类轨迹模板 + 多组轻噪声复制 + 短步数扩散细化 + 乘性噪声局部扩增 + coarse/fine 分级筛选”。最终 SEL 推理阶段的 800 条候选来自 <code>20 anchors * 10 groups * 4 variants</code>，再被筛成 coarse best 加 3 个 fine best，用于真实 PDM re-score 或官方输出。
+    </p>
+</article>
+<article class="qa" id="q2">
+<h2>问题 2：step_ratio、step_num、add_noise 和 10 步扩散细化到底在做什么？</h2>
+<p class="meta">
+      记录时间：2026-06-27；回答要求：白话解释，细到代码段和关键行。
+      <span class="tag">step_num</span>
+<span class="tag">step_ratio</span>
+<span class="tag">add_noise</span>
+<span class="tag">DDIM rollout</span>
+</p>
+<div class="question">用白话解释：step_ratio 和 step_num 各是什么含义，相除得到的结果又是什么含义，self.diffusionrl_scheduler.add_noise 具体是怎么实现的，怎么做到的加噪，以及详细展开 10 步扩散细化的全部流程和逻辑，细致到每行/每段代码。</div>
+<h3>先给一句白话总览</h3>
+<p>
+      这段代码做的事情可以理解成：先拿 20 条离线聚类出来的轨迹模板，把它复制成 80 条候选；然后在这些模板上加一点很轻的噪声，让它们变成“略微脏一点的模板”；接着跑 10 次循环，每次让神经网络看当前这条带噪轨迹、场景 BEV 特征、agent 特征、ego 特征和当前 diffusion 时间步，预测一个更干净、更符合当前场景的轨迹；最后用 scheduler 把当前带噪轨迹推进到更干净的一步，并记录这一步的 log probability，后面给 RL loss 用。
+    </p>
+<p>
+      关键点是：这里不是从纯随机噪声里造轨迹，而是在 <code>kmeans_navsim_traj_20.npy</code> 的 anchor 附近做短程细化。<code>step_num=10</code> 不是 1000 步完整扩散；<code>step_ratio=20/step_num</code> 是作者自己在很浅的时间窗口 <code>[0, 20]</code> 里挑 10 个时间点；<code>add_noise(t=8)</code> 是把干净 anchor 变成 <code>x_8</code>，噪声很轻，anchor 形状仍然占主导。
+    </p>
+<h3>step_num 是什么：这次 rollout 要跑几轮细化</h3>
+<p>
+      在 RL 训练路径 <code>forward_train_rl</code> 里，第一行关键代码是：
+    </p>
+<pre><code class="language-python">step_num = 10</code></pre>
+<p>
+      白话讲，<code>step_num</code> 就是“这一轮扩散反推要让模型修几次”。这里设置为 10，意思是同一批候选轨迹会经过 10 次“看当前轨迹 - 结合场景 - 预测干净轨迹 - scheduler 往前退一步”的循环。
+    </p>
+<p>
+      注意它不是 scheduler 的总训练时间步数。scheduler 初始化时是 <code>num_train_timesteps=1000</code>，也就是扩散表里有 1000 个噪声等级；但本段代码真正拿出来跑的只有 10 个点。所以 <code>step_num</code> 控制的是实际循环次数，不是 diffusion 表的总长度。
+    </p>
+<h3>step_ratio 是什么：在浅层时间窗口里隔多远取一个时间点</h3>
+<p>
+      代码接着写：
+    </p>
+<pre><code class="language-python">self.diffusionrl_scheduler.set_timesteps(1000, device)
+step_ratio = 20 / step_num
+roll_timesteps = (np.arange(0, step_num) * step_ratio).round()[::-1].copy().astype(np.int64)
+roll_timesteps = torch.from_numpy(roll_timesteps).to(device)</code></pre>
+<p>
+<code>set_timesteps(1000)</code> 的作用是告诉 scheduler：内部按 1000 个 inference step 来算。这样在自定义 <code>step()</code> 里，<code>prev_timestep = timestep - 1000 // 1000</code>，也就是当前 <code>k</code> 的上一步是 <code>k-1</code>。
+    </p>
+<p>
+<code>step_ratio = 20 / step_num</code> 这里容易误解。它不是把 1000 除以 10，而是把作者手工选定的浅层窗口 20 除以实际循环次数。因为 <code>step_num=10</code>，所以：
+    </p>
+<pre><code>step_ratio = 20 / 10 = 2</code></pre>
+<p>
+      白话说，作者只想在 <code>0 到 20</code> 这个很浅的扩散时间范围里取 10 个点，于是每隔 2 个 timestep 取一次。算出来：
+    </p>
+<pre><code>np.arange(0, 10) = [0,1,2,3,4,5,6,7,8,9]
+乘以 2 后       = [0,2,4,6,8,10,12,14,16,18]
+倒序后          = [18,16,14,12,10,8,6,4,2,0]</code></pre>
+<p>
+      所以 <code>roll_timesteps</code> 是 <code>[18,16,14,12,10,8,6,4,2,0]</code>。这 10 个数不是“加噪起点”。真正初始加噪点是 <code>trunc_timesteps=8</code>。这些数是循环里传给模型的 diffusion 时间条件，以及传给 scheduler 的当前 timestep。
+    </p>
+<div class="note">
+      一个细节：循环访问的是 18、16、14...，但 scheduler 自定义 step 内部的 previous timestep 是 <code>k-1</code>，因为 <code>set_timesteps(1000)</code> 后步长为 1。因此每次 step 的公式里是 <code>18 -&gt; 17</code>、<code>16 -&gt; 15</code>、<code>14 -&gt; 13</code>，并不是公式上直接 <code>18 -&gt; 16</code>。不过下一轮循环又会把当前 sample 当作输入，并用新的时间条件 <code>16</code> 让模型再修一次。代码没有严格沿用 scheduler 自带的 <code>self.timesteps</code>，而是手写了这组浅层时间点。
+    </div>
+<h3>step_ratio 相除得到的结果到底代表什么</h3>
+<p>
+<code>20 / step_num</code> 得到的是“浅层采样间隔”。在 RL 训练中是 2，表示作者从 <code>[0,20]</code> 这个小窗口里每隔 2 个时间等级取一个模型条件。换句话说，它决定 <code>roll_timesteps</code> 的稀疏程度。
+    </p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>代码值</th>
+<th>白话含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>num_train_timesteps</code></td>
+<td>1000</td>
+<td>scheduler 有 1000 档噪声表，负责提供 alpha、beta、variance 等数值。</td>
+</tr>
+<tr>
+<td><code>step_num</code></td>
+<td>10</td>
+<td>本次 RL rollout 实际跑 10 轮细化。</td>
+</tr>
+<tr>
+<td><code>20</code></td>
+<td>手写常数</td>
+<td>作者只在很浅的 diffusion 区间 <code>0..20</code> 内取点。</td>
+</tr>
+<tr>
+<td><code>step_ratio</code></td>
+<td>2</td>
+<td>在 <code>0..20</code> 里每隔 2 个 timestep 取一个。</td>
+</tr>
+<tr>
+<td><code>roll_timesteps</code></td>
+<td><code>[18,16,...,0]</code></td>
+<td>10 次循环依次使用的 diffusion 时间条件。</td>
+</tr>
+</tbody>
+</table>
+<h3>add_noise 前先发生什么：80 条 anchor 是怎么准备出来的</h3>
+<p>
+      加噪不是加在随机轨迹上，而是加在 anchor 上。相关代码：
+    </p>
+<pre><code class="language-python">num_groups = self.num_groups
+plan_anchor = self.plan_anchor.unsqueeze(0).unsqueeze(0).repeat(bs, num_groups, 1, 1, 1)
+plan_anchor = plan_anchor.view(bs, num_groups * self.ego_fut_mode, *plan_anchor.shape[3:])
+diffusion_output = self.norm_odo(plan_anchor)</code></pre>
+<p>
+<code>self.plan_anchor</code> 原始形状是 <code>(20, 8, 2)</code>。其中 20 是 20 种轨迹模板，8 是未来 8 个 waypoint，2 是 <code>x,y</code>。
+    </p>
+<p>
+<code>unsqueeze(0).unsqueeze(0)</code> 给它前面加两个维度，变成类似 <code>(1,1,20,8,2)</code>。第一个 1 给 batch 用，第二个 1 给 group 用。
+    </p>
+<p>
+<code>repeat(bs, num_groups, 1, 1, 1)</code> 复制到每个 batch、每个 group。RL config 当前 <code>num_groups=4</code>，所以每个样本是 <code>4 * 20 = 80</code> 条候选模板。
+    </p>
+<p>
+<code>view(bs, num_groups * self.ego_fut_mode, 8, 2)</code> 把 group 和 anchor mode 合并成候选维度，得到 <code>(B,80,8,2)</code>。
+    </p>
+<p>
+<code>norm_odo</code> 把坐标归一化：x 除以 50，y 除以 20。这样轨迹数值大致落在适合扩散模型处理的范围里。此处只传 xy，所以 heading 虽然在 <code>norm_odo</code> 函数里有除以 1.57 的逻辑，但这个阶段并没有真正扩散 heading。
+    </p>
+<h3>self.diffusionrl_scheduler.add_noise 具体怎么加噪</h3>
+<p>
+      加噪调用是：
+    </p>
+<pre><code class="language-python">noise = torch.randn(diffusion_output.shape, device=device)
+trunc_timesteps = torch.ones((bs,), device=device, dtype=torch.long) * 8
+diffusion_output = self.diffusionrl_scheduler.add_noise(
+    original_samples=diffusion_output,
+    noise=noise,
+    timesteps=trunc_timesteps,
+)</code></pre>
+<p>
+      第一行 <code>torch.randn</code> 生成和轨迹同形状的标准高斯噪声，形状也是 <code>(B,80,8,2)</code>。每个候选、每个点、每个 x/y 坐标都有自己的随机扰动。
+    </p>
+<p>
+      第二行 <code>trunc_timesteps</code> 是一个长度为 batch size 的向量，每个样本都是 8。它的意思是：这批样本都加到第 8 档噪声水平。不是加到 18，也不是加到 1000。
+    </p>
+<p>
+      上游 diffusers 的 <code>DDIMScheduler.add_noise</code> 本质公式是：
+    </p>
+<pre><code>noisy = sqrt(alpha_cumprod[t]) * original + sqrt(1 - alpha_cumprod[t]) * noise</code></pre>
+<p>
+      白话讲，它不是简单地 <code>original + noise</code>，而是按 timestep 查一张噪声强度表。<code>alpha_cumprod[t]</code> 越接近 1，保留原始样本越多，噪声越少；越接近 0，原始样本越少，噪声越多。
+    </p>
+<p>
+      它内部大致分四步：
+    </p>
+<ol>
+<li>把 <code>alphas_cumprod</code> 移到和 <code>original_samples</code> 一样的 device 和 dtype。</li>
+<li>用 <code>timesteps</code> 查表，得到每个 batch 样本对应的 <code>sqrt_alpha_prod</code>。</li>
+<li>继续算 <code>sqrt_one_minus_alpha_prod</code>，也就是噪声系数。</li>
+<li>把这两个系数不断 <code>unsqueeze</code>，扩成能广播到 <code>(B,80,8,2)</code> 的形状，然后执行加权求和。</li>
+</ol>
+<p>
+      这就是为什么 <code>timesteps</code> 只需要 <code>(B,)</code>，却能给 <code>(B,80,8,2)</code> 的所有候选统一加噪：每个 batch 样本共用一个噪声等级，具体噪声内容由 <code>noise</code> 张量逐元素提供。
+    </p>
+<p>
+      按 <code>scaled_linear</code> 的常见 DDIM alpha 表估算，在 <code>t=8</code> 时 <code>sqrt(alpha_cumprod)</code> 大约是 0.9995，<code>sqrt(1-alpha_cumprod)</code> 大约是 0.0316。也就是说，起点大约是：
+    </p>
+<pre><code>x_8 ~= 0.9995 * anchor + 0.0316 * gaussian_noise</code></pre>
+<p>
+      这就是“truncated diffusion”的核心：只加很轻的噪声，轨迹仍然很像 anchor。模型不是从一团乱噪声里凭空生成，而是在已有轨迹模板附近搜索更适合当前场景的轨迹。
+    </p>
+<h3>10 步扩散细化的主循环：每一轮都在做什么</h3>
+<p>
+      主循环是：
+    </p>
+<pre><code class="language-python">all_log_probs = []
+all_diffusion_output = [diffusion_output]
+
+for i, k in enumerate(roll_timesteps[:]):
+    x_boxes = torch.clamp(diffusion_output, min=-1, max=1)
+    noisy_traj_points = self.denorm_odo(x_boxes)
+    traj_pos_embed = gen_sineembed_for_position(noisy_traj_points, hidden_dim=64)
+    traj_pos_embed = traj_pos_embed.flatten(-2)
+    traj_feature = self.plan_anchor_encoder(traj_pos_embed)
+    traj_feature = traj_feature.view(bs, num_groups * self.ego_fut_mode, -1)
+    timesteps = k.expand(diffusion_output.shape[0])
+    time_embed = self.time_mlp(timesteps).view(bs, 1, -1)
+    poses_reg_list, poses_cls_list = self.diff_decoder(...)
+    poses_reg = poses_reg_list[-1]
+    x_start = poses_reg[..., :2]
+    x_start = self.norm_odo(x_start)
+    prev_sample, log_prob, _ = self.diffusionrl_scheduler.step(...)
+    diffusion_output = prev_sample
+    all_log_probs.append(log_prob)
+    all_diffusion_output.append(prev_sample)</code></pre>
+<h3>第 0 步：all_log_probs 和 all_diffusion_output 是轨迹链记录本</h3>
+<p>
+<code>all_log_probs=[]</code> 用来记录每一步 scheduler 从当前样本走到下一样本的 log probability。后面的 <code>get_rlloss</code> 会重新计算这些 log probability，并和 advantage 相乘，形成 RL loss。
+    </p>
+<p>
+<code>all_diffusion_output=[diffusion_output]</code> 先把初始加噪后的轨迹 <code>x_8</code> 存下来。后面每走一步，都会追加一个 <code>prev_sample</code>。所以 10 步后，这里一共有 11 个状态：初始状态 + 10 次更新后的状态。
+    </p>
+<h3>第 1 步：clamp 把当前轨迹限制在安全数值范围</h3>
+<pre><code class="language-python">x_boxes = torch.clamp(diffusion_output, min=-1, max=1)</code></pre>
+<p>
+      当前 <code>diffusion_output</code> 是归一化坐标，理论上应该在较小范围内。加噪和模型更新可能让个别点越界，所以这里先截断到 <code>[-1,1]</code>。白话讲就是：不要让坐标跑飞，否则后面的 BEV cross attention 会在不合理位置采样。
+    </p>
+<h3>第 2 步：denorm_odo 把归一化坐标还原成米制轨迹点</h3>
+<pre><code class="language-python">noisy_traj_points = self.denorm_odo(x_boxes)</code></pre>
+<p>
+<code>denorm_odo</code> 做的是反归一化：x 乘以 50，y 乘以 20。模型内部扩散用归一化数值，但 BEV 采样、轨迹位置编码、轨迹 decoder 更需要真实局部坐标尺度，所以要还原成近似米制的 xy。
+    </p>
+<h3>第 3 步：把当前轨迹点做正弦位置编码</h3>
+<pre><code class="language-python">traj_pos_embed = gen_sineembed_for_position(noisy_traj_points, hidden_dim=64)
+traj_pos_embed = traj_pos_embed.flatten(-2)</code></pre>
+<p>
+      当前轨迹是 <code>(B,80,8,2)</code>，只是 xy 数值。神经网络不直接拿两个浮点数做全部判断，而是把位置变成高维正弦编码。这个思路和 Transformer 里的 positional embedding 类似：同一个点的位置会被展开成一串高维特征，让网络更容易感知空间差异。
+    </p>
+<p>
+<code>flatten(-2)</code> 把每条轨迹 8 个点的编码摊平，变成“一条候选轨迹对应一个长向量”。这样后面的 <code>plan_anchor_encoder</code> 可以把整条轨迹编码成一个候选 query feature。
+    </p>
+<h3>第 4 步：plan_anchor_encoder 把轨迹几何变成候选特征</h3>
+<pre><code class="language-python">traj_feature = self.plan_anchor_encoder(traj_pos_embed)
+traj_feature = traj_feature.view(bs, num_groups * self.ego_fut_mode, -1)</code></pre>
+<p>
+<code>plan_anchor_encoder</code> 是一个 MLP，把轨迹位置编码映射到模型隐藏维度。白话讲，它把“这条候选轨迹长什么样”翻译成神经网络能和 BEV、agent、ego 特征交互的 query。
+    </p>
+<p>
+<code>view(bs,80,-1)</code> 保持每个 batch 有 80 条候选，每条候选一个特征向量。
+    </p>
+<h3>第 5 步：time_mlp 告诉模型当前是在第几个噪声等级上修</h3>
+<pre><code class="language-python">timesteps = k.expand(diffusion_output.shape[0])
+time_embed = self.time_mlp(timesteps).view(bs, 1, -1)</code></pre>
+<p>
+      每一轮的 <code>k</code> 依次是 <code>18,16,14,12,10,8,6,4,2,0</code>。<code>time_mlp</code> 把这个数字变成高维 time embedding。模型需要知道“我现在面对的是哪个噪声等级的轨迹”，因为高噪声时该修得更猛，低噪声时该修得更细。
+    </p>
+<p>
+      这里 <code>view(bs,1,-1)</code> 是为了让同一个 batch 的所有候选共享这个时间条件，再在 decoder 里广播使用。
+    </p>
+<h3>第 6 步：diff_decoder 结合场景信息，预测更干净的轨迹</h3>
+<pre><code class="language-python">poses_reg_list, poses_cls_list = self.diff_decoder(
+    traj_feature, noisy_traj_points, bev_feature, bev_spatial_shape,
+    agents_query, ego_query, time_embed, status_encoding, global_img
+)</code></pre>
+<p>
+      这是 10 步细化里最核心的神经网络部分。它把当前候选轨迹 <code>traj_feature/noisy_traj_points</code> 和场景特征结合起来，输出 <code>poses_reg</code>。白话讲，就是问网络：“在当前道路、障碍物、自车状态和这个噪声等级下，这条候选轨迹应该往哪里修？”
+    </p>
+<p>
+<code>CustomTransformerDecoderLayer</code> 内部主要做几件事：
+    </p>
+<ol>
+<li><code>cross_bev_attention</code>：用候选轨迹点去 BEV 特征图上取信息，相当于看这条轨迹沿途位置有什么路面/障碍物/语义特征。</li>
+<li><code>cross_agent_attention</code>：和其他 agent 的 query 交互，理解周围车和行人的影响。</li>
+<li><code>cross_ego_attention</code>：和 ego query 交互，把自车自身状态融进去。</li>
+<li><code>ffn</code>：常规前馈网络，进一步混合特征。</li>
+<li><code>time_modulation</code>：用 time embedding 调制特征，让模型按当前噪声等级调整修正方式。</li>
+<li><code>task_decoder</code>：输出轨迹回归 <code>poses_reg</code> 和分类分数 <code>poses_cls</code>。</li>
+</ol>
+<p>
+      最关键的一行在 decoder layer 内部：
+    </p>
+<pre><code class="language-python">poses_reg[..., :2] = poses_reg[..., :2] + noisy_traj_points</code></pre>
+<p>
+      这说明 decoder 不是直接凭空输出完整轨迹，而是在当前 noisy trajectory 上预测一个修正量，再加回去。白话讲，它不是“重画一条路”，而是“沿着当前候选轨迹做局部修边”。
+    </p>
+<h3>第 7 步：取最后一层输出，把 xy 当作预测的 x0</h3>
+<pre><code class="language-python">poses_reg = poses_reg_list[-1]
+poses_cls = poses_cls_list[-1]
+x_start = poses_reg[..., :2]
+x_start = self.norm_odo(x_start)</code></pre>
+<p>
+<code>poses_reg_list[-1]</code> 取 decoder 最后一层的轨迹输出。当前实现里 decoder 层数是 1，所以它就是唯一一层输出，但写成 list 结构方便以后堆多层。
+    </p>
+<p>
+<code>x_start = poses_reg[..., :2]</code> 只取 xy。扩散链里真正参与 scheduler step 的只有 xy，heading 不参与。heading 后面通过 Bezier 曲线从 xy 恢复。
+    </p>
+<p>
+<code>self.norm_odo(x_start)</code> 把 decoder 输出的米制 xy 再归一化，因为 scheduler 的 <code>sample</code> 也是归一化空间里的张量。scheduler 不能一边拿归一化 sample，一边拿米制 model_output。
+    </p>
+<h3>第 8 步：scheduler.step 把当前样本推进到更干净的一步</h3>
+<pre><code class="language-python">prev_sample, log_prob, _ = self.diffusionrl_scheduler.step(
+    model_output=x_start,
+    timestep=k,
+    sample=diffusion_output,
+    eta=eta,
+)</code></pre>
+<p>
+      这里的 <code>model_output=x_start</code> 很重要。scheduler 初始化时 <code>prediction_type="sample"</code>，所以它把模型输出解释成“预测的干净样本 <code>x0</code>”，而不是噪声 <code>epsilon</code>。
+    </p>
+<p>
+      自定义 <code>DDIMScheduler_with_logprob.step</code> 内部做的事情可以拆成这些段：
+    </p>
+<ol>
+<li>算 <code>prev_timestep = timestep - 1</code>，因为 <code>set_timesteps(1000)</code> 后内部步长是 1。</li>
+<li>查 <code>alpha_prod_t</code> 和 <code>alpha_prod_t_prev</code>，得到当前噪声等级和上一步噪声等级。</li>
+<li>因为 <code>prediction_type="sample"</code>，直接令 <code>pred_original_sample = model_output</code>。</li>
+<li>反推当前隐含噪声：<code>pred_epsilon = (sample - sqrt(alpha_t) * pred_original_sample) / sqrt(beta_t)</code>。</li>
+<li>用 DDIM 公式算从 <code>x_t</code> 指向 <code>x_{t-1}</code> 的方向。</li>
+<li>得到无随机扰动版本的 <code>prev_sample_mean</code>。</li>
+<li>如果 <code>eta &gt; 0</code>，再乘性采样一个随机扰动；RL agent 调用时传入 <code>eta=1.0</code>，所以训练阶段是随机的。</li>
+<li>根据 <code>prev_sample</code> 和 <code>prev_sample_mean</code> 计算近似 log probability，供后面的 policy gradient 使用。</li>
+</ol>
+<p>
+      和标准 diffusers 的 DDIM step 相比，这个仓库的自定义版本最特殊的地方是：它不是简单加性噪声 <code>prev_sample_mean + sigma * noise</code>，而是用了乘性噪声：
+    </p>
+<pre><code class="language-python">prev_sample = prev_sample_mean * variance_noise_mul + std_dev_t_add * variance_noise_add</code></pre>
+<p>
+      在当前代码里 <code>std_dev_t_add=0</code>，所以训练时主要是“把均值乘上一个接近 1 的随机系数”。这让轨迹整体横向/纵向产生比例扰动。白话讲，它更像“把这条轨迹稍微拉宽、压窄、放大、缩小”，不是每个点独立乱抖。
+    </p>
+<h3>第 9 步：更新 diffusion_output，并把 log_prob 和链路状态存起来</h3>
+<pre><code class="language-python">diffusion_output = prev_sample
+all_log_probs.append(log_prob)
+all_diffusion_output.append(prev_sample)</code></pre>
+<p>
+<code>diffusion_output = prev_sample</code> 表示下一轮循环的输入就是这一步更新后的轨迹。第 1 轮用初始加噪 anchor，第 2 轮用第 1 轮更新后的轨迹，第 3 轮用第 2 轮更新后的轨迹，依次推进。
+    </p>
+<p>
+<code>all_log_probs.append(log_prob)</code> 保存这一步产生这个 <code>prev_sample</code> 的概率。后面 RL loss 会用它衡量“当前策略生成这条轨迹链的概率”。
+    </p>
+<p>
+<code>all_diffusion_output.append(prev_sample)</code> 保存整条扩散链。后面的 <code>get_rlloss</code> 会拿旧链条 <code>chains</code> 和 <code>chains_prev</code> 重新计算 log probability，而不是重新采样一条链。
+    </p>
+<h3>10 步循环按时间展开是什么样</h3>
+<table>
+<thead>
+<tr>
+<th>循环轮次</th>
+<th>k</th>
+<th>模型看到的时间条件</th>
+<th>scheduler 公式里的 previous timestep</th>
+<th>白话理解</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>18</td><td>较高噪声条件</td><td>17</td><td>先做较粗的修正，把候选从更脏状态往干净方向拉。</td></tr>
+<tr><td>2</td><td>16</td><td>稍低一点</td><td>15</td><td>继续结合场景调整轨迹形状。</td></tr>
+<tr><td>3</td><td>14</td><td>继续降低</td><td>13</td><td>把粗轨迹变得更贴合道路和交互。</td></tr>
+<tr><td>4</td><td>12</td><td>中间状态</td><td>11</td><td>进一步修正候选路径。</td></tr>
+<tr><td>5</td><td>10</td><td>中低噪声</td><td>9</td><td>接近低噪声区域，修正幅度应更细。</td></tr>
+<tr><td>6</td><td>8</td><td>和初始加噪 t=8 对齐</td><td>7</td><td>进入很接近 anchor 的细化区间。</td></tr>
+<tr><td>7</td><td>6</td><td>低噪声</td><td>5</td><td>主要做局部平滑和避障/路面一致性修正。</td></tr>
+<tr><td>8</td><td>4</td><td>更低噪声</td><td>3</td><td>基本是在精修。</td></tr>
+<tr><td>9</td><td>2</td><td>接近干净</td><td>1</td><td>微调输出。</td></tr>
+<tr><td>10</td><td>0</td><td>最干净条件</td><td>-1，使用 final alpha</td><td>收尾，得到最终归一化 xy。</td></tr>
+</tbody>
+</table>
+<p>
+      这里有一个工程上的不完全严格之处：初始样本是 <code>x_8</code>，但第一轮传给模型的时间条件是 <code>k=18</code>。所以从严格扩散数学看，它不是一条完全标准的 <code>x_18 -&gt; x_16 -&gt; ... -&gt; x_0</code> 链。代码更像是在浅层时间条件上反复调用一个 learned refinement decoder。论文里叫 truncated diffusion，但从代码行为看，“anchor 附近的短程迭代修正”是更准确的白话描述。
+    </p>
+<h3>10 步之后：xy 变 x/y/yaw，再拿去 PDM 评分</h3>
+<pre><code class="language-python">all_log_probs = torch.stack(all_log_probs, dim=-1)
+all_log_probs = all_log_probs.view(bs, num_groups, self.ego_fut_mode, all_log_probs.shape[-1])
+all_diffusion_output = torch.stack(all_diffusion_output, dim=-1)
+
+diffusion_output = self.denorm_odo(diffusion_output)
+diffusion_output = self.bezier_xyyaw(diffusion_output)</code></pre>
+<p>
+<code>all_log_probs</code> 从 list 变成 tensor，形状可理解为 <code>(B,4,20,10)</code>：每个 batch、每个 group、每个 anchor mode、每个 diffusion step 都有一个 log probability。
+    </p>
+<p>
+<code>all_diffusion_output</code> 保存整条链，后面给 RL loss 的第二次 forward 用。
+    </p>
+<p>
+      最终 <code>diffusion_output</code> 先反归一化回米制 xy，再用 <code>bezier_xyyaw</code> 根据 xy 曲线的一阶导数恢复 yaw。也就是说 yaw 不是 diffusion 直接生成的，而是从 8 个 xy 点形成的曲线方向算出来的。
+    </p>
+<h3>为什么要存 old_pred，再跑 get_rlloss</h3>
+<p>
+      在 RL agent 里，forward 会先跑一次 <code>forward_train_rl(... old_pred=None ...)</code> 生成轨迹链、PDM reward 和 advantage；然后再把这个 <code>old_pred</code> 喂回 trajectory head，进入 <code>get_rlloss</code>。这相当于先采样，再基于采样结果算策略梯度损失。
+    </p>
+<p>
+<code>get_rlloss</code> 里把旧链拆成：
+    </p>
+<pre><code class="language-python">chains = old_diffusion_output[..., :-1]
+chains_prev = old_diffusion_output[..., 1:]</code></pre>
+<p>
+      白话讲，<code>chains</code> 是每一步的当前状态，<code>chains_prev</code> 是这一步实际走到的下一状态。然后它用当前模型重新计算“如果现在的策略面对这个当前状态，会给实际下一状态多大 log probability”。这就是 RL loss 里的概率项来源。
+    </p>
+<h3>这套逻辑最容易误解的地方</h3>
+<table>
+<thead>
+<tr>
+<th>误解</th>
+<th>更准确的理解</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>step_num=10</code> 表示扩散模型总共只有 10 个 timestep</td>
+<td>不是。scheduler 表还是 1000 档；10 只是本次 rollout 实际循环 10 次。</td>
+</tr>
+<tr>
+<td><code>step_ratio=20/step_num</code> 是 1000 步扩散的压缩比例</td>
+<td>不是。它是在作者手写的浅层窗口 <code>0..20</code> 内取点的间隔。</td>
+</tr>
+<tr>
+<td><code>add_noise</code> 从纯随机噪声开始</td>
+<td>不是。它把轻噪声加到 anchor 上，公式是 <code>sqrt(alpha)*anchor + sqrt(1-alpha)*noise</code>。</td>
+</tr>
+<tr>
+<td>10 步每一步都是直接输出最终轨迹</td>
+<td>每一步先预测当前条件下的干净样本 x0，再由 scheduler 算下一状态。</td>
+</tr>
+<tr>
+<td>heading/yaw 也是扩散生成的</td>
+<td>不是。扩散链只处理 xy，yaw 最后由 Bezier 曲线导数恢复。</td>
+</tr>
+<tr>
+<td>它是标准完整 DDIM 采样链</td>
+<td>代码更像 anchor 附近的短程、浅层、场景条件迭代 refinement。</td>
+</tr>
+</tbody>
+</table>
+<h3>源码证据索引</h3>
+<table>
+<thead>
+<tr>
+<th>问题点</th>
+<th>源码位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>RL 训练设置 <code>step_num=10</code>、<code>step_ratio=20/step_num</code>、生成 <code>roll_timesteps</code></td>
+<td><code>navsim/agents/diffusiondrivev2/diffusiondrivev2_model_rl.py:800-807</code></td>
+</tr>
+<tr>
+<td>20 条 anchor 复制成 <code>B x 80 x 8 x 2</code> 并归一化</td>
+<td><code>diffusiondrivev2_model_rl.py:810-816</code></td>
+</tr>
+<tr>
+<td>生成随机噪声、设置 <code>trunc_timesteps=8</code>、调用 <code>add_noise</code></td>
+<td><code>diffusiondrivev2_model_rl.py:818-820</code></td>
+</tr>
+<tr>
+<td>10 步细化主循环</td>
+<td><code>diffusiondrivev2_model_rl.py:825-857</code></td>
+</tr>
+<tr>
+<td>自定义 <code>DDIMScheduler_with_logprob.step</code> 计算 previous sample 和 log_prob</td>
+<td><code>diffusiondrivev2_model_rl.py:518-675</code></td>
+</tr>
+<tr>
+<td>decoder 内部把预测 offset 加回 noisy trajectory</td>
+<td><code>diffusiondrivev2_model_rl.py:445-480</code></td>
+</tr>
+<tr>
+<td>归一化/反归一化逻辑</td>
+<td><code>diffusiondrivev2_model_rl.py:755-772</code></td>
+</tr>
+<tr>
+<td>Bezier 从 xy 恢复 yaw</td>
+<td><code>diffusiondrivev2_model_rl.py:1123-1171</code></td>
+</tr>
+<tr>
+<td>RL agent 训练时传入 <code>eta=1.0</code></td>
+<td><code>diffusiondrivev2_rl_agent.py:116-118</code></td>
+</tr>
+</tbody>
+</table>
+<h3>一句话收束</h3>
+<p>
+<code>step_num</code> 是“实际修几轮”，<code>step_ratio</code> 是“在 0 到 20 的浅层时间窗口里隔多远取一个时间条件”，<code>add_noise</code> 是“按 alpha 表把少量高斯噪声混到 anchor 上”，10 步扩散细化则是“反复用当前带噪候选轨迹查询场景特征、预测更干净的 x0、再由自定义 DDIM step 采样下一状态并记录 log_prob”。所以这套实现本质上是 anchor-based truncated diffusion refinement，而不是完整 1000 步的从噪声生成。
+    </p>
+</article>
+<article class="qa" id="q3">
+<h2>问题 3：当前项目代码的重点模块和递进关系可视化</h2>
+<p class="meta">
+      记录时间：2026-06-27；回答要求：完整可视化结果图，白话梳理重点模块和递进关系。
+      <span class="tag">architecture</span>
+<span class="tag">training pipeline</span>
+<span class="tag">RL stage</span>
+<span class="tag">SEL stage</span>
+<span class="tag">evaluation</span>
+</p>
+<div class="question">给我一个完整的可视化结果图，梳理出来当前项目代码的全部重点模块和递进关系。</div>
+<h3>先用白话讲清楚这张图怎么看</h3>
+<p>
+      DiffusionDriveV2 这个仓库不是一个单独模型文件就能讲完。它更像一条分阶段流水线：先由 NAVSIM cache/dataset 把场景特征和目标轨迹喂进 Lightning；再由 agent 包一层训练/推理入口；核心模型用 Transfuser backbone 把 camera、lidar、status 融成 BEV 和 query；然后 TrajectoryHead 基于 20 条 anchor 做 truncated diffusion；第一阶段用 PDM reward 做 RL 约束；第二阶段冻结扩散轨迹生成器，训练 coarse/fine scorer；最后推理时生成 800 条候选，筛到少数轨迹，再走 PDM/提交路径。
+    </p>
+<p>
+      所以图里我把代码分成 7 个层级：数据入口、训练封装、Agent 入口、共享感知骨干、轨迹扩散头、两阶段训练逻辑、评测/推理输出。你可以从左往右看“数据如何进入模型”，从上往下看“训练阶段如何递进”，从右侧看“最后怎么选轨迹和评测”。
+    </p>
+<h3>完整可视化结果图：DiffusionDriveV2 重点模块递进图</h3>
+<div class="figure-wrap">
+<svg aria-label="DiffusionDriveV2 代码重点模块和递进关系图" class="arch-svg" role="img" viewbox="0 0 1320 820">
+<defs>
+<marker id="arrow" markerheight="10" markerunits="strokeWidth" markerwidth="10" orient="auto" refx="8" refy="3">
+<path d="M0,0 L0,6 L9,3 z" fill="#334155"></path>
+</marker>
+<marker id="arrowSoft" markerheight="10" markerunits="strokeWidth" markerwidth="10" orient="auto" refx="8" refy="3">
+<path d="M0,0 L0,6 L9,3 z" fill="#64748b"></path>
+</marker>
+</defs>
+<text class="arch-title" x="30" y="34">DiffusionDriveV2 代码重点模块与递进关系</text>
+<text class="arch-small" x="30" y="56">从 NAVSIM cache 到 Transfuser 特征、anchor diffusion、RL 约束、SEL 选择器，再到 PDM 评测/提交。</text>
+<text class="lane-title" x="35" y="98">1. 数据与训练入口</text>
+<rect class="arch-box" height="92" width="210" x="30" y="112"></rect>
+<text class="arch-label" x="48" y="138">CacheOnlyDataset</text>
+<text class="arch-small" x="48" y="158">dataset.py</text>
+<text class="arch-small" x="48" y="178">features / targets</text>
+<text class="arch-small" x="48" y="196">metric_cache_path / token</text>
+<rect class="arch-box" height="92" width="210" x="270" y="112"></rect>
+<text class="arch-label" x="288" y="138">run_training.py</text>
+<text class="arch-small" x="288" y="158">Hydra instantiate</text>
+<text class="arch-small" x="288" y="178">Trainer / dataloader</text>
+<text class="arch-small" x="288" y="196">checkpoint / config</text>
+<rect class="arch-box" height="92" width="230" x="510" y="112"></rect>
+<text class="arch-label" x="528" y="138">AgentLightningModule</text>
+<text class="arch-small" x="528" y="158">agent_lightning_module.py</text>
+<text class="arch-small" x="528" y="178">training_step / validation_step</text>
+<text class="arch-small" x="528" y="196">batch 四元组分发</text>
+<path class="arch-arrow" d="M240 158 L270 158"></path>
+<path class="arch-arrow" d="M480 158 L510 158"></path>
+<text class="lane-title" x="35" y="252">2. Agent 入口：两条训练线共享主干，但目的不同</text>
+<rect class="arch-box-blue" height="98" width="250" x="30" y="266"></rect>
+<text class="arch-label" x="48" y="292">Diffusiondrivev2_Rl_Agent</text>
+<text class="arch-small" x="48" y="313">diffusiondrivev2_rl_agent.py</text>
+<text class="arch-small" x="48" y="333">Stage 1：训练轨迹扩散 head</text>
+<text class="arch-small" x="48" y="351">传入 eta=1.0，带随机 rollout</text>
+<rect class="arch-box-green" height="98" width="250" x="310" y="266"></rect>
+<text class="arch-label" x="328" y="292">Diffusiondrivev2_Sel_Agent</text>
+<text class="arch-small" x="328" y="313">diffusiondrivev2_sel_agent.py</text>
+<text class="arch-small" x="328" y="333">Stage 2：训练 coarse/fine scorer</text>
+<text class="arch-small" x="328" y="351">冻结扩散生成器，只学选择</text>
+<path class="arch-arrow-soft" d="M625 204 C625 236 155 236 155 266"></path>
+<path class="arch-arrow-soft" d="M625 204 C625 236 435 236 435 266"></path>
+<text class="lane-title" x="635" y="252">3. 共享感知骨干：把传感器变成规划可用特征</text>
+<rect class="arch-box-purple" height="98" width="250" x="620" y="266"></rect>
+<text class="arch-label" x="638" y="292">V2TransfuserModel</text>
+<text class="arch-small" x="638" y="313">diffusiondrivev2_model_rl/sel.py</text>
+<text class="arch-small" x="638" y="333">统一接收 features / targets</text>
+<text class="arch-small" x="638" y="351">组织 backbone 与 heads</text>
+<rect class="arch-box-purple" height="98" width="250" x="900" y="266"></rect>
+<text class="arch-label" x="918" y="292">TransfuserBackbone</text>
+<text class="arch-small" x="918" y="313">transfuser_backbone.py</text>
+<text class="arch-small" x="918" y="333">camera + lidar + status</text>
+<text class="arch-small" x="918" y="351">输出 BEV / ego / agents query</text>
+<path class="arch-arrow" d="M280 315 L620 315"></path>
+<path class="arch-arrow" d="M560 315 L620 315"></path>
+<path class="arch-arrow" d="M870 315 L900 315"></path>
+<text class="lane-title" x="35" y="418">4. 轨迹生成核心：anchor-based truncated diffusion</text>
+<rect class="arch-box-orange" height="118" width="230" x="30" y="432"></rect>
+<text class="arch-label" x="48" y="458">20 plan anchors</text>
+<text class="arch-small" x="48" y="479">kmeans_navsim_traj_20.npy</text>
+<text class="arch-small" x="48" y="499">20 x 8 x 2</text>
+<text class="arch-small" x="48" y="517">离线聚类驾驶意图模板</text>
+<text class="arch-tiny" x="48" y="535">不是从纯噪声开始</text>
+<rect class="arch-box-orange" height="118" width="250" x="292" y="432"></rect>
+<text class="arch-label" x="310" y="458">TrajectoryHead</text>
+<text class="arch-small" x="310" y="479">diffusiondrivev2_model_rl/sel.py</text>
+<text class="arch-small" x="310" y="499">norm_odo + add_noise(t=8)</text>
+<text class="arch-small" x="310" y="517">RL: 4 groups -&gt; 80 candidates</text>
+<text class="arch-small" x="310" y="535">SEL test: 10 groups -&gt; 200</text>
+<rect class="arch-box-orange" height="118" width="250" x="574" y="432"></rect>
+<text class="arch-label" x="592" y="458">CustomTransformerDecoder</text>
+<text class="arch-small" x="592" y="479">cross BEV / agent / ego</text>
+<text class="arch-small" x="592" y="499">time_mlp 调制 timestep</text>
+<text class="arch-small" x="592" y="517">预测 x0 / offset refinement</text>
+<text class="arch-small" x="592" y="535">scheduler.step 生成下一状态</text>
+<rect class="arch-box-orange" height="118" width="250" x="856" y="432"></rect>
+<text class="arch-label" x="874" y="458">bezier_xyyaw</text>
+<text class="arch-small" x="874" y="479">xy -&gt; x/y/yaw</text>
+<text class="arch-small" x="874" y="499">heading 不参与 diffusion</text>
+<text class="arch-small" x="874" y="517">用曲线导数恢复 yaw</text>
+<text class="arch-small" x="874" y="535">输出 (B,N,8,3)</text>
+<path class="arch-arrow" d="M260 491 L292 491"></path>
+<path class="arch-arrow" d="M542 491 L574 491"></path>
+<path class="arch-arrow" d="M824 491 L856 491"></path>
+<path class="arch-arrow-soft" d="M1025 364 C1025 398 700 398 700 432"></path>
+<text class="lane-title" x="35" y="604">5. Stage 1：RL 约束扩散策略，让候选更像高 PDM 轨迹</text>
+<rect class="arch-box-blue" height="116" width="240" x="30" y="618"></rect>
+<text class="arch-label" x="48" y="644">forward_train_rl</text>
+<text class="arch-small" x="48" y="665">10-step rollout</text>
+<text class="arch-small" x="48" y="685">80 candidates + GT</text>
+<text class="arch-small" x="48" y="703">保存 all_diffusion_output</text>
+<text class="arch-small" x="48" y="721">保存 log_prob 链</text>
+<rect class="arch-box-blue" height="116" width="240" x="300" y="618"></rect>
+<text class="arch-label" x="318" y="644">PDM reward</text>
+<text class="arch-small" x="318" y="665">get_pdm_score_para</text>
+<text class="arch-small" x="318" y="685">16-worker pool</text>
+<text class="arch-small" x="318" y="703">NC / DAC / TTC / C / EP</text>
+<text class="arch-small" x="318" y="721">GT-normalized advantage</text>
+<rect class="arch-box-blue" height="116" width="240" x="570" y="618"></rect>
+<text class="arch-label" x="588" y="644">get_rlloss</text>
+<text class="arch-small" x="588" y="665">重算 log_prob</text>
+<text class="arch-small" x="588" y="685">simplified GRPO</text>
+<text class="arch-small" x="588" y="703">hard gate: NC / drivable</text>
+<text class="arch-small" x="588" y="721">IL L1 safety net</text>
+<path class="arch-arrow" d="M270 676 L300 676"></path>
+<path class="arch-arrow" d="M540 676 L570 676"></path>
+<path class="arch-arrow" d="M417 550 C417 585 150 585 150 618"></path>
+<text class="lane-title" x="860" y="604">6. Stage 2 / 推理：多生成，再用 scorer 选择</text>
+<rect class="arch-box-green" height="116" width="210" x="850" y="618"></rect>
+<text class="arch-label" x="868" y="644">SEL train</text>
+<text class="arch-small" x="868" y="665">冻结 diffusion head</text>
+<text class="arch-small" x="868" y="685">120 diffusion candidates</text>
+<text class="arch-small" x="868" y="703">+ GTRS vocab candidates</text>
+<text class="arch-small" x="868" y="721">训练 sub-score heads</text>
+<rect class="arch-box-green" height="116" width="210" x="1090" y="618"></rect>
+<text class="arch-label" x="1108" y="644">SEL inference</text>
+<text class="arch-small" x="1108" y="665">200 -&gt; add_mul_noise -&gt; 800</text>
+<text class="arch-small" x="1108" y="685">coarse top-32</text>
+<text class="arch-small" x="1108" y="703">fine scorer 选 3</text>
+<text class="arch-small" x="1108" y="721">coarse best + fine best</text>
+<path class="arch-arrow" d="M981 550 C981 585 955 585 955 618"></path>
+<path class="arch-arrow" d="M1060 676 L1090 676"></path>
+<text class="lane-title" x="35" y="780">7. 输出与评测</text>
+<rect class="arch-box-red" height="48" width="260" x="150" y="754"></rect>
+<text class="arch-label" x="168" y="783">run_pdm_score_fast.py / PDMScorer</text>
+<rect class="arch-box-red" height="48" width="250" x="450" y="754"></rect>
+<text class="arch-label" x="468" y="783">reward_dict / metrics / logs</text>
+<rect class="arch-box-red" height="48" width="250" x="740" y="754"></rect>
+<text class="arch-label" x="758" y="783">submission trajectory</text>
+<path class="arch-arrow-soft" d="M690 734 C690 752 280 736 280 754"></path>
+<path class="arch-arrow-soft" d="M1195 734 C1195 752 865 736 865 754"></path>
+<path class="arch-arrow" d="M410 778 L450 778"></path>
+<path class="arch-arrow" d="M700 778 L740 778"></path>
+</svg>
+<p class="figure-caption">图 1：DiffusionDriveV2 代码模块递进关系。蓝色是 RL 训练线，绿色是 SEL 选择器线，橙色是轨迹扩散核心，紫色是共享 Transfuser 感知骨干，红色是评测/输出。</p>
+</div>
+<h3>这张图里的主线：先学会生成，再学会选择</h3>
+<p>
+      最重要的递进关系是两阶段：第一阶段 <code>Diffusiondrivev2_Rl_Agent</code> 用 PDM reward 去约束扩散轨迹生成器，让它生成的候选更可能拿高 PDM；第二阶段 <code>Diffusiondrivev2_Sel_Agent</code> 不再主要改扩散生成器，而是训练一个选择器，在大量候选轨迹中挑出更好的几条。
+    </p>
+<p>
+      白话说，第一阶段解决“候选池质量要够好”，第二阶段解决“候选池里哪条最好”。这就是为什么代码里会有两个很像但又不同的主模型文件：<code>diffusiondrivev2_model_rl.py</code> 和 <code>diffusiondrivev2_model_sel.py</code>。它们都复用了 Transfuser + TrajectoryHead 的思想，但训练目标不一样。
+    </p>
+<h3>数据入口层：训练和评测都从 cache 读</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>关键文件</th>
+<th>作用</th>
+<th>往下递给谁</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>训练脚本</td>
+<td><code>navsim/planning/script/run_training.py</code></td>
+<td>Hydra 读取 config，实例化 agent、dataset、LightningModule 和 Trainer。</td>
+<td><code>AgentLightningModule</code></td>
+</tr>
+<tr>
+<td>训练数据</td>
+<td><code>navsim/planning/training/dataset.py</code></td>
+<td><code>CacheOnlyDataset</code> 从预处理 cache 读取 features、targets、metric_cache_path、token。</td>
+<td>Lightning batch 四元组</td>
+</tr>
+<tr>
+<td>训练封装</td>
+<td><code>agent_lightning_module.py</code></td>
+<td>把 batch 分发给 agent.forward，并统一 log loss、reward、sub_rewards。</td>
+<td>RL Agent 或 SEL Agent</td>
+</tr>
+</tbody>
+</table>
+<h3>Agent 层：同一套模型思想，两条训练路径</h3>
+<p>
+<code>Diffusiondrivev2_Rl_Agent</code> 是第一阶段入口。它的核心特点是冻结大部分模块，只训练轨迹 head，并在 forward 时传入 <code>eta=1.0</code>，让 rollout 带随机性，方便 RL 采样和 log probability 计算。
+    </p>
+<p>
+<code>Diffusiondrivev2_Sel_Agent</code> 是第二阶段入口。它重点训练 scorer：coarse 和 fine 两级子分数预测头。扩散生成器更多是提供候选池，真正学习的是“怎么判断哪条候选更好”。
+    </p>
+<h3>共享骨干层：Transfuser 把多模态输入变成规划特征</h3>
+<p>
+<code>V2TransfuserModel</code> 是 RL 和 SEL 都会走的主模型壳。它先从 features 里取 camera、lidar、status 等输入，再交给 <code>TransfuserBackbone</code>。Backbone 负责把图像、激光和状态融合成 BEV feature、ego query、agents query。
+    </p>
+<p>
+      这层的作用不是直接输出最终轨迹，而是给后面的轨迹 head 提供“当前场景是什么样”的上下文。没有这层，anchor diffusion 就只是在模板附近乱修；有了这层，轨迹修正才知道哪里是道路、哪里有障碍物、周围 agent 在哪里。
+    </p>
+<h3>轨迹生成层：20 条 anchor 是整个扩散头的起点</h3>
+<p>
+      TrajectoryHead 的核心不是从纯噪声开始，而是从 <code>kmeans_navsim_traj_20.npy</code> 开始。这个文件提供 20 条 <code>(8,2)</code> 的 xy 轨迹模板。RL 训练时复制 4 组变成 80 条，SEL 推理时复制 10 组再扩成 800 条候选。
+    </p>
+<p>
+      这部分递进关系是：<code>plan_anchor</code> 先归一化，<code>add_noise(t=8)</code> 轻微加噪，再进入 <code>CustomTransformerDecoder</code>。Decoder 用当前轨迹点去 cross-attend BEV、agent、ego 特征，然后预测更干净的轨迹。最后 <code>DDIMScheduler_with_logprob.step</code> 把当前状态推进到下一状态，并留下 log probability。
+    </p>
+<h3>RL 训练层：PDM reward 约束候选轨迹质量</h3>
+<p>
+      RL 阶段完整链路是：<code>forward_train_rl</code> 生成 80 条候选，再把 GT 拼进去，一起送进 PDM 评分。PDM scorer 返回每条候选的综合分和子指标。代码再按 group 和 anchor mode 构造 advantage：同一个 anchor 的不同 group 互相比，优于 GT 的正样本才拿正 advantage；如果 no-collision 或 drivable-area 不满足，会被强制设成负向。
+    </p>
+<p>
+      接着 <code>get_rlloss</code> 会拿之前保存的 diffusion chain 重新计算 log probability，形成类似 GRPO 的 loss，并加上 imitation L1 loss 做安全兜底。白话讲，RL 阶段的目标是：“让扩散头更愿意生成 PDM 高分轨迹，但不要完全丢掉人类轨迹监督。”
+    </p>
+<h3>SEL 训练和推理层：从生成很多，到选得准</h3>
+<p>
+      SEL 阶段不是重新发明一个规划器，而是在 RL 训练过的生成器上叠一个选择器。训练时，它用 diffusion 候选加 GTRS vocabulary 候选，学习预测 PDM 子指标，比如 NC、EP、DAC、TTC、comfort。推理时，它先生成 800 条候选，再用 coarse scorer 快速扫一遍，取 top-32，最后用 fine scorer 精排，留下少数候选。
+    </p>
+<p>
+      这层的工程思路很直接：生成器负责“覆盖可能性”，选择器负责“从可能性里挑更可靠的”。这比只输出一条轨迹更适合自动驾驶，因为同一个场景经常存在多个合理未来。
+    </p>
+<h3>评测层：PDMScorer 是训练奖励和最终验证的共同裁判</h3>
+<p>
+      仓库里的评测逻辑集中在 <code>navsim/evaluate/pdm_score.py</code> 和 <code>navsim/planning/script/run_pdm_score_fast.py</code> 等文件。PDMScorer 会对候选轨迹做 closed-loop 风格评分，涉及 no-collision、drivable area、progress、TTC、comfort 等指标。
+    </p>
+<p>
+      这里要注意：repo 内在线训练 reward 用的是 NAVSIM v1 风格 PDMS 子指标；论文报告里还会提到 EPDMS，但这个仓库本身并没有完整实现论文里 v2 EPDMS 的所有项。因此，如果你要改评测指标，不能只改 scorer，还要同步检查 RL reward、SEL sub-score heads、fast eval 脚本和最终提交路径。
+    </p>
+<h3>重点模块清单：按“读代码顺序”排列</h3>
+<table>
+<thead>
+<tr>
+<th>阅读顺序</th>
+<th>模块/文件</th>
+<th>为什么重要</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><code>run_training.py</code></td><td>看训练从哪里启动，Hydra 怎么实例化 agent 和 dataset。</td></tr>
+<tr><td>2</td><td><code>dataset.py</code></td><td>看 batch 到底包含什么，尤其是 PDM cache path 和 token。</td></tr>
+<tr><td>3</td><td><code>agent_lightning_module.py</code></td><td>看 Lightning 如何调用 agent.forward、如何 log loss。</td></tr>
+<tr><td>4</td><td><code>diffusiondrivev2_rl_agent.py</code></td><td>看第一阶段哪些参数训练、eta 如何传入、checkpoint 怎么加载。</td></tr>
+<tr><td>5</td><td><code>diffusiondrivev2_model_rl.py</code></td><td>看 RL 轨迹扩散、10 步 rollout、PDM reward、GRPO loss。</td></tr>
+<tr><td>6</td><td><code>transfuser_backbone.py</code></td><td>看 camera/lidar/status 怎么变成 BEV 和 query。</td></tr>
+<tr><td>7</td><td><code>modules/blocks.py</code></td><td>看 GridSampleCrossBEVAttention 如何让轨迹点查询 BEV 特征。</td></tr>
+<tr><td>8</td><td><code>diffusiondrivev2_sel_agent.py</code></td><td>看第二阶段训练哪些 scorer 参数，冻结哪些生成器参数。</td></tr>
+<tr><td>9</td><td><code>diffusiondrivev2_model_sel.py</code></td><td>看 800 候选、coarse/fine scorer、top-k 选择逻辑。</td></tr>
+<tr><td>10</td><td><code>pdm_score.py / PDMScorer</code></td><td>看 reward 和评测指标如何算，哪些指标真正进入训练。</td></tr>
+<tr><td>11</td><td><code>run_pdm_score_fast.py</code></td><td>看 fast eval 如何跑模型、如何取输出、如何批量评分。</td></tr>
+</tbody>
+</table>
+<h3>一句话收束</h3>
+<p>
+      DiffusionDriveV2 的代码递进关系可以概括为：cache 数据进入 Lightning，Agent 选择 RL 或 SEL 训练线，Transfuser 提供共享场景特征，TrajectoryHead 从 20 个 anchor 出发做 truncated diffusion，RL 阶段用 PDM reward 约束生成质量，SEL 阶段训练 coarse/fine scorer 从大候选池里选轨迹，最后通过 PDMScorer/fast eval/提交路径验证输出。
+    </p>
+</article>
+<article class="qa" id="q4">
+<h2>问题 4：prev_sample、log_prob 和自定义 step 与正常 DDIM+GRPO 预测噪声有什么区别？</h2>
+<p class="meta">
+      记录时间：2026-06-27；回答要求：白话详细解释，重点对比标准 DDIM/GRPO 预测噪声。
+      <span class="tag">DDIM step</span>
+<span class="tag">prediction_type=sample</span>
+<span class="tag">log_prob</span>
+<span class="tag">GRPO</span>
+</p>
+<div class="question">用白话详细解释下 <code>prev_sample, log_prob, _ = self.diffusionrl_scheduler.step(model_output=x_start, timestep=k, sample=diffusion_output, eta=eta)</code>，和正常的 DDIM+GRPO 预测噪声有什么区别。</div>
+<h3>先用一句白话讲清楚</h3>
+<p>
+      这行代码做的不是“模型预测噪声，然后 DDIM 用噪声反推下一步”那种最常见写法。DiffusionDriveV2 这里的模型输出 <code>x_start</code> 被当成“模型预测的干净轨迹 <code>x0</code>”，scheduler 再根据当前带噪轨迹 <code>diffusion_output</code> 和这个 <code>x0</code> 反推出隐含噪声 <code>epsilon</code>，然后算出下一步轨迹 <code>prev_sample</code>，同时给这次采样动作算一个近似 <code>log_prob</code>，供后面的 RL/GRPO loss 使用。
+    </p>
+<p>
+      白话类比：正常预测噪声像是模型说“这张脏图里哪些部分是灰尘”；DiffusionDriveV2 这里像是模型直接说“我觉得干净图应该长这样”。scheduler 再用“当前脏图”和“模型说的干净图”倒推出灰尘是什么，然后按 DDIM 公式往前走一步。
+    </p>
+<h3>这行调用里的四个输入各是什么</h3>
+<pre><code class="language-python">prev_sample, log_prob, _ = self.diffusionrl_scheduler.step(
+    model_output=x_start,
+    timestep=k,
+    sample=diffusion_output,
+    eta=eta,
+)</code></pre>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>代码里的来源</th>
+<th>白话含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>model_output=x_start</code></td>
+<td><code>poses_reg[..., :2]</code> 再 <code>norm_odo</code></td>
+<td>模型预测的“干净 xy 轨迹”。不是噪声，而是预测的 <code>x0</code>。</td>
+</tr>
+<tr>
+<td><code>timestep=k</code></td>
+<td><code>roll_timesteps</code> 中的一个值，例如 18、16、14...</td>
+<td>告诉 scheduler 当前处在哪个 diffusion 噪声等级。</td>
+</tr>
+<tr>
+<td><code>sample=diffusion_output</code></td>
+<td>当前循环的带噪轨迹状态</td>
+<td>当前的 <code>x_t</code>。它是上一轮得到的轨迹，仍在归一化 xy 空间。</td>
+</tr>
+<tr>
+<td><code>eta=eta</code></td>
+<td>RL agent forward 传入 <code>eta=1.0</code></td>
+<td>控制这一步是否带随机性。训练时 <code>eta&gt;0</code>，会采样；推理时常用 <code>eta=0</code>，更接近确定性 DDIM。</td>
+</tr>
+</tbody>
+</table>
+<h3>返回的 prev_sample、log_prob、_ 分别是什么</h3>
+<table>
+<thead>
+<tr>
+<th>返回值</th>
+<th>实际含义</th>
+<th>后面怎么用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prev_sample</code></td>
+<td>scheduler 算出来的下一步轨迹状态，近似 <code>x_{t-1}</code>。</td>
+<td>赋值给 <code>diffusion_output</code>，作为下一轮 decoder 的输入。</td>
+</tr>
+<tr>
+<td><code>log_prob</code></td>
+<td>当前策略生成这个 <code>prev_sample</code> 的近似对数概率。</td>
+<td>存入 <code>all_log_probs</code>，后面 <code>get_rlloss</code> 里和 advantage 相乘。</td>
+</tr>
+<tr>
+<td><code>_</code></td>
+<td>代码返回的 <code>prev_sample_mean</code>，也就是不采样随机扰动时的均值轨迹。</td>
+<td>训练 rollout 这里没直接用，所以写成下划线丢掉；测试路径里会用 mean 做最终轨迹。</td>
+</tr>
+</tbody>
+</table>
+<h3>为什么说 model_output 不是预测噪声，而是预测 x0</h3>
+<p>
+      关键证据在 scheduler 初始化：
+    </p>
+<pre><code class="language-python">self.diffusionrl_scheduler = DDIMScheduler_with_logprob(
+    num_train_timesteps=1000,
+    steps_offset=1,
+    beta_schedule="scaled_linear",
+    prediction_type="sample",
+)</code></pre>
+<p>
+<code>prediction_type="sample"</code> 决定了 scheduler 怎么解释 <code>model_output</code>。在自定义 <code>step()</code> 里有三种分支：
+    </p>
+<pre><code class="language-python">if self.config.prediction_type == "epsilon":
+    pred_original_sample = (sample - sqrt(beta_t) * model_output) / sqrt(alpha_t)
+    pred_epsilon = model_output
+elif self.config.prediction_type == "sample":
+    pred_original_sample = model_output
+    pred_epsilon = (sample - sqrt(alpha_t) * pred_original_sample) / sqrt(beta_t)</code></pre>
+<p>
+      如果是标准常见写法 <code>epsilon</code>，模型输出就是噪声 <code>epsilon</code>，scheduler 再由噪声还原 <code>x0</code>。但这里是 <code>sample</code>，所以模型输出直接就是 <code>x0</code>，也就是它认为的干净轨迹。scheduler 再反过来算噪声。
+    </p>
+<p>
+      这和轨迹任务很匹配：模型更像在说“这条轨迹应该修成这样”，而不是说“当前轨迹里混进了哪些噪声”。因为它的起点是 20 个 k-means anchor，不是一团纯噪声，所以直接预测干净轨迹/修正后轨迹更自然。
+    </p>
+<h3>step 内部第一段：找 previous timestep，查 alpha 表</h3>
+<pre><code class="language-python">prev_timestep = timestep - self.config.num_train_timesteps // self.num_inference_steps
+alpha_prod_t = self.alphas_cumprod[timestep]
+alpha_prod_t_prev = self.alphas_cumprod[prev_timestep] if prev_timestep &gt;= 0 else self.final_alpha_cumprod
+beta_prod_t = 1 - alpha_prod_t</code></pre>
+<p>
+      这段在做 DDIM 的查表准备。<code>alpha_prod_t</code> 可以理解成“当前状态里干净信号还剩多少比例”。<code>beta_prod_t</code> 就是噪声相关比例。
+    </p>
+<p>
+      因为前面调用过 <code>set_timesteps(1000)</code>，所以 <code>num_train_timesteps // num_inference_steps = 1000 // 1000 = 1</code>，也就是 <code>prev_timestep = k - 1</code>。例如当前 <code>k=18</code>，公式里上一档就是 17。
+    </p>
+<h3>step 内部第二段：从 x0 反推出隐含噪声 epsilon</h3>
+<pre><code class="language-python">pred_original_sample = model_output
+pred_epsilon = (sample - alpha_prod_t ** 0.5 * pred_original_sample) / beta_prod_t ** 0.5</code></pre>
+<p>
+      这两行是理解差异的核心。<code>model_output</code> 被当成 <code>pred_original_sample</code>，也就是预测的干净轨迹。然后用当前带噪状态 <code>sample</code> 减掉干净轨迹贡献，剩下的部分除以噪声系数，就得到隐含噪声。
+    </p>
+<p>
+      对比标准预测噪声：标准写法是 <code>pred_epsilon = model_output</code>，模型直接告诉你噪声是什么；这里是 <code>pred_original_sample = model_output</code>，模型告诉你干净轨迹是什么，噪声由公式倒推。
+    </p>
+<h3>step 内部第三段：裁剪 x0，避免轨迹数值跑飞</h3>
+<pre><code class="language-python">if self.config.thresholding:
+    pred_original_sample = self._threshold_sample(pred_original_sample)
+elif self.config.clip_sample:
+    pred_original_sample = pred_original_sample.clamp(
+        -self.config.clip_sample_range, self.config.clip_sample_range
+    )</code></pre>
+<p>
+      这段是数值保护。因为轨迹在 scheduler 里是归一化 xy，通常应该在 <code>[-1,1]</code> 附近。如果模型预测的 <code>x0</code> 太夸张，就裁回合法范围。白话说，就是不让模型一步把轨迹点修到不合理的位置。
+    </p>
+<h3>step 内部第四段：算 DDIM 均值 prev_sample_mean</h3>
+<pre><code class="language-python">variance = self._get_variance(timestep, prev_timestep)
+std_dev_t = (eta * variance ** 0.5).clamp_(min=1e-10)
+pred_sample_direction = (1 - alpha_prod_t_prev - std_dev_t**2).clamp_(min=0) ** 0.5 * pred_epsilon
+prev_sample_mean = alpha_prod_t_prev ** 0.5 * pred_original_sample + pred_sample_direction</code></pre>
+<p>
+      这段是 DDIM 反推公式。它用预测的干净轨迹 <code>x0</code> 和刚刚反推出的噪声方向 <code>epsilon</code>，组合出“如果不额外采随机噪声，下一步应该在哪里”的均值 <code>prev_sample_mean</code>。
+    </p>
+<p>
+      如果 <code>eta=0</code>，这一步基本就是确定性的 DDIM。给定当前 sample 和模型输出，下一步固定。如果 <code>eta&gt;0</code>，后面还会在这个均值上采样随机扰动。
+    </p>
+<h3>step 内部第五段：DiffusionDriveV2 用的是乘性噪声采样</h3>
+<pre><code class="language-python">if eta &gt; 0:
+    std_dev_t_mul = torch.clip(std_dev_t, min=0.04)
+    std_dev_t_add = torch.tensor(0.0).to(std_dev_t.device)
+else:
+    std_dev_t_mul = torch.tensor(0.0).to(std_dev_t.device)
+    std_dev_t_add = torch.tensor(0.0).to(std_dev_t.device)</code></pre>
+<p>
+      正常 DDIM/DDPM 更常见的是加性噪声：<code>prev_sample = mean + sigma * noise</code>。但这个仓库里，作者把采样改成了乘性噪声。<code>eta&gt;0</code> 时，先得到一个最小为 0.04 的乘性扰动强度；<code>eta=0</code> 时扰动强度是 0。
+    </p>
+<pre><code class="language-python">variance_noise_horizon = randn_tensor([B, N, 1, 1]) * std_dev_t_mul + 1.0
+variance_noise_vert = randn_tensor([B, N, 1, 1]) * std_dev_t_mul + 1.0
+variance_noise_mul = torch.cat((variance_noise_horizon, variance_noise_vert), dim=-1)
+variance_noise_mul = variance_noise_mul.repeat(1, 1, model_output.shape[2], 1)
+prev_sample = prev_sample_mean * variance_noise_mul + std_dev_t_add * variance_noise_add</code></pre>
+<p>
+      这里每条候选轨迹会为 x 方向和 y 方向各采一个随机缩放系数，然后复制到 8 个 waypoint 上。所以它不是每个轨迹点独立乱抖，而是更像“整条轨迹在横向/纵向上轻微缩放”。这对轨迹很有意义：车辆轨迹通常是整体形状扰动，而不是每个点像图像像素一样独立噪声。
+    </p>
+<p>
+      由于 <code>std_dev_t_add=0</code>，后面的加性噪声分支实际不起作用。也就是说，训练采样主要靠乘性噪声。
+    </p>
+<h3>step 内部第六段：log_prob 是怎么来的</h3>
+<pre><code class="language-python">std_dev_t_mul = torch.clip(std_dev_t, min=0.1)
+log_prob = (
+    -((prev_sample.detach() - prev_sample_mean) ** 2) / (2 * (std_dev_t_mul**2))
+    - torch.log(std_dev_t_mul)
+    - torch.log(torch.sqrt(2 * torch.as_tensor(math.pi)))
+)
+log_prob = log_prob.sum(dim=(-2, -1))</code></pre>
+<p>
+      这段是在给“这一步采到的 <code>prev_sample</code>”算一个近似高斯 log probability。公式长得像普通正态分布 log density：离均值越远，概率越小；方差越大，概率分布越宽。
+    </p>
+<p>
+      但这里有个重要近似：前面采样用的是乘性噪声 <code>prev_sample = mean * mul_noise</code>，严格的概率密度不应该简单写成 <code>prev_sample - mean</code> 的加性高斯形式。代码为了稳定和简单，还是用了类似加性高斯的 log_prob 近似。这就是它和严格 DPPO/DDIM policy log_prob 的一个差别。
+    </p>
+<p>
+<code>prev_sample.detach()</code> 表示把实际采样结果当成固定样本，不让梯度穿过采样动作本身。后面训练时，梯度主要通过 <code>prev_sample_mean</code> 回到模型参数。
+    </p>
+<h3>它和正常 DDIM 预测噪声有什么区别</h3>
+<table>
+<thead>
+<tr>
+<th>对比点</th>
+<th>常见 DDIM 预测噪声</th>
+<th>DiffusionDriveV2 这段代码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模型输出</td>
+<td>通常输出 <code>epsilon</code>，也就是噪声。</td>
+<td>输出 <code>x_start</code>，也就是预测的干净 xy 轨迹。</td>
+</tr>
+<tr>
+<td>prediction_type</td>
+<td><code>epsilon</code> 常见。</td>
+<td><code>sample</code>，代码明确设置。</td>
+</tr>
+<tr>
+<td>噪声怎么得到</td>
+<td>模型直接预测噪声。</td>
+<td>由 <code>sample</code> 和预测的 <code>x0</code> 反推出噪声。</td>
+</tr>
+<tr>
+<td>采样扰动</td>
+<td>常见是 <code>mean + sigma * noise</code> 加性噪声。</td>
+<td>主要是 <code>mean * mul_noise</code> 乘性噪声。</td>
+</tr>
+<tr>
+<td>对象形态</td>
+<td>图像扩散里常把每个像素/latent 当作高维连续变量。</td>
+<td>轨迹扩散里每条候选是 8 个 waypoint，整体几何结构更强。</td>
+</tr>
+<tr>
+<td>起点</td>
+<td>很多生成任务从纯 Gaussian noise 开始。</td>
+<td>从 20 个 k-means anchor 轻微加噪开始。</td>
+</tr>
+<tr>
+<td>作用</td>
+<td>完整生成。</td>
+<td>更像 anchor 附近的短程 refinement。</td>
+</tr>
+</tbody>
+</table>
+<h3>它和正常 GRPO/PPO 风格 policy gradient 有什么区别</h3>
+<p>
+      标准 PPO/GRPO 通常需要一个“旧策略概率”和“新策略概率”的比值，比如 <code>ratio = exp(logp_new - logp_old)</code>，再乘 advantage，并可能加 clipping 或 KL 约束。
+    </p>
+<p>
+      这个仓库的 <code>get_rlloss</code> 写法是：
+    </p>
+<pre><code class="language-python">per_token_loss = -torch.exp(per_token_logps - per_token_logps.detach()) * advantages</code></pre>
+<p>
+<code>per_token_logps.detach()</code> 相当于把当前 log_prob 自己当成旧 log_prob 的常量版本。因此数值上 <code>exp(logp - logp.detach())</code> 接近 1，但梯度仍然来自 <code>logp</code>。白话讲，它不是完整 PPO 那种“拿旧模型和新模型做比值”，而是一个简化的 on-policy policy gradient 形式。
+    </p>
+<p>
+      还有一个容易漏掉的点：训练时不是“Pass 2 再重新采样一条轨迹”。Pass 1 先在 <code>no_grad</code> 下真实 rollout，保存整条轨迹链；Pass 2 的 <code>get_rlloss</code> 会把旧链里的下一步样本通过 <code>prev_sample=chains_prev[..., i]</code> 传回 scheduler。这样 scheduler 不再随机采新的 <code>prev_sample</code>，而是在当前模型下给同一条旧轨迹链重新算 <code>log_prob</code>。白话讲，就是“先把当时走过的路记录下来，再让当前策略解释：如果现在让我走这一步，我觉得这一步有多像我会走出来的”。
+    </p>
+<p>
+      所以它和“正常 DDIM + GRPO 预测噪声”的差别有两层：第一层是 diffusion 参数化不同，它预测 <code>x0</code> 不是预测 <code>epsilon</code>；第二层是 RL objective 简化了，它没有显式 PPO clip，也没有独立旧策略模型，而是用 detach 构造近似的策略梯度。
+    </p>
+<h3>为什么作者可能这么写</h3>
+<p>
+      从工程角度看，这样写有三个明显好处。
+    </p>
+<ol>
+<li><strong>轨迹更适合直接预测 x0。</strong>轨迹不是图像纹理，anchor 已经提供了强先验，模型直接输出修正后的干净轨迹更直观。</li>
+<li><strong>乘性噪声更像轨迹扰动。</strong>车辆轨迹常见变化是整体偏一点、长一点、短一点，而不是每个 waypoint 独立乱动。</li>
+<li><strong>简化 RL 训练。</strong>完整 PPO/GRPO 会引入旧策略、clip、KL、多轮 rollout 存储等复杂度；这里用 PDM scorer 已经很慢，作者选择了更轻的近似。</li>
+</ol>
+<p>
+      代价也很明确：数学上不如标准 diffusion policy 严格，尤其是乘性噪声下的 log_prob 近似不完全精确；但工程上更稳定、更省算力，也更贴近“在 anchor 附近搜索好轨迹”的设计目标。
+    </p>
+<h3>一张小流程图：这行 step 的内部逻辑</h3>
+<div class="flow">输入：
+  sample = 当前带噪轨迹 x_t
+  model_output = x_start = 模型预测的干净轨迹 x0
+  timestep = k
+  eta = 1.0 或 0.0
+
+step 内部：
+  1. 查 alpha_t / alpha_prev
+  2. 因为 prediction_type="sample"，直接把 model_output 当 x0
+  3. 用 x_t 和 x0 反推出 epsilon
+  4. 用 DDIM 公式得到 prev_sample_mean
+  5. eta &gt; 0 时，用乘性噪声采样 prev_sample
+  6. 用近似高斯公式计算 log_prob
+
+输出：
+  prev_sample -&gt; 下一轮 diffusion_output
+  log_prob    -&gt; 后面 GRPO-like loss
+  _           -&gt; prev_sample_mean，这里丢掉</div>
+<h3>源码证据索引</h3>
+<table>
+<thead>
+<tr>
+<th>逻辑点</th>
+<th>源码位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>scheduler 设置 <code>prediction_type="sample"</code></td>
+<td><code>diffusiondrivev2_model_rl.py:697-708</code></td>
+</tr>
+<tr>
+<td>训练 rollout 调用 <code>step(model_output=x_start,...)</code></td>
+<td><code>diffusiondrivev2_model_rl.py:844-857</code></td>
+</tr>
+<tr>
+<td><code>prediction_type="sample"</code> 分支，把 model_output 当 x0</td>
+<td><code>diffusiondrivev2_model_rl.py:596-598</code></td>
+</tr>
+<tr>
+<td>DDIM 均值 <code>prev_sample_mean</code></td>
+<td><code>diffusiondrivev2_model_rl.py:616-630</code></td>
+</tr>
+<tr>
+<td>乘性噪声采样 <code>prev_sample</code></td>
+<td><code>diffusiondrivev2_model_rl.py:638-666</code></td>
+</tr>
+<tr>
+<td>近似 <code>log_prob</code> 计算</td>
+<td><code>diffusiondrivev2_model_rl.py:668-675</code></td>
+</tr>
+<tr>
+<td>RL agent 训练时传入 <code>eta=1.0</code></td>
+<td><code>diffusiondrivev2_rl_agent.py:116-118</code></td>
+</tr>
+<tr>
+<td>GRPO-like loss 使用 <code>logp - logp.detach()</code></td>
+<td><code>diffusiondrivev2_model_rl.py:1085-1097</code></td>
+</tr>
+</tbody>
+</table>
+<h3>一句话收束</h3>
+<p>
+      这行 <code>step()</code> 的本质是：把模型预测的干净轨迹 <code>x0</code> 和当前带噪轨迹 <code>x_t</code> 放进自定义 DDIM 公式，得到下一步轨迹 <code>prev_sample</code>，同时算一个近似 <code>log_prob</code> 给 RL loss。它和常见 DDIM+GRPO 最大的区别是：这里预测的是 <code>x0</code> 不是噪声，采样主要用乘性噪声不是加性噪声，GRPO 也是简化 on-policy 形式而不是完整 PPO/GRPO clip 版本。
+    </p>
+</article>
+<article class="qa" id="q5">
+<h2>问题 5：为什么要先预测干净轨迹再反推噪声，感觉是不是在绕圈子？</h2>
+<p class="meta">
+      记录时间：2026-06-27；回答要求：白话解释设计动机，判断用户理解是否正确。
+      <span class="tag">x0 参数化</span>
+<span class="tag">DDIM 公式</span>
+<span class="tag">log_prob</span>
+<span class="tag">设计动机</span>
+</p>
+<div class="question">
+      为什么要这样设计感觉很奇怪，我理解的正确吗：模型预测出来的是所谓的干净轨迹，然后根据预测结果和噪声（加噪轨迹）反推噪声，然后再根据所谓的干净轨迹和噪声再推出来下一个时间步的去噪轨迹，最后再根据得到的去噪轨迹和加上扰动后的结果得到了所谓的采样概率 log_pred？感觉一直在绕圈子。
+    </div>
+<h3>先给结论：你的主线理解基本对，但有两个地方要修正</h3>
+<p>
+      你的理解大方向是对的：这段代码确实是先让模型预测一个“干净轨迹” <code>x0</code>，再用当前带噪轨迹 <code>x_t</code> 和预测的 <code>x0</code> 反推出隐含噪声 <code>epsilon</code>，然后用 DDIM 公式得到下一步 <code>x_{t-1}</code>，也就是代码里的 <code>prev_sample</code>。
+    </p>
+<p>
+      但需要修正两点。
+    </p>
+<ol>
+<li><strong>反推噪声不是为了“绕一圈再预测一次”。</strong>它只是把模型输出的 <code>x0</code> 转换成 DDIM 公式需要的 <code>epsilon</code> 坐标。白话讲，模型说的是“终点大概在哪里”，DDIM 公式还需要知道“当前点到终点之间的噪声方向”，所以代码用公式把这个方向算出来。</li>
+<li><strong><code>log_prob</code> 不是根据“去噪轨迹和加上扰动后的结果”随便算出来的。</strong>更准确地说，scheduler 先算出一个不加随机性的中心位置 <code>prev_sample_mean</code>，再采样得到实际的 <code>prev_sample</code>，然后估计“在以 <code>prev_sample_mean</code> 为中心的分布下，采到这个 <code>prev_sample</code> 的概率有多大”。这个概率就是给 RL loss 用的近似策略概率。</li>
+</ol>
+<h3>为什么看起来绕：因为这里混了两套语言</h3>
+<p>
+      这段代码看起来绕，主要是因为它同时用了两套语言。
+    </p>
+<table>
+<thead>
+<tr>
+<th>语言</th>
+<th>它关心什么</th>
+<th>在这段代码里的表现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>模型语言</td>
+<td>给定场景和当前带噪轨迹，直接预测干净轨迹应该长什么样。</td>
+<td><code>x_start = norm_odo(poses_reg[..., :2])</code></td>
+</tr>
+<tr>
+<td>DDIM 公式语言</td>
+<td>用 <code>x_t</code>、<code>x0</code>、<code>epsilon</code>、alpha 表从当前时间步走到上一时间步。</td>
+<td><code>pred_epsilon = (...)</code>，再算 <code>prev_sample_mean</code></td>
+</tr>
+<tr>
+<td>RL 语言</td>
+<td>需要知道“策略走出这一步的概率”，这样 reward / advantage 才能反向训练模型。</td>
+<td>对 <code>prev_sample</code> 算近似 <code>log_prob</code></td>
+</tr>
+</tbody>
+</table>
+<p>
+      所以它不是纯 diffusion，也不是纯 RL，而是把 diffusion 的一步采样伪装成 RL 里的一个 action。这个 action 就是“从当前轨迹状态走到下一步轨迹状态”。
+    </p>
+<h3>用白话重新走一遍，不把它想成绕圈</h3>
+<p>
+      假设现在有一条候选轨迹 <code>x_t</code>，它来自 anchor，并且带了一点噪声。当前时间步是 <code>k</code>。模型现在要做的不是一次性输出最终答案，而是负责回答一句话：
+    </p>
+<blockquote>
+      如果当前这条带噪轨迹对应的干净版本存在，那我猜它应该长这样。
+    </blockquote>
+<p>
+      这个“我猜它应该长这样”就是 <code>x_start</code>，也就是预测的 <code>x0</code>。
+    </p>
+<p>
+      但 DDIM 的反推不是简单把 <code>x_t</code> 直接替换成 <code>x0</code>。DDIM 是一步一步走的。它要从 <code>k</code> 走到 <code>k-1</code>，不是直接从 <code>k</code> 跳到 0。因此 scheduler 需要回答：
+    </p>
+<blockquote>
+      如果干净轨迹是 <code>x0</code>，当前带噪轨迹是 <code>x_t</code>，那当前里面混进去的噪声方向是什么？
+    </blockquote>
+<p>
+      这就是 <code>pred_epsilon</code>。它不是模型新预测出来的第二个东西，而是由 <code>x_t</code> 和 <code>x0</code> 算出来的同一件事的另一种表示。
+    </p>
+<p>
+      拿到 <code>x0</code> 和 <code>epsilon</code> 后，DDIM 公式就能算出一个“下一步最应该去的位置”，也就是 <code>prev_sample_mean</code>。如果不加随机性，下一步就落在这个 mean 上。
+    </p>
+<p>
+      但训练 RL 时需要探索，不能每条同 anchor 的轨迹都走完全一样的确定路径。所以这里又加了一个乘性扰动，得到真正的 <code>prev_sample</code>。这个 <code>prev_sample</code> 才会进入下一轮 denoising。
+    </p>
+<h3>真正的流程可以压缩成 5 句话</h3>
+<div class="flow">当前状态：
+  x_t = 当前带噪候选轨迹
+
+模型预测：
+  x0_hat = 模型认为的干净轨迹
+
+坐标转换：
+  epsilon_hat = 用 x_t 和 x0_hat 反推出来的噪声方向
+
+DDIM 更新：
+  prev_sample_mean = 用 x0_hat 和 epsilon_hat 算出来的下一步中心位置
+
+采样和训练：
+  prev_sample = 在 prev_sample_mean 附近采样得到的下一步轨迹
+  log_prob = 当前策略采到 prev_sample 的近似对数概率</div>
+<h3>为什么不直接把模型预测的 x0 当最终轨迹？</h3>
+<p>
+      这是最容易产生疑问的地方。既然模型已经预测了干净轨迹 <code>x0</code>，为什么还要搞 <code>epsilon</code>、<code>prev_sample_mean</code>、<code>prev_sample</code>？
+    </p>
+<p>
+      原因有四个。
+    </p>
+<ol>
+<li><strong>它要保留 diffusion 的逐步细化结构。</strong>模型每一步看到的是当前带噪候选轨迹和时间步，输出的是“此刻我认为的干净版本”。下一步状态仍然通过 scheduler 推出来。这样 10 步可以逐渐修轨迹，而不是一次性硬跳。</li>
+<li><strong>它要产生多样候选。</strong>如果直接用 <code>x0</code>，同一个 anchor 下的多个样本很容易变得很像。乘性扰动让同一个 anchor 的不同 group 能探索出轻微不同的轨迹，后面 GRPO 才有组内比较的对象。</li>
+<li><strong>它要给 RL 一个“动作概率”。</strong>Policy gradient 不是只看轨迹好不好，还需要知道这条轨迹链是当前策略多大概率走出来的。<code>log_prob</code> 就是为了把 diffusion sampling 变成 RL 可训练的 policy action。</li>
+<li><strong>它要复用 diffusers 的 scheduler 公式和接口。</strong>diffusers 的 DDIM scheduler 支持 <code>epsilon</code>、<code>sample</code>、<code>v_prediction</code> 多种 prediction type。即使模型预测 <code>x0</code>，内部仍会转成 <code>epsilon</code> 来套统一的 DDIM 更新公式。这是工程接口带来的“看起来绕”。</li>
+</ol>
+<h3>所以“反推噪声”到底是不是多余的？</h3>
+<p>
+      从数学上说，它不是多余的，但它确实不是新增信息。
+    </p>
+<p>
+<code>x_t</code>、<code>x0</code>、<code>epsilon</code> 三者之间有一个固定关系：
+    </p>
+<pre><code class="language-text">x_t = sqrt(alpha_t) * x0 + sqrt(1 - alpha_t) * epsilon</code></pre>
+<p>
+      如果你知道 <code>x_t</code> 和 <code>x0</code>，就能解出 <code>epsilon</code>。所以 <code>epsilon</code> 不是模型又发现了什么新东西，而是为了套 DDIM 更新公式换了一个坐标系。
+    </p>
+<p>
+      你可以把它理解成导航里的“位置”和“方向”。模型预测的是目标位置，scheduler 还需要算出你现在相对目标的方向，才能决定下一小步往哪里走。方向不是新目标，只是从当前位置和目标位置算出来的。
+    </p>
+<h3>log_prob 这一段确实有一点工程近似</h3>
+<p>
+      你的“不太对劲”的直觉在 <code>log_prob</code> 这里是有道理的。因为代码实际采样 <code>prev_sample</code> 用的是乘性噪声：
+    </p>
+<pre><code class="language-python">prev_sample = prev_sample_mean * variance_noise_mul + std_dev_t_add * variance_noise_add</code></pre>
+<p>
+      而 <code>std_dev_t_add</code> 在这段实现里被设成 0，所以真正起作用的是 <code>prev_sample_mean * variance_noise_mul</code>。这更像“整条轨迹按 x / y 方向缩放一下”，不是常规的“在 mean 上加一个高斯噪声”。
+    </p>
+<p>
+      但后面算 <code>log_prob</code> 时，用的是类似加性高斯的形式：
+    </p>
+<pre><code class="language-python">log_prob = -((prev_sample.detach() - prev_sample_mean) ** 2) / (2 * std_dev_t_mul**2) - log(std_dev_t_mul) - const</code></pre>
+<p>
+      这严格来说和前面的乘性噪声分布并不完全匹配。也就是说，<code>log_prob</code> 更像一个“稳定可用的近似打分”，不是严格推导出来的精确概率密度。
+    </p>
+<p>
+      这也是为什么你会觉得怪：如果按严格 diffusion policy 或严格 PPO 的标准看，它确实不够规整。作者这里更像是工程上做了一个折中：采样方式用更适合轨迹的乘性扰动，训练概率用更简单稳定的高斯近似。
+    </p>
+<h3>Pass 1 / Pass 2 再补一刀：它不是一直重新绕，而是先采样再解释</h3>
+<p>
+      训练时还有一个关键点。Pass 1 会真的采样，得到一整条轨迹链，并计算 reward / advantage。Pass 2 不会重新采样一条新链，而是把 Pass 1 保存下来的下一步轨迹通过 <code>prev_sample=chains_prev[..., i]</code> 塞给 scheduler。
+    </p>
+<p>
+      这样做的意思是：同一条已经采出来的轨迹链，现在让带梯度的模型重新解释一遍“我生成这一步的概率有多大”。如果这条链 reward 高，advantage 为正，训练就会提高它的 log_prob；如果安全指标失败，advantage 被置成负，训练就会降低它的 log_prob。
+    </p>
+<p>
+      白话讲，Pass 1 是“先试开一批路线并打分”，Pass 2 是“回放这些路线，让模型学会以后更常走高分路线、更少走低分路线”。
+    </p>
+<h3>这套设计为什么可能适合轨迹规划</h3>
+<p>
+      放在图像生成里，这种写法可能显得很不标准；但放在自动驾驶轨迹规划里，它有几个现实动机。
+    </p>
+<ol>
+<li><strong>轨迹维度低，直接预测 x0 更自然。</strong>轨迹只有 8 个 waypoint 的 xy，不像图像 latent 那样高维复杂。让模型直接输出“干净轨迹”比输出抽象噪声更直观，也更容易接 IL 的 L1 监督。</li>
+<li><strong>anchor 已经提供了强先验。</strong>它不是从纯噪声里创造轨迹，而是在 20 个 k-means 轨迹模板附近修正。既然起点已经像轨迹，模型直接预测修正后的干净轨迹很合理。</li>
+<li><strong>乘性扰动更贴近车辆轨迹。</strong>车辆轨迹变化常常是整体更远、更近、更偏左、更偏右，而不是每个点独立乱动。乘性噪声虽然概率上不够标准，但形态上更像轨迹扰动。</li>
+<li><strong>RL 需要随机性和概率。</strong>没有随机性就没有组内探索，没有 log_prob 就没法把 reward 变成 policy gradient。scheduler 的作用就是把“轨迹生成过程”包装成一个可采样、可算概率的策略。</li>
+</ol>
+<h3>最终判断：你的理解该怎么改写才更准确</h3>
+<p>
+      你原来的理解可以改成下面这个版本：
+    </p>
+<blockquote>
+      模型每一步预测的是当前带噪轨迹对应的干净轨迹 <code>x0</code>。scheduler 为了按 DDIM 公式从当前时间步走到下一时间步，会用 <code>x_t</code> 和预测的 <code>x0</code> 反推出隐含噪声方向 <code>epsilon</code>。然后它用 <code>x0</code> 和 <code>epsilon</code> 算出下一步的中心位置 <code>prev_sample_mean</code>，再加一个轨迹友好的乘性扰动得到实际下一步 <code>prev_sample</code>。最后，它用一个近似高斯公式估计当前策略采到这个 <code>prev_sample</code> 的 <code>log_prob</code>，给 GRPO-like loss 使用。
+    </blockquote>
+<p>
+      这样看就不是“无意义绕圈”，而是三件事串在一起：<strong>模型用 x0 参数化表达预测，DDIM 用 epsilon 形式推进一步，RL 用 log_prob 训练采样行为。</strong>
+</p>
+<h3>但你的质疑也成立：这不是严格标准实现</h3>
+<p>
+      如果问“这是不是一个数学上很干净、完全标准的 DDIM + GRPO？”答案是否定的。它有几个明显的工程化近似：
+    </p>
+<ul>
+<li><code>prediction_type="sample"</code> 让模型预测 <code>x0</code>，不是常见的直接预测噪声 <code>epsilon</code>。</li>
+<li>采样用的是乘性噪声，不是标准 DDIM 的加性高斯噪声。</li>
+<li><code>log_prob</code> 用类似加性高斯的公式近似乘性噪声采样概率。</li>
+<li>GRPO/PPO loss 没有显式旧策略 log_prob、ratio clip 和 KL，只用了 <code>logp - logp.detach()</code> 的 on-policy 近似。</li>
+</ul>
+<p>
+      所以你的“感觉怪”不是理解错，而是你已经看到了这个实现最值得讨论的地方：它不是追求 diffusion / PPO 公式最正统，而是为了自动驾驶轨迹任务，把 anchor、短步扩散、轨迹扰动和 PDM reward 绑在一起，做了一个能跑、能探索、能被 reward 推动的近似策略。
+    </p>
+<h3>源码证据索引</h3>
+<table>
+<thead>
+<tr>
+<th>逻辑点</th>
+<th>源码位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prediction_type="sample"</code> 时，模型输出直接作为 <code>x0</code></td>
+<td><code>diffusiondrivev2_model_rl.py:596-598</code></td>
+</tr>
+<tr>
+<td>用 <code>x_t</code> 和 <code>x0</code> 反推出 <code>pred_epsilon</code></td>
+<td><code>diffusiondrivev2_model_rl.py:597-598</code></td>
+</tr>
+<tr>
+<td>用 <code>x0</code> 和 <code>epsilon</code> 算 <code>prev_sample_mean</code></td>
+<td><code>diffusiondrivev2_model_rl.py:625-630</code></td>
+</tr>
+<tr>
+<td>乘性噪声采样实际 <code>prev_sample</code></td>
+<td><code>diffusiondrivev2_model_rl.py:638-666</code></td>
+</tr>
+<tr>
+<td>近似高斯形式的 <code>log_prob</code></td>
+<td><code>diffusiondrivev2_model_rl.py:668-675</code></td>
+</tr>
+<tr>
+<td>Pass 2 固定旧链重算 log_prob</td>
+<td><code>diffusiondrivev2_model_rl.py:1085-1091</code></td>
+</tr>
+<tr>
+<td>GRPO-like loss 的 on-policy 近似</td>
+<td><code>diffusiondrivev2_model_rl.py:1094-1097</code></td>
+</tr>
+</tbody>
+</table>
+</article>
+<article class="qa" id="q6">
+<h2>问题 6：按 group 和 anchor mode 如何构造 advantage？标准、逻辑和最终形态是什么？</h2>
+<p class="meta">
+      记录时间：2026-06-27；回答要求：白话详细解释 group / anchor mode advantage 构造逻辑，并举例说明。
+      <span class="tag">advantage</span>
+<span class="tag">group</span>
+<span class="tag">anchor mode</span>
+<span class="tag">GRPO</span>
+</p>
+<div class="question">
+      用白话详细展开解释一下：按 group 和 anchor mode 如何构造 advantage，有哪些标准和逻辑，最终呈现出来的 advantage 什么样子的，并举例说明。
+    </div>
+<h3>先用一句话讲清楚</h3>
+<p>
+      DiffusionDriveV2 这里的 advantage 不是把 80 条候选轨迹放在一起直接排名，而是先按 <code>anchor mode</code> 分成 20 个小组，每个 anchor 里面有 <code>num_groups=4</code> 条同意图候选。每个 anchor 内部先做“组内相对好坏”标准化，然后只保留“比 GT 好、并且比同 anchor 平均水平好”的样本；如果这条轨迹撞车或不可行驶，就直接给 <code>-1</code> 的负 advantage。最后把这个二维结果摊平成 80 条轨迹，并复制到 10 个 diffusion step 上，再乘时间步折扣。
+    </p>
+<p>
+      白话讲：<strong>先在同一种驾驶意图内部比谁更好，再用 GT 和安全约束做门槛，最后把结果变成每条采样轨迹、每个扩散步骤都能用的训练权重。</strong>
+</p>
+<h3>group 和 anchor mode 分别是什么</h3>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>代码里的数量</th>
+<th>白话含义</th>
+<th>为什么需要它</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>anchor mode</code></td>
+<td><code>self.ego_fut_mode = 20</code></td>
+<td>20 条离线 k-means 聚类出来的轨迹模板，比如偏直行、偏左转、偏右转、偏停等不同驾驶意图。</td>
+<td>保证候选轨迹天然多模态，不让模型只学一种平均轨迹。</td>
+</tr>
+<tr>
+<td><code>group</code></td>
+<td><code>self.num_groups = 4</code></td>
+<td>每个 anchor mode 被复制 4 份，经过随机扩散扰动后，形成 4 条同一意图下的不同候选。</td>
+<td>给同一 anchor 内部制造可比较的样本，GRPO 才能说“这一组里哪条更好”。</td>
+</tr>
+<tr>
+<td>总候选数</td>
+<td><code>4 * 20 = 80</code></td>
+<td>每个场景生成 80 条候选轨迹。</td>
+<td>后面 PDM scorer 会给这 80 条候选加上 GT 一起打分。</td>
+</tr>
+</tbody>
+</table>
+<p>
+      代码里先是 <code>plan_anchor</code> 从 <code>(20,8,2)</code> 复制成 <code>(B,4,20,8,2)</code>，再 reshape 成 <code>(B,80,8,2)</code> 去 rollout。PDM 打分后，代码又把 reward 还原成 <code>(B,4,20)</code>：
+    </p>
+<pre><code class="language-python">reward_group = reward_group.view(bs, num_groups, self.ego_fut_mode)  # (B, 4, 20)</code></pre>
+<p>
+      这一步非常关键：它说明 advantage 的逻辑不是“80 条乱排”，而是“4 个 group × 20 个 anchor mode”的二维结构。
+    </p>
+<h3>advantage 构造的 5 道标准</h3>
+<p>
+      一条候选轨迹要真正得到正向 advantage，需要连续通过几道标准。可以把它想成筛选漏斗。
+    </p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>代码</th>
+<th>白话标准</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. PDM 打分</td>
+<td><code>reward_group</code></td>
+<td>80 条候选轨迹各自拿到一个 PDM reward，GT 也拿到一个 reward。</td>
+<td>得到 <code>(B,80)</code> 候选 reward 和 <code>reward_gt</code>。</td>
+</tr>
+<tr>
+<td>2. 按 anchor 组内标准化</td>
+<td><code>(r - mean_anchor) / std_anchor</code></td>
+<td>只在同一个 anchor 的 4 条候选里比较谁更好。</td>
+<td>得到组内 z-score，形状 <code>(B,4,20)</code>。</td>
+</tr>
+<tr>
+<td>3. 负值截断</td>
+<td><code>advantages.clamp(min=0)</code></td>
+<td>比同 anchor 平均水平差的样本不奖励。</td>
+<td>负 advantage 变 0。</td>
+</tr>
+<tr>
+<td>4. 必须超过 GT</td>
+<td><code>reward_group &gt; reward_gt - 1e-6</code></td>
+<td>即使你在同 anchor 内还不错，如果还没超过 GT，也不奖励。</td>
+<td>没超过 GT 的样本 advantage 变 0。</td>
+</tr>
+<tr>
+<td>5. 安全硬门控</td>
+<td><code>no_collision</code> / <code>drivable_area</code></td>
+<td>如果撞车或不可行驶，直接惩罚。</td>
+<td>advantage 被覆盖为 <code>-1.0</code>。</td>
+</tr>
+</tbody>
+</table>
+<h3>第一步：PDM reward 先变成 4 × 20 的表</h3>
+<p>
+      代码先把 80 条候选和 GT 拼在一起打 PDM 分：
+    </p>
+<pre><code class="language-python">target_traj = targets["trajectory"].unsqueeze(1)
+diffusion_output_with_gt = torch.cat((diffusion_output, target_traj), dim=1)
+reward_group, metric_cache, sub_rewards_group = self.get_pdm_score_para(
+    diffusion_output_with_gt, metric_cache
+)
+reward_gt = reward_group[:, -1:].unsqueeze(-1)
+reward_group = reward_group[:, :-1]</code></pre>
+<p>
+      这里 <code>reward_group</code> 原本是 <code>(B,81)</code>，最后一列是 GT。去掉 GT 后剩下 <code>(B,80)</code>。然后 reshape 成：
+    </p>
+<pre><code class="language-text">reward_group[b, g, a]
+
+b = batch 里的第几个场景
+g = 第几个 group，范围 0..3
+a = 第几个 anchor mode，范围 0..19</code></pre>
+<p>
+      展开看，它像这样：
+    </p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>anchor 0</th>
+<th>anchor 1</th>
+<th>anchor 2</th>
+<th>...</th>
+<th>anchor 19</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>group 0</strong></td>
+<td><code>r[0,0]</code></td>
+<td><code>r[0,1]</code></td>
+<td><code>r[0,2]</code></td>
+<td>...</td>
+<td><code>r[0,19]</code></td>
+</tr>
+<tr>
+<td><strong>group 1</strong></td>
+<td><code>r[1,0]</code></td>
+<td><code>r[1,1]</code></td>
+<td><code>r[1,2]</code></td>
+<td>...</td>
+<td><code>r[1,19]</code></td>
+</tr>
+<tr>
+<td><strong>group 2</strong></td>
+<td><code>r[2,0]</code></td>
+<td><code>r[2,1]</code></td>
+<td><code>r[2,2]</code></td>
+<td>...</td>
+<td><code>r[2,19]</code></td>
+</tr>
+<tr>
+<td><strong>group 3</strong></td>
+<td><code>r[3,0]</code></td>
+<td><code>r[3,1]</code></td>
+<td><code>r[3,2]</code></td>
+<td>...</td>
+<td><code>r[3,19]</code></td>
+</tr>
+</tbody>
+</table>
+<p>
+      每一列是一个 anchor mode，每一列里有 4 个 group 样本。后续 advantage 主要就是逐列计算。
+    </p>
+<h3>第二步：只在同一个 anchor 内做相对比较</h3>
+<p>
+      代码写法是：
+    </p>
+<pre><code class="language-python">mean_grouped_rewards = reward_group.mean(dim=1)  # (B,20)
+std_grouped_rewards = reward_group.std(dim=1)    # (B,20)
+advantages = (reward_group - mean_grouped_rewards.unsqueeze(1)) / (
+    std_grouped_rewards.unsqueeze(1) + 1e-4
+)</code></pre>
+<p>
+<code>dim=1</code> 是 group 维度，所以它不是对 80 条一起算均值和方差，而是对每个 anchor 的 4 条 group 候选分别算均值和方差。
+    </p>
+<p>
+      为什么要这么做？因为不同 anchor mode 代表不同驾驶意图。比如一个 anchor 是“直行加速”，另一个 anchor 是“慢速等待”，它们的 reward 绝对值可能不可直接比较。如果把 80 条全放一起比，某些天然高 reward 的意图会把其他意图压掉，模型可能越来越只偏向一种模式。按 anchor 内部比，就变成：
+    </p>
+<blockquote>
+      同一个驾驶意图下，4 条扰动候选里谁更好，就奖励谁；不同驾驶意图之间先不直接抢名次。
+    </blockquote>
+<p>
+      这就是它所谓的 intra-anchor，也就是“anchor 内部的相对 advantage”。
+    </p>
+<h3>第三步：必须同时满足两个正向条件</h3>
+<p>
+      标准化以后，代码没有直接使用正负 advantage，而是做了截断和 GT 门槛：
+    </p>
+<pre><code class="language-python">mask_positive = (reward_group &gt; (reward_gt - 1e-6))
+advantages = advantages.clamp(min=0) * mask_positive.float()</code></pre>
+<p>
+      所以一个样本想得到正 advantage，必须同时满足两个条件：
+    </p>
+<ol>
+<li><strong>它要比同 anchor 的平均水平好。</strong>如果标准化后是负数，说明它在这个 anchor 的 4 条候选里偏差，直接截成 0。</li>
+<li><strong>它要比 GT 的 PDM reward 更好。</strong>如果没超过 GT，即使在同 anchor 内不差，也不给正向奖励。</li>
+</ol>
+<p>
+      因此最终的正 advantage 含义不是“这条轨迹 reward 高”，而是更严格：
+    </p>
+<blockquote>
+      这条轨迹在同一个 anchor mode 的 4 条候选里表现更好，而且它的 PDM reward 超过了 GT。
+    </blockquote>
+<h3>第四步：安全指标有一票否决权</h3>
+<p>
+      后面代码还会遍历 sub reward：
+    </p>
+<pre><code class="language-python">for k, v_full in batched_sub.items():
+    v = v_full[:, :-1]
+    v = v.view(bs, num_groups, self.ego_fut_mode)
+
+    if k == "no_collision" or k == "drivable_area":
+        zero_mask = (v != 1)
+        advantages = torch.where(
+            zero_mask,
+            torch.full_like(advantages, -1.0),
+            advantages,
+        )</code></pre>
+<p>
+      这里 <code>no_collision</code> 和 <code>drivable_area</code> 是硬约束。只要不等于 1，就说明有碰撞或不可行驶，advantage 会直接被覆盖成 <code>-1.0</code>。
+    </p>
+<p>
+      注意这个覆盖发生在“截断成 0”之后，所以它可以把原本 0 的样本也变成 <code>-1</code>。这表示：普通差样本只是“不奖励”，但危险样本要“明确惩罚”。
+    </p>
+<p>
+      其他 sub reward，比如 <code>ttc</code>、<code>comfort</code>、<code>final</code>、<code>dir_weighted</code>、<code>progress</code>，这里没有额外门控。它们已经通过综合 PDM reward 影响了前面的 reward 排名。
+    </p>
+<h3>第五步：从 4 × 20 摊平成 80，再扩展到 10 个 diffusion step</h3>
+<p>
+      到这一步，advantage 还是 <code>(B,4,20)</code>，也就是每个场景一张 4 行 20 列的表。随后代码把它摊平成 80 条候选：
+    </p>
+<pre><code class="language-python">advantages = advantages.view(bs, num_groups * self.ego_fut_mode)  # (B,80)</code></pre>
+<p>
+      flatten 的顺序和前面构造候选的顺序一致，可以理解为：
+    </p>
+<pre><code class="language-text">n = g * 20 + a
+
+n=0..19    -&gt; group 0 的 anchor 0..19
+n=20..39   -&gt; group 1 的 anchor 0..19
+n=40..59   -&gt; group 2 的 anchor 0..19
+n=60..79   -&gt; group 3 的 anchor 0..19</code></pre>
+<p>
+      然后它把每条候选的 advantage 复制到 10 个 denoising step 上：
+    </p>
+<pre><code class="language-python">advantages = advantages.detach().unsqueeze(-1).repeat(1, 1, step_num)  # (B,80,10)</code></pre>
+<p>
+<code>detach()</code> 表示 advantage 本身不参与梯度反传。它只是 RL loss 的权重，梯度走的是 <code>log_prob</code>。
+    </p>
+<p>
+      最后再乘一个时间步折扣：
+    </p>
+<pre><code class="language-python">discount = torch.tensor([0.8 ** (step_num - i - 1) for i in range(step_num)])
+advantages = advantages * discount</code></pre>
+<p>
+<code>step_num=10</code> 时，折扣大约是：
+    </p>
+<pre><code class="language-text">[0.134, 0.168, 0.210, 0.262, 0.328, 0.410, 0.512, 0.640, 0.800, 1.000]</code></pre>
+<p>
+      也就是说，越早的 denoising step 权重越小，越靠后的精修 step 权重越大。最终传给 <code>get_rlloss</code> 的 advantage 形状是：
+    </p>
+<pre><code class="language-text">(B, 80, 10)
+
+B  = batch size
+80 = 4 groups * 20 anchor modes
+10 = 10 个 reverse diffusion step</code></pre>
+<h3>数值例子 1：同一个 anchor 内部怎么比</h3>
+<p>
+      假设只看一个 batch 里的 <code>anchor 0</code>，它有 4 个 group 样本。GT 的 PDM reward 是 <code>0.75</code>：
+    </p>
+<table>
+<thead>
+<tr>
+<th>group</th>
+<th>reward</th>
+<th>是否超过 GT 0.75</th>
+<th>相对同 anchor 平均水平</th>
+<th>截断/GT 门槛后</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>group 0</td>
+<td>0.70</td>
+<td>否</td>
+<td>略低于平均</td>
+<td>0</td>
+</tr>
+<tr>
+<td>group 1</td>
+<td>0.82</td>
+<td>是</td>
+<td>明显高于平均</td>
+<td>正 advantage，约 0.98</td>
+</tr>
+<tr>
+<td>group 2</td>
+<td>0.60</td>
+<td>否</td>
+<td>明显低于平均</td>
+<td>0</td>
+</tr>
+<tr>
+<td>group 3</td>
+<td>0.78</td>
+<td>是</td>
+<td>高于平均</td>
+<td>正 advantage，约 0.57</td>
+</tr>
+</tbody>
+</table>
+<p>
+      这个 anchor 的均值大约是 <code>0.725</code>。代码会算每个 group 相对这个均值和标准差的 z-score。最后只有 group 1 和 group 3 同时满足“高于 anchor 平均”和“超过 GT”，所以它们得到正 advantage。
+    </p>
+<p>
+      如果 group 3 虽然 reward 是 <code>0.78</code>，但 <code>drivable_area=0</code>，那最终不是 <code>0.57</code>，而是被硬门控覆盖成 <code>-1.0</code>。这就是安全指标的一票否决。
+    </p>
+<h3>数值例子 2：为什么不是所有高 reward 都被奖励</h3>
+<p>
+      再看另一个 anchor。假设 <code>anchor 2</code> 四个 group 的 reward 都超过 GT：
+    </p>
+<table>
+<thead>
+<tr>
+<th>group</th>
+<th>reward</th>
+<th>超过 GT？</th>
+<th>同 anchor 内相对表现</th>
+<th>最终趋势</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>group 0</td>
+<td>0.80</td>
+<td>是</td>
+<td>略低于本 anchor 平均</td>
+<td>0</td>
+</tr>
+<tr>
+<td>group 1</td>
+<td>0.81</td>
+<td>是</td>
+<td>略高于本 anchor 平均</td>
+<td>小正 advantage</td>
+</tr>
+<tr>
+<td>group 2</td>
+<td>0.79</td>
+<td>是</td>
+<td>低于本 anchor 平均</td>
+<td>0</td>
+</tr>
+<tr>
+<td>group 3</td>
+<td>0.82</td>
+<td>是</td>
+<td>最高</td>
+<td>较大正 advantage</td>
+</tr>
+</tbody>
+</table>
+<p>
+      这说明 DiffusionDriveV2 不是“超过 GT 就全部奖励”。它还要求你在同一个 anchor 的 4 条候选里相对更好。这样可以让每个 anchor 内部继续优胜劣汰，而不是把整列样本都一股脑推高概率。
+    </p>
+<h3>数值例子 3：整个 anchor 都不如 GT 会怎样</h3>
+<p>
+      假设 <code>anchor 5</code> 的 4 个 reward 是：
+    </p>
+<pre><code class="language-text">[0.50, 0.55, 0.52, 0.54]，GT = 0.75</code></pre>
+<p>
+      组内标准化后，最高的 <code>0.55</code> 可能在这个 anchor 内是正的，但它没有超过 GT，所以 <code>mask_positive</code> 会把它乘成 0。结果是这个 anchor 的 4 个 group 最终全是 0，除非其中某条还触发碰撞或不可行驶门控，那条会变成 <code>-1</code>。
+    </p>
+<p>
+      这就是 inter-anchor truncation 的效果：如果某个 anchor 代表的驾驶意图整体不如 GT，就不要因为它在自己小圈子里稍微好一点而强化它。
+    </p>
+<h3>最终 advantage 长什么样</h3>
+<p>
+      在硬门控和折扣之前，它是一张 <code>4 × 20</code> 的表。每个格子对应“一条 group-anchor 候选轨迹”的训练信号：
+    </p>
+<pre><code class="language-text">A_final[b] =
+
+              anchor0  anchor1  anchor2  ... anchor19
+group0          0       -1       0.00          0
+group1        0.98       0       0.39          0
+group2          0        0      -1.00          0
+group3       -1.00       0       1.16          0</code></pre>
+<p>
+      这里可以这样读：
+    </p>
+<ul>
+<li><code>正数</code>：这条候选值得强化，后面 RL loss 会提高它的 log probability。</li>
+<li><code>0</code>：这条候选不训练，不奖励也不惩罚。</li>
+<li><code>-1</code>：这条候选违反硬安全约束，要降低它的 log probability。</li>
+</ul>
+<p>
+      摊平成 80 条并乘 10 步折扣后，每条候选会变成一个长度为 10 的向量。比如某条候选原始 advantage 是 <code>0.98</code>，最终会变成：
+    </p>
+<pre><code class="language-text">0.98 * [0.134, 0.168, 0.210, 0.262, 0.328, 0.410, 0.512, 0.640, 0.800, 1.000]
+= [0.131, 0.164, 0.206, 0.257, 0.321, 0.401, 0.502, 0.627, 0.784, 0.980]</code></pre>
+<p>
+      如果某条候选被安全门控成 <code>-1</code>，最终会变成：
+    </p>
+<pre><code class="language-text">[-0.134, -0.168, -0.210, -0.262, -0.328, -0.410, -0.512, -0.640, -0.800, -1.000]</code></pre>
+<p>
+      这些长度为 10 的向量会和每一步 diffusion 的 <code>log_prob</code> 对齐。也就是第 0 个 denoise step 用第 0 个 advantage，第 9 个 denoise step 用第 9 个 advantage。
+    </p>
+<h3>advantage 如何进入 loss</h3>
+<p>
+      在 <code>get_rlloss</code> 里，当前模型会对同一条旧采样链重新计算 <code>log_prob</code>，得到 <code>per_token_logps</code>，形状同样是 <code>(B,80,10)</code>。然后代码写：
+    </p>
+<pre><code class="language-python">per_token_loss = -torch.exp(per_token_logps - per_token_logps.detach()) * advantages</code></pre>
+<p>
+      白话讲：
+    </p>
+<ul>
+<li>如果 advantage 是正数，梯度会让这条轨迹链的 <code>log_prob</code> 变大，以后更容易采到。</li>
+<li>如果 advantage 是 <code>-1</code>，梯度会让这条轨迹链的 <code>log_prob</code> 变小，以后更不容易采到。</li>
+<li>如果 advantage 是 0，这条样本基本不参与 RL 更新。</li>
+</ul>
+<p>
+      这就是 advantage 的最终作用：它不是最终输出轨迹，而是告诉策略“哪些采样行为该更常发生，哪些采样行为该减少”。
+    </p>
+<h3>这套逻辑的设计意图</h3>
+<table>
+<thead>
+<tr>
+<th>设计</th>
+<th>解决什么问题</th>
+<th>白话解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>按 anchor 内部标准化</td>
+<td>避免不同驾驶意图直接互相碾压。</td>
+<td>左转和直行不要一上来就比绝对分，先在各自意图内部选优秀样本。</td>
+</tr>
+<tr>
+<td>负 advantage 截断为 0</td>
+<td>减少普通差样本的负向干扰。</td>
+<td>普通不好就不学它，不一定强烈惩罚。</td>
+</tr>
+<tr>
+<td>必须超过 GT</td>
+<td>防止强化低质量 anchor。</td>
+<td>你在小圈子里优秀还不够，还要真的比 GT 更好。</td>
+</tr>
+<tr>
+<td>安全硬门控为 -1</td>
+<td>强力压制撞车/出界轨迹。</td>
+<td>危险轨迹不是“不奖励”，而是明确要减少概率。</td>
+</tr>
+<tr>
+<td>10 步时间折扣</td>
+<td>让后期精修步骤承担更大训练信号。</td>
+<td>越接近最终轨迹的 denoise step，越应该对好坏负责。</td>
+</tr>
+</tbody>
+</table>
+<h3>一句话收束</h3>
+<p>
+      DiffusionDriveV2 的 advantage 可以理解成一张 <code>group × anchor</code> 的奖惩表：同一个 anchor 内部先比较 4 个 group 的相对好坏，只奖励超过本 anchor 平均且超过 GT 的样本；撞车或不可行驶直接给 <code>-1</code>；最后摊平成 80 条候选，并复制到 10 个 diffusion step 上加折扣。最终它呈现为 <code>(B,80,10)</code> 的 tensor，用来指导模型提高高分安全轨迹链的概率、降低危险轨迹链的概率。
+    </p>
+<h3>源码证据索引</h3>
+<table>
+<thead>
+<tr>
+<th>逻辑点</th>
+<th>源码位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>num_groups=4</code></td>
+<td><code>diffusiondrivev2_rl_config.py:37</code></td>
+</tr>
+<tr>
+<td>20 个 anchor mode</td>
+<td><code>diffusiondrivev2_model_rl.py:695</code></td>
+</tr>
+<tr>
+<td>anchor 复制并 reshape 成 80 条候选</td>
+<td><code>diffusiondrivev2_model_rl.py:813-815</code></td>
+</tr>
+<tr>
+<td>80 条候选 + GT 一起 PDM 打分</td>
+<td><code>diffusiondrivev2_model_rl.py:867-873</code></td>
+</tr>
+<tr>
+<td>reward reshape 成 <code>(B,4,20)</code></td>
+<td><code>diffusiondrivev2_model_rl.py:886</code></td>
+</tr>
+<tr>
+<td>组内均值/方差标准化</td>
+<td><code>diffusiondrivev2_model_rl.py:887-889</code></td>
+</tr>
+<tr>
+<td>GT 门槛和负值截断</td>
+<td><code>diffusiondrivev2_model_rl.py:891-893</code></td>
+</tr>
+<tr>
+<td>碰撞/可行驶区域硬门控</td>
+<td><code>diffusiondrivev2_model_rl.py:896-904</code></td>
+</tr>
+<tr>
+<td>flatten、detach、repeat 到 10 步并乘折扣</td>
+<td><code>diffusiondrivev2_model_rl.py:924-932</code></td>
+</tr>
+<tr>
+<td>advantage 进入 RL loss</td>
+<td><code>diffusiondrivev2_model_rl.py:1094-1097</code></td>
+</tr>
+</tbody>
+</table>
+</article>
+<article class="qa" id="q7">
+<h2>问题 7：get_rlloss 的全部处理流程、每段代码目的和设计思考</h2>
+<p class="meta">
+      记录时间：2026-06-27；回答要求：白话详细展开，细致到每行/每段代码实现、目的和设计取舍。
+      <span class="tag">get_rlloss</span>
+<span class="tag">Pass 2</span>
+<span class="tag">log_prob</span>
+<span class="tag">RL + IL loss</span>
+</p>
+<div class="question">
+      用白话详细展开解释：<code>get_rlloss</code> 的全部处理流程，细致到每行/每段代码实现和目的，设计的思考。
+    </div>
+<h3>先用一句话讲清楚 get_rlloss 在干什么</h3>
+<p>
+<code>get_rlloss</code> 是 DiffusionDriveV2 RL 训练里的第二遍 forward。第一遍 <code>forward_train_rl</code> 已经在 <code>torch.no_grad()</code> 下真实采样出 80 条轨迹、跑 PDM 打分、算好 advantage；<code>get_rlloss</code> 不再重新采样新轨迹，而是把第一遍保存下来的扩散链拿出来“回放”，在当前可求梯度的模型下重新计算这条旧链每一步的 <code>log_prob</code>，再用 <code>advantage</code> 加权形成 RL loss，同时加一个 imitation L1 loss 稳住模型。
+    </p>
+<p>
+      白话讲：第一遍是“试开 80 条路线并评分”，第二遍是“回放这些路线，让模型学会以后更常走高分路线、更少走危险路线，同时别偏离 GT 太远”。
+    </p>
+<h3>它在整个训练流程里的位置</h3>
+<p>
+      外层 <code>V2TransfuserModel.forward</code> 里有两次 trajectory head 调用：
+    </p>
+<pre><code class="language-python">with torch.no_grad():
+    old_pred = self._trajectory_head(..., old_pred=None, ...)
+
+pred = self._trajectory_head(..., old_pred=old_pred, ...)</code></pre>
+<p>
+      第一次 <code>old_pred=None</code>，进入 <code>forward_train_rl</code>，负责采样、PDM reward、advantage。第二次 <code>old_pred</code> 不为空，进入 <code>get_rlloss</code>，负责真正产生可以反传的 loss。
+    </p>
+<p>
+      这样设计的原因是：PDM 打分、碰撞检查、轨迹仿真这些 reward 逻辑不可微，也很慢。作者就把“采样和打分”放在无梯度第一遍，把“对同一条采样链算 log_prob 并反传”放在第二遍。
+    </p>
+<h3>函数签名：输入看起来很多，但核心只用几类</h3>
+<pre><code class="language-python">def get_rlloss(
+    self,
+    ego_query,
+    agents_query,
+    bev_feature,
+    bev_spatial_shape,
+    status_encoding,
+    status_feature,
+    camera_feature,
+    targets,
+    global_img,
+    eta,
+    old_pred,
+):</code></pre>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>白话含义</th>
+<th>在 get_rlloss 中的用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ego_query</code></td>
+<td>自车规划 query。</td>
+<td>传给 <code>diff_decoder</code>，帮助预测轨迹。</td>
+</tr>
+<tr>
+<td><code>agents_query</code></td>
+<td>周围 agent 的 query。</td>
+<td>传给 <code>diff_decoder</code>，提供交互信息。</td>
+</tr>
+<tr>
+<td><code>bev_feature</code> / <code>bev_spatial_shape</code></td>
+<td>感知骨干输出的 BEV 特征和空间尺寸。</td>
+<td>给轨迹 decoder 做场景条件。</td>
+</tr>
+<tr>
+<td><code>status_encoding</code></td>
+<td>自车状态编码，比如速度、加速度、导航命令等。</td>
+<td>传给 decoder 做条件。</td>
+</tr>
+<tr>
+<td><code>targets</code></td>
+<td>训练标签，最重要的是 GT 轨迹。</td>
+<td>用于后面的 IL L1 loss。</td>
+</tr>
+<tr>
+<td><code>eta</code></td>
+<td>扩散 scheduler 的随机性强度。</td>
+<td>传给 <code>diffusionrl_scheduler.step</code>，用于 log_prob 计算。</td>
+</tr>
+<tr>
+<td><code>old_pred</code></td>
+<td>第一遍无梯度 rollout 保存的旧采样链和 advantage。</td>
+<td>这是整个函数最核心的输入。</td>
+</tr>
+<tr>
+<td><code>status_feature</code> / <code>camera_feature</code></td>
+<td>状态原始特征和相机特征。</td>
+<td>这个函数体里没有实际使用，是接口保留下来的参数。</td>
+</tr>
+</tbody>
+</table>
+<h3>第 1 段：取出旧扩散链和 advantage</h3>
+<pre><code class="language-python">old_diffusion_output = old_pred["all_diffusion_output"]
+advantages = old_pred["advantages"]</code></pre>
+<p>
+<code>old_pred</code> 来自第一遍 <code>forward_train_rl</code>。它里面最关键的两个东西是：
+    </p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>形状</th>
+<th>白话含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>all_diffusion_output</code></td>
+<td><code>(B,80,8,2,11)</code></td>
+<td>第一遍采样时保存的完整扩散链。80 条候选，每条轨迹 8 个点，每点 xy，11 个状态。</td>
+</tr>
+<tr>
+<td><code>advantages</code></td>
+<td><code>(B,80,10)</code></td>
+<td>第一遍根据 PDM reward 和安全门控算好的奖惩信号，已经 detach、flatten 并乘了时间折扣。</td>
+</tr>
+</tbody>
+</table>
+<p>
+      为什么扩散链是 11 个状态？因为 10 步 reverse diffusion 需要保存“初始状态 + 每一步更新后的状态”。如果有 10 次转移，就有 11 个节点。
+    </p>
+<h3>第 2 段：把旧链拆成当前状态 chains 和下一状态 chains_prev</h3>
+<pre><code class="language-python">chains = old_diffusion_output[..., :-1]
+chains_prev = old_diffusion_output[..., 1:]</code></pre>
+<p>
+      这两行是在把 11 个状态拆成 10 对转移：
+    </p>
+<pre><code class="language-text">chains[..., i]      = 第 i 步开始时的状态 x_t
+chains_prev[..., i] = 第 i 步第一遍真实采出来的下一状态 x_{t-1}</code></pre>
+<p>
+      如果把旧链写成：
+    </p>
+<pre><code class="language-text">[x_18, x_16, x_14, x_12, x_10, x_8, x_6, x_4, x_2, x_0, x_final]</code></pre>
+<p>
+      那么 <code>chains</code> 取前 10 个，<code>chains_prev</code> 取后 10 个。它们一一配对，用来问一个问题：
+    </p>
+<blockquote>
+      在当前模型看来，从 <code>chains[..., i]</code> 走到第一遍采到的 <code>chains_prev[..., i]</code>，概率有多大？
+    </blockquote>
+<p>
+      这就是为什么 <code>get_rlloss</code> 不是重新采样，而是在回放旧链。
+    </p>
+<h3>第 3 段：重新设置 10 个扩散时间步</h3>
+<pre><code class="language-python">step_num = 10
+bs = chains.shape[0]
+device = chains.device
+self.diffusionrl_scheduler.set_timesteps(1000, device)
+step_ratio = 20 / step_num
+roll_timesteps = (np.arange(0, step_num) * step_ratio).round()[::-1].copy().astype(np.int64)
+roll_timesteps = torch.from_numpy(roll_timesteps).to(device)</code></pre>
+<p>
+      这里重新构造和第一遍一致的 10 个时间步。<code>step_num=10</code>，<code>step_ratio=20/10=2</code>，所以得到：
+    </p>
+<pre><code class="language-text">roll_timesteps = [18, 16, 14, 12, 10, 8, 6, 4, 2, 0]</code></pre>
+<p>
+<code>set_timesteps(1000)</code> 是为了让 scheduler 的内部时间表和 1000 个 train timesteps 对齐。虽然这里只走 10 个浅层时间点，但 scheduler 内部仍然使用 1000 步 alpha/beta 表。
+    </p>
+<p>
+      设计上，这一步必须和第一遍 rollout 的时间步完全一致。否则第一遍保存的旧链和第二遍重算 log_prob 的时间条件对不上，advantage 就会错配。
+    </p>
+<h3>第 4 段：准备容器，开始逐步回放旧链</h3>
+<pre><code class="language-python">all_log_probs = []
+poses_reg_steps_list = []
+poses_cls_steps_list = []
+for i, k in enumerate(roll_timesteps[:]):
+    diffusion_output = chains[..., i]</code></pre>
+<p>
+      三个 list 的作用分别是：
+    </p>
+<table>
+<thead>
+<tr>
+<th>变量</th>
+<th>后续用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>all_log_probs</code></td>
+<td>存每一步重算出来的 log probability，后面构造 RL loss。</td>
+</tr>
+<tr>
+<td><code>poses_reg_steps_list</code></td>
+<td>存每一步 decoder 的轨迹预测，后面构造 IL L1 loss。</td>
+</tr>
+<tr>
+<td><code>poses_cls_steps_list</code></td>
+<td>代码会存分类输出，但在这个函数后面没有实际用于 loss。</td>
+</tr>
+</tbody>
+</table>
+<p>
+      循环里的 <code>diffusion_output = chains[..., i]</code> 表示：第 <code>i</code> 步的输入状态不来自当前模型新采样，而是第一遍保存的旧状态。
+    </p>
+<h3>第 5 段：把旧状态裁剪并反归一化成轨迹点</h3>
+<pre><code class="language-python">ego_fut_mode = diffusion_output.shape[1]
+x_boxes = torch.clamp(diffusion_output, min=-1, max=1)
+noisy_traj_points = self.denorm_odo(x_boxes)</code></pre>
+<p>
+<code>ego_fut_mode</code> 在这里其实是候选数量，通常是 80，不是单纯的 20 个 anchor mode。变量名沿用了别处写法，但此处含义更接近 <code>num_candidates</code>。
+    </p>
+<p>
+<code>torch.clamp</code> 把归一化后的轨迹限制在 <code>[-1,1]</code>。这是一种数值保护，避免极端值进入后面的坐标编码。
+    </p>
+<p>
+<code>denorm_odo</code> 把归一化 xy 还原到物理尺度。前面 <code>norm_odo</code> 通常会把 x/y 按不同尺度缩放，这里反过来恢复成 decoder 更好理解的轨迹点坐标。
+    </p>
+<h3>第 6 段：把当前轨迹点编码成 query 特征</h3>
+<pre><code class="language-python">traj_pos_embed = gen_sineembed_for_position(noisy_traj_points, hidden_dim=64)
+traj_pos_embed = traj_pos_embed.flatten(-2)
+traj_feature = self.plan_anchor_encoder(traj_pos_embed)
+traj_feature = traj_feature.view(bs, ego_fut_mode, -1)</code></pre>
+<p>
+      这段是在把当前旧链状态 <code>x_t</code> 转成 transformer decoder 能吃的轨迹 query 特征。
+    </p>
+<ol>
+<li><code>gen_sineembed_for_position</code>：对 8 个 xy 轨迹点做正弦位置编码，让连续坐标变成高维特征。</li>
+<li><code>flatten(-2)</code>：把最后两维位置编码压平，方便线性层处理。</li>
+<li><code>plan_anchor_encoder</code>：把位置编码映射到模型隐藏维度，通常变成 256 维。</li>
+<li><code>view(bs, ego_fut_mode, -1)</code>：恢复成 <code>(B,80,256)</code> 这样的候选轨迹特征表。</li>
+</ol>
+<p>
+      白话讲，这一步是在告诉 decoder：“这是当前这一条候选轨迹链在第 <code>k</code> 个时间步的样子，请结合场景特征预测它对应的干净轨迹。”
+    </p>
+<h3>第 7 段：构造 timestep embedding</h3>
+<pre><code class="language-python">timesteps = k
+if not torch.is_tensor(timesteps):
+    timesteps = torch.tensor([timesteps], dtype=torch.long, device=diffusion_output.device)
+elif torch.is_tensor(timesteps) and len(timesteps.shape) == 0:
+    timesteps = timesteps[None].to(diffusion_output.device)
+
+timesteps = timesteps.expand(diffusion_output.shape[0])
+time_embed = self.time_mlp(timesteps)
+time_embed = time_embed.view(bs, 1, -1)</code></pre>
+<p>
+      这里把当前扩散时间步 <code>k</code> 变成模型可用的时间条件。因为 <code>k</code> 有时可能是 Python 标量，有时是 0 维 tensor，所以前几行是在统一格式。
+    </p>
+<p>
+<code>timesteps.expand(diffusion_output.shape[0])</code> 把同一个时间步复制到 batch 维度，得到 <code>(B,)</code>。然后 <code>time_mlp</code> 把它编码成 <code>(B,256)</code>，再 reshape 成 <code>(B,1,256)</code>，用于后面的 decoder。
+    </p>
+<p>
+      设计目的：同一个轨迹状态在不同 diffusion time 下意义不同。模型需要知道“现在是粗修阶段还是精修阶段”，所以 time embedding 必须传进去。
+    </p>
+<h3>第 8 段：用 diff_decoder 重新预测 x0</h3>
+<pre><code class="language-python">poses_reg_list, poses_cls_list = self.diff_decoder(
+    traj_feature,
+    noisy_traj_points,
+    bev_feature,
+    bev_spatial_shape,
+    agents_query,
+    ego_query,
+    time_embed,
+    status_encoding,
+    global_img,
+)
+poses_reg_steps_list.append(poses_reg_list)
+poses_cls_steps_list.append(poses_cls_list)
+poses_reg = poses_reg_list[-1]
+poses_cls = poses_cls_list[-1]</code></pre>
+<p>
+      这段是 <code>get_rlloss</code> 真正让梯度回到模型的核心。和第一遍不同，这里没有 <code>torch.no_grad()</code>，所以 <code>diff_decoder</code> 的计算图会保留下来。
+    </p>
+<p>
+<code>diff_decoder</code> 接收当前轨迹 query、BEV 场景特征、周围 agent、自车 query、时间步和状态编码，输出：
+    </p>
+<table>
+<thead>
+<tr>
+<th>输出</th>
+<th>含义</th>
+<th>这个函数里怎么用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>poses_reg_list</code></td>
+<td>每层 decoder 的轨迹回归结果。</td>
+<td>最后一层用于算 <code>x_start</code> 和 <code>log_prob</code>；所有层用于 IL L1 loss。</td>
+</tr>
+<tr>
+<td><code>poses_cls_list</code></td>
+<td>每层 decoder 的分类 logits。</td>
+<td>在这里保存了，但没有参与最终 loss。</td>
+</tr>
+</tbody>
+</table>
+<p>
+      当前代码里 <code>self.diff_decoder = CustomTransformerDecoder(diff_decoder_layer, 1)</code>，所以通常只有 1 层 decoder。源码注释里写“2 层 decoder”是历史注释，不符合这里的实际配置。
+    </p>
+<h3>第 9 段：从 decoder 输出取 x_start，并归一化</h3>
+<pre><code class="language-python">x_start = poses_reg[..., :2]  # bs G*N 8 2
+# x_start = poses_reg
+x_start = self.norm_odo(x_start)</code></pre>
+<p>
+<code>poses_reg</code> 预测的是轨迹点，通常包含 <code>x,y,yaw</code>。这里取 <code>[..., :2]</code>，只拿 xy，不用 yaw。原因是这个 RL diffusion scheduler 只在 xy 空间里做扩散链，yaw 后面通常通过 Bézier 曲线导数恢复或在其他路径里处理。
+    </p>
+<p>
+<code>norm_odo</code> 再把 xy 归一化回 scheduler 使用的尺度。因为 scheduler 里保存的旧链 <code>diffusion_output</code> 是归一化坐标，<code>x_start</code> 必须回到同一坐标系，才能正确计算 log_prob。
+    </p>
+<p>
+      白话讲：decoder 给出“我认为干净轨迹应该长这样”，代码把它拿出来变成 scheduler 能用的 <code>x0</code>。
+    </p>
+<h3>第 10 段：固定旧的下一步样本，重算 log_prob</h3>
+<pre><code class="language-python">_, log_prob, _ = self.diffusionrl_scheduler.step(
+    model_output=x_start,
+    timestep=k,
+    sample=diffusion_output,
+    eta=eta,
+    prev_sample=chains_prev[..., i],
+)
+all_log_probs.append(log_prob)</code></pre>
+<p>
+      这是 <code>get_rlloss</code> 最关键的一段。注意这里传入了 <code>prev_sample=chains_prev[..., i]</code>。
+    </p>
+<p>
+      在第一遍 rollout 里，scheduler 会真的采样一个 <code>prev_sample</code>。但在第二遍，已经有第一遍采好的 <code>chains_prev[..., i]</code>，所以这里强制 scheduler 使用这个旧样本，不再重新随机采样。
+    </p>
+<p>
+      这样做的目的有两个：
+    </p>
+<ol>
+<li><strong>让 reward 和 log_prob 对齐。</strong>第一遍 PDM reward 是给旧链打的分。如果第二遍重新采样一条新链，那 advantage 就不属于新链了。</li>
+<li><strong>让模型可以学习“这条旧链在当前策略下概率多大”。</strong>如果旧链 reward 高，就提高这条链的概率；如果安全失败，就降低这条链的概率。</li>
+</ol>
+<p>
+      scheduler 内部因为收到了 <code>prev_sample</code>，会跳过随机噪声生成，只用当前模型预测出的 <code>x_start</code> 算 <code>prev_sample_mean</code>，再计算“旧的 <code>prev_sample</code> 离这个 mean 有多远”的近似 <code>log_prob</code>。
+    </p>
+<h3>第 11 段：把 10 步 log_prob 堆成 tensor</h3>
+<pre><code class="language-python">all_log_probs = torch.stack(all_log_probs, dim=-1)  # BG N step_num
+per_token_logps = all_log_probs.view(
+    bs,
+    self.num_groups * self.ego_fut_mode,
+    -1,
+)  # B G*N step_num</code></pre>
+<p>
+      每一步 scheduler 返回的 <code>log_prob</code> 形状大约是 <code>(B,80)</code>。循环 10 次后，stack 成 <code>(B,80,10)</code>。
+    </p>
+<p>
+<code>per_token_logps</code> 这个名字里的 token 可以理解成“每条候选轨迹、每个 diffusion step 的动作概率”。它会和 <code>advantages</code> 一一对齐：
+    </p>
+<pre><code class="language-text">per_token_logps[b, n, t]  对应  advantages[b, n, t]
+
+b = 第几个 batch 样本
+n = 第几条候选轨迹，0..79
+t = 第几个 diffusion reverse step，0..9</code></pre>
+<h3>第 12 段：构造 GRPO-like / policy-gradient loss</h3>
+<pre><code class="language-python">per_token_loss = -torch.exp(per_token_logps - per_token_logps.detach()) * advantages</code></pre>
+<p>
+      这行是 RL loss 的核心。它看起来像 PPO ratio，但不是完整 PPO。
+    </p>
+<p>
+<code>per_token_logps.detach()</code> 是当前 log_prob 的“停止梯度版本”。所以数值上：
+    </p>
+<pre><code class="language-text">exp(logp - logp.detach()) ≈ exp(0) = 1</code></pre>
+<p>
+      但梯度上，它仍然会对 <code>logp</code> 求导。也就是说，这个写法数值上接近 <code>-advantage</code>，梯度效果接近：
+    </p>
+<pre><code class="language-text">- advantage * ∇log_prob</code></pre>
+<p>
+      白话讲：
+    </p>
+<ul>
+<li>advantage 是正数：loss 会推动这条轨迹链的 <code>log_prob</code> 变大，以后更容易采到。</li>
+<li>advantage 是负数：loss 会推动这条轨迹链的 <code>log_prob</code> 变小，以后更不容易采到。</li>
+<li>advantage 是 0：这条轨迹链基本不影响 RL 更新。</li>
+</ul>
+<p>
+      设计取舍：这里没有保存第一遍的 <code>old_log_prob</code> 来做 <code>exp(new_logp - old_logp)</code>，也没有 PPO clip 和 KL penalty。它更像一个轻量 on-policy policy gradient。优势是简单、省内存、和在线 PDM 打分流程搭配方便；代价是理论上不如标准 PPO / GRPO 严格。
+    </p>
+<h3>第 13 段：只平均非零 advantage 的样本，得到每个 batch 的 RL loss</h3>
+<pre><code class="language-python">mask_nz = per_token_loss != 0
+RL_loss_b = (per_token_loss * mask_nz).sum(dim=1) / mask_nz.sum(dim=1).clamp_min(1)
+RL_loss_b = RL_loss_b.mean(dim=-1)</code></pre>
+<p>
+<code>per_token_loss</code> 的形状是 <code>(B,80,10)</code>。<code>mask_nz</code> 找出非零位置，主要是为了把 advantage 为 0 的样本排除掉。
+    </p>
+<p>
+      第一行平均：
+    </p>
+<pre><code class="language-text">sum(dim=1) / count(dim=1)</code></pre>
+<p>
+      是在 80 条候选轨迹维度上平均，得到 <code>(B,10)</code>。也就是每个 batch、每个 diffusion step 一个 RL loss。
+    </p>
+<p>
+<code>clamp_min(1)</code> 是防止某个时间步没有任何非零样本时除以 0。最后 <code>mean(dim=-1)</code> 再把 10 个 diffusion step 平均掉，得到 <code>(B,)</code> 的 <code>RL_loss_b</code>。
+    </p>
+<p>
+      这个平均策略的含义是：每个 batch 样本先在有效候选上平均，再在 10 个去噪步骤上平均。它不是把所有 80×10 位置简单无脑平均，而是保留了时间步维度后再平均。
+    </p>
+<h3>第 14 段：初始化 IL loss，并准备 GT 轨迹</h3>
+<pre><code class="language-python">IL_loss_b = torch.zeros_like(RL_loss_b)  # (B,)
+target_traj = targets["trajectory"].unsqueeze(1).repeat(
+    1,
+    self.num_groups * self.ego_fut_mode,
+    1,
+    1,
+)</code></pre>
+<p>
+      RL loss 会让模型追逐 PDM reward，但只靠 reward 可能不稳定。于是这里又加一个 imitation learning 的 L1 loss，让 decoder 的每一步轨迹预测不要偏离 GT 太远。
+    </p>
+<p>
+<code>targets["trajectory"]</code> 原本是 <code>(B,8,3)</code>，表示每个 batch 样本的 GT 未来轨迹。代码把它扩展成 <code>(B,80,8,3)</code>，让 80 条候选都能和同一个 GT 做 L1 对齐。
+    </p>
+<p>
+      设计含义：无论候选来自哪个 anchor，IL 都把它往 GT 拉一点。这不是多模态 WTA loss，而是一个稳定训练的保底项。
+    </p>
+<h3>第 15 段：累积每个 diffusion step、每层 decoder 的 L1 loss</h3>
+<pre><code class="language-python">for poses_reg_list in poses_reg_steps_list:
+    for poses_reg in poses_reg_list:
+        traj_l1 = F.l1_loss(
+            poses_reg[..., :2],
+            target_traj[..., :2],
+            reduction="none",
+        )
+        IL_loss_b += traj_l1.mean()
+
+IL_loss_b /= (len(poses_reg_steps_list) * len(poses_reg_steps_list[0]))</code></pre>
+<p>
+      外层循环遍历 10 个 diffusion step，内层循环遍历 decoder layers。当前模型里 <code>diff_decoder</code> 是 1 层，所以通常是 10×1 次。
+    </p>
+<p>
+      这里同样只比较 xy：<code>poses_reg[..., :2]</code> 对 <code>target_traj[..., :2]</code>。yaw 不参与这个 L1。
+    </p>
+<p>
+      一个很重要的实现细节：代码注释说“先算每个 batch”，但 <code>traj_l1.mean()</code> 没有指定维度，会对 batch、80 条候选、8 个点、2 个坐标全部求平均，得到一个标量。这个标量加到 <code>IL_loss_b</code> 这个 <code>(B,)</code> tensor 上时会广播，所以当前实现里的 IL loss 实际更像是“整个 batch 共享的一个标量 IL loss”，再配合后面的 <code>il_weight</code> 做 per-batch 加权。
+    </p>
+<p>
+      这不一定是作者想表达的理想公式，但这是当前代码真实行为。理想上如果想严格 per-batch，可以写成先对候选、时间点、坐标求均值，保留 batch 维度。
+    </p>
+<h3>第 16 段：判断这个 batch 样本有没有正 advantage</h3>
+<pre><code class="language-python">has_positive = (advantages &gt; 0).any(dim=2).any(dim=1)  # (B,) bool</code></pre>
+<p>
+<code>advantages</code> 形状是 <code>(B,80,10)</code>。这行先看 10 个 diffusion step 中有没有正数，再看 80 条候选中有没有正数，最后得到每个 batch 样本一个 bool。
+    </p>
+<p>
+      白话讲：这个场景里，80 条候选轨迹中有没有任何一条真正值得奖励？如果有，说明 RL 找到了比 GT 或安全门槛更好的样本；如果没有，说明这批采样质量不够，不能太依赖 RL。
+    </p>
+<h3>第 17 段：动态设置 IL 权重</h3>
+<pre><code class="language-python">il_weight = torch.where(
+    has_positive == 0,
+    torch.tensor(1.0, device=RL_loss_b.device),
+    torch.tensor(0.1, device=RL_loss_b.device),
+)</code></pre>
+<p>
+      如果某个 batch 样本没有任何正 advantage，IL 权重就是 <code>1.0</code>；如果有正 advantage，IL 权重降到 <code>0.1</code>。
+    </p>
+<p>
+      设计思考很直接：
+    </p>
+<ul>
+<li><strong>有好样本时：</strong>让 RL 主导，鼓励模型提高高 PDM 轨迹链的概率，但保留 0.1 的 IL 防止发散。</li>
+<li><strong>没有好样本时：</strong>不要让 RL 在一堆差样本上乱推，退回更像行为克隆的训练方式，用 GT 把模型拉住。</li>
+</ul>
+<p>
+      这是防止 RL fine-tuning 把模型带偏的保险丝。
+    </p>
+<h3>第 18 段：合成总 loss 并返回</h3>
+<pre><code class="language-python">loss_b = RL_loss_b + il_weight * IL_loss_b
+loss = loss_b.mean()
+return {"loss": loss}</code></pre>
+<p>
+<code>RL_loss_b</code> 是每个 batch 样本一个 RL loss。<code>IL_loss_b</code> 当前实现里虽然形状是 <code>(B,)</code>，但主要来自一个 batch 共享标量的广播。<code>il_weight</code> 是每个 batch 样本一个权重。
+    </p>
+<p>
+      最终每个 batch 样本的 loss 是：
+    </p>
+<pre><code class="language-text">loss_b = RL_loss_b + il_weight * IL_loss_b</code></pre>
+<p>
+      最后对 batch 求平均，返回给外层 Lightning 的 <code>compute_loss</code> / optimizer 反传。
+    </p>
+<h3>把整个 get_rlloss 压缩成一张流程图</h3>
+<div class="flow">输入：
+  old_pred["all_diffusion_output"] -&gt; 第一遍采样保存的旧扩散链
+  old_pred["advantages"]           -&gt; 第一遍 PDM reward 得到的奖惩权重
+
+拆链：
+  chains      = 每一步开始状态 x_t
+  chains_prev = 第一遍真实采到的下一状态 x_{t-1}
+
+10 步回放：
+  对每个 timestep k:
+    1. 取旧状态 chains[..., i]
+    2. 编码轨迹位置 + timestep + BEV/agent/ego 条件
+    3. diff_decoder 重新预测干净轨迹 x0
+    4. scheduler 固定 prev_sample=chains_prev[..., i]
+    5. 计算这一步旧样本在当前模型下的 log_prob
+
+RL loss：
+  per_token_loss = -exp(logp - logp.detach()) * advantage
+  非零 advantage 位置参与平均
+
+IL loss：
+  每个 denoise step 的 decoder 输出都和 GT xy 做 L1
+
+合成：
+  有正 advantage -&gt; IL 权重 0.1
+  没正 advantage -&gt; IL 权重 1.0
+  loss = mean(RL_loss + il_weight * IL_loss)</div>
+<h3>为什么要两遍，而不是第一遍直接反传？</h3>
+<p>
+      第一遍里有 PDM scorer、模拟器、安全指标、reward 统计，这些东西不可微，也会引入大量非 PyTorch 计算。直接穿过它们反传不现实。
+    </p>
+<p>
+      两遍设计把任务拆开：
+    </p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>做什么</th>
+<th>是否有梯度</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Pass 1</td>
+<td>真实 rollout 80 条轨迹，跑 PDM，算 advantage。</td>
+<td>无梯度</td>
+<td>reward 不可微，且省显存。</td>
+</tr>
+<tr>
+<td>Pass 2 / get_rlloss</td>
+<td>回放同一条链，重算 log_prob 和 IL。</td>
+<td>有梯度</td>
+<td>通过 log_prob 把 reward 信号转成 policy gradient。</td>
+</tr>
+</tbody>
+</table>
+<p>
+      这和 RL 里的经典思路一致：环境给 reward，环境不可微；策略通过 <code>log_prob(action)</code> 学习哪些 action 更值得发生。
+    </p>
+<h3>为什么必须回放同一条链，而不是重新采样</h3>
+<p>
+      因为 advantage 是第一遍那条链的 reward 结果。如果第二遍重新采样，新的轨迹没有被 PDM 打分，拿旧 advantage 乘新 log_prob 就错位了。
+    </p>
+<p>
+      所以代码用 <code>prev_sample=chains_prev[..., i]</code> 固定住第一遍真实采到的下一步样本。这样每一个 <code>log_prob</code> 都是在问：
+    </p>
+<blockquote>
+      当前模型对第一遍那一步动作的概率是多少？
+    </blockquote>
+<p>
+      这就是 policy gradient 需要的东西。
+    </p>
+<h3>为什么还要加 IL loss</h3>
+<p>
+      纯 RL reward 很容易不稳定，尤其这里 reward 来自 PDM scorer，具有强规则性和稀疏/门控特征。只靠 reward 可能会让模型朝某些高分但不自然的轨迹偏移，或者在没有正样本时学不到有用方向。
+    </p>
+<p>
+      IL loss 的作用是保底：
+    </p>
+<ul>
+<li>当 RL 找到了好候选，IL 权重 0.1，只轻微约束。</li>
+<li>当 RL 没找到好候选，IL 权重 1.0，让模型先别乱跑，继续贴近 GT。</li>
+</ul>
+<p>
+      这就是 RL fine-tuning 里常见的“reward 提升性能，BC 保稳定”的组合。
+    </p>
+<h3>这段实现里值得注意的工程细节</h3>
+<table>
+<thead>
+<tr>
+<th>细节</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>没有真正使用旧策略 log_prob</td>
+<td><code>old_log_probs</code> 第一遍其实算过，但没有传进 <code>get_rlloss</code>。当前 ratio 是 <code>exp(logp - logp.detach())</code>。</td>
+</tr>
+<tr>
+<td>没有 PPO clip / KL</td>
+<td>稳定性主要靠 advantage 截断、安全硬门控和 IL loss，而不是标准 PPO 约束。</td>
+</tr>
+<tr>
+<td><code>poses_cls_steps_list</code> 未用于 loss</td>
+<td>分类 logits 被收集，但后续没有参与 RL 或 IL 计算。</td>
+</tr>
+<tr>
+<td>IL 只看 xy，不看 yaw</td>
+<td><code>poses_reg[..., :2]</code> 对齐 <code>target_traj[..., :2]</code>，yaw 没有进入这个 L1。</td>
+</tr>
+<tr>
+<td>IL 当前实现是 batch 共享标量</td>
+<td><code>traj_l1.mean()</code> 会对所有维度求平均，再广播到 <code>IL_loss_b</code>。</td>
+</tr>
+<tr>
+<td>代码注释和实际配置有出入</td>
+<td>注释写“5 个 time-step / 2 层 decoder”，但这里 <code>step_num=10</code>，当前 <code>diff_decoder</code> 是 1 层。</td>
+</tr>
+</tbody>
+</table>
+<h3>如果用一个具体样本理解梯度方向</h3>
+<p>
+      假设某条候选轨迹 <code>n=17</code> 在某个 step 的 advantage 是 <code>+0.8</code>，说明它 PDM 表现好、安全，并且超过门槛。那么：
+    </p>
+<pre><code class="language-text">loss = -exp(logp - detach(logp)) * 0.8</code></pre>
+<p>
+      优化器最小化 loss 时，会提高这一步 <code>logp</code>。以后模型更倾向于采到类似这一步的转移。
+    </p>
+<p>
+      如果另一条候选因为碰撞 advantage 是 <code>-1</code>：
+    </p>
+<pre><code class="language-text">loss = -exp(logp - detach(logp)) * (-1)</code></pre>
+<p>
+      最小化这个 loss 会降低 <code>logp</code>。以后模型更不倾向于走出这种危险转移。
+    </p>
+<h3>一句话收束</h3>
+<p>
+<code>get_rlloss</code> 的本质是“固定第一遍采样链，重新用当前模型解释这条链的概率，然后用 PDM advantage 调整这些概率，同时用 GT L1 做稳定约束”。它是 DiffusionDriveV2 把扩散采样接到 RL reward 上的关键桥梁：扩散负责产生可算概率的轨迹转移，PDM reward 负责告诉哪些转移好坏，IL loss 负责防止训练跑飞。
+    </p>
+<h3>源码证据索引</h3>
+<table>
+<thead>
+<tr>
+<th>逻辑点</th>
+<th>源码位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>外层两遍 forward</td>
+<td><code>diffusiondrivev2_model_rl.py:258-260</code></td>
+</tr>
+<tr>
+<td>training 时 old_pred 不为空进入 <code>get_rlloss</code></td>
+<td><code>diffusiondrivev2_model_rl.py:775-781</code></td>
+</tr>
+<tr>
+<td>取出旧链和 advantage</td>
+<td><code>diffusiondrivev2_model_rl.py:1030-1031</code></td>
+</tr>
+<tr>
+<td>拆成 <code>chains</code> 和 <code>chains_prev</code></td>
+<td><code>diffusiondrivev2_model_rl.py:1033-1034</code></td>
+</tr>
+<tr>
+<td>重建 10 个 roll timesteps</td>
+<td><code>diffusiondrivev2_model_rl.py:1036-1042</code></td>
+</tr>
+<tr>
+<td>轨迹点编码和时间步编码</td>
+<td><code>diffusiondrivev2_model_rl.py:1048-1069</code></td>
+</tr>
+<tr>
+<td>带梯度重新跑 <code>diff_decoder</code></td>
+<td><code>diffusiondrivev2_model_rl.py:1072-1081</code></td>
+</tr>
+<tr>
+<td>取 xy 作为 <code>x_start</code> 并归一化</td>
+<td><code>diffusiondrivev2_model_rl.py:1082-1084</code></td>
+</tr>
+<tr>
+<td>固定 <code>prev_sample</code> 重算 <code>log_prob</code></td>
+<td><code>diffusiondrivev2_model_rl.py:1085-1092</code></td>
+</tr>
+<tr>
+<td>构造 GRPO-like loss</td>
+<td><code>diffusiondrivev2_model_rl.py:1093-1102</code></td>
+</tr>
+<tr>
+<td>IL L1 loss</td>
+<td><code>diffusiondrivev2_model_rl.py:1103-1112</code></td>
+</tr>
+<tr>
+<td>动态 IL 权重和总 loss</td>
+<td><code>diffusiondrivev2_model_rl.py:1113-1120</code></td>
+</tr>
+</tbody>
+</table>
+</article>
+<article class="qa" id="q8">
+<h2>问题 8：diffusiondrivev2_model_sel.py 的全部处理流程，以及 coarse/fine scorer 如何训练和推理</h2>
+<p class="meta">
+      记录时间：2026-06-27；回答要求：白话详细展开，解释整个文件处理链路，重点讲清 coarse scorer 和 fine scorer 的训练、推理、shape、loss 和设计动机。
+      <span class="tag">model_sel</span>
+<span class="tag">selector</span>
+<span class="tag">coarse scorer</span>
+<span class="tag">fine scorer</span>
+<span class="tag">PDM supervision</span>
+</p>
+<div class="question">
+      用白话详细展开解释：<code>diffusiondrivev2_model_sel.py</code> 的全部处理流程，尤其是 coarse/fine scorer 是如何训练和推理的。
+    </div>
+<h3>先用一句话讲清楚这个文件在干什么</h3>
+<p>
+<code>diffusiondrivev2_model_sel.py</code> 做的事情可以理解成：“先用已经训练好的 diffusion 规划器生成一大堆候选轨迹，再训练一个专门的打分器 scorer，从这些候选里挑出最像 PDM 高分轨迹的那一条。”它不是主要训练 diffusion policy 的 GRPO 文件，而是 selector 文件：生成器基本冻结，真正训练的是 coarse scorer 和 fine scorer。
+    </p>
+<p>
+      更白话一点：diffusion 部分像一个“路线生成器”，一次性给出很多可能的开法；coarse scorer 像第一轮海选，快速把几百条路线筛到 32 条；fine scorer 像复审评委，对这 32 条再细看 3 遍，最后选出更可靠的一条。
+    </p>
+<div class="note">
+      一个非常重要的命名坑：这个文件里也有 <code>forward_train_rl</code> 和 <code>forward_test_rl</code>，但在 <code>_sel</code> 版本里，<code>forward_train_rl</code> 不是 GRPO 强化学习训练。它只是沿用了名字，实际做的是“候选生成 + PDM 打标签 + scorer 监督训练”。
+    </div>
+<h3>整体流程图：先生成，再选择</h3>
+<figure class="figure-wrap">
+<svg aria-label="diffusiondrivev2_model_sel.py coarse fine selector flow" class="arch-svg" role="img" viewbox="0 0 1320 700">
+<defs>
+<marker id="q8Arrow" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"></path>
+</marker>
+<marker id="q8SoftArrow" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#64748b"></path>
+</marker>
+</defs>
+<rect fill="#ffffff" height="660" rx="10" stroke="#d9ded7" width="1280" x="20" y="20"></rect>
+<text class="arch-title" x="50" y="58">model_sel.py 的主链路：冻结生成器，训练两级 scorer</text>
+<rect class="arch-box arch-box-blue" height="92" width="205" x="55" y="105"></rect>
+<text class="arch-label" x="75" y="132">输入 features</text>
+<text class="arch-small" x="75" y="155">camera / lidar / status</text>
+<text class="arch-small" x="75" y="177">batch scene context</text>
+<line marker-end="url(#q8Arrow)" stroke="#334155" stroke-width="1.8" x1="260" x2="315" y1="151" y2="151"></line>
+<rect class="arch-box arch-box-green" height="92" width="220" x="315" y="105"></rect>
+<text class="arch-label" x="335" y="132">Transfuser backbone</text>
+<text class="arch-small" x="335" y="155">BEV feature + query</text>
+<text class="arch-small" x="335" y="177">trajectory / agents / ego</text>
+<line marker-end="url(#q8Arrow)" stroke="#334155" stroke-width="1.8" x1="535" x2="590" y1="151" y2="151"></line>
+<rect class="arch-box arch-box-purple" height="118" width="245" x="590" y="92"></rect>
+<text class="arch-label" x="610" y="122">冻结 diffusion 生成器</text>
+<text class="arch-small" x="610" y="146">20 anchors x num_groups</text>
+<text class="arch-small" x="610" y="168">add_noise(t=8)</text>
+<text class="arch-small" x="610" y="190">2-step DDIM: [10, 0]</text>
+<line marker-end="url(#q8Arrow)" stroke="#334155" stroke-width="1.8" x1="835" x2="890" y1="151" y2="151"></line>
+<rect class="arch-box arch-box-orange" height="118" width="235" x="890" y="92"></rect>
+<text class="arch-label" x="910" y="122">候选轨迹池</text>
+<text class="arch-small" x="910" y="146">train: 40 -&gt; 120 + GTRS</text>
+<text class="arch-small" x="910" y="168">test: 200 -&gt; 800</text>
+<text class="arch-small" x="910" y="190">(x, y, yaw), 8 poses</text>
+<line marker-end="url(#q8Arrow)" stroke="#334155" stroke-width="1.8" x1="1007" x2="1007" y1="210" y2="265"></line>
+<rect class="arch-box arch-box-blue" height="114" width="355" x="830" y="265"></rect>
+<text class="arch-label" x="855" y="295">coarse scorer: 全量海选</text>
+<text class="arch-small" x="855" y="319">1-layer scorer decoder + 5 heads</text>
+<text class="arch-small" x="855" y="341">NC / DAC / TTC / EP / Comfort</text>
+<text class="arch-small" x="855" y="363">输出 PDM proxy 分数，选 top-32</text>
+<line marker-end="url(#q8Arrow)" stroke="#334155" stroke-width="1.8" x1="830" x2="685" y1="322" y2="322"></line>
+<rect class="arch-box arch-box-red" height="114" width="355" x="330" y="265"></rect>
+<text class="arch-label" x="355" y="295">fine scorer: top-32 复审</text>
+<text class="arch-small" x="355" y="319">3-layer scorer decoder</text>
+<text class="arch-small" x="355" y="341">每层都有同一套 5 heads</text>
+<text class="arch-small" x="355" y="363">训练时每层监督，推理时每层选一个 best</text>
+<line marker-end="url(#q8Arrow)" stroke="#334155" stroke-width="1.8" x1="508" x2="508" y1="379" y2="442"></line>
+<rect class="arch-box arch-box-green" height="114" width="355" x="330" y="442"></rect>
+<text class="arch-label" x="355" y="472">最终选择</text>
+<text class="arch-small" x="355" y="496">coarse best + fine layer0/1/2 best</text>
+<text class="arch-small" x="355" y="518">官方应返回最后一层 fine best</text>
+<text class="arch-small" x="355" y="540">当前源码里官方 return 被注释</text>
+<path d="M 1007 379 C 1007 485 940 535 690 505" fill="none" marker-end="url(#q8SoftArrow)" stroke="#64748b" stroke-dasharray="5 5" stroke-width="1.5"></path>
+<text class="arch-small" x="838" y="506">训练时：PDM 真值监督；推理时：scorer 近似 PDM 做选择</text>
+<rect class="arch-box" height="100" width="205" x="70" y="445"></rect>
+<text class="arch-label" x="90" y="474">训练标签来自 PDM</text>
+<text class="arch-small" x="90" y="498">不可微 / 较慢</text>
+<text class="arch-small" x="90" y="520">只用来给 scorer 打标签</text>
+<line marker-end="url(#q8SoftArrow)" stroke="#64748b" stroke-dasharray="5 5" stroke-width="1.5" x1="275" x2="330" y1="493" y2="493"></line>
+</svg>
+<figcaption class="figure-caption">图 8-1：selector 的设计就是“生成器负责多样性，scorer 负责挑最好”。点击图片可以局部放大。</figcaption>
+</figure>
+<h3>文件分层：它不是只有 scorer，而是一整条模型链</h3>
+<p>
+      这个文件可以分成 7 层来看：
+    </p>
+<table>
+<thead>
+<tr>
+<th>层次</th>
+<th>代码位置</th>
+<th>白话作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>顶层模型 <code>V2TransfuserModel</code></td>
+<td><code>model_sel.py:143-265</code></td>
+<td>接收 camera/lidar/status，跑 backbone，产出 BEV 特征、trajectory query、agent query，然后调用 <code>TrajectoryHead</code>。</td>
+</tr>
+<tr>
+<td>agent 检测头 <code>AgentHead</code></td>
+<td><code>model_sel.py:267-307</code></td>
+<td>顺手预测周围目标框和类别，和 selector 主逻辑关系不大。</td>
+</tr>
+<tr>
+<td>diffusion refine head</td>
+<td><code>model_sel.py:309-627</code></td>
+<td>从 noisy anchor 轨迹出发，结合 BEV 和 agent 信息，预测更干净的轨迹。_sel 里它基本被冻结。</td>
+</tr>
+<tr>
+<td>自定义 DDIM scheduler</td>
+<td><code>model_sel.py:629-783</code></td>
+<td>把模型预测的干净轨迹 <code>x_start</code> 和当前 noisy sample 合成上一个扩散时间步的轨迹。_sel 里调用时 <code>eta=0.0</code>。</td>
+</tr>
+<tr>
+<td><code>TrajectoryHead.__init__</code></td>
+<td><code>model_sel.py:785-933</code></td>
+<td>初始化 anchors、diffusion decoder、coarse scorer、fine scorer、PDM pool、loss、GTRS vocab 路径。</td>
+</tr>
+<tr>
+<td>训练分支 <code>forward_train_rl</code></td>
+<td><code>model_sel.py:1288-1387</code></td>
+<td>生成候选轨迹，调用 PDM 得到监督标签，训练 coarse/fine scorer。</td>
+</tr>
+<tr>
+<td>推理分支 <code>forward_test_rl</code></td>
+<td><code>model_sel.py:1390-1523</code></td>
+<td>生成 800 条候选，coarse 全量筛，fine top-32 精筛，得到最终轨迹。</td>
+</tr>
+</tbody>
+</table>
+<h3>顶层 forward：从传感器特征到 TrajectoryHead</h3>
+<p>
+      顶层 <code>V2TransfuserModel.forward</code> 的逻辑很规整。它先从 <code>features</code> 里取出三类输入：相机特征 <code>camera_feature</code>、激光雷达特征 <code>lidar_feature</code>、自车状态 <code>status_feature</code>。然后把相机和 LiDAR 送进 <code>TransfuserBackbone</code>，得到两份 BEV 特征：一份用于语义图输出，一份用于 transformer query 和 trajectory head。
+    </p>
+<p>
+      接着它把 BEV 特征降到 <code>config.tf_d_model=256</code> 维，并 flatten 成 8x8 一共 64 个 BEV token；同时把自车状态用线性层编码成 1 个 status token。这样 <code>keyval</code> 就变成 65 个 token：64 个 BEV token 加 1 个状态 token。再加上 <code>_keyval_embedding</code>，相当于告诉 transformer 每个 token 的位置和身份。
+    </p>
+<p>
+      然后它构造 query。query 总数是 <code>1 + num_bounding_boxes</code>，默认就是 1 个轨迹 query 加 30 个 agent query。<code>_tf_decoder</code> 用这些 query 去读 <code>keyval</code>，得到 <code>query_out</code>，再 split 成 <code>trajectory_query</code> 和 <code>agents_query</code>。
+    </p>
+<p>
+      最后有两条输出线：一条是 <code>_trajectory_head(...)</code>，这是本文重点；另一条是 <code>_agent_head(agents_query)</code>，输出 <code>agent_states</code> 和 <code>agent_labels</code>。所以顶层模型不是只做规划，它仍然保留了 Transfuser 的检测/语义辅助输出，但 selector 的核心在 <code>TrajectoryHead</code>。
+    </p>
+<div class="flow">V2TransfuserModel.forward
+features["camera_feature"], features["lidar_feature"], features["status_feature"]
+  -&gt; TransfuserBackbone
+  -&gt; BEV tokens + status token
+  -&gt; TransformerDecoder query_out
+  -&gt; split:
+       trajectory_query: (B, 1, 256)
+       agents_query:     (B, 30, 256)
+  -&gt; TrajectoryHead: 生成候选 + scorer 选择
+  -&gt; AgentHead: 辅助目标框输出</div>
+<h3>真正训练哪些参数：selector 只训练 scorer，不训练生成器</h3>
+<p>
+      这一点不在 <code>model_sel.py</code> 里，而是在 <code>diffusiondrivev2_sel_agent.py</code> 里。agent 初始化模型后，列了一个 <code>trainable_prefixes</code> 白名单，只允许这些模块 <code>requires_grad=True</code>：
+    </p>
+<ul>
+<li><code>plan_anchor_scorer_encoder</code>：把轨迹坐标编码成 scorer 特征。</li>
+<li><code>scorer_decoder</code> 和 <code>NC/DAC/EP/C/TTC_head</code>：coarse scorer。</li>
+<li><code>fine_scorer_decoder</code> 和 <code>fine_NC/fine_DAC/fine_EP/fine_C/fine_TTC_head</code>：fine scorer。</li>
+</ul>
+<p>
+      也就是说，backbone、BEV semantic head、agent head、anchor encoder、time MLP、diffusion decoder 都被冻结。代码还会先把整个 <code>_transfuser_model</code> 设成 <code>eval()</code>，再把白名单里的 scorer 模块单独切回 <code>train()</code>。这就解释了为什么它叫 selector：它不是把生成器越训越强，而是训练一个“如何从生成器候选里挑好路线”的打分器。
+    </p>
+<h3>TrajectoryHead 初始化：它同时持有生成器、两级 scorer、PDM 和 vocab</h3>
+<p>
+<code>TrajectoryHead.__init__</code> 里最重要的对象有四组。
+    </p>
+<h4>第一组：扩散 scheduler 和固定 anchors</h4>
+<p>
+<code>diffusion_scheduler</code> 是 diffusers 的 <code>DDIMScheduler</code>，用于最开始给 anchor 加噪；<code>diffusionrl_scheduler</code> 是本文件自己继承出来的 <code>DDIMScheduler_with_logprob</code>，用于反向去噪一步。两个 scheduler 都是 <code>num_train_timesteps=1000</code>，<code>prediction_type="sample"</code>。这里的 <code>prediction_type="sample"</code> 很关键，表示模型输出被当成干净样本 <code>x_0</code>，而不是直接预测噪声。
+    </p>
+<p>
+<code>plan_anchor</code> 从 <code>kmeans_navsim_traj_20.npy</code> 读取，shape 是 <code>(20, 8, 2)</code>，代表 20 个典型未来轨迹模板，每条 8 个未来点，每点只有 x/y。它被包成 <code>nn.Parameter(..., requires_grad=False)</code>，也就是模型不会改 anchor 本身。
+    </p>
+<h4>第二组：冻结的 diffusion decoder</h4>
+<p>
+<code>plan_anchor_encoder</code> 把 noisy 轨迹位置编码成 256 维特征；<code>time_mlp</code> 把扩散时间步编码成 256 维；<code>diff_decoder</code> 是 1 层 <code>CustomTransformerDecoder</code>。它会根据轨迹点位置，在 BEV 上 grid sample 场景特征，再和 agent query、自车 query 交互，最后通过 <code>DiffMotionPlanningRefinementModule</code> 预测 <code>poses_reg</code>。
+    </p>
+<p>
+<code>CustomTransformerDecoderLayer</code> 的最后几行很有意思：<code>poses_reg[..., :2] = poses_reg[..., :2] + noisy_traj_points</code>。这说明 decoder 不是凭空输出绝对轨迹，而是在当前 noisy 轨迹基础上预测一个修正量。白话说，它做的是“把这条粗路线往合理方向挪一挪”。
+    </p>
+<h4>第三组：coarse scorer</h4>
+<p>
+      coarse scorer 由 1 层 <code>ScorerTransformerDecoder</code> 加 5 个 head 组成：<code>NC_head</code>、<code>DAC_head</code>、<code>EP_head</code>、<code>TTC_head</code>、<code>C_head</code>。这 5 个 head 分别对应 PDM 里的几个关键子指标：
+    </p>
+<table>
+<thead>
+<tr>
+<th>head</th>
+<th>目标指标</th>
+<th>白话含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NC_head</code></td>
+<td><code>no_collision</code></td>
+<td>是否不发生碰撞。</td>
+</tr>
+<tr>
+<td><code>DAC_head</code></td>
+<td><code>drivable_area</code></td>
+<td>是否待在可行驶区域内。</td>
+</tr>
+<tr>
+<td><code>EP_head</code></td>
+<td><code>progress</code></td>
+<td>是否有效向前推进。</td>
+</tr>
+<tr>
+<td><code>TTC_head</code></td>
+<td><code>ttc</code></td>
+<td>是否满足 time-to-collision 安全约束。</td>
+</tr>
+<tr>
+<td><code>C_head</code></td>
+<td><code>comfort</code></td>
+<td>轨迹是否舒适，急刹、急转、急加速是否少。</td>
+</tr>
+</tbody>
+</table>
+<h4>第四组：fine scorer、PDM pool、GTRS vocab</h4>
+<p>
+      fine scorer 和 coarse scorer 很像，但 decoder 是 3 层 <code>fine_scorer_decoder</code>。每一层输出一个 feature list 元素，然后同一套 fine heads 都会去打分。训练时每层都算 loss；推理时每层都可以选出一个 best 候选。
+    </p>
+<p>
+      PDM 部分通过 <code>ProcessPoolExecutor(max_workers=4)</code> 并行跑，因为真实 PDM 打分是仿真和规则评价，不是一个可微的神经网络 forward。GTRS vocab 则是预先离线准备的一堆轨迹和它们的 PDM 子分数，训练时随机拿一小部分混入候选池，增加 scorer 见到的正负样本多样性。
+    </p>
+<h3>训练和推理怎么分流：看的是 EP_head.training</h3>
+<p>
+<code>TrajectoryHead.forward</code> 没有直接写 <code>if self.training</code>，而是写了：
+    </p>
+<pre><code class="language-python">if self.EP_head.training:
+    return self.forward_train_rl(...)
+else:
+    return self.forward_test_rl(...)</code></pre>
+<p>
+      这和 agent 的冻结策略配合在一起：整个模型先被设成 eval，只有 scorer 模块被设成 train。因此只要 <code>EP_head</code> 是 train，就走训练分支；如果 scorer 也被切到 eval，就走推理分支。这个写法有点绕，阅读时要特别注意。它判断的是 coarse scorer 中 <code>EP_head</code> 的训练状态，不是整个 <code>TrajectoryHead</code> 的训练状态。
+    </p>
+<h3>候选轨迹如何生成：训练和推理共用同一套骨架</h3>
+<p>
+      不管训练还是推理，候选生成的大框架都一样：拿 20 个 anchor，复制成多组，给 anchor 加一点截断噪声，然后用冻结的 diffusion decoder 做 2 步去噪，最后再用乘性噪声扩增候选池。
+    </p>
+<h4>第一步：复制 20 个 anchor</h4>
+<p>
+      训练时 <code>num_groups=2</code>，所以候选初始数是 <code>2 x 20 = 40</code>。推理时 <code>num_groups=10</code>，所以初始数是 <code>10 x 20 = 200</code>。这里的 group 可以理解成“同一套 20 个 anchor 的多次采样副本”。anchor 决定粗模式，比如直行、左转、右转、不同速度曲线；group 提供同一模式下的随机扰动。
+    </p>
+<h4>第二步：归一化并在 t=8 加截断噪声</h4>
+<p>
+<code>norm_odo</code> 会把 x 除以 50，y 除以 20，heading 除以 1.57。anchor 本来只有 x/y，经过归一化后给 <code>diffusion_scheduler.add_noise(..., timesteps=8)</code> 加噪。这个 t=8 很小，说明它不是从纯噪声开始生成，而是从“接近 anchor 的轻度噪声状态”开始。白话讲：不是让模型从一团乱麻里凭空想路线，而是给它一个模板路线，再稍微揉乱一点，让它修。
+    </p>
+<h4>第三步：2 步 DDIM 去噪，实际时间步是 [10, 0]</h4>
+<p>
+      代码里写的是：
+    </p>
+<pre><code class="language-python">step_num = 2
+step_ratio = 20 / step_num
+roll_timesteps = (np.arange(0, step_num) * step_ratio).round()[::-1]</code></pre>
+<p>
+      所以按代码字面计算，<code>step_ratio=10</code>，<code>np.arange(0, 2)</code> 是 <code>[0, 1]</code>，乘以 10 得到 <code>[0, 10]</code>，反过来就是 <code>[10, 0]</code>。这点容易误读成 <code>[20, 0]</code>，但源码实际是 <code>[10, 0]</code>。
+    </p>
+<h4>每个 DDIM step 内部做什么</h4>
+<p>
+      每个时间步 <code>k</code> 都会执行同一段逻辑：
+    </p>
+<ol>
+<li>先把当前 <code>diffusion_output</code> clamp 到 <code>[-1, 1]</code>，避免轨迹坐标跑飞。</li>
+<li>用 <code>denorm_odo</code> 还原到真实尺度，得到 <code>noisy_traj_points</code>。</li>
+<li>对这些点做 sine positional embedding，再用 <code>plan_anchor_encoder</code> 编成 trajectory feature。</li>
+<li>把当前 timestep 通过 <code>time_mlp</code> 编码成 <code>time_embed</code>。</li>
+<li>调用冻结的 <code>diff_decoder</code>，结合 BEV、agent、自车 query，预测 <code>poses_reg</code>。</li>
+<li>取 <code>poses_reg[..., :2]</code> 当作模型预测的干净 x/y 轨迹 <code>x_start</code>。</li>
+<li>把 <code>x_start</code> 再归一化，喂给 <code>diffusionrl_scheduler.step(..., eta=0.0)</code>，得到上一个扩散时间步的 <code>diffusion_output</code>。</li>
+</ol>
+<p>
+      这里有一个和普通 DDPM 很不一样的点：scheduler 的 <code>prediction_type</code> 是 <code>sample</code>，所以模型输出不是噪声 epsilon，而是干净轨迹 <code>x_0</code>。scheduler 再根据当前 noisy sample 和这个 <code>x_0</code> 反推出噪声方向，并计算前一个时间步。
+    </p>
+<h4>第四步：add_mul_noise 做乘性增强</h4>
+<p>
+      2 步去噪完成后，代码会调用 <code>add_mul_noise</code>。它不是给每个点加一个独立位移，而是给整条轨迹的横向/纵向各采一个乘性系数：
+    </p>
+<pre><code class="language-python">variance_noise_horizon = randn(...) * std + 1.0
+variance_noise_vert    = randn(...) * std + 1.0
+diffusion_output_aug.append(diffusion_output * variance_noise_mul)</code></pre>
+<p>
+      白话讲：它把整条轨迹按 x/y 方向稍微拉长、压短、横向放大或缩小，而不是把每个轨迹点随机抖成锯齿。这样增强出来的轨迹仍然比较像一条车能开的路线。
+    </p>
+<p>
+      训练时调用 <code>add_mul_noise(n_aug=2, std_min=0.1, std_max=0.2)</code>，所以 40 条扩成 <code>40 x (1+2)=120</code> 条。推理时默认 <code>n_aug=3, std_min=0.1, std_max=0.3</code>，所以 200 条扩成 <code>200 x (1+3)=800</code> 条。
+    </p>
+<h4>第五步：bezier_xyyaw 补 yaw</h4>
+<p>
+      diffusion decoder 主要生成 x/y。最后 <code>bezier_xyyaw</code> 会在轨迹最前面补一个原点 <code>(0,0)</code>，把 8 个未来点看成 8 阶 Bezier 控制点，然后根据曲线导数计算每个未来点的 yaw。这样最终候选轨迹从 <code>(B, G, 8, 2)</code> 变成 <code>(B, G, 8, 3)</code>。
+    </p>
+<h3>训练分支 forward_train_rl：生成候选、跑 PDM、训练 scorer</h3>
+<p>
+      训练分支前半段包在 <code>with torch.no_grad()</code> 里。这意味着候选生成、PDM 打分、GTRS 采样都不反传梯度。等候选池和标签准备好以后，才离开 <code>no_grad</code>，让 scorer 正常前向并反传。
+    </p>
+<h4>训练候选池的数量变化</h4>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>数量</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>anchor 复制</td>
+<td><code>20 x 2 = 40</code></td>
+<td>训练时 <code>num_groups=2</code>。</td>
+</tr>
+<tr>
+<td>2 步 diffusion 去噪</td>
+<td><code>40</code></td>
+<td>数量不变，只是每条轨迹被 refine。</td>
+</tr>
+<tr>
+<td>乘性噪声增强</td>
+<td><code>40 x 3 = 120</code></td>
+<td>原始 1 份 + 2 份增强。</td>
+</tr>
+<tr>
+<td>PDM 打分</td>
+<td><code>120</code></td>
+<td>给每条 diffusion 候选计算真实 PDM 子指标。</td>
+</tr>
+<tr>
+<td>混入 GTRS vocab</td>
+<td><code>120 + keep_num</code></td>
+<td><code>dropout_ratio=0.99</code>，约保留 vocab 的 1%。</td>
+</tr>
+<tr>
+<td>coarse scorer</td>
+<td><code>G_all</code></td>
+<td>对所有候选打分。</td>
+</tr>
+<tr>
+<td>fine scorer</td>
+<td><code>32</code></td>
+<td>只看 coarse 选出的 top-32。</td>
+</tr>
+</tbody>
+</table>
+<p>
+      这里混入 GTRS vocab 的目的，是让 scorer 不只看当前 diffusion 生成出来的 120 条。GTRS 是离线轨迹库，已经有预计算 PDM 子分数。训练时按 token 找到当前场景对应的 vocab 分数，随机保留很小一部分，再把轨迹和标签拼到 diffusion 候选后面。这样 scorer 见到的轨迹分布更宽，能学到“什么样的轨迹 PDM 会喜欢，什么样的会扣分”。
+    </p>
+<h3>scorer 的输入是怎么做出来的</h3>
+<p>
+      coarse 和 fine scorer 都不是直接吃原始 x/y/yaw 数字。代码先调用 <code>_get_scorer_inputs</code>：
+    </p>
+<ol>
+<li>把候选轨迹重新 <code>norm_odo</code>，再 clamp 到 <code>[-1, 1]</code>，再 <code>denorm_odo</code>。这一步像是给 scorer 输入做范围保护。</li>
+<li>取出 x/y，调用 <code>gen_sineembed_for_position(..., hidden_dim=64)</code>。每个 waypoint 得到 64 维，8 个点合起来是 512 维。</li>
+<li>取出 heading，调用 <code>gen_sineembed_for_position_1d(..., hidden_dim=32)</code>。这个函数会同时拼 sin 和 cos，所以每个 waypoint 是 64 维，8 个点也是 512 维。</li>
+<li>把 x/y embedding 和 heading embedding 拼起来，得到 1024 维轨迹位置描述。</li>
+<li>送入 <code>plan_anchor_scorer_encoder</code>，压到 512 维，作为 scorer decoder 的初始 <code>traj_feature</code>。</li>
+</ol>
+<p>
+      白话讲：scorer 先把一条轨迹“翻译”成高维向量，里面包含每个未来点在哪里、朝向怎样。然后 scorer decoder 再把这条轨迹拿去和 BEV 场景、周围 agent、自车状态做交互，判断它到底安全不安全、舒不舒服、有没有前进。
+    </p>
+<h3>ScorerTransformerDecoderLayer：每条轨迹如何读场景</h3>
+<p>
+      coarse 和 fine scorer 都用 <code>ScorerTransformerDecoderLayer</code>，只是一层数不同。这个 layer 的隐层维度固定成 512，attention head 是 16，主要做 4 件事：
+    </p>
+<ol>
+<li><strong>读 BEV：</strong><code>GridSampleCrossBEVAttentionScorer</code> 根据轨迹的 8 个未来点去 BEV 特征图上采样。也就是说，轨迹经过哪里，就去哪里看道路、障碍物、车道等场景信息。</li>
+<li><strong>看周围 agent：</strong><code>cross_agent_attention</code> 让轨迹 feature 读 30 个 agent query，判断会不会和别的车、人产生交互风险。</li>
+<li><strong>自己内部比较：</strong><code>self_attn</code> 让候选轨迹之间互相看一眼。因为 scorer 同时处理很多候选，self-attention 可以帮助它相对比较不同候选。</li>
+<li><strong>看自车 query：</strong><code>cross_ego_attention</code> 让轨迹 feature 读 ego query，结合自车当前状态和规划意图。</li>
+<li><strong>FFN 整合：</strong>最后过一个两层 MLP，把这些信息压回 512 维。</li>
+</ol>
+<p>
+      所以 scorer 不是只看轨迹几何形状，它会把轨迹放回当前场景里判断。两条轨迹在几何上可能很像，但一条压线、一条避开障碍物，BEV 和 agent attention 会让 scorer 区分它们。
+    </p>
+<h3>coarse scorer 如何训练：全量候选海选</h3>
+<p>
+      coarse scorer 的训练入口是 <code>_score_coarse</code>。在进入它之前，代码已经把所有候选轨迹变成了 <code>traj_feature</code>，shape 是 <code>(B, G_all, 512)</code>。coarse 的 decoder 是 1 层，所以它比较轻，可以对所有候选都跑一遍。
+    </p>
+<h4>第一步：5 个 head 分别预测 5 个 PDM 子指标</h4>
+<pre><code class="language-python">NC_score  = self.NC_head(traj_feature).squeeze(-1)
+EP_score  = self.EP_head(traj_feature).squeeze(-1)
+DAC_score = self.DAC_head(traj_feature).squeeze(-1)
+TTC_score = self.TTC_head(traj_feature).squeeze(-1)
+C_score   = self.C_head(traj_feature).squeeze(-1)</code></pre>
+<p>
+      每个 <code>score</code> 的 shape 都是 <code>(B, G_all)</code>，也就是每个 batch、每条候选一个 logit。注意这里输出的是 logit，不是 0 到 1 的概率；后面算 BCE 时用的是 <code>BCEWithLogitsLoss</code>，会内部做 sigmoid。
+    </p>
+<h4>第二步：拿 PDM 子指标当监督标签</h4>
+<p>
+<code>sub_rewards_group</code> 里有 <code>no_collision</code>、<code>progress</code>、<code>drivable_area</code>、<code>ttc</code>、<code>comfort</code>、<code>final</code> 等字段。它们来自真实 PDM scorer 或离线 vocab 分数。coarse scorer 学的不是人工标注类别，而是“PDM 会给这条轨迹多少子分”。
+    </p>
+<p>
+<code>no_collision</code> 里如果有 0.5，会被强行改成 0.0。可以理解成作者不想让“半碰撞/不确定碰撞”成为中间标签，而是按坏样本处理。<code>comfort</code> 比较特殊，GTRS vocab 里 comfort 被填成 <code>-1</code>，表示这个标签不可用，所以 comfort loss 用 <code>reduction='none'</code> 先逐元素算，再用 <code>comfort != -1</code> 的 mask 只统计有效项。
+    </p>
+<h4>第三步：BCE loss 学绝对分数</h4>
+<p>
+      coarse 的基础 loss 是 5 个 BCE：
+    </p>
+<pre><code class="language-python">loss_nc  = BCE(NC_score,  gt_no_collision)
+loss_ep  = BCE(EP_score,  gt_progress)
+loss_dac = BCE(DAC_score, gt_drivable_area)
+loss_ttc = BCE(TTC_score, gt_ttc)
+loss_c   = masked_BCE(C_score, gt_comfort)</code></pre>
+<p>
+      虽然叫 BCE，但目标不一定全是 0/1。像 progress、ttc、comfort 可能是 0 到 1 的连续分数。<code>BCEWithLogitsLoss</code> 支持这种软标签，所以这里可以理解成“把 logit 校准到 PDM 子分数”。
+    </p>
+<h4>第四步：MarginRankingLoss 学相对顺序</h4>
+<p>
+      只学绝对分数还不够，因为最终选择关心的是候选之间谁更好。代码额外对 <code>EP_score</code> 做 pairwise ranking：
+    </p>
+<ol>
+<li>用 <code>torch.combinations(torch.arange(Gk), r=2)</code> 枚举所有候选对 <code>(i, j)</code>。</li>
+<li>取预测的 <code>pred_i, pred_j</code> 和真实的 <code>gt_i, gt_j</code>。</li>
+<li>用 <code>torch.sign(gt_i - gt_j)</code> 得到 target。如果真实 progress i 更大，target 是 1；如果 j 更大，target 是 -1；如果一样，就是 0。</li>
+<li>把 target=0 的候选对过滤掉，因为真实分数一样就没必要排顺序。</li>
+<li>对剩下的候选对用 <code>MarginRankingLoss(margin=0.05)</code>，要求预测顺序和真实 progress 顺序一致，并且至少拉开 0.05 的 margin。</li>
+</ol>
+<p>
+      白话讲：如果 PDM progress 认为 A 比 B 更能向前走，那 scorer 的 <code>EP_score(A)</code> 也应该比 <code>EP_score(B)</code> 高一点。这个 ranking loss 不是直接让它拟合某个数字，而是让它学会“谁排前面”。
+    </p>
+<h4>第五步：coarse 总 loss 和最终 proxy 分数</h4>
+<p>
+      coarse 总 loss 是：
+    </p>
+<pre><code class="language-python">loss_coarse = loss_nc + loss_ep + loss_dac + loss_ttc + loss_c + 2 * loss_rank</code></pre>
+<p>
+      rank loss 乘了 2，说明作者比较重视 progress 的相对排序。训练完这些 head 后，coarse 会用一个和 PDM 聚合逻辑相似的公式得到最终 proxy reward：
+    </p>
+<pre><code class="language-python">final = sigmoid(NC) * sigmoid(DAC) *
+        (5 * sigmoid(TTC) + 5 * sigmoid(EP) + 2 * sigmoid(C)) / 12</code></pre>
+<p>
+      这个公式有两个乘法门：<code>NC</code> 和 <code>DAC</code>。意思是如果碰撞或开出可行驶区域，最终分数会被直接压低。后面的括号是加权平均，TTC 和 progress 权重都是 5，comfort 权重是 2。白话讲：先保证“不撞、不乱开”，再看“安全距离、前进效率、舒适性”。
+    </p>
+<p>
+      训练时 coarse 还会取这个 proxy 分数最高的候选，去真实 <code>sub_rewards_group["final"]</code> 里查它的 PDM 真分数，记录成 <code>coarse_reward</code>。这个值主要用于日志观察：coarse scorer 当前选出来的东西，真实 PDM 到底有多好。
+    </p>
+<h3>fine scorer 如何训练：只复审 coarse top-32</h3>
+<p>
+      coarse scorer 全量打分后，代码调用 <code>_select_topk</code>：
+    </p>
+<pre><code class="language-python">topk_val, topk_idx = torch.topk(final_coarse_reward, 32, dim=-1)
+traj_feature_k = gather(traj_feature, topk_idx)
+noisy_points_k = gather(noisy_traj_points_xy, topk_idx)
+sub_rewards_topk = gather(sub_rewards_group, topk_idx)</code></pre>
+<p>
+      这里不是只拿 top-32 的分数，而是把 top-32 对应的特征、轨迹点、PDM 标签全部同步 gather 出来。这样 fine scorer 后面只在这 32 条候选上工作。
+    </p>
+<p>
+      fine scorer 的 decoder 有 3 层。<code>ScorerTransformerDecoder.forward</code> 会把每层输出都放进 <code>traj_feature_list</code>，所以 fine scorer 不是只监督最后一层，而是 3 层都监督。进入 <code>_score_fine_multi</code> 后，代码会遍历每一层 feature：
+    </p>
+<ol>
+<li>用 fine 的 5 个 head 输出 <code>NC/EP/DAC/TTC/C</code> logits。</li>
+<li>如果不是 <code>only_reward</code>，就和 coarse 一样算 5 个 BCE。</li>
+<li>同样对 EP/progress 做 pairwise margin ranking。</li>
+<li>把这一层的 loss 加到 <code>loss_fine</code>。</li>
+<li>用同样的 PDM proxy 公式算 <code>final_fine_reward</code>，并记录这一层选出的 best index。</li>
+</ol>
+<p>
+      最后 <code>loss_fine = loss_fine / len(traj_feature_list)</code>，也就是 3 层 loss 取平均。这叫 deep supervision：中间层也被要求会打分，而不是所有压力都放到最后一层。这样训练通常更稳，尤其是 fine scorer 只有 top-32，候选更难区分，需要每一层都逐步把排序学好。
+    </p>
+<p>
+      训练分支最后的总 loss 很简单：
+    </p>
+<pre><code class="language-python">loss = loss_fine + loss_coarse</code></pre>
+<p>
+      没有 GRPO ratio，没有 advantage，也没有 policy gradient。整个 _sel 的训练目标就是：让 scorer 的 5 个子指标预测更像 PDM，让 scorer 的排序更像 PDM progress 排序。
+    </p>
+<h3>推理分支 forward_test_rl：800 条候选如何变成最终轨迹</h3>
+<p>
+      推理分支和训练分支前半段非常像，但数量更大，并且不混入 GTRS vocab。
+    </p>
+<h4>推理候选数量</h4>
+<p>
+      推理时 <code>num_groups=10</code>，所以 20 个 anchor 被复制成 <code>200</code> 条初始候选。2 步 DDIM refine 后调用默认 <code>add_mul_noise()</code>，默认 <code>n_aug=3</code>，于是每条候选变成原始 1 条加增强 3 条，总数是 <code>200 x 4 = 800</code>。这 800 条就是 scorer 的全量候选池。
+    </p>
+<h4>coarse 推理：对 800 条全量打分</h4>
+<p>
+      推理时 coarse 不调用 <code>_score_coarse</code>，而是在 <code>forward_test_rl</code> 里直接写了同样的 head 和公式：
+    </p>
+<pre><code class="language-python">NC_score = self.NC_head(traj_feature).squeeze(-1)
+EP_score = self.EP_head(traj_feature).squeeze(-1)
+...
+final_coarse_reward = sigmoid(NC) * sigmoid(DAC) *
+    (5 * sigmoid(TTC) + 5 * sigmoid(EP) + 2 * sigmoid(C)) / 12</code></pre>
+<p>
+      然后 <code>argmax</code> 得到 coarse 最喜欢的一条，保存成 <code>coarse_traj</code>。同时，它还用 <code>_select_topk(..., topk=32, sub_rewards_group=None)</code> 把 coarse 排名前 32 的候选拿出来，交给 fine scorer。
+    </p>
+<h4>fine 推理：3 层各选一条</h4>
+<p>
+      推理时 fine 调用：
+    </p>
+<pre><code class="language-python">loss_fine, final_fine_reward, fine_reward, fine_sub_loss_dict,
+fine_reward_dict, fine_best_idx_list = self._score_fine_multi(
+    fine_traj_feature_list, sub_rewards_topk, only_reward=True
+)</code></pre>
+<p>
+<code>only_reward=True</code> 表示不算 BCE，不算 rank loss，只计算每层的 proxy reward 和 best index。因为 fine decoder 有 3 层，所以 <code>fine_best_idx_list</code> 里有 3 个 index。每个 index 是 top-32 内部的局部位置，代码再用 <code>topk_idx</code> 映射回 800 条全局候选池里的位置。
+    </p>
+<p>
+      最终代码把 4 条轨迹拼在一起：
+    </p>
+<pre><code class="language-python">traj_to_score = [
+    coarse_best,
+    fine_best_layer_0,
+    fine_best_layer_1,
+    fine_best_layer_2,
+]</code></pre>
+<p>
+      shape 是 <code>(B, 4, 8, 3)</code>。第一条是 coarse 直接选出来的，后面三条是 fine 三层分别选出来的。按作者意图，官方最终轨迹应该是最后一层 fine 的选择，也就是 <code>traj_to_score[:, -1]</code>。
+    </p>
+<div class="note">
+      当前源码里官方返回轨迹的那行是注释状态：<code># return {"trajectory": traj_to_score[:,-1]}</code>。后面代码会对这 4 条轨迹再跑一次真实 PDM，并返回 <code>{"reward_dict": reward_dict}</code>，更像是 debug/fast eval 日志路径。如果要作为正式 planner 输出，通常需要恢复这行 trajectory return。
+    </div>
+<h3>训练和推理的核心差异</h3>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>训练</th>
+<th>推理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>入口</td>
+<td><code>forward_train_rl</code></td>
+<td><code>forward_test_rl</code></td>
+</tr>
+<tr>
+<td>是否训练 diffusion decoder</td>
+<td>不训练，候选生成在 <code>torch.no_grad()</code> 下。</td>
+<td>不训练，只前向生成候选。</td>
+</tr>
+<tr>
+<td>anchor groups</td>
+<td><code>num_groups=2</code>，初始 40 条。</td>
+<td><code>num_groups=10</code>，初始 200 条。</td>
+</tr>
+<tr>
+<td>乘性增强</td>
+<td><code>n_aug=2</code>，40 -&gt; 120。</td>
+<td><code>n_aug=3</code>，200 -&gt; 800。</td>
+</tr>
+<tr>
+<td>是否混 GTRS vocab</td>
+<td>混入约 1% 离线 vocab 轨迹。</td>
+<td>不混，只用 diffusion 候选。</td>
+</tr>
+<tr>
+<td>PDM 的作用</td>
+<td>给候选轨迹生成监督标签。</td>
+<td>源码里对 4 条候选做日志打分；选择本身靠 scorer。</td>
+</tr>
+<tr>
+<td>coarse</td>
+<td>全量候选算 BCE + rank loss，并产生 top-32。</td>
+<td>全量 800 打 proxy 分，取 coarse best 和 top-32。</td>
+</tr>
+<tr>
+<td>fine</td>
+<td>top-32 上 3 层 deep supervision，loss 取平均。</td>
+<td>top-32 上 3 层分别选 best，最后一层通常作为最终轨迹。</td>
+</tr>
+<tr>
+<td>最终输出</td>
+<td><code>{"loss", "sub_loss_dict", "reward_dict"}</code></td>
+<td>当前源码返回 <code>{"reward_dict"}</code>；正式轨迹 return 被注释。</td>
+</tr>
+</tbody>
+</table>
+<h3>为什么要 coarse/fine 两级，而不是一个 scorer 直接选</h3>
+<p>
+      如果只用一个很重的 scorer 对所有候选精排，推理时 800 条候选都要完整精细交互，计算会更贵。如果只用一个很轻的 scorer，又可能看不细，容易把非常接近的候选排错。所以作者用了两级结构：
+    </p>
+<ol>
+<li><strong>coarse 轻：</strong>1 层 decoder，能承受全量候选，负责快速排除明显差的轨迹。</li>
+<li><strong>top-32 截断：</strong>把候选池从几百条降到 32 条，让 fine 的计算量可控。</li>
+<li><strong>fine 深：</strong>3 层 decoder，对少量候选更仔细地看 BEV、agent、自车状态，做更精细排序。</li>
+<li><strong>deep supervision：</strong>fine 每层都训练，让排序能力逐层稳定，而不是只依赖最后一层。</li>
+</ol>
+<p>
+      这个设计很像搜索系统：先粗召回/粗排，再精排。coarse 保证召回高分候选，fine 负责在高分候选里做最后选择。
+    </p>
+<h3>为什么 scorer 要预测 5 个子指标，而不是直接预测 final score</h3>
+<p>
+      直接预测一个 final 分数当然更简单，但 final PDM 是一个乘法门控加加权平均的组合。碰撞、驶出道路这种安全项会强烈影响最终分数。如果只学一个 final，模型可能不知道分数低到底是因为碰撞、越界、TTC 差、还是不舒适。
+    </p>
+<p>
+      分成 5 个 head 有三个好处：
+    </p>
+<ol>
+<li><strong>监督更细：</strong>每个 head 学一个具体原因，错误更容易定位。</li>
+<li><strong>结构贴近 PDM：</strong>最终 proxy 公式和 PDM 聚合方式一致，安全门控不会被普通回归平均掉。</li>
+<li><strong>日志更可解释：</strong>可以看到模型到底是 NC 差、DAC 差、TTC 差，还是 progress 差。</li>
+</ol>
+<p>
+      白话讲，scorer 不是只说“这条路线 80 分”，而是分别回答“撞不撞、压不压路、能不能往前走、会不会太接近别人、坐起来舒不舒服”。最后再按 PDM 的规矩合成总分。
+    </p>
+<h3>关键 shape 例子：用 B=1 帮你把数量串起来</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>训练 shape 示例</th>
+<th>推理 shape 示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>anchor</td>
+<td><code>(1, 40, 8, 2)</code></td>
+<td><code>(1, 200, 8, 2)</code></td>
+</tr>
+<tr>
+<td>DDIM refine 后</td>
+<td><code>(1, 40, 8, 2)</code></td>
+<td><code>(1, 200, 8, 2)</code></td>
+</tr>
+<tr>
+<td>add_mul_noise 后</td>
+<td><code>(1, 120, 8, 2)</code></td>
+<td><code>(1, 800, 8, 2)</code></td>
+</tr>
+<tr>
+<td>bezier yaw 后</td>
+<td><code>(1, 120, 8, 3)</code></td>
+<td><code>(1, 800, 8, 3)</code></td>
+</tr>
+<tr>
+<td>混入 vocab 后</td>
+<td><code>(1, G_all, 8, 3)</code></td>
+<td>不混 vocab，仍是 <code>(1, 800, 8, 3)</code></td>
+</tr>
+<tr>
+<td>scorer feature</td>
+<td><code>(1, G_all, 512)</code></td>
+<td><code>(1, 800, 512)</code></td>
+</tr>
+<tr>
+<td>coarse top-k</td>
+<td><code>(1, 32, 512)</code></td>
+<td><code>(1, 32, 512)</code></td>
+</tr>
+<tr>
+<td>fine 输出候选</td>
+<td>用于 loss，不返回轨迹</td>
+<td><code>(1, 4, 8, 3)</code>，即 coarse best + 3 个 fine best</td>
+</tr>
+</tbody>
+</table>
+<h3>几个容易读错的地方</h3>
+<ul>
+<li><strong><code>forward_train_rl</code> 名字误导：</strong>在 <code>model_sel.py</code> 里它不是 GRPO，只是 selector 监督训练。</li>
+<li><strong>分支条件不是 <code>self.training</code>：</strong>代码看 <code>self.EP_head.training</code>，这和 agent 只把 scorer 切回 train 有关。</li>
+<li><strong><code>eta=1.0</code> 被 agent 传进来，但 selector 内部 step 硬写 <code>eta=0.0</code>：</strong>所以 DDIM 反向 step 本身不额外采样噪声；随机性主要来自初始 <code>add_noise</code> 和后面的 <code>add_mul_noise</code>。</li>
+<li><strong>推理选择不是直接 PDM 选 800 条最高：</strong>真正选择靠训练好的 scorer。当前代码只对 coarse/fine 选出的 4 条再跑 PDM 做日志。</li>
+<li><strong>official trajectory return 被注释：</strong><code>forward_test_rl</code> 里 <code># return {"trajectory": traj_to_score[:,-1]}</code> 被注释了，当前返回的是 <code>reward_dict</code>。</li>
+<li><strong>comfort 的 <code>-1</code> 是无效标签：</strong>loss 里会 mask 掉，不参与 comfort BCE。</li>
+<li><strong><code>compute_diversity</code> 基本是旁路函数：</strong>它在文件末尾定义了 pairwise diversity，但主训练/推理链路没有使用。</li>
+</ul>
+<h3>用最白话的方式总结 coarse/fine scorer</h3>
+<p>
+      训练时，系统先让冻结的 diffusion 生成很多候选路线，然后请真实 PDM scorer 给这些路线打“标准答案”：是否撞车、是否在路上、是否推进、TTC 是否安全、是否舒适、最终分多少。coarse scorer 先学习对所有候选快速打这 5 类分，并学会按 progress 排序；然后 coarse 选出 top-32，fine scorer 在这 32 条上更仔细地学同样的 5 类分和排序。总 loss 就是 coarse loss 加 fine loss。
+    </p>
+<p>
+      推理时，没有标准答案，也不会对 800 条都跑真实 PDM 来选。系统先生成 800 条候选，coarse scorer 给 800 条都打 proxy PDM 分，拿出 top-32；fine scorer 对 top-32 复审，三层各选一条，最后通常取第 3 层 fine 选中的轨迹作为最终规划结果。这样既保留 diffusion 的多样性，又避免在推理时用昂贵的 PDM 全量搜索。
+    </p>
+<h3>源码索引</h3>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>源码位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>顶层 <code>V2TransfuserModel</code> 初始化和 forward</td>
+<td><code>navsim/agents/diffusiondrivev2/diffusiondrivev2_model_sel.py:143-265</code></td>
+</tr>
+<tr>
+<td>selector agent 冻结/解冻参数白名单</td>
+<td><code>navsim/agents/diffusiondrivev2/diffusiondrivev2_sel_agent.py:60-83</code></td>
+</tr>
+<tr>
+<td>diffusion refine decoder</td>
+<td><code>diffusiondrivev2_model_sel.py:309-627</code></td>
+</tr>
+<tr>
+<td><code>DDIMScheduler_with_logprob.step</code></td>
+<td><code>diffusiondrivev2_model_sel.py:629-783</code></td>
+</tr>
+<tr>
+<td><code>TrajectoryHead.__init__</code> 初始化 anchors/scorer/PDM/vocab</td>
+<td><code>diffusiondrivev2_model_sel.py:785-933</code></td>
+</tr>
+<tr>
+<td>训练/推理分流</td>
+<td><code>diffusiondrivev2_model_sel.py:954-959</code></td>
+</tr>
+<tr>
+<td>PDM worker 和子指标提取</td>
+<td><code>diffusiondrivev2_model_sel.py:38-142</code>, <code>961-976</code></td>
+</tr>
+<tr>
+<td>coarse scorer loss 和 proxy reward</td>
+<td><code>diffusiondrivev2_model_sel.py:978-1042</code></td>
+</tr>
+<tr>
+<td>fine scorer 多层 loss 和推理 best index</td>
+<td><code>diffusiondrivev2_model_sel.py:1044-1122</code></td>
+</tr>
+<tr>
+<td>scorer 输入构造和 top-32 gather</td>
+<td><code>diffusiondrivev2_model_sel.py:1124-1200</code></td>
+</tr>
+<tr>
+<td>GTRS vocab 混入和乘性噪声增强</td>
+<td><code>diffusiondrivev2_model_sel.py:1202-1286</code></td>
+</tr>
+<tr>
+<td>训练主流程</td>
+<td><code>diffusiondrivev2_model_sel.py:1288-1387</code></td>
+</tr>
+<tr>
+<td>推理主流程</td>
+<td><code>diffusiondrivev2_model_sel.py:1390-1523</code></td>
+</tr>
+<tr>
+<td>Bezier yaw 补全</td>
+<td><code>diffusiondrivev2_model_sel.py:1558-1606</code></td>
+</tr>
+</tbody>
+</table>
+</article>
+<article class="qa" id="q9">
+<h2>问题 9：PDM 每一步打分策略、子指标逻辑和最终 PDM 分数如何得到</h2>
+<p class="meta">
+      记录时间：2026-06-27；回答要求：白话详细展开，讲清 PDM 从轨迹输入、闭环模拟、子指标计算、归一化、加权聚合到最终分数的每一步。
+      <span class="tag">PDM</span>
+<span class="tag">PDMS</span>
+<span class="tag">No Collision</span>
+<span class="tag">Drivable Area</span>
+<span class="tag">Progress</span>
+<span class="tag">TTC</span>
+<span class="tag">Comfort</span>
+</p>
+<div class="question">
+      用白话详细展开解释：PDM 具体详细每一步的打分策略和逻辑，如何得到最终的 PDM 分数。
+    </div>
+<h3>先用一句话讲清楚 PDM 在评什么</h3>
+<p>
+      PDM 分数不是只看预测轨迹和 GT 轨迹像不像。它更像一个小型闭环驾驶考试：先把模型给出的未来路线放进车辆动力学里重新开一遍，再看这辆车有没有撞、有没有开出路、有没有沿路线推进、有没有潜在碰撞风险、坐起来舒不舒服。最后把这些子指标按规则合成一个 0 到 1 的分数。
+    </p>
+<p>
+      白话讲：L2 位移误差问的是“你画的轨迹像不像标准答案”；PDM 问的是“按你这条轨迹真开起来，会不会安全、合规、有效、舒服”。所以 PDM 对自动驾驶规划更接近“能不能用”，而不是只比较几何误差。
+    </p>
+<h3>先看总流程：一条轨迹怎样变成 PDM 分数</h3>
+<figure class="figure-wrap">
+<svg aria-label="PDM scoring pipeline" class="arch-svg" role="img" viewbox="0 0 1320 720">
+<defs>
+<marker id="q9Arrow" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10">
+<path d="M 0 0 L 10 5 L 0 10 z" fill="#334155"></path>
+</marker>
+</defs>
+<rect fill="#ffffff" height="680" rx="10" stroke="#d9ded7" width="1280" x="20" y="20"></rect>
+<text class="arch-title" x="50" y="58">PDM 打分流水线：先闭环模拟，再算规则指标，最后聚合</text>
+<rect class="arch-box arch-box-blue" height="98" width="220" x="60" y="105"></rect>
+<text class="arch-label" x="82" y="134">模型预测轨迹</text>
+<text class="arch-small" x="82" y="158">ego-frame, 8 poses</text>
+<text class="arch-small" x="82" y="180">(x, y, heading)</text>
+<line marker-end="url(#q9Arrow)" stroke="#334155" stroke-width="1.8" x1="280" x2="335" y1="154" y2="154"></line>
+<rect class="arch-box arch-box-green" height="98" width="225" x="335" y="105"></rect>
+<text class="arch-label" x="358" y="134">转世界坐标 + 重采样</text>
+<text class="arch-small" x="358" y="158">relative_to_absolute</text>
+<text class="arch-small" x="358" y="180">proposal_sampling: 40 x 0.1s</text>
+<line marker-end="url(#q9Arrow)" stroke="#334155" stroke-width="1.8" x1="560" x2="615" y1="154" y2="154"></line>
+<rect class="arch-box arch-box-purple" height="98" width="245" x="615" y="105"></rect>
+<text class="arch-label" x="638" y="134">PDMSimulator</text>
+<text class="arch-small" x="638" y="158">LQR tracker 追踪路线</text>
+<text class="arch-small" x="638" y="180">kinematic bicycle 真开一遍</text>
+<line marker-end="url(#q9Arrow)" stroke="#334155" stroke-width="1.8" x1="860" x2="915" y1="154" y2="154"></line>
+<rect class="arch-box arch-box-orange" height="98" width="285" x="915" y="105"></rect>
+<text class="arch-label" x="938" y="134">PDMScorer</text>
+<text class="arch-small" x="938" y="158">和 map / GT agents / centerline 比较</text>
+<text class="arch-small" x="938" y="180">输出各子指标和最终分</text>
+<rect class="arch-box arch-box-red" height="92" width="205" x="90" y="295"></rect>
+<text class="arch-label" x="112" y="324">乘法门控 1</text>
+<text class="arch-small" x="112" y="348">No Collision</text>
+<text class="arch-small" x="112" y="370">1 / 0.5 / 0</text>
+<rect class="arch-box arch-box-red" height="92" width="205" x="335" y="295"></rect>
+<text class="arch-label" x="357" y="324">乘法门控 2</text>
+<text class="arch-small" x="357" y="348">Drivable Area</text>
+<text class="arch-small" x="357" y="370">1 / 0</text>
+<rect class="arch-box arch-box-blue" height="132" width="250" x="595" y="275"></rect>
+<text class="arch-label" x="620" y="304">加权指标</text>
+<text class="arch-small" x="620" y="330">Progress weight 5</text>
+<text class="arch-small" x="620" y="352">TTC weight 5</text>
+<text class="arch-small" x="620" y="374">Comfort weight 2</text>
+<text class="arch-small" x="620" y="396">Driving Direction weight 0</text>
+<rect class="arch-box arch-box-green" height="92" width="270" x="900" y="295"></rect>
+<text class="arch-label" x="925" y="324">最终 PDM</text>
+<text class="arch-small" x="925" y="350">multi_prod * weighted_avg</text>
+<text class="arch-small" x="925" y="372">范围 0 到 1</text>
+<line marker-end="url(#q9Arrow)" stroke="#334155" stroke-width="1.8" x1="295" x2="335" y1="341" y2="341"></line>
+<line marker-end="url(#q9Arrow)" stroke="#334155" stroke-width="1.8" x1="540" x2="595" y1="341" y2="341"></line>
+<line marker-end="url(#q9Arrow)" stroke="#334155" stroke-width="1.8" x1="845" x2="900" y1="341" y2="341"></line>
+<rect class="arch-box" height="118" width="1040" x="95" y="492"></rect>
+<text class="arch-label" x="120" y="524">公式</text>
+<text class="arch-small" x="120" y="552">multi_prod = no_collision * drivable_area</text>
+<text class="arch-small" x="120" y="577">weighted_avg = (5 * progress + 5 * TTC + 2 * comfort + 0 * driving_direction) / 12</text>
+<text class="arch-small" x="120" y="602">PDM = multi_prod * weighted_avg</text>
+</svg>
+<figcaption class="figure-caption">图 9-1：PDM 先做闭环模拟，再计算安全门控和加权指标，最后聚合成 0 到 1 的分数。点击图片可以局部放大。</figcaption>
+</figure>
+<h3>PDM 打分需要哪些输入</h3>
+<p>
+      代码里的入口主要是 <code>navsim/evaluate/pdm_score.py</code>。它不是只拿一条预测轨迹就能算，还需要一个 <code>MetricCache</code>。这个 cache 是提前离线生成好的，里面存了当前场景的地图、参考轨迹、周围障碍物未来状态等信息。
+    </p>
+<table>
+<thead>
+<tr>
+<th>输入</th>
+<th>来自哪里</th>
+<th>白话作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>model_trajectory</code></td>
+<td>模型预测</td>
+<td>要被评分的未来轨迹，通常是自车局部坐标系下的 8 个点。</td>
+</tr>
+<tr>
+<td><code>metric_cache.ego_state</code></td>
+<td>离线 cache</td>
+<td>当前时刻自车真实状态，用来把局部轨迹转到世界坐标。</td>
+</tr>
+<tr>
+<td><code>metric_cache.trajectory</code></td>
+<td>PDM-Closed planner 离线跑出</td>
+<td>一个参考轨迹，评分 batch 里会作为第 0 条 proposal。</td>
+</tr>
+<tr>
+<td><code>metric_cache.observation</code></td>
+<td>离线 cache</td>
+<td>未来一段时间周围 agent / 静态物 / 红灯区域的 occupancy map。</td>
+</tr>
+<tr>
+<td><code>metric_cache.centerline</code></td>
+<td>PDM-Closed planner</td>
+<td>路线中心线，用来计算 progress。</td>
+</tr>
+<tr>
+<td><code>metric_cache.route_lane_ids</code></td>
+<td>PDM-Closed planner</td>
+<td>合法路线 lane id，用来判断是不是逆行或偏离路线。</td>
+</tr>
+<tr>
+<td><code>metric_cache.drivable_area_map</code></td>
+<td>地图查询</td>
+<td>可行驶区域、多车道、逆行区域等几何信息。</td>
+</tr>
+</tbody>
+</table>
+<p>
+<code>MetricCacheProcessor</code> 离线做了几件重活：跑一次 <code>PDMClosedPlanner</code> 得到参考轨迹和 centerline；把未来 GT 障碍物插值到 10Hz；查询自车附近 100m 地图区域；最后把这些对象压缩成 <code>metric_cache.pkl</code>。因此训练或评测时，实时部分主要只剩“模拟预测轨迹 + 算指标”。
+    </p>
+<h3>第 1 步：把模型轨迹从自车坐标转到世界坐标</h3>
+<p>
+      模型输出的轨迹一般是相对当前自车的局部坐标，比如未来 0.5s、1.0s、1.5s 时车应该相对当前位置在哪里。PDM 不能直接拿这个局部坐标去和地图、障碍物比，因为地图和 GT agent 都在世界坐标里。
+    </p>
+<p>
+      所以 <code>transform_trajectory</code> 会做三件事：
+    </p>
+<ol>
+<li>根据 trajectory sampling 得到未来时间点。</li>
+<li>把预测的相对 pose 反序列化成 <code>StateSE2</code>。</li>
+<li>调用 <code>relative_to_absolute_poses(initial_ego_state.rear_axle, relative_states)</code>，把局部轨迹转成世界坐标。</li>
+</ol>
+<p>
+      代码里还把速度和加速度设成 0，因为后面 LQR tracker + bicycle model 会根据目标轨迹重新跟踪和模拟，最终用于 comfort/TTC 的速度、加速度来自模拟结果，而不是直接信模型输出。
+    </p>
+<h3>第 2 步：把轨迹重采样成 PDM 使用的 10Hz 状态序列</h3>
+<p>
+      默认配置里 <code>proposal_sampling.num_poses=40</code>，<code>interval_length=0.1</code>。也就是说，PDM scorer 实际用的是 4 秒、10Hz、共 41 个状态点：第 0 个是当前时刻，后面 40 个是未来点。
+    </p>
+<p>
+<code>get_trajectory_as_array</code> 会把 <code>InterpolatedTrajectory</code> 按这些时间点采样成 numpy 数组。每个状态的字段不是只有 x/y/yaw，而是完整车辆状态数组：
+    </p>
+<pre><code class="language-text">[x, y, heading, velocity_x, velocity_y, acceleration_x, acceleration_y,
+ steering_angle, steering_rate, angular_velocity, angular_acceleration]</code></pre>
+<p>
+      这就是为什么后面可以算 comfort：它需要加速度、jerk、yaw rate 等动力学量。
+    </p>
+<h3>第 3 步：把参考轨迹和预测轨迹拼成 proposals</h3>
+<p>
+      单条 PDM 打分时，代码会把 <code>metric_cache.trajectory</code> 也就是 PDM-Closed 参考轨迹放在第 0 条，把模型预测轨迹放在第 1 条：
+    </p>
+<pre><code class="language-python">trajectory_states = np.concatenate([
+    pdm_states[None, ...],
+    pred_states[None, ...],
+], axis=0)</code></pre>
+<p>
+      批量打分 <code>pdm_score_para</code> 时也是同理：第 0 条是参考轨迹，后面第 1 到第 N 条是模型候选轨迹。这个设计对后面 progress 归一化和 DiffusionDriveV2 的 pairwise reward 很重要。
+    </p>
+<h3>第 4 步：闭环模拟，不是直接拿原轨迹评分</h3>
+<p>
+      PDM 的关键是 <code>PDMSimulator.simulate_proposals</code>。它不会直接相信模型画出来的每个点，而是把这条轨迹当成“目标路线”，让一个 LQR tracker 去跟踪，再用运动学自行车模型一步步推进车辆状态。
+    </p>
+<p>
+      白话讲，模型说“我想这么开”，PDM 会问“车真按控制器追这条路线，会开成什么样”。如果模型轨迹很尖锐、突然横跳，真实车辆模型可能追不上，模拟出来的速度、加速度、转向也会很差，comfort 和安全指标会受影响。
+    </p>
+<ol>
+<li><code>BatchLQRTracker.update(proposal_states)</code> 读取所有 proposal 的目标状态。</li>
+<li>从初始 ego state 开始，<code>simulated_states[:, 0]</code> 固定为当前真实车辆状态。</li>
+<li>每 0.1 秒调用 <code>track_trajectory</code> 产生控制命令。</li>
+<li>再用 <code>BatchKinematicBicycleModel.propagate_state</code> 推进一帧。</li>
+<li>循环 40 次，得到 4 秒闭环模拟轨迹。</li>
+</ol>
+<p>
+      后面所有 PDM 子指标用的是这个 <code>simulated_states</code>，不是原始预测点。这一点非常重要。
+    </p>
+<h3>第 5 步：PDMScorer 初始化内部几何状态</h3>
+<p>
+<code>PDMScorer.score_proposals</code> 一开始会调用 <code>_reset</code>。它会检查输入 shape：必须是 <code>(num_proposals, 41, StateIndex.size())</code>，也就是每条 proposal 都有 41 个完整状态。
+    </p>
+<p>
+      然后它会把每个时刻的车辆状态转成自车矩形框的 4 个角点和中心点，再进一步变成 shapely polygon。后续碰撞、可行驶区域、TTC 都是拿这些 polygon 和地图/障碍物 polygon 做几何判断。
+    </p>
+<p>
+      同时它会准备几个结果数组：
+    </p>
+<ul>
+<li><code>_multi_metrics</code>：乘法门控指标，目前有 NO_COLLISION 和 DRIVABLE_AREA。</li>
+<li><code>_weighted_metrics</code>：加权平均指标，有 PROGRESS、TTC、COMFORTABLE、DRIVING_DIRECTION。</li>
+<li><code>_progress_raw</code>：尚未归一化的米制前进距离。</li>
+<li><code>_ego_areas</code>：每条轨迹每个时刻是否跨多车道、是否在不可行驶区域、是否在逆行区域。</li>
+</ul>
+<h3>第 6 步：先判断自车每个时刻处在哪些地图区域</h3>
+<p>
+<code>_calculate_ego_area</code> 是很多指标的基础。它会把自车每个时刻的角点和中心点拿去和 <code>drivable_area_map</code> 的多边形做包含关系判断。
+    </p>
+<table>
+<thead>
+<tr>
+<th>区域标记</th>
+<th>代码判定</th>
+<th>后续影响</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MULTIPLE_LANES</code></td>
+<td>车的角点落在多个 lane / lane connector 内，且没有一个单独 lane 包住全部角点。</td>
+<td>侧向碰撞责任判断会用到。</td>
+</tr>
+<tr>
+<td><code>NON_DRIVABLE_AREA</code></td>
+<td>4 个角点不是全部落在 roadblock / intersection / drivable area / carpark area 内。</td>
+<td>drivable area 直接变 0，也会影响碰撞和 TTC 责任判断。</td>
+</tr>
+<tr>
+<td><code>ONCOMING_TRAFFIC</code></td>
+<td>车辆中心点没有落在当前 route lane ids 对应的合法 lane 内。</td>
+<td>driving direction compliance 用它累计逆行距离。</td>
+</tr>
+</tbody>
+</table>
+<h3>子指标 1：No-at-fault Collision，不发生责任碰撞</h3>
+<p>
+      这个指标在 <code>_calculate_no_at_fault_collision</code> 里计算，结果写到 <code>_multi_metrics[NO_COLLISION]</code>。它默认每条轨迹都是 1，然后逐时刻检查自车 polygon 是否和未来障碍物 occupancy map 相交。
+    </p>
+<p>
+      它不是“只要碰到东西就一定 0”，而是先判断这是不是自车有责碰撞。核心逻辑是：
+    </p>
+<ol>
+<li>每个未来时间点，拿所有 proposal 的自车 polygon 去查询障碍物 polygon 是否相交。</li>
+<li>如果障碍物 token 是红灯区域，或者这个 token 之前已经碰过并记录过，就跳过。</li>
+<li>用 <code>get_collision_type</code> 分类碰撞：自车停止碰撞、撞到停止物体、后车追尾、前向碰撞、侧向碰撞。</li>
+<li>如果是主动前向碰撞，或者撞上停止目标，就是自车有责。</li>
+<li>如果自车处在多车道或不可行驶区域时发生侧向碰撞，也算自车有责。</li>
+<li>如果自车无责，比如别人从后面撞上，代码会把这个 token 记到 collided list，避免后面重复算。</li>
+</ol>
+<p>
+      分数取值是：
+    </p>
+<table>
+<thead>
+<tr>
+<th>情况</th>
+<th>NO_COLLISION 分数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>没有责任碰撞</td>
+<td><code>1.0</code></td>
+</tr>
+<tr>
+<td>和动态 agent 发生责任碰撞，比如车、人、自行车等</td>
+<td><code>0.0</code></td>
+</tr>
+<tr>
+<td>和静态物体发生责任碰撞</td>
+<td><code>0.5</code></td>
+</tr>
+</tbody>
+</table>
+<p>
+      注意它是乘法门控。动态责任碰撞给 0 后，最终 PDM 基本直接归零；静态物碰撞给 0.5，会把最终分至少打半折。
+    </p>
+<h3>子指标 2：Drivable Area Compliance，是否开在可行驶区域</h3>
+<p>
+      这个指标在 <code>_calculate_drivable_area_compliance</code> 里计算，也属于乘法门控。逻辑非常硬：
+    </p>
+<pre><code class="language-python">off_road_mask = self._ego_areas[:, :, NON_DRIVABLE_AREA].any(axis=-1)
+drivable_area_compliance_scores[off_road_mask] = 0.0</code></pre>
+<p>
+      白话讲，只要这条轨迹在 4 秒内任何一个时刻有车身角点跑到不可行驶区域外，DAC 就是 0。没有中间分，没有“轻微越界扣一点”的设计。
+    </p>
+<p>
+      因为 DAC 也是乘法门控，所以只要 DAC=0，最终 PDM 就会被乘成 0。PDM 对“开出路面”非常严格。
+    </p>
+<h3>子指标 3：Driving Direction Compliance，是否逆行</h3>
+<p>
+      这个指标在 <code>_calculate_driving_direction_compliance</code> 里算。它看的是车辆中心点有没有落在合法 route lane 上。如果某段时间中心点不在 route lane 内，就把这段运动距离记为 oncoming progress，也就是疑似逆行/不按路线方向走的距离。
+    </p>
+<p>
+      它不是看整个 4 秒累计，而是在 1 秒 rolling window 内看最大逆行距离：
+    </p>
+<ol>
+<li>计算每个相邻时刻中心点移动距离。</li>
+<li>如果该时刻没有处在 <code>ONCOMING_TRAFFIC</code>，这段距离置 0。</li>
+<li>对每个时刻往前 1 秒窗口求和。</li>
+<li>取所有窗口里的最大逆行距离。</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>1 秒窗口内最大逆行距离</th>
+<th>Driving Direction 分数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt; 2m</code></td>
+<td><code>1.0</code></td>
+</tr>
+<tr>
+<td><code>2m 到 6m</code></td>
+<td><code>0.5</code></td>
+</tr>
+<tr>
+<td><code>&gt;= 6m</code></td>
+<td><code>0.0</code></td>
+</tr>
+</tbody>
+</table>
+<p>
+      但在 DiffusionDriveV2 当前默认配置里，<code>driving_direction_weight=0.0</code>。所以它会被计算、会被记录，但不参与最终 weighted average。也就是说默认 PDM 最终分只真正加权 progress、TTC、comfort。
+    </p>
+<h3>子指标 4：Progress，沿路线向前推进多少</h3>
+<p>
+      progress 在 <code>_calculate_progress</code> 里先算 raw 值。它不是简单看终点离起点的欧氏距离，而是把起点和终点投影到 centerline 上，看沿路线方向前进了多少米。
+    </p>
+<pre><code class="language-python">start_point = ego center at time 0
+end_point   = ego center at final time
+progress = centerline.project(end_point) - centerline.project(start_point)
+progress_raw = max(progress, 0)</code></pre>
+<p>
+      如果车倒退，或者投影后前进距离为负，就被 clip 到 0。
+    </p>
+<p>
+      但 raw progress 还不是最终参与加权的 progress。聚合时会先乘上安全门控：
+    </p>
+<pre><code class="language-python">raw_progress = progress_raw * (NO_COLLISION * DRIVABLE_AREA)</code></pre>
+<p>
+      也就是说，撞车或开出路以后，你的 progress 不再有意义，会被压成 0 或打折。
+    </p>
+<p>
+      然后 PDM 会做 batch 内归一化：
+    </p>
+<ul>
+<li>如果这一批 proposal 里最大 raw progress 超过 5m，就每条轨迹除以这个最大值。</li>
+<li>如果最大 raw progress 不超过 5m，就把 progress 默认设为 1，但安全门控为 0 的轨迹仍设为 0。</li>
+</ul>
+<p>
+      白话讲：PDM 不直接奖励“绝对前进 20 米就是 20 分”，而是在同一批候选里看谁推进得更多，把最好的一条归一到 1。5m 阈值是为了处理停车/低速场景：如果大家都不该怎么动，不会因为没走远就全部 progress 很低。
+    </p>
+<h3>子指标 5：TTC，1 秒内是否存在潜在碰撞风险</h3>
+<p>
+      TTC 在 <code>_calculate_ttc</code> 里计算，默认每条轨迹是 1，只要发现风险就置 0。它不是只看当前 polygon 是否已经撞上，而是在每个时间点把自车按当前速度向未来最多约 1 秒做投影，看投影后的车身会不会和障碍物相交。
+    </p>
+<p>
+      源码里 <code>future_time_idcs = np.arange(0, 10, 3)</code>，在 0.1s 采样下相当于检查 0s、0.3s、0.6s、0.9s 的未来投影。具体步骤是：
+    </p>
+<ol>
+<li>计算当前每个状态的速度大小 <code>speeds</code>。</li>
+<li>根据 heading 和 speed 得到每秒位移方向 <code>dxy_per_s</code>。</li>
+<li>把自车 polygon 按 0、0.3、0.6、0.9 秒投影到未来位置。</li>
+<li>用投影 polygon 查询未来时刻的障碍物 occupancy map。</li>
+<li>如果自车几乎停止，速度低于 <code>5e-3 m/s</code>，跳过 TTC 风险。</li>
+<li>如果障碍物在前方，或者自车在多车道/不可行驶区域/路口且障碍物不是在后方，就把 TTC 置 0。</li>
+</ol>
+<p>
+      白话讲：碰撞指标看“已经撞没撞”，TTC 看“照这个速度继续开，马上会不会撞”。所以一条轨迹即使 4 秒模拟里还没实际碰上，只要接近得危险，也可能 TTC=0。
+    </p>
+<h3>子指标 6：Comfort，坐起来是否舒服</h3>
+<p>
+      Comfort 在 <code>_calculate_is_comfortable</code> 里调用 <code>ego_is_comfortable</code>。它会检查 6 个动力学指标，全部通过才是 comfortable=1，只要一个不通过就是 0。
+    </p>
+<table>
+<thead>
+<tr>
+<th>comfort 子检查</th>
+<th>阈值</th>
+<th>白话含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>纵向加速度</td>
+<td><code>-4.05 &lt; a_x &lt; 2.40 m/s^2</code></td>
+<td>不能急刹太狠，也不能加速太猛。</td>
+</tr>
+<tr>
+<td>横向加速度</td>
+<td><code>|a_y| &lt; 4.89 m/s^2</code></td>
+<td>不能横向甩得太厉害。</td>
+</tr>
+<tr>
+<td>加速度模长 jerk</td>
+<td><code>|jerk| &lt; 8.37 m/s^3</code></td>
+<td>整体加速度变化不能太突兀。</td>
+</tr>
+<tr>
+<td>纵向 jerk</td>
+<td><code>|lon_jerk| &lt; 4.13 m/s^3</code></td>
+<td>前后方向不能突然一冲一刹。</td>
+</tr>
+<tr>
+<td>yaw acceleration</td>
+<td><code>|yaw_accel| &lt; 1.93 rad/s^2</code></td>
+<td>转向变化不能太急。</td>
+</tr>
+<tr>
+<td>yaw rate</td>
+<td><code>|yaw_rate| &lt; 0.95 rad/s</code></td>
+<td>不能转得过快。</td>
+</tr>
+</tbody>
+</table>
+<p>
+      这些量来自闭环模拟后的状态序列，并用 Savitzky-Golay filter 做平滑/导数近似。最后 <code>np.all(is_comfortable, axis=-1)</code> 表示 6 个检查全过才给 1。PDM 的 comfort 是硬开关，不是逐项扣分。
+    </p>
+<h3>最终聚合：两类指标先分开，再合成</h3>
+<p>
+      PDM 聚合发生在 <code>_aggregate_scores</code>。它把指标分成两类：
+    </p>
+<ul>
+<li><strong>乘法门控指标：</strong><code>NO_COLLISION</code> 和 <code>DRIVABLE_AREA</code>。这类指标负责“一票否决”或强力折扣。</li>
+<li><strong>加权平均指标：</strong><code>PROGRESS</code>、<code>TTC</code>、<code>COMFORTABLE</code>、<code>DRIVING_DIRECTION</code>。这类指标负责在安全合规基础上衡量质量。</li>
+</ul>
+<p>
+      第一步，算乘法门控：
+    </p>
+<pre><code class="language-python">multi_prod = NO_COLLISION * DRIVABLE_AREA</code></pre>
+<p>
+      第二步，progress 先乘上门控再归一化：
+    </p>
+<pre><code class="language-python">raw_progress = progress_raw * multi_prod
+if max(raw_progress) &gt; 5.0:
+    progress = raw_progress / max(raw_progress)
+else:
+    progress = 1.0 for safe proposals, 0.0 for gated proposals</code></pre>
+<p>
+      第三步，算加权平均。默认权重是 progress=5、TTC=5、comfort=2、driving_direction=0，所以分母是 12：
+    </p>
+<pre><code class="language-python">weighted_avg = (5 * progress + 5 * TTC + 2 * comfort + 0 * driving_direction) / 12</code></pre>
+<p>
+      第四步，再乘一次门控，得到最终 PDM：
+    </p>
+<pre><code class="language-python">PDM = multi_prod * weighted_avg</code></pre>
+<p>
+      这就是为什么碰撞和开出路这么致命：它们不仅会让 progress 归一化前被清零，还会在最后再乘一次。
+    </p>
+<h3>用数值例子理解最终分数</h3>
+<h4>例子 1：安全、在路上、推进好、TTC 和舒适都好</h4>
+<pre><code class="language-text">NO_COLLISION = 1
+DRIVABLE_AREA = 1
+progress = 0.9
+TTC = 1
+comfort = 1
+
+multi_prod = 1 * 1 = 1
+weighted_avg = (5*0.9 + 5*1 + 2*1) / 12 = 11.5 / 12 = 0.958
+PDM = 1 * 0.958 = 0.958</code></pre>
+<p>
+      这类轨迹就是 PDM 高分：安全、合规、有进展、无近碰风险、乘坐舒适。
+    </p>
+<h4>例子 2：安全在路上，但 progress 差</h4>
+<pre><code class="language-text">NO_COLLISION = 1
+DRIVABLE_AREA = 1
+progress = 0.3
+TTC = 1
+comfort = 1
+
+weighted_avg = (5*0.3 + 5*1 + 2*1) / 12 = 8.5 / 12 = 0.708
+PDM = 0.708</code></pre>
+<p>
+      这条路线没有犯安全大错，但不太往前走，所以分数中等。
+    </p>
+<h4>例子 3：开出可行驶区域</h4>
+<pre><code class="language-text">NO_COLLISION = 1
+DRIVABLE_AREA = 0
+progress = 1
+TTC = 1
+comfort = 1
+
+multi_prod = 1 * 0 = 0
+PDM = 0</code></pre>
+<p>
+      即使它看起来走得很远、很舒服，只要开出可行驶区域，最终分直接归零。
+    </p>
+<h4>例子 4：静态物责任碰撞</h4>
+<pre><code class="language-text">NO_COLLISION = 0.5
+DRIVABLE_AREA = 1
+progress = 0.8
+TTC = 1
+comfort = 1
+
+multi_prod = 0.5
+weighted_avg = (5*0.8 + 5*1 + 2*1) / 12 = 11 / 12 = 0.917
+PDM = 0.5 * 0.917 = 0.458</code></pre>
+<p>
+      静态物碰撞不是直接 0，但会被明显打折。动态 agent 责任碰撞则 <code>NO_COLLISION=0</code>，最终就是 0。
+    </p>
+<h3>DiffusionDriveV2 训练里使用的 pairwise PDM 口径</h3>
+<p>
+      上面讲的是 <code>PDMScorer._aggregate_scores</code> 的原始聚合逻辑。DiffusionDriveV2 在 RL/SEL 训练里还额外写了 <code>_pairwise_scores</code> 和 <code>_pairwise_subscores</code>，这两个函数会在 PDMScorer 算完后重新处理 progress。
+    </p>
+<p>
+      原始 PDM 聚合的 progress 是在同一个 proposal batch 内按最大 progress 归一化；而 DiffusionDriveV2 的 pairwise 版本把第 0 条轨迹当作参考/GT，对每条候选单独和 GT 比：
+    </p>
+<pre><code class="language-python">raw_prog_gt = raw_progress[0]
+max_pair = max(raw_prog_gt, raw_prog_candidate)
+norm_prog_candidate = raw_prog_candidate / max_pair</code></pre>
+<p>
+      白话讲：原始 PDM 问“这一批候选里谁走得最多”；pairwise 版本问“这条候选相对 GT/参考走得怎么样”。这样更适合训练 reward，因为候选数量和候选质量会变，按 batch 最大值归一化可能让奖励口径随采样池波动。
+    </p>
+<p>
+      但除了 progress 归一化口径外，最终形式仍然是同一种：
+    </p>
+<pre><code class="language-text">final = (NO_COLLISION * DRIVABLE_AREA) *
+        (5 * progress + 5 * TTC + 2 * comfort + 0 * driving_direction) / 12</code></pre>
+<h3>PDM 和 selector scorer 的关系</h3>
+<p>
+      前面 Q8 讲过 selector 的 coarse/fine scorer 会预测 <code>NC/DAC/EP/TTC/C</code> 五个 head。它们其实就是在学习近似 PDM 的这些子指标：
+    </p>
+<table>
+<thead>
+<tr>
+<th>selector head</th>
+<th>PDM 指标</th>
+<th>最终公式中的作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NC_head</code></td>
+<td>No Collision</td>
+<td>乘法门控。</td>
+</tr>
+<tr>
+<td><code>DAC_head</code></td>
+<td>Drivable Area Compliance</td>
+<td>乘法门控。</td>
+</tr>
+<tr>
+<td><code>EP_head</code></td>
+<td>Ego Progress</td>
+<td>权重 5。</td>
+</tr>
+<tr>
+<td><code>TTC_head</code></td>
+<td>Time-To-Collision</td>
+<td>权重 5。</td>
+</tr>
+<tr>
+<td><code>C_head</code></td>
+<td>Comfort</td>
+<td>权重 2。</td>
+</tr>
+</tbody>
+</table>
+<p>
+      selector 推理时不能对 800 条候选都跑完整 PDM，因为太慢，所以训练一个神经网络 scorer 去模仿 PDM 子指标。它的 proxy 公式就是：
+    </p>
+<pre><code class="language-python">sigmoid(NC) * sigmoid(DAC) *
+(5 * sigmoid(TTC) + 5 * sigmoid(EP) + 2 * sigmoid(C)) / 12</code></pre>
+<p>
+      这和 PDM 聚合公式是一一对应的，只是把真实规则分数换成了模型预测的分数。
+    </p>
+<h3>几个容易误解的点</h3>
+<ul>
+<li><strong>PDM 不是 L2 误差：</strong>它不直接问预测轨迹离 GT 多近，而是问闭环开起来是否安全合规。</li>
+<li><strong>PDM 使用模拟后的轨迹：</strong>指标基于 LQR + bicycle model 得到的 <code>simulated_states</code>，不是原始预测点。</li>
+<li><strong>碰撞和可行驶区域是乘法门控：</strong>不是普通加权平均项，出严重安全问题会让最终分归零或大幅打折。</li>
+<li><strong>progress 会归一化：</strong>原始 progress 是米制距离，但最终进入公式前会归一化到 0 到 1。</li>
+<li><strong>driving direction 默认权重为 0：</strong>代码会算它，但默认不影响最终分。</li>
+<li><strong>comfort 是硬开关：</strong>6 个舒适性检查全部过才是 1，不是每项部分扣分。</li>
+<li><strong>训练 reward 可能用 pairwise 版本：</strong>DiffusionDriveV2 的 RL/SEL worker 会重新用 GT/参考轨迹做 pairwise progress 归一化。</li>
+</ul>
+<h3>一句话收束</h3>
+<p>
+      PDM 的最终分数可以理解成：先用闭环模拟把“模型想怎么开”变成“车实际会怎么开”，再用碰撞和可行驶区域做安全门控，接着用 progress、TTC、comfort 衡量路线质量，最后按 <code>NO_COLLISION * DRIVABLE_AREA * (5*progress + 5*TTC + 2*comfort) / 12</code> 得到 0 到 1 的分数。它重视的不是轨迹像不像，而是开起来安不安全、合不合规、有没有效率、舒不舒服。
+    </p>
+<h3>源码索引</h3>
+<table>
+<thead>
+<tr>
+<th>主题</th>
+<th>源码位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PDM 单条/批量入口</td>
+<td><code>navsim/evaluate/pdm_score.py:24-287</code></td>
+</tr>
+<tr>
+<td>默认 proposal sampling 和权重配置</td>
+<td><code>navsim/planning/script/config/pdm_scoring/default_scoring_parameters.yaml</code></td>
+</tr>
+<tr>
+<td>PDMScorer 配置与权重</td>
+<td><code>pdm_scorer.py:35-58</code></td>
+</tr>
+<tr>
+<td>PDMScorer 主流程和聚合公式</td>
+<td><code>pdm_scorer.py:114-183</code></td>
+</tr>
+<tr>
+<td>reset、ego polygon、结果数组初始化</td>
+<td><code>pdm_scorer.py:185-238</code></td>
+</tr>
+<tr>
+<td>地图区域判断</td>
+<td><code>pdm_scorer.py:240-291</code></td>
+</tr>
+<tr>
+<td>No-at-fault collision</td>
+<td><code>pdm_scorer.py:293-349</code></td>
+</tr>
+<tr>
+<td>Drivable area compliance</td>
+<td><code>pdm_scorer.py:351-358</code></td>
+</tr>
+<tr>
+<td>Driving direction compliance</td>
+<td><code>pdm_scorer.py:360-396</code></td>
+</tr>
+<tr>
+<td>Progress</td>
+<td><code>pdm_scorer.py:398-412</code></td>
+</tr>
+<tr>
+<td>TTC</td>
+<td><code>pdm_scorer.py:414-498</code></td>
+</tr>
+<tr>
+<td>Comfort</td>
+<td><code>pdm_scorer.py:500-509</code>, <code>pdm_comfort_metrics.py:11-336</code></td>
+</tr>
+<tr>
+<td>闭环模拟</td>
+<td><code>pdm_simulator.py:14-79</code></td>
+</tr>
+<tr>
+<td>MetricCache 内容和离线生成</td>
+<td><code>metric_cache.py:19-36</code>, <code>metric_cache_processor.py:27-235</code></td>
+</tr>
+<tr>
+<td>DiffusionDriveV2 pairwise reward/subscore</td>
+<td><code>diffusiondrivev2_model_rl.py:38-117</code>, <code>diffusiondrivev2_model_sel.py:38-117</code></td>
+</tr>
+</tbody>
+</table>
+</article>
+<article class="qa" id="q10">
+<span class="tag">Conversation archive</span>
+<span class="tag">Verbatim user requests</span>
+<h2>问题 10：当前对话中的用户原话整理</h2>
+<div class="question">
+      将当前对话中的全部的用户原话进行整理。
+    </div>
+<h3>整理口径</h3>
+<p>
+      这里整理的是当前 DiffusionDriveV2 分析线程里，用户直接提出的自然语言请求、纠正和追问。为避免把系统上下文污染成“用户需求”，以下内容没有作为用户原话逐字展开：系统注入的 <code>environment_context</code>、开发者规则、上一模型 handoff summary，以及用户粘贴的超长 <code>AGENTS.md</code> 规则块本体。它们属于上下文/规则材料，不属于这轮问答里围绕 DiffusionDriveV2 的自然语言问题。
+    </p>
+<h3>按时间顺序整理</h3>
+<ol class="quote-list">
+<li>
+<blockquote>拉取diffusiondrivev2的开源代码，并深入分析代码逻辑，具体实现等，回答我一些问题</blockquote>
+<p>意图：建立任务主线，要求拉取开源代码并做深入代码分析。</p>
+</li>
+<li>
+<blockquote>将后续所有问题和回答结果直接记录在一个HTML文件中，首先第一个问题：候选的多条轨迹是如何生成和采样的</blockquote>
+<p>意图：设定交付形式为 HTML，并提出 Q1：多候选轨迹生成与采样。</p>
+</li>
+<li>
+<blockquote>错，不能是短答，必须是全部的回答内容，都放进去，另外对于问题，我要的是白话的回答解释</blockquote>
+<p>意图：纠正回答粒度和表达风格。后续 HTML 不能只放摘要，必须放完整回答；解释要尽量白话。</p>
+</li>
+<li>
+<blockquote>左边给我一个完整的目录栏，且支持点击直接跳转，和内容同步跟进</blockquote>
+<p>意图：要求 HTML 有左侧完整目录栏，目录可点击跳转，并随阅读位置同步高亮。</p>
+</li>
+<li>
+<blockquote>用白话解释：step_ratio和step_num各是什么含义，相除得到的结果又是什么含义， self.diffusionrl_scheduler.add_noise具体是怎么实现的，怎么做到的加噪，以及详细展开 10 步扩散细化的全部流程和逻辑，细致到每行/每段代码</blockquote>
+<p>意图：提出 Q2，要求解释扩散时间步、加噪公式和 10 步扩散细化代码流程。</p>
+</li>
+<li>
+<blockquote>Stream disconnected before completion: stream closed before response.completed卡住了，尝试绕开</blockquote>
+<p>意图：指出流式输出中断，要求绕开卡住问题，继续完成 HTML 交付。</p>
+</li>
+<li>
+<blockquote>给我一个完整的可视化结果图，梳理出来当前项目代码的全部重点模块和递进关系</blockquote>
+<p>意图：提出 Q3，要求用完整可视化图梳理项目重点模块和递进关系。</p>
+</li>
+<li>
+<blockquote>用白话详细解释下prev_sample, log_prob, _ = self.diffusionrl_scheduler.step(
+    model_output=x_start,
+    timestep=k,
+    sample=diffusion_output,
+    eta=eta,
+)，和正常的DDIM+GRPO预测噪声有什么区别</blockquote>
+<p>意图：提出 Q4，要求解释自定义 scheduler step 的输出和常规 DDIM+GRPO 噪声预测口径的区别。</p>
+</li>
+<li>
+<blockquote>为什么要这样设计感觉很奇怪，我理解的正确吗：模型预测出来的是所谓的干净轨迹，然后根据预测结果和噪声（加噪轨迹）反推噪声，然后再根据所谓的干净轨迹和噪声再推出来下一个时间步的去噪轨迹，最后再根据得到的去噪轨迹和加上扰动后的结果得到了所谓的采样概率log_pred？感觉一直在绕圈子</blockquote>
+<p>意图：提出 Q5，要求验证对“预测干净轨迹、反推噪声、再去噪、再算 log_prob”这套设计的理解是否正确，并解释为什么看起来绕。</p>
+</li>
+<li>
+<blockquote>html中的图片要做成点击可局部放大的功能，给之前的图片添加功能，并且以后生成的图片也要有这个功能</blockquote>
+<p>意图：提出 HTML 交互要求：所有已有和未来图片、SVG 都要支持点击局部放大。</p>
+</li>
+<li>
+<blockquote>用白话详细展开解释一下：按 group 和 anchor mode 如何构造 advantage，有哪些标准和逻辑，最终呈现出来的advantage什么样子的，并举例说明。</blockquote>
+<p>意图：提出 Q6，要求解释 RL 中按 group 和 anchor mode 构造 advantage 的逻辑、标准、最终形态和例子。</p>
+</li>
+<li>
+<blockquote>用白话详细展开解释：get_rlloss的全部处理流程，细致到每行/每段代码实现和目的，设计的思考</blockquote>
+<p>意图：提出 Q7，要求逐行/逐段解释 <code>get_rlloss</code> 的流程、目的和设计思考。</p>
+</li>
+<li>
+<blockquote>用白话详细展开解释：diffusiondrivev2_model_sel.py的全部处理流程，尤其是coarse/fine scorer是如何训练和推理的</blockquote>
+<p>意图：提出 Q8，要求解释 selector 文件全流程，重点关注 coarse/fine scorer 的训练和推理。</p>
+</li>
+<li>
+<blockquote>用白话详细展开解释：PDM 具体详细每一步的打分策略和逻辑，如何得到最终的PDM分数</blockquote>
+<p>意图：提出 Q9，要求解释 PDM 每一步评分策略、子指标逻辑和最终 PDM 分数的聚合方式。</p>
+</li>
+<li>
+<blockquote>将当前对话中的全部的用户原话进行整理</blockquote>
+<p>意图：提出 Q10，要求把当前对话里的用户原话按时间顺序整理出来。</p>
+</li>
+</ol>
+<h3>这轮对话里形成的长期偏好</h3>
+<ul>
+<li><strong>交付必须落到 HTML：</strong>后续问题和完整回答都要直接写进同一个 HTML 文件。</li>
+<li><strong>不能短答：</strong>回答内容要完整进入 HTML，不能只放摘要。</li>
+<li><strong>解释风格要白话：</strong>先把直观含义讲清楚，再补源码、shape、公式和细节。</li>
+<li><strong>HTML 要可导航：</strong>左侧目录必须完整、可点击、随内容同步高亮。</li>
+<li><strong>图像要可放大：</strong>已有图片和后续生成图片/SVG 都要支持点击局部放大。</li>
+<li><strong>遇到流断要绕开：</strong>不要停在对话流式输出，优先小步写入 artifact 并做读回验证。</li>
+</ul>
+<h3>用户输入中的上下文/规则块</h3>
+<p>
+      当前线程里还出现过以下用户侧粘贴或注入的上下文块。它们不是围绕 DiffusionDriveV2 的自然语言追问，但属于用户侧提供的约束材料，所以在这里单独登记，不混入上面的问答清单。
+    </p>
+<ul>
+<li>
+<strong><code># AGENTS.md instructions</code> 超长规则块：</strong>用户粘贴了一整段 Codex/Claude 适配规则，开头为 <code># AGENTS.md instructions</code>，内部包含 memory 读取、飞书同步、全程归档、HTML/site 交付、stream 断流恢复、工具使用等约束。这段内容很长，已作为执行规则读取和遵守，不在本节逐字重复展开。
+      </li>
+<li>
+<strong><code>&lt;environment_context&gt;</code> 环境块：</strong>用户侧上下文里出现过当前日期、时区、工作目录和文件系统权限等机器环境信息。这类内容用于执行任务，不作为自然语言问题逐条解释。
+      </li>
+<li>
+<strong>上一模型 handoff summary：</strong>对 Q9 已完成工作做了交接说明，帮助后续模型继续验证 HTML、目录、lightbox 和飞书同步。这属于交接材料，不是新的用户问题。
+      </li>
+</ul>
+</article>
+</main>
+<div aria-hidden="true" class="figure-lightbox" id="figureLightbox">
+<button aria-label="关闭放大图" class="figure-lightbox-close" type="button">×</button>
+<div aria-label="放大图" aria-modal="true" class="figure-lightbox-panel" role="dialog">
+<div class="figure-lightbox-content" id="figureLightboxContent"></div>
+</div>
+</div>
+<script>
+  (function () {
+    const sidebar = document.getElementById("tocSidebar");
+    const toggle = document.querySelector(".toc-mobile-toggle");
+    const nav = document.getElementById("tocNav");
+    const content = document.getElementById("content");
+    const headings = Array.from(content.querySelectorAll("article.qa h2, article.qa h3, article.qa h4"));
+
+    function slugify(text, index) {
+      return "toc-" + index + "-" + text
+        .trim()
+        .toLowerCase()
+        .replace(/[^\w\u4e00-\u9fa5]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+    function setActive(id) {
+      nav.querySelectorAll(".toc-link").forEach((link) => {
+        link.classList.toggle("active", link.getAttribute("href") === "#" + id);
+      });
+    }
+
+    nav.innerHTML = "";
+    headings.forEach((heading, index) => {
+      if (!heading.id) heading.id = slugify(heading.textContent, index);
+      const link = document.createElement("a");
+      link.href = "#" + heading.id;
+      link.textContent = heading.textContent.trim();
+      link.className = "toc-link level-" + heading.tagName.slice(1);
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        heading.scrollIntoView({ block: "start" });
+        history.pushState(null, "", "#" + heading.id);
+        setActive(heading.id);
+        if (window.matchMedia("(max-width: 960px)").matches) {
+          sidebar.classList.remove("open");
+        }
+      });
+      nav.appendChild(link);
+    });
+
+    if (!headings.length) {
+      nav.innerHTML = '<div class="toc-empty">暂无目录</div>';
+      return;
+    }
+
+    setActive(headings[0].id);
+
+    let ticking = false;
+    function updateActiveFromScroll() {
+      let active = headings[0];
+      for (const heading of headings) {
+        if (heading.getBoundingClientRect().top <= 140) {
+          active = heading;
+        } else {
+          break;
+        }
+      }
+      setActive(active.id);
+      ticking = false;
+    }
+
+    window.addEventListener("scroll", () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateActiveFromScroll);
+        ticking = true;
+      }
+    }, { passive: true });
+
+    window.addEventListener("hashchange", () => {
+      const id = decodeURIComponent(location.hash.slice(1));
+      if (id) setActive(id);
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible[0]) setActive(visible[0].target.id);
+    }, {
+      rootMargin: "-12% 0px -72% 0px",
+      threshold: [0, 1]
+    });
+
+    headings.forEach((heading) => observer.observe(heading));
+
+    toggle.addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+    });
+
+    const lightbox = document.getElementById("figureLightbox");
+    const lightboxContent = document.getElementById("figureLightboxContent");
+    const lightboxClose = lightbox.querySelector(".figure-lightbox-close");
+
+    function prepareZoomableFigures() {
+      content.querySelectorAll("img, svg").forEach((figure, index) => {
+        figure.classList.add("zoomable-figure");
+        figure.setAttribute("tabindex", "0");
+        figure.setAttribute("data-zoom-index", String(index));
+        if (!figure.getAttribute("title")) {
+          figure.setAttribute("title", "点击放大");
+        }
+      });
+    }
+
+    function openFigureLightbox(figure) {
+      const clone = figure.cloneNode(true);
+      clone.classList.remove("zoomable-figure");
+      clone.removeAttribute("tabindex");
+      clone.removeAttribute("title");
+      lightboxContent.replaceChildren(clone);
+      lightbox.classList.add("open");
+      lightbox.setAttribute("aria-hidden", "false");
+      lightboxClose.focus();
+    }
+
+    function closeFigureLightbox() {
+      lightbox.classList.remove("open");
+      lightbox.setAttribute("aria-hidden", "true");
+      lightboxContent.replaceChildren();
+    }
+
+    prepareZoomableFigures();
+
+    content.addEventListener("click", (event) => {
+      const figure = event.target.closest("img, svg");
+      if (figure && content.contains(figure)) {
+        openFigureLightbox(figure);
+      }
+    });
+
+    content.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      const figure = event.target.closest("img, svg");
+      if (figure && content.contains(figure)) {
+        event.preventDefault();
+        openFigureLightbox(figure);
+      }
+    });
+
+    lightbox.addEventListener("click", (event) => {
+      if (event.target === lightbox || event.target.classList.contains("figure-lightbox-panel")) {
+        closeFigureLightbox();
+      }
+    });
+
+    lightboxClose.addEventListener("click", closeFigureLightbox);
+
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && lightbox.classList.contains("open")) {
+        closeFigureLightbox();
+      }
+    });
+  })();
+</script>
+</body>
+</html>

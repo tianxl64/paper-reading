@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>S005 固定源码：sources/repos/dreamerv3/snapshot-ghfast/dreamerv3-e01491fad6434b2245a3b8ca201dd7faedcc458c/dreamerv3/rssm.py</title><style>body{max-width:100%;margin:1.2rem;font-family:system-ui,sans-serif}pre{overflow:auto;line-height:1.55}pre span{display:block}pre a{color:#667;text-decoration:none}:target{background:#fff3ba}</style><link href="../../../../../../../../../../../../favicon.ico" rel="icon"/></head><body><h1>S005 固定源码：sources/repos/dreamerv3/snapshot-ghfast/dreamerv3-e01491fad6434b2245a3b8ca201dd7faedcc458c/dreamerv3/rssm.py</h1><p>源码字节 SHA-256：<code>d6d50166914e94fb8bd17a5d5dbda9d42cdd37b85819bb1e9fff3a64d4ad2eb6</code>。<a download="" href="rssm.py">下载原始源码</a></p><pre><span id="L1"><a aria-label="第 1 行" href="#L1">   1</a> import math</span>
+<span id="L2"><a aria-label="第 2 行" href="#L2">   2</a> </span>
+<span id="L3"><a aria-label="第 3 行" href="#L3">   3</a> import einops</span>
+<span id="L4"><a aria-label="第 4 行" href="#L4">   4</a> import elements</span>
+<span id="L5"><a aria-label="第 5 行" href="#L5">   5</a> import embodied.jax</span>
+<span id="L6"><a aria-label="第 6 行" href="#L6">   6</a> import embodied.jax.nets as nn</span>
+<span id="L7"><a aria-label="第 7 行" href="#L7">   7</a> import jax</span>
+<span id="L8"><a aria-label="第 8 行" href="#L8">   8</a> import jax.numpy as jnp</span>
+<span id="L9"><a aria-label="第 9 行" href="#L9">   9</a> import ninjax as nj</span>
+<span id="L10"><a aria-label="第 10 行" href="#L10">  10</a> import numpy as np</span>
+<span id="L11"><a aria-label="第 11 行" href="#L11">  11</a> </span>
+<span id="L12"><a aria-label="第 12 行" href="#L12">  12</a> f32 = jnp.float32</span>
+<span id="L13"><a aria-label="第 13 行" href="#L13">  13</a> sg = jax.lax.stop_gradient</span>
+<span id="L14"><a aria-label="第 14 行" href="#L14">  14</a> </span>
+<span id="L15"><a aria-label="第 15 行" href="#L15">  15</a> </span>
+<span id="L16"><a aria-label="第 16 行" href="#L16">  16</a> class RSSM(nj.Module):</span>
+<span id="L17"><a aria-label="第 17 行" href="#L17">  17</a> </span>
+<span id="L18"><a aria-label="第 18 行" href="#L18">  18</a>   deter: int = 4096</span>
+<span id="L19"><a aria-label="第 19 行" href="#L19">  19</a>   hidden: int = 2048</span>
+<span id="L20"><a aria-label="第 20 行" href="#L20">  20</a>   stoch: int = 32</span>
+<span id="L21"><a aria-label="第 21 行" href="#L21">  21</a>   classes: int = 32</span>
+<span id="L22"><a aria-label="第 22 行" href="#L22">  22</a>   norm: str = 'rms'</span>
+<span id="L23"><a aria-label="第 23 行" href="#L23">  23</a>   act: str = 'gelu'</span>
+<span id="L24"><a aria-label="第 24 行" href="#L24">  24</a>   unroll: bool = False</span>
+<span id="L25"><a aria-label="第 25 行" href="#L25">  25</a>   unimix: float = 0.01</span>
+<span id="L26"><a aria-label="第 26 行" href="#L26">  26</a>   outscale: float = 1.0</span>
+<span id="L27"><a aria-label="第 27 行" href="#L27">  27</a>   imglayers: int = 2</span>
+<span id="L28"><a aria-label="第 28 行" href="#L28">  28</a>   obslayers: int = 1</span>
+<span id="L29"><a aria-label="第 29 行" href="#L29">  29</a>   dynlayers: int = 1</span>
+<span id="L30"><a aria-label="第 30 行" href="#L30">  30</a>   absolute: bool = False</span>
+<span id="L31"><a aria-label="第 31 行" href="#L31">  31</a>   blocks: int = 8</span>
+<span id="L32"><a aria-label="第 32 行" href="#L32">  32</a>   free_nats: float = 1.0</span>
+<span id="L33"><a aria-label="第 33 行" href="#L33">  33</a> </span>
+<span id="L34"><a aria-label="第 34 行" href="#L34">  34</a>   def __init__(self, act_space, **kw):</span>
+<span id="L35"><a aria-label="第 35 行" href="#L35">  35</a>     assert self.deter % self.blocks == 0</span>
+<span id="L36"><a aria-label="第 36 行" href="#L36">  36</a>     self.act_space = act_space</span>
+<span id="L37"><a aria-label="第 37 行" href="#L37">  37</a>     self.kw = kw</span>
+<span id="L38"><a aria-label="第 38 行" href="#L38">  38</a> </span>
+<span id="L39"><a aria-label="第 39 行" href="#L39">  39</a>   @property</span>
+<span id="L40"><a aria-label="第 40 行" href="#L40">  40</a>   def entry_space(self):</span>
+<span id="L41"><a aria-label="第 41 行" href="#L41">  41</a>     return dict(</span>
+<span id="L42"><a aria-label="第 42 行" href="#L42">  42</a>         deter=elements.Space(np.float32, self.deter),</span>
+<span id="L43"><a aria-label="第 43 行" href="#L43">  43</a>         stoch=elements.Space(np.float32, (self.stoch, self.classes)))</span>
+<span id="L44"><a aria-label="第 44 行" href="#L44">  44</a> </span>
+<span id="L45"><a aria-label="第 45 行" href="#L45">  45</a>   def initial(self, bsize):</span>
+<span id="L46"><a aria-label="第 46 行" href="#L46">  46</a>     carry = nn.cast(dict(</span>
+<span id="L47"><a aria-label="第 47 行" href="#L47">  47</a>         deter=jnp.zeros([bsize, self.deter], f32),</span>
+<span id="L48"><a aria-label="第 48 行" href="#L48">  48</a>         stoch=jnp.zeros([bsize, self.stoch, self.classes], f32)))</span>
+<span id="L49"><a aria-label="第 49 行" href="#L49">  49</a>     return carry</span>
+<span id="L50"><a aria-label="第 50 行" href="#L50">  50</a> </span>
+<span id="L51"><a aria-label="第 51 行" href="#L51">  51</a>   def truncate(self, entries, carry=None):</span>
+<span id="L52"><a aria-label="第 52 行" href="#L52">  52</a>     assert entries['deter'].ndim == 3, entries['deter'].shape</span>
+<span id="L53"><a aria-label="第 53 行" href="#L53">  53</a>     carry = jax.tree.map(lambda x: x[:, -1], entries)</span>
+<span id="L54"><a aria-label="第 54 行" href="#L54">  54</a>     return carry</span>
+<span id="L55"><a aria-label="第 55 行" href="#L55">  55</a> </span>
+<span id="L56"><a aria-label="第 56 行" href="#L56">  56</a>   def starts(self, entries, carry, nlast):</span>
+<span id="L57"><a aria-label="第 57 行" href="#L57">  57</a>     B = len(jax.tree.leaves(carry)[0])</span>
+<span id="L58"><a aria-label="第 58 行" href="#L58">  58</a>     return jax.tree.map(</span>
+<span id="L59"><a aria-label="第 59 行" href="#L59">  59</a>         lambda x: x[:, -nlast:].reshape((B * nlast, *x.shape[2:])), entries)</span>
+<span id="L60"><a aria-label="第 60 行" href="#L60">  60</a> </span>
+<span id="L61"><a aria-label="第 61 行" href="#L61">  61</a>   def observe(self, carry, tokens, action, reset, training, single=False):</span>
+<span id="L62"><a aria-label="第 62 行" href="#L62">  62</a>     carry, tokens, action = nn.cast((carry, tokens, action))</span>
+<span id="L63"><a aria-label="第 63 行" href="#L63">  63</a>     if single:</span>
+<span id="L64"><a aria-label="第 64 行" href="#L64">  64</a>       carry, (entry, feat) = self._observe(</span>
+<span id="L65"><a aria-label="第 65 行" href="#L65">  65</a>           carry, tokens, action, reset, training)</span>
+<span id="L66"><a aria-label="第 66 行" href="#L66">  66</a>       return carry, entry, feat</span>
+<span id="L67"><a aria-label="第 67 行" href="#L67">  67</a>     else:</span>
+<span id="L68"><a aria-label="第 68 行" href="#L68">  68</a>       unroll = jax.tree.leaves(tokens)[0].shape[1] if self.unroll else 1</span>
+<span id="L69"><a aria-label="第 69 行" href="#L69">  69</a>       carry, (entries, feat) = nj.scan(</span>
+<span id="L70"><a aria-label="第 70 行" href="#L70">  70</a>           lambda carry, inputs: self._observe(</span>
+<span id="L71"><a aria-label="第 71 行" href="#L71">  71</a>               carry, *inputs, training),</span>
+<span id="L72"><a aria-label="第 72 行" href="#L72">  72</a>           carry, (tokens, action, reset), unroll=unroll, axis=1)</span>
+<span id="L73"><a aria-label="第 73 行" href="#L73">  73</a>       return carry, entries, feat</span>
+<span id="L74"><a aria-label="第 74 行" href="#L74">  74</a> </span>
+<span id="L75"><a aria-label="第 75 行" href="#L75">  75</a>   def _observe(self, carry, tokens, action, reset, training):</span>
+<span id="L76"><a aria-label="第 76 行" href="#L76">  76</a>     deter, stoch, action = nn.mask(</span>
+<span id="L77"><a aria-label="第 77 行" href="#L77">  77</a>         (carry['deter'], carry['stoch'], action), ~reset)</span>
+<span id="L78"><a aria-label="第 78 行" href="#L78">  78</a>     action = nn.DictConcat(self.act_space, 1)(action)</span>
+<span id="L79"><a aria-label="第 79 行" href="#L79">  79</a>     action = nn.mask(action, ~reset)</span>
+<span id="L80"><a aria-label="第 80 行" href="#L80">  80</a>     deter = self._core(deter, stoch, action)</span>
+<span id="L81"><a aria-label="第 81 行" href="#L81">  81</a>     tokens = tokens.reshape((*deter.shape[:-1], -1))</span>
+<span id="L82"><a aria-label="第 82 行" href="#L82">  82</a>     x = tokens if self.absolute else jnp.concatenate([deter, tokens], -1)</span>
+<span id="L83"><a aria-label="第 83 行" href="#L83">  83</a>     for i in range(self.obslayers):</span>
+<span id="L84"><a aria-label="第 84 行" href="#L84">  84</a>       x = self.sub(f'obs{i}', nn.Linear, self.hidden, **self.kw)(x)</span>
+<span id="L85"><a aria-label="第 85 行" href="#L85">  85</a>       x = nn.act(self.act)(self.sub(f'obs{i}norm', nn.Norm, self.norm)(x))</span>
+<span id="L86"><a aria-label="第 86 行" href="#L86">  86</a>     logit = self._logit('obslogit', x)</span>
+<span id="L87"><a aria-label="第 87 行" href="#L87">  87</a>     stoch = nn.cast(self._dist(logit).sample(seed=nj.seed()))</span>
+<span id="L88"><a aria-label="第 88 行" href="#L88">  88</a>     carry = dict(deter=deter, stoch=stoch)</span>
+<span id="L89"><a aria-label="第 89 行" href="#L89">  89</a>     feat = dict(deter=deter, stoch=stoch, logit=logit)</span>
+<span id="L90"><a aria-label="第 90 行" href="#L90">  90</a>     entry = dict(deter=deter, stoch=stoch)</span>
+<span id="L91"><a aria-label="第 91 行" href="#L91">  91</a>     assert all(x.dtype == nn.COMPUTE_DTYPE for x in (deter, stoch, logit))</span>
+<span id="L92"><a aria-label="第 92 行" href="#L92">  92</a>     return carry, (entry, feat)</span>
+<span id="L93"><a aria-label="第 93 行" href="#L93">  93</a> </span>
+<span id="L94"><a aria-label="第 94 行" href="#L94">  94</a>   def imagine(self, carry, policy, length, training, single=False):</span>
+<span id="L95"><a aria-label="第 95 行" href="#L95">  95</a>     if single:</span>
+<span id="L96"><a aria-label="第 96 行" href="#L96">  96</a>       action = policy(sg(carry)) if callable(policy) else policy</span>
+<span id="L97"><a aria-label="第 97 行" href="#L97">  97</a>       actemb = nn.DictConcat(self.act_space, 1)(action)</span>
+<span id="L98"><a aria-label="第 98 行" href="#L98">  98</a>       deter = self._core(carry['deter'], carry['stoch'], actemb)</span>
+<span id="L99"><a aria-label="第 99 行" href="#L99">  99</a>       logit = self._prior(deter)</span>
+<span id="L100"><a aria-label="第 100 行" href="#L100"> 100</a>       stoch = nn.cast(self._dist(logit).sample(seed=nj.seed()))</span>
+<span id="L101"><a aria-label="第 101 行" href="#L101"> 101</a>       carry = nn.cast(dict(deter=deter, stoch=stoch))</span>
+<span id="L102"><a aria-label="第 102 行" href="#L102"> 102</a>       feat = nn.cast(dict(deter=deter, stoch=stoch, logit=logit))</span>
+<span id="L103"><a aria-label="第 103 行" href="#L103"> 103</a>       assert all(x.dtype == nn.COMPUTE_DTYPE for x in (deter, stoch, logit))</span>
+<span id="L104"><a aria-label="第 104 行" href="#L104"> 104</a>       return carry, (feat, action)</span>
+<span id="L105"><a aria-label="第 105 行" href="#L105"> 105</a>     else:</span>
+<span id="L106"><a aria-label="第 106 行" href="#L106"> 106</a>       unroll = length if self.unroll else 1</span>
+<span id="L107"><a aria-label="第 107 行" href="#L107"> 107</a>       if callable(policy):</span>
+<span id="L108"><a aria-label="第 108 行" href="#L108"> 108</a>         carry, (feat, action) = nj.scan(</span>
+<span id="L109"><a aria-label="第 109 行" href="#L109"> 109</a>             lambda c, _: self.imagine(c, policy, 1, training, single=True),</span>
+<span id="L110"><a aria-label="第 110 行" href="#L110"> 110</a>             nn.cast(carry), (), length, unroll=unroll, axis=1)</span>
+<span id="L111"><a aria-label="第 111 行" href="#L111"> 111</a>       else:</span>
+<span id="L112"><a aria-label="第 112 行" href="#L112"> 112</a>         carry, (feat, action) = nj.scan(</span>
+<span id="L113"><a aria-label="第 113 行" href="#L113"> 113</a>             lambda c, a: self.imagine(c, a, 1, training, single=True),</span>
+<span id="L114"><a aria-label="第 114 行" href="#L114"> 114</a>             nn.cast(carry), nn.cast(policy), length, unroll=unroll, axis=1)</span>
+<span id="L115"><a aria-label="第 115 行" href="#L115"> 115</a>       # We can also return all carry entries but it might be expensive.</span>
+<span id="L116"><a aria-label="第 116 行" href="#L116"> 116</a>       # entries = dict(deter=feat['deter'], stoch=feat['stoch'])</span>
+<span id="L117"><a aria-label="第 117 行" href="#L117"> 117</a>       # return carry, entries, feat, action</span>
+<span id="L118"><a aria-label="第 118 行" href="#L118"> 118</a>       return carry, feat, action</span>
+<span id="L119"><a aria-label="第 119 行" href="#L119"> 119</a> </span>
+<span id="L120"><a aria-label="第 120 行" href="#L120"> 120</a>   def loss(self, carry, tokens, acts, reset, training):</span>
+<span id="L121"><a aria-label="第 121 行" href="#L121"> 121</a>     metrics = {}</span>
+<span id="L122"><a aria-label="第 122 行" href="#L122"> 122</a>     carry, entries, feat = self.observe(carry, tokens, acts, reset, training)</span>
+<span id="L123"><a aria-label="第 123 行" href="#L123"> 123</a>     prior = self._prior(feat['deter'])</span>
+<span id="L124"><a aria-label="第 124 行" href="#L124"> 124</a>     post = feat['logit']</span>
+<span id="L125"><a aria-label="第 125 行" href="#L125"> 125</a>     dyn = self._dist(sg(post)).kl(self._dist(prior))</span>
+<span id="L126"><a aria-label="第 126 行" href="#L126"> 126</a>     rep = self._dist(post).kl(self._dist(sg(prior)))</span>
+<span id="L127"><a aria-label="第 127 行" href="#L127"> 127</a>     if self.free_nats:</span>
+<span id="L128"><a aria-label="第 128 行" href="#L128"> 128</a>       dyn = jnp.maximum(dyn, self.free_nats)</span>
+<span id="L129"><a aria-label="第 129 行" href="#L129"> 129</a>       rep = jnp.maximum(rep, self.free_nats)</span>
+<span id="L130"><a aria-label="第 130 行" href="#L130"> 130</a>     losses = {'dyn': dyn, 'rep': rep}</span>
+<span id="L131"><a aria-label="第 131 行" href="#L131"> 131</a>     metrics['dyn_ent'] = self._dist(prior).entropy().mean()</span>
+<span id="L132"><a aria-label="第 132 行" href="#L132"> 132</a>     metrics['rep_ent'] = self._dist(post).entropy().mean()</span>
+<span id="L133"><a aria-label="第 133 行" href="#L133"> 133</a>     return carry, entries, losses, feat, metrics</span>
+<span id="L134"><a aria-label="第 134 行" href="#L134"> 134</a> </span>
+<span id="L135"><a aria-label="第 135 行" href="#L135"> 135</a>   def _core(self, deter, stoch, action):</span>
+<span id="L136"><a aria-label="第 136 行" href="#L136"> 136</a>     stoch = stoch.reshape((stoch.shape[0], -1))</span>
+<span id="L137"><a aria-label="第 137 行" href="#L137"> 137</a>     action /= sg(jnp.maximum(1, jnp.abs(action)))</span>
+<span id="L138"><a aria-label="第 138 行" href="#L138"> 138</a>     g = self.blocks</span>
+<span id="L139"><a aria-label="第 139 行" href="#L139"> 139</a>     flat2group = lambda x: einops.rearrange(x, '... (g h) -&gt; ... g h', g=g)</span>
+<span id="L140"><a aria-label="第 140 行" href="#L140"> 140</a>     group2flat = lambda x: einops.rearrange(x, '... g h -&gt; ... (g h)', g=g)</span>
+<span id="L141"><a aria-label="第 141 行" href="#L141"> 141</a>     x0 = self.sub('dynin0', nn.Linear, self.hidden, **self.kw)(deter)</span>
+<span id="L142"><a aria-label="第 142 行" href="#L142"> 142</a>     x0 = nn.act(self.act)(self.sub('dynin0norm', nn.Norm, self.norm)(x0))</span>
+<span id="L143"><a aria-label="第 143 行" href="#L143"> 143</a>     x1 = self.sub('dynin1', nn.Linear, self.hidden, **self.kw)(stoch)</span>
+<span id="L144"><a aria-label="第 144 行" href="#L144"> 144</a>     x1 = nn.act(self.act)(self.sub('dynin1norm', nn.Norm, self.norm)(x1))</span>
+<span id="L145"><a aria-label="第 145 行" href="#L145"> 145</a>     x2 = self.sub('dynin2', nn.Linear, self.hidden, **self.kw)(action)</span>
+<span id="L146"><a aria-label="第 146 行" href="#L146"> 146</a>     x2 = nn.act(self.act)(self.sub('dynin2norm', nn.Norm, self.norm)(x2))</span>
+<span id="L147"><a aria-label="第 147 行" href="#L147"> 147</a>     x = jnp.concatenate([x0, x1, x2], -1)[..., None, :].repeat(g, -2)</span>
+<span id="L148"><a aria-label="第 148 行" href="#L148"> 148</a>     x = group2flat(jnp.concatenate([flat2group(deter), x], -1))</span>
+<span id="L149"><a aria-label="第 149 行" href="#L149"> 149</a>     for i in range(self.dynlayers):</span>
+<span id="L150"><a aria-label="第 150 行" href="#L150"> 150</a>       x = self.sub(f'dynhid{i}', nn.BlockLinear, self.deter, g, **self.kw)(x)</span>
+<span id="L151"><a aria-label="第 151 行" href="#L151"> 151</a>       x = nn.act(self.act)(self.sub(f'dynhid{i}norm', nn.Norm, self.norm)(x))</span>
+<span id="L152"><a aria-label="第 152 行" href="#L152"> 152</a>     x = self.sub('dyngru', nn.BlockLinear, 3 * self.deter, g, **self.kw)(x)</span>
+<span id="L153"><a aria-label="第 153 行" href="#L153"> 153</a>     gates = jnp.split(flat2group(x), 3, -1)</span>
+<span id="L154"><a aria-label="第 154 行" href="#L154"> 154</a>     reset, cand, update = [group2flat(x) for x in gates]</span>
+<span id="L155"><a aria-label="第 155 行" href="#L155"> 155</a>     reset = jax.nn.sigmoid(reset)</span>
+<span id="L156"><a aria-label="第 156 行" href="#L156"> 156</a>     cand = jnp.tanh(reset * cand)</span>
+<span id="L157"><a aria-label="第 157 行" href="#L157"> 157</a>     update = jax.nn.sigmoid(update - 1)</span>
+<span id="L158"><a aria-label="第 158 行" href="#L158"> 158</a>     deter = update * cand + (1 - update) * deter</span>
+<span id="L159"><a aria-label="第 159 行" href="#L159"> 159</a>     return deter</span>
+<span id="L160"><a aria-label="第 160 行" href="#L160"> 160</a> </span>
+<span id="L161"><a aria-label="第 161 行" href="#L161"> 161</a>   def _prior(self, feat):</span>
+<span id="L162"><a aria-label="第 162 行" href="#L162"> 162</a>     x = feat</span>
+<span id="L163"><a aria-label="第 163 行" href="#L163"> 163</a>     for i in range(self.imglayers):</span>
+<span id="L164"><a aria-label="第 164 行" href="#L164"> 164</a>       x = self.sub(f'prior{i}', nn.Linear, self.hidden, **self.kw)(x)</span>
+<span id="L165"><a aria-label="第 165 行" href="#L165"> 165</a>       x = nn.act(self.act)(self.sub(f'prior{i}norm', nn.Norm, self.norm)(x))</span>
+<span id="L166"><a aria-label="第 166 行" href="#L166"> 166</a>     return self._logit('priorlogit', x)</span>
+<span id="L167"><a aria-label="第 167 行" href="#L167"> 167</a> </span>
+<span id="L168"><a aria-label="第 168 行" href="#L168"> 168</a>   def _logit(self, name, x):</span>
+<span id="L169"><a aria-label="第 169 行" href="#L169"> 169</a>     kw = dict(**self.kw, outscale=self.outscale)</span>
+<span id="L170"><a aria-label="第 170 行" href="#L170"> 170</a>     x = self.sub(name, nn.Linear, self.stoch * self.classes, **kw)(x)</span>
+<span id="L171"><a aria-label="第 171 行" href="#L171"> 171</a>     return x.reshape(x.shape[:-1] + (self.stoch, self.classes))</span>
+<span id="L172"><a aria-label="第 172 行" href="#L172"> 172</a> </span>
+<span id="L173"><a aria-label="第 173 行" href="#L173"> 173</a>   def _dist(self, logits):</span>
+<span id="L174"><a aria-label="第 174 行" href="#L174"> 174</a>     out = embodied.jax.outs.OneHot(logits, self.unimix)</span>
+<span id="L175"><a aria-label="第 175 行" href="#L175"> 175</a>     out = embodied.jax.outs.Agg(out, 1, jnp.sum)</span>
+<span id="L176"><a aria-label="第 176 行" href="#L176"> 176</a>     return out</span>
+<span id="L177"><a aria-label="第 177 行" href="#L177"> 177</a> </span>
+<span id="L178"><a aria-label="第 178 行" href="#L178"> 178</a> </span>
+<span id="L179"><a aria-label="第 179 行" href="#L179"> 179</a> class Encoder(nj.Module):</span>
+<span id="L180"><a aria-label="第 180 行" href="#L180"> 180</a> </span>
+<span id="L181"><a aria-label="第 181 行" href="#L181"> 181</a>   units: int = 1024</span>
+<span id="L182"><a aria-label="第 182 行" href="#L182"> 182</a>   norm: str = 'rms'</span>
+<span id="L183"><a aria-label="第 183 行" href="#L183"> 183</a>   act: str = 'gelu'</span>
+<span id="L184"><a aria-label="第 184 行" href="#L184"> 184</a>   depth: int = 64</span>
+<span id="L185"><a aria-label="第 185 行" href="#L185"> 185</a>   mults: tuple = (2, 3, 4, 4)</span>
+<span id="L186"><a aria-label="第 186 行" href="#L186"> 186</a>   layers: int = 3</span>
+<span id="L187"><a aria-label="第 187 行" href="#L187"> 187</a>   kernel: int = 5</span>
+<span id="L188"><a aria-label="第 188 行" href="#L188"> 188</a>   symlog: bool = True</span>
+<span id="L189"><a aria-label="第 189 行" href="#L189"> 189</a>   outer: bool = False</span>
+<span id="L190"><a aria-label="第 190 行" href="#L190"> 190</a>   strided: bool = False</span>
+<span id="L191"><a aria-label="第 191 行" href="#L191"> 191</a> </span>
+<span id="L192"><a aria-label="第 192 行" href="#L192"> 192</a>   def __init__(self, obs_space, **kw):</span>
+<span id="L193"><a aria-label="第 193 行" href="#L193"> 193</a>     assert all(len(s.shape) &lt;= 3 for s in obs_space.values()), obs_space</span>
+<span id="L194"><a aria-label="第 194 行" href="#L194"> 194</a>     self.obs_space = obs_space</span>
+<span id="L195"><a aria-label="第 195 行" href="#L195"> 195</a>     self.veckeys = [k for k, s in obs_space.items() if len(s.shape) &lt;= 2]</span>
+<span id="L196"><a aria-label="第 196 行" href="#L196"> 196</a>     self.imgkeys = [k for k, s in obs_space.items() if len(s.shape) == 3]</span>
+<span id="L197"><a aria-label="第 197 行" href="#L197"> 197</a>     self.depths = tuple(self.depth * mult for mult in self.mults)</span>
+<span id="L198"><a aria-label="第 198 行" href="#L198"> 198</a>     self.kw = kw</span>
+<span id="L199"><a aria-label="第 199 行" href="#L199"> 199</a> </span>
+<span id="L200"><a aria-label="第 200 行" href="#L200"> 200</a>   @property</span>
+<span id="L201"><a aria-label="第 201 行" href="#L201"> 201</a>   def entry_space(self):</span>
+<span id="L202"><a aria-label="第 202 行" href="#L202"> 202</a>     return {}</span>
+<span id="L203"><a aria-label="第 203 行" href="#L203"> 203</a> </span>
+<span id="L204"><a aria-label="第 204 行" href="#L204"> 204</a>   def initial(self, batch_size):</span>
+<span id="L205"><a aria-label="第 205 行" href="#L205"> 205</a>     return {}</span>
+<span id="L206"><a aria-label="第 206 行" href="#L206"> 206</a> </span>
+<span id="L207"><a aria-label="第 207 行" href="#L207"> 207</a>   def truncate(self, entries, carry=None):</span>
+<span id="L208"><a aria-label="第 208 行" href="#L208"> 208</a>     return {}</span>
+<span id="L209"><a aria-label="第 209 行" href="#L209"> 209</a> </span>
+<span id="L210"><a aria-label="第 210 行" href="#L210"> 210</a>   def __call__(self, carry, obs, reset, training, single=False):</span>
+<span id="L211"><a aria-label="第 211 行" href="#L211"> 211</a>     bdims = 1 if single else 2</span>
+<span id="L212"><a aria-label="第 212 行" href="#L212"> 212</a>     outs = []</span>
+<span id="L213"><a aria-label="第 213 行" href="#L213"> 213</a>     bshape = reset.shape</span>
+<span id="L214"><a aria-label="第 214 行" href="#L214"> 214</a> </span>
+<span id="L215"><a aria-label="第 215 行" href="#L215"> 215</a>     if self.veckeys:</span>
+<span id="L216"><a aria-label="第 216 行" href="#L216"> 216</a>       vspace = {k: self.obs_space[k] for k in self.veckeys}</span>
+<span id="L217"><a aria-label="第 217 行" href="#L217"> 217</a>       vecs = {k: obs[k] for k in self.veckeys}</span>
+<span id="L218"><a aria-label="第 218 行" href="#L218"> 218</a>       squish = nn.symlog if self.symlog else lambda x: x</span>
+<span id="L219"><a aria-label="第 219 行" href="#L219"> 219</a>       x = nn.DictConcat(vspace, 1, squish=squish)(vecs)</span>
+<span id="L220"><a aria-label="第 220 行" href="#L220"> 220</a>       x = x.reshape((-1, *x.shape[bdims:]))</span>
+<span id="L221"><a aria-label="第 221 行" href="#L221"> 221</a>       for i in range(self.layers):</span>
+<span id="L222"><a aria-label="第 222 行" href="#L222"> 222</a>         x = self.sub(f'mlp{i}', nn.Linear, self.units, **self.kw)(x)</span>
+<span id="L223"><a aria-label="第 223 行" href="#L223"> 223</a>         x = nn.act(self.act)(self.sub(f'mlp{i}norm', nn.Norm, self.norm)(x))</span>
+<span id="L224"><a aria-label="第 224 行" href="#L224"> 224</a>       outs.append(x)</span>
+<span id="L225"><a aria-label="第 225 行" href="#L225"> 225</a> </span>
+<span id="L226"><a aria-label="第 226 行" href="#L226"> 226</a>     if self.imgkeys:</span>
+<span id="L227"><a aria-label="第 227 行" href="#L227"> 227</a>       K = self.kernel</span>
+<span id="L228"><a aria-label="第 228 行" href="#L228"> 228</a>       imgs = [obs[k] for k in sorted(self.imgkeys)]</span>
+<span id="L229"><a aria-label="第 229 行" href="#L229"> 229</a>       assert all(x.dtype == jnp.uint8 for x in imgs)</span>
+<span id="L230"><a aria-label="第 230 行" href="#L230"> 230</a>       x = nn.cast(jnp.concatenate(imgs, -1), force=True) / 255 - 0.5</span>
+<span id="L231"><a aria-label="第 231 行" href="#L231"> 231</a>       x = x.reshape((-1, *x.shape[bdims:]))</span>
+<span id="L232"><a aria-label="第 232 行" href="#L232"> 232</a>       for i, depth in enumerate(self.depths):</span>
+<span id="L233"><a aria-label="第 233 行" href="#L233"> 233</a>         if self.outer and i == 0:</span>
+<span id="L234"><a aria-label="第 234 行" href="#L234"> 234</a>           x = self.sub(f'cnn{i}', nn.Conv2D, depth, K, **self.kw)(x)</span>
+<span id="L235"><a aria-label="第 235 行" href="#L235"> 235</a>         elif self.strided:</span>
+<span id="L236"><a aria-label="第 236 行" href="#L236"> 236</a>           x = self.sub(f'cnn{i}', nn.Conv2D, depth, K, 2, **self.kw)(x)</span>
+<span id="L237"><a aria-label="第 237 行" href="#L237"> 237</a>         else:</span>
+<span id="L238"><a aria-label="第 238 行" href="#L238"> 238</a>           x = self.sub(f'cnn{i}', nn.Conv2D, depth, K, **self.kw)(x)</span>
+<span id="L239"><a aria-label="第 239 行" href="#L239"> 239</a>           B, H, W, C = x.shape</span>
+<span id="L240"><a aria-label="第 240 行" href="#L240"> 240</a>           x = x.reshape((B, H // 2, 2, W // 2, 2, C)).max((2, 4))</span>
+<span id="L241"><a aria-label="第 241 行" href="#L241"> 241</a>         x = nn.act(self.act)(self.sub(f'cnn{i}norm', nn.Norm, self.norm)(x))</span>
+<span id="L242"><a aria-label="第 242 行" href="#L242"> 242</a>       assert 3 &lt;= x.shape[-3] &lt;= 16, x.shape</span>
+<span id="L243"><a aria-label="第 243 行" href="#L243"> 243</a>       assert 3 &lt;= x.shape[-2] &lt;= 16, x.shape</span>
+<span id="L244"><a aria-label="第 244 行" href="#L244"> 244</a>       x = x.reshape((x.shape[0], -1))</span>
+<span id="L245"><a aria-label="第 245 行" href="#L245"> 245</a>       outs.append(x)</span>
+<span id="L246"><a aria-label="第 246 行" href="#L246"> 246</a> </span>
+<span id="L247"><a aria-label="第 247 行" href="#L247"> 247</a>     x = jnp.concatenate(outs, -1)</span>
+<span id="L248"><a aria-label="第 248 行" href="#L248"> 248</a>     tokens = x.reshape((*bshape, *x.shape[1:]))</span>
+<span id="L249"><a aria-label="第 249 行" href="#L249"> 249</a>     entries = {}</span>
+<span id="L250"><a aria-label="第 250 行" href="#L250"> 250</a>     return carry, entries, tokens</span>
+<span id="L251"><a aria-label="第 251 行" href="#L251"> 251</a> </span>
+<span id="L252"><a aria-label="第 252 行" href="#L252"> 252</a> </span>
+<span id="L253"><a aria-label="第 253 行" href="#L253"> 253</a> class Decoder(nj.Module):</span>
+<span id="L254"><a aria-label="第 254 行" href="#L254"> 254</a> </span>
+<span id="L255"><a aria-label="第 255 行" href="#L255"> 255</a>   units: int = 1024</span>
+<span id="L256"><a aria-label="第 256 行" href="#L256"> 256</a>   norm: str = 'rms'</span>
+<span id="L257"><a aria-label="第 257 行" href="#L257"> 257</a>   act: str = 'gelu'</span>
+<span id="L258"><a aria-label="第 258 行" href="#L258"> 258</a>   outscale: float = 1.0</span>
+<span id="L259"><a aria-label="第 259 行" href="#L259"> 259</a>   depth: int = 64</span>
+<span id="L260"><a aria-label="第 260 行" href="#L260"> 260</a>   mults: tuple = (2, 3, 4, 4)</span>
+<span id="L261"><a aria-label="第 261 行" href="#L261"> 261</a>   layers: int = 3</span>
+<span id="L262"><a aria-label="第 262 行" href="#L262"> 262</a>   kernel: int = 5</span>
+<span id="L263"><a aria-label="第 263 行" href="#L263"> 263</a>   symlog: bool = True</span>
+<span id="L264"><a aria-label="第 264 行" href="#L264"> 264</a>   bspace: int = 8</span>
+<span id="L265"><a aria-label="第 265 行" href="#L265"> 265</a>   outer: bool = False</span>
+<span id="L266"><a aria-label="第 266 行" href="#L266"> 266</a>   strided: bool = False</span>
+<span id="L267"><a aria-label="第 267 行" href="#L267"> 267</a> </span>
+<span id="L268"><a aria-label="第 268 行" href="#L268"> 268</a>   def __init__(self, obs_space, **kw):</span>
+<span id="L269"><a aria-label="第 269 行" href="#L269"> 269</a>     assert all(len(s.shape) &lt;= 3 for s in obs_space.values()), obs_space</span>
+<span id="L270"><a aria-label="第 270 行" href="#L270"> 270</a>     self.obs_space = obs_space</span>
+<span id="L271"><a aria-label="第 271 行" href="#L271"> 271</a>     self.veckeys = [k for k, s in obs_space.items() if len(s.shape) &lt;= 2]</span>
+<span id="L272"><a aria-label="第 272 行" href="#L272"> 272</a>     self.imgkeys = [k for k, s in obs_space.items() if len(s.shape) == 3]</span>
+<span id="L273"><a aria-label="第 273 行" href="#L273"> 273</a>     self.depths = tuple(self.depth * mult for mult in self.mults)</span>
+<span id="L274"><a aria-label="第 274 行" href="#L274"> 274</a>     self.imgdep = sum(obs_space[k].shape[-1] for k in self.imgkeys)</span>
+<span id="L275"><a aria-label="第 275 行" href="#L275"> 275</a>     self.imgres = self.imgkeys and obs_space[self.imgkeys[0]].shape[:-1]</span>
+<span id="L276"><a aria-label="第 276 行" href="#L276"> 276</a>     self.kw = kw</span>
+<span id="L277"><a aria-label="第 277 行" href="#L277"> 277</a> </span>
+<span id="L278"><a aria-label="第 278 行" href="#L278"> 278</a>   @property</span>
+<span id="L279"><a aria-label="第 279 行" href="#L279"> 279</a>   def entry_space(self):</span>
+<span id="L280"><a aria-label="第 280 行" href="#L280"> 280</a>     return {}</span>
+<span id="L281"><a aria-label="第 281 行" href="#L281"> 281</a> </span>
+<span id="L282"><a aria-label="第 282 行" href="#L282"> 282</a>   def initial(self, batch_size):</span>
+<span id="L283"><a aria-label="第 283 行" href="#L283"> 283</a>     return {}</span>
+<span id="L284"><a aria-label="第 284 行" href="#L284"> 284</a> </span>
+<span id="L285"><a aria-label="第 285 行" href="#L285"> 285</a>   def truncate(self, entries, carry=None):</span>
+<span id="L286"><a aria-label="第 286 行" href="#L286"> 286</a>     return {}</span>
+<span id="L287"><a aria-label="第 287 行" href="#L287"> 287</a> </span>
+<span id="L288"><a aria-label="第 288 行" href="#L288"> 288</a>   def __call__(self, carry, feat, reset, training, single=False):</span>
+<span id="L289"><a aria-label="第 289 行" href="#L289"> 289</a>     assert feat['deter'].shape[-1] % self.bspace == 0</span>
+<span id="L290"><a aria-label="第 290 行" href="#L290"> 290</a>     K = self.kernel</span>
+<span id="L291"><a aria-label="第 291 行" href="#L291"> 291</a>     recons = {}</span>
+<span id="L292"><a aria-label="第 292 行" href="#L292"> 292</a>     bshape = reset.shape</span>
+<span id="L293"><a aria-label="第 293 行" href="#L293"> 293</a>     inp = [nn.cast(feat[k]) for k in ('stoch', 'deter')]</span>
+<span id="L294"><a aria-label="第 294 行" href="#L294"> 294</a>     inp = [x.reshape((math.prod(bshape), -1)) for x in inp]</span>
+<span id="L295"><a aria-label="第 295 行" href="#L295"> 295</a>     inp = jnp.concatenate(inp, -1)</span>
+<span id="L296"><a aria-label="第 296 行" href="#L296"> 296</a> </span>
+<span id="L297"><a aria-label="第 297 行" href="#L297"> 297</a>     if self.veckeys:</span>
+<span id="L298"><a aria-label="第 298 行" href="#L298"> 298</a>       spaces = {k: self.obs_space[k] for k in self.veckeys}</span>
+<span id="L299"><a aria-label="第 299 行" href="#L299"> 299</a>       o1, o2 = 'categorical', ('symlog_mse' if self.symlog else 'mse')</span>
+<span id="L300"><a aria-label="第 300 行" href="#L300"> 300</a>       outputs = {k: o1 if v.discrete else o2 for k, v in spaces.items()}</span>
+<span id="L301"><a aria-label="第 301 行" href="#L301"> 301</a>       kw = dict(**self.kw, act=self.act, norm=self.norm)</span>
+<span id="L302"><a aria-label="第 302 行" href="#L302"> 302</a>       x = self.sub('mlp', nn.MLP, self.layers, self.units, **kw)(inp)</span>
+<span id="L303"><a aria-label="第 303 行" href="#L303"> 303</a>       x = x.reshape((*bshape, *x.shape[1:]))</span>
+<span id="L304"><a aria-label="第 304 行" href="#L304"> 304</a>       kw = dict(**self.kw, outscale=self.outscale)</span>
+<span id="L305"><a aria-label="第 305 行" href="#L305"> 305</a>       outs = self.sub('vec', embodied.jax.DictHead, spaces, outputs, **kw)(x)</span>
+<span id="L306"><a aria-label="第 306 行" href="#L306"> 306</a>       recons.update(outs)</span>
+<span id="L307"><a aria-label="第 307 行" href="#L307"> 307</a> </span>
+<span id="L308"><a aria-label="第 308 行" href="#L308"> 308</a>     if self.imgkeys:</span>
+<span id="L309"><a aria-label="第 309 行" href="#L309"> 309</a>       factor = 2 ** (len(self.depths) - int(bool(self.outer)))</span>
+<span id="L310"><a aria-label="第 310 行" href="#L310"> 310</a>       minres = [int(x // factor) for x in self.imgres]</span>
+<span id="L311"><a aria-label="第 311 行" href="#L311"> 311</a>       assert 3 &lt;= minres[0] &lt;= 16, minres</span>
+<span id="L312"><a aria-label="第 312 行" href="#L312"> 312</a>       assert 3 &lt;= minres[1] &lt;= 16, minres</span>
+<span id="L313"><a aria-label="第 313 行" href="#L313"> 313</a>       shape = (*minres, self.depths[-1])</span>
+<span id="L314"><a aria-label="第 314 行" href="#L314"> 314</a>       if self.bspace:</span>
+<span id="L315"><a aria-label="第 315 行" href="#L315"> 315</a>         u, g = math.prod(shape), self.bspace</span>
+<span id="L316"><a aria-label="第 316 行" href="#L316"> 316</a>         x0, x1 = nn.cast((feat['deter'], feat['stoch']))</span>
+<span id="L317"><a aria-label="第 317 行" href="#L317"> 317</a>         x1 = x1.reshape((*x1.shape[:-2], -1))</span>
+<span id="L318"><a aria-label="第 318 行" href="#L318"> 318</a>         x0 = x0.reshape((-1, x0.shape[-1]))</span>
+<span id="L319"><a aria-label="第 319 行" href="#L319"> 319</a>         x1 = x1.reshape((-1, x1.shape[-1]))</span>
+<span id="L320"><a aria-label="第 320 行" href="#L320"> 320</a>         x0 = self.sub('sp0', nn.BlockLinear, u, g, **self.kw)(x0)</span>
+<span id="L321"><a aria-label="第 321 行" href="#L321"> 321</a>         x0 = einops.rearrange(</span>
+<span id="L322"><a aria-label="第 322 行" href="#L322"> 322</a>             x0, '... (g h w c) -&gt; ... h w (g c)',</span>
+<span id="L323"><a aria-label="第 323 行" href="#L323"> 323</a>             h=minres[0], w=minres[1], g=g)</span>
+<span id="L324"><a aria-label="第 324 行" href="#L324"> 324</a>         x1 = self.sub('sp1', nn.Linear, 2 * self.units, **self.kw)(x1)</span>
+<span id="L325"><a aria-label="第 325 行" href="#L325"> 325</a>         x1 = nn.act(self.act)(self.sub('sp1norm', nn.Norm, self.norm)(x1))</span>
+<span id="L326"><a aria-label="第 326 行" href="#L326"> 326</a>         x1 = self.sub('sp2', nn.Linear, shape, **self.kw)(x1)</span>
+<span id="L327"><a aria-label="第 327 行" href="#L327"> 327</a>         x = nn.act(self.act)(self.sub('spnorm', nn.Norm, self.norm)(x0 + x1))</span>
+<span id="L328"><a aria-label="第 328 行" href="#L328"> 328</a>       else:</span>
+<span id="L329"><a aria-label="第 329 行" href="#L329"> 329</a>         x = self.sub('space', nn.Linear, shape, **kw)(inp)</span>
+<span id="L330"><a aria-label="第 330 行" href="#L330"> 330</a>         x = nn.act(self.act)(self.sub('spacenorm', nn.Norm, self.norm)(x))</span>
+<span id="L331"><a aria-label="第 331 行" href="#L331"> 331</a>       for i, depth in reversed(list(enumerate(self.depths[:-1]))):</span>
+<span id="L332"><a aria-label="第 332 行" href="#L332"> 332</a>         if self.strided:</span>
+<span id="L333"><a aria-label="第 333 行" href="#L333"> 333</a>           kw = dict(**self.kw, transp=True)</span>
+<span id="L334"><a aria-label="第 334 行" href="#L334"> 334</a>           x = self.sub(f'conv{i}', nn.Conv2D, depth, K, 2, **kw)(x)</span>
+<span id="L335"><a aria-label="第 335 行" href="#L335"> 335</a>         else:</span>
+<span id="L336"><a aria-label="第 336 行" href="#L336"> 336</a>           x = x.repeat(2, -2).repeat(2, -3)</span>
+<span id="L337"><a aria-label="第 337 行" href="#L337"> 337</a>           x = self.sub(f'conv{i}', nn.Conv2D, depth, K, **self.kw)(x)</span>
+<span id="L338"><a aria-label="第 338 行" href="#L338"> 338</a>         x = nn.act(self.act)(self.sub(f'conv{i}norm', nn.Norm, self.norm)(x))</span>
+<span id="L339"><a aria-label="第 339 行" href="#L339"> 339</a>       if self.outer:</span>
+<span id="L340"><a aria-label="第 340 行" href="#L340"> 340</a>         kw = dict(**self.kw, outscale=self.outscale)</span>
+<span id="L341"><a aria-label="第 341 行" href="#L341"> 341</a>         x = self.sub('imgout', nn.Conv2D, self.imgdep, K, **kw)(x)</span>
+<span id="L342"><a aria-label="第 342 行" href="#L342"> 342</a>       elif self.strided:</span>
+<span id="L343"><a aria-label="第 343 行" href="#L343"> 343</a>         kw = dict(**self.kw, outscale=self.outscale, transp=True)</span>
+<span id="L344"><a aria-label="第 344 行" href="#L344"> 344</a>         x = self.sub('imgout', nn.Conv2D, self.imgdep, K, 2, **kw)(x)</span>
+<span id="L345"><a aria-label="第 345 行" href="#L345"> 345</a>       else:</span>
+<span id="L346"><a aria-label="第 346 行" href="#L346"> 346</a>         x = x.repeat(2, -2).repeat(2, -3)</span>
+<span id="L347"><a aria-label="第 347 行" href="#L347"> 347</a>         kw = dict(**self.kw, outscale=self.outscale)</span>
+<span id="L348"><a aria-label="第 348 行" href="#L348"> 348</a>         x = self.sub('imgout', nn.Conv2D, self.imgdep, K, **kw)(x)</span>
+<span id="L349"><a aria-label="第 349 行" href="#L349"> 349</a>       x = jax.nn.sigmoid(x)</span>
+<span id="L350"><a aria-label="第 350 行" href="#L350"> 350</a>       x = x.reshape((*bshape, *x.shape[1:]))</span>
+<span id="L351"><a aria-label="第 351 行" href="#L351"> 351</a>       split = np.cumsum(</span>
+<span id="L352"><a aria-label="第 352 行" href="#L352"> 352</a>           [self.obs_space[k].shape[-1] for k in self.imgkeys][:-1])</span>
+<span id="L353"><a aria-label="第 353 行" href="#L353"> 353</a>       for k, out in zip(self.imgkeys, jnp.split(x, split, -1)):</span>
+<span id="L354"><a aria-label="第 354 行" href="#L354"> 354</a>         out = embodied.jax.outs.MSE(out)</span>
+<span id="L355"><a aria-label="第 355 行" href="#L355"> 355</a>         out = embodied.jax.outs.Agg(out, 3, jnp.sum)</span>
+<span id="L356"><a aria-label="第 356 行" href="#L356"> 356</a>         recons[k] = out</span>
+<span id="L357"><a aria-label="第 357 行" href="#L357"> 357</a> </span>
+<span id="L358"><a aria-label="第 358 行" href="#L358"> 358</a>     entries = {}</span>
+<span id="L359"><a aria-label="第 359 行" href="#L359"> 359</a>     return carry, entries, recons</span></pre></body></html>

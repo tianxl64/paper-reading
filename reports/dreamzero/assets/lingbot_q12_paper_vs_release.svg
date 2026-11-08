@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f8fbff"/><stop offset="1" stop-color="#eef2ff"/></linearGradient><filter id="sh"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-opacity=".13"/></filter><marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L10,3 L0,6 Z" fill="#4263c7"/></marker><style>.t{font-family:Arial,'Microsoft YaHei',sans-serif;fill:#17233d}.title{font-size:34px;font-weight:800}.sub{font-size:18px;fill:#52617d}.h{font-size:25px;font-weight:800}.m{font-size:18px;font-weight:700}.s{font-size:15px;fill:#4d5c76}.tiny{font-size:13px;fill:#61708a}.box{rx:18;stroke-width:2;filter:url(#sh)}.line{stroke:#4263c7;stroke-width:3;fill:none;marker-end:url(#arr)}.dash{stroke:#8a98b3;stroke-width:2;stroke-dasharray:9 7;fill:none}.pill{rx:12;stroke-width:1.5}</style></defs>
+<rect width="1800" height="1120" fill="url(#bg)"/>
+<text x="900" y="55" text-anchor="middle" class="t title">LingBot-VA：论文 MoT 与公开源码 Shared Backbone 的参数拓扑</text>
+<text x="900" y="88" text-anchor="middle" class="t sub">同一个 causal mask ≠ 同一个模型；mask 管“看谁”，参数拓扑管“用谁的脑子处理”</text>
+
+<rect x="45" y="125" width="825" height="880" fill="#fff" stroke="#8ba0d8" class="box"/>
+<text x="457" y="175" text-anchor="middle" class="t h">论文：Dual-stream Mixture-of-Transformers</text>
+<text x="457" y="205" text-anchor="middle" class="t sub">two parallel transformer backbones · modality-specific Q/K/V</text>
+
+<rect x="85" y="250" width="330" height="115" fill="#e9f2ff" stroke="#4f79cc" class="box"/><text x="250" y="288" text-anchor="middle" class="t m">Video stem</text><text x="250" y="316" text-anchor="middle" class="t s">Wan patchify + projection</text><text x="250" y="341" text-anchor="middle" class="t tiny">hidden width dᵥ（较宽，Wan2.2-5B 初始化）</text>
+<rect x="500" y="250" width="330" height="115" fill="#fff0ea" stroke="#d16c49" class="box"/><text x="665" y="288" text-anchor="middle" class="t m">Action stem</text><text x="665" y="316" text-anchor="middle" class="t s">action grouping + projection</text><text x="665" y="341" text-anchor="middle" class="t tiny">hidden width dₐ（更窄，独立参数）</text>
+
+<path d="M250 365 V405" class="line"/><path d="M665 365 V405" class="line"/>
+<rect x="75" y="405" width="350" height="420" fill="#edf5ff" stroke="#4f79cc" class="box"/><text x="250" y="445" text-anchor="middle" class="t h">Video Expert × L</text>
+<rect x="105" y="480" width="290" height="65" fill="#fff" stroke="#83a4df" class="pill"/><text x="250" y="508" text-anchor="middle" class="t m">Video Norm / AdaLN</text><text x="250" y="532" text-anchor="middle" class="t tiny">独立 θᵥ</text>
+<rect x="105" y="565" width="290" height="78" fill="#dceaff" stroke="#4f79cc" class="pill"/><text x="250" y="595" text-anchor="middle" class="t m">Qᵥ, Kᵥ, Vᵥ</text><text x="250" y="621" text-anchor="middle" class="t tiny">投到共享 attention dimension</text>
+<rect x="105" y="665" width="290" height="65" fill="#fff" stroke="#83a4df" class="pill"/><text x="250" y="694" text-anchor="middle" class="t m">Video O + FFN</text><text x="250" y="718" text-anchor="middle" class="t tiny">独立 θᵥ</text>
+<rect x="105" y="750" width="290" height="45" fill="#e1e9fa" stroke="#83a4df" class="pill"/><text x="250" y="779" text-anchor="middle" class="t s">重复 L 层</text>
+
+<rect x="490" y="405" width="350" height="420" fill="#fff2ec" stroke="#d16c49" class="box"/><text x="665" y="445" text-anchor="middle" class="t h">Action Expert × L</text>
+<rect x="520" y="480" width="290" height="65" fill="#fff" stroke="#e5a086" class="pill"/><text x="665" y="508" text-anchor="middle" class="t m">Action Norm / AdaLN</text><text x="665" y="532" text-anchor="middle" class="t tiny">独立 θₐ</text>
+<rect x="520" y="565" width="290" height="78" fill="#ffe1d5" stroke="#d16c49" class="pill"/><text x="665" y="595" text-anchor="middle" class="t m">Qₐ, Kₐ, Vₐ</text><text x="665" y="621" text-anchor="middle" class="t tiny">projection 对齐 video attention dim</text>
+<rect x="520" y="665" width="290" height="65" fill="#fff" stroke="#e5a086" class="pill"/><text x="665" y="694" text-anchor="middle" class="t m">Action O + FFN</text><text x="665" y="718" text-anchor="middle" class="t tiny">独立 θₐ</text>
+<rect x="520" y="750" width="290" height="45" fill="#fae7df" stroke="#e5a086" class="pill"/><text x="665" y="779" text-anchor="middle" class="t s">重复 L 层</text>
+
+<path d="M395 604 H520" style="stroke:#7857bd;stroke-width:4;stroke-dasharray:8 6;fill:none"/>
+<path d="M250 825 V870" class="line"/><path d="M665 825 V870" class="line"/>
+<rect x="85" y="870" width="330" height="90" fill="#e9f2ff" stroke="#4f79cc" class="box"/><text x="250" y="908" text-anchor="middle" class="t m">Video head</text><text x="250" y="936" text-anchor="middle" class="t s">velocity / future-video target</text>
+<rect x="500" y="870" width="330" height="90" fill="#fff0ea" stroke="#d16c49" class="box"/><text x="665" y="908" text-anchor="middle" class="t m">Action head</text><text x="665" y="936" text-anchor="middle" class="t s">velocity / action target</text>
+
+<rect x="930" y="125" width="825" height="880" fill="#fff" stroke="#82aa91" class="box"/>
+<text x="1342" y="175" text-anchor="middle" class="t h">公开 release：Single Shared Wan Backbone</text>
+<text x="1342" y="205" text-anchor="middle" class="t sub">一套 30 层 blocks；输入、time embed、输出头部分分模态</text>
+<rect x="970" y="250" width="330" height="115" fill="#e9f2ff" stroke="#4f79cc" class="box"/><text x="1135" y="288" text-anchor="middle" class="t m">Video-only parameters</text><text x="1135" y="316" text-anchor="middle" class="t s">patch_embedding_mlp</text><text x="1135" y="341" text-anchor="middle" class="t tiny">condition_embedder · proj_out</text>
+<rect x="1385" y="250" width="330" height="115" fill="#fff0ea" stroke="#d16c49" class="box"/><text x="1550" y="288" text-anchor="middle" class="t m">Action-only parameters</text><text x="1550" y="316" text-anchor="middle" class="t s">action_embedder</text><text x="1550" y="341" text-anchor="middle" class="t tiny">condition_embedder_action · action_proj_out</text>
+<path d="M1135 365 V420 H1342" class="line"/><path d="M1550 365 V420 H1342" class="line"/>
+<rect x="1010" y="420" width="665" height="405" fill="#edf8f1" stroke="#47966a" class="box"/><text x="1342" y="461" text-anchor="middle" class="t h">self.blocks × 30（全部共享）</text>
+<rect x="1050" y="495" width="585" height="60" fill="#fff" stroke="#72ad88" class="pill"/><text x="1342" y="532" text-anchor="middle" class="t m">共享 Norm1 + AdaLN scale/shift/gate</text>
+<rect x="1050" y="575" width="585" height="82" fill="#dff2e6" stroke="#47966a" class="pill"/><text x="1342" y="606" text-anchor="middle" class="t m">共享 self-attention Q / K / V / O</text><text x="1342" y="634" text-anchor="middle" class="t tiny">video token 与 action token 使用同一套矩阵；差异来自 token embedding、timestep embedding 与 cache/history</text>
+<rect x="1050" y="677" width="585" height="60" fill="#fff" stroke="#72ad88" class="pill"/><text x="1342" y="714" text-anchor="middle" class="t m">共享 text cross-attention + FFN</text>
+<rect x="1050" y="757" width="585" height="42" fill="#e7f3eb" stroke="#72ad88" class="pill"/><text x="1342" y="784" text-anchor="middle" class="t s">共享 norm_out 与 output scale_shift_table</text>
+<path d="M1342 825 V870" class="line"/>
+<rect x="970" y="870" width="330" height="90" fill="#e9f2ff" stroke="#4f79cc" class="box"/><text x="1135" y="908" text-anchor="middle" class="t m">Video head</text><text x="1135" y="936" text-anchor="middle" class="t s">独立 proj_out</text>
+<rect x="1385" y="870" width="330" height="90" fill="#fff0ea" stroke="#d16c49" class="box"/><text x="1550" y="908" text-anchor="middle" class="t m">Action head</text><text x="1550" y="936" text-anchor="middle" class="t s">独立 action_proj_out</text>
+
+<rect x="140" y="1025" width="1520" height="65" fill="#17233d" rx="16"/><text x="900" y="1053" text-anchor="middle" style="font-family:Arial,'Microsoft YaHei';font-size:18px;font-weight:700;fill:white">结论：论文是“两个参数独立 expert + 联合 attention”；公开代码是“一个共享 expert + 模态专属 stem/time/head”。</text><text x="900" y="1078" text-anchor="middle" style="font-family:Arial,'Microsoft YaHei';font-size:15px;fill:#cbd7f4">即便 attention mask 完全相同，容量、梯度竞争、预训练保持、冻结方式、单模态执行成本仍然不同。</text>
+</svg>

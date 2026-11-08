@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Diffusion Planner 图片学习笔记报告</title>
+<style>
+    :root {
+      --ink: #172033;
+      --muted: #5d667a;
+      --line: #dfe4ef;
+      --paper: #fbfaf7;
+      --panel: #ffffff;
+      --blue: #2463eb;
+      --green: #15803d;
+      --rose: #e11d48;
+      --amber: #b45309;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .layout {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      border-right: 1px solid var(--line);
+      background: #fff;
+      padding: 22px 18px;
+    }
+    aside h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+    aside .meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    nav a {
+      display: block;
+      padding: 7px 8px;
+      border-radius: 6px;
+      color: #263148;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    nav a:hover {
+      background: #eef4ff;
+      text-decoration: none;
+    }
+    main {
+      max-width: 1320px;
+      width: 100%;
+      padding: 32px 42px 60px;
+      margin: 0 auto;
+    }
+    header {
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 24px;
+      margin-bottom: 28px;
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: 34px;
+      line-height: 1.22;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      max-width: 920px;
+      color: var(--muted);
+      font-size: 16px;
+      margin: 0 0 18px;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 4px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: #39445a;
+      font-size: 13px;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 22px 0 8px;
+    }
+    .summary div {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 13px 14px;
+    }
+    .summary strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .summary span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    section {
+      margin: 32px 0 44px;
+      padding-top: 8px;
+    }
+    section h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.3;
+    }
+    section p {
+      max-width: 940px;
+      margin: 0 0 16px;
+      color: #344056;
+    }
+    .figure-wrap {
+      display: grid;
+      grid-template-columns: minmax(320px, 560px) minmax(300px, 1fr);
+      gap: 24px;
+      align-items: start;
+      margin-top: 14px;
+    }
+    figure {
+      margin: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 10px;
+    }
+    figure img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+      cursor: zoom-in;
+    }
+    figcaption {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 8px 2px 0;
+    }
+    .notes {
+      border-left: 4px solid var(--blue);
+      background: #fff;
+      border-radius: 8px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 0 rgba(23, 32, 51, .04);
+    }
+    .notes h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+    }
+    .notes ul {
+      margin: 0;
+      padding-left: 20px;
+      color: #344056;
+    }
+    .notes li { margin: 6px 0; }
+    .source {
+      margin-top: 34px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(11, 18, 32, .88);
+      padding: 24px;
+      z-index: 20;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: min(96vw, 1100px);
+      max-height: 94vh;
+      border-radius: 8px;
+      background: #fff;
+    }
+    .lightbox button {
+      position: fixed;
+      right: 18px;
+      top: 14px;
+      border: 1px solid rgba(255,255,255,.32);
+      border-radius: 6px;
+      background: rgba(255,255,255,.12);
+      color: #fff;
+      font-size: 18px;
+      padding: 6px 11px;
+      cursor: pointer;
+    }
+    @media (max-width: 980px) {
+      .layout { display: block; }
+      aside { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+      nav { columns: 2; }
+      main { padding: 24px 16px 44px; }
+      h1 { font-size: 27px; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .figure-wrap { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      nav { columns: 1; }
+      .summary { grid-template-columns: 1fr; }
+    }
+  </style>
+<link href="../../favicon.ico" rel="icon"/></head>
+<body>
+<div class="layout">
+<aside>
+<h2>Diffusion Planner<br/>图片学习笔记</h2>
+<div class="meta">28 张小红书风格图文卡片</div>
+<nav>
+<a href="#card01">01 任务重写</a>
+<a href="#card02">02 动机瓶颈</a>
+<a href="#card03">03 总体架构</a>
+<a href="#card04">04 数据预处理</a>
+<a href="#card05">05 主干编码器</a>
+<a href="#card06">06 车辆信息集成</a>
+<a href="#card07">07 历史车辆融合</a>
+<a href="#card08">08 车道与静态物</a>
+<a href="#card09">09 导航信息融合</a>
+<a href="#card10">10 DiT Block</a>
+<a href="#card11">11 联合输出</a>
+<a href="#card12">12 扩散目标</a>
+<a href="#card13">13 Loss 拆解</a>
+<a href="#card14">14 Mask 与归一化</a>
+<a href="#card15">15 训练 forward</a>
+<a href="#card16">16 反传更新</a>
+<a href="#card17">17 推理采样</a>
+<a href="#card18">18 Guidance 原理</a>
+<a href="#card19">19 Energy 设计</a>
+<a href="#card20">20 Collision guidance</a>
+<a href="#card21">21 Guidance 接入</a>
+<a href="#card22">22 多模态行为</a>
+<a href="#card23">23 实验主结果</a>
+<a href="#card24">24 Guidance 案例</a>
+<a href="#card25">25 训练消融</a>
+<a href="#card26">26 推理消融</a>
+<a href="#card27">27 代码映射</a>
+<a href="#card28">28 复现风险</a>
+</nav>
+</aside>
+<main>
+<header>
+<h1>Diffusion-Based Planning for Autonomous Driving with Flexible Guidance</h1>
+<p class="subtitle">这份报告把论文解析改写成图片版学习笔记：每张图既是插图，也是独立可读的机制卡片。主线围绕“把闭环规划重写为条件扩散轨迹生成，并用 guidance 在推理时注入偏好”。</p>
+<div class="chips">
+<span class="chip">ICLR 2025</span>
+<span class="chip">Diffusion Planner</span>
+<span class="chip">DiT</span>
+<span class="chip">Closed-loop Planning</span>
+<span class="chip">Classifier Guidance</span>
+</div>
+<div class="summary">
+<div><strong>核心任务</strong><span>联合生成 ego 规划和邻车预测。</span></div>
+<div><strong>核心结构</strong><span>向量条件编码 + DiT 条件去噪。</span></div>
+<div><strong>核心训练</strong><span>同一个 diffusion loss 统一规划与预测。</span></div>
+<div><strong>核心推理</strong><span>DPM-Solver 快速采样，guidance 可调偏好。</span></div>
+</div>
+</header>
+<section id="card01"><h2>01 任务重写：规划 = 多车未来轨迹生成</h2><p>论文的第一步不是直接回归 ego 的一条轨迹，而是把 closed-loop planning 与 motion prediction 合成一个条件未来生成问题。</p><div class="figure-wrap"><figure><img alt="任务重写：规划等于多车未来轨迹生成" src="../../assets/media/3194b656270cf079a68b088c06d0446de84bf076da4048d5d92abead17d35b0a.webp"/><figcaption>点击图片可放大查看。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>条件 C 包含当前状态、历史轨迹、车道和导航。</li><li>输出 X0 同时包含 ego planning 和邻车 prediction。</li><li>状态用 x, y, cosθ, sinθ，方便连续轨迹建模。</li></ul></div></div></section>
+<section id="card02"><h2>02 为什么不用传统 BC + 后处理</h2><p>传统 imitation/BC 容易平均化多模态行为，遇到 OOD 场景输出不稳，很多方法再依赖 rule-based refinement 补救。</p><div class="figure-wrap"><figure><img alt="传统 BC 与后处理瓶颈" src="../../assets/media/7dc114b59df662007de6a254b57049b77cc0f5141778a33d524333fdade9f9d7.webp"/><figcaption>动机图：从行为克隆瓶颈到扩散生成。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>多模态不是噪声，而是驾驶行为本身的属性。</li><li>规则后处理能补救，但工程维护成本重。</li><li>Diffusion Planner 的方向是学分布，再在采样时调偏好。</li></ul></div></div></section>
+<section id="card03"><h2>03 总体架构：条件编码 + DiT 去噪 + guidance</h2><p>模型主线是：向量化场景条件先编码成上下文，带噪未来轨迹作为 decoder 输入，再由 DiT 在条件约束下逐步还原干净轨迹。</p><div class="figure-wrap"><figure><img alt="Diffusion Planner 总体架构" src="../../assets/media/c070b23eddb386fdb17fb64b308c24eb6c5e14ca0f52b2440cb61a6740711e8a.webp"/><figcaption>总体架构图。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>Encoder 负责 agents、lanes、static objects 的场景上下文。</li><li>Route 和 timestep 进入 AdaLN 条件。</li><li>DPM-Solver 与 guidance 只发生在推理采样链路。</li></ul></div></div></section>
+<section id="card04"><h2>04 数据表示与预处理：让扩散更好学</h2><p>论文的性能不只来自网络结构，数据增强、扰动插值、ego 坐标系和 z-score normalization 对训练稳定性很关键。</p><div class="figure-wrap"><figure><img alt="数据表示与预处理" src="../../assets/media/2b7e67cbfdbe5e3fe0678520a30e26c786ccfb6873881e3e51a92b3b9cf76314.webp"/><figcaption>数据进入模型前的处理链路。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>扰动 current state 后还要插值修正 future，避免不物理的跳变。</li><li>heading 用 cos/sin 表示，避免角度 wrap 问题。</li><li>图中 agent/static/lane/route 数量是官方代码默认配置。</li></ul></div></div></section>
+<section id="card05"><h2>05 主干网络与编码器：稀疏向量到上下文 token</h2><p>实现里没有图像 CNN 主干，而是用 MLP-Mixer 与 Transformer 处理向量化历史、车道和静态物。</p><div class="figure-wrap"><figure><img alt="主干网络与编码器" src="../../assets/media/a8129cbe4dacc72d364cfaa530bf8411d30efc06531e8a862f63872867a7dc30.webp"/><figcaption>Encoder 与 DiT 条件输入关系。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>AgentFusionEncoder 和 LaneFusionEncoder 将稀疏序列压成 dense token。</li><li>FusionEncoder 用 self-attention 建模全局场景交互。</li><li>DiT 通过 cross-attention 读取 scene context。</li></ul></div></div></section>
+<section id="card06"><h2>06 车辆信息集成：当前状态如何约束未来轨迹</h2><p>当前状态是未来轨迹生成的起点约束。实现中会把 ego 与预测邻车的 current state 放到序列第 0 点。</p><div class="figure-wrap"><figure><img alt="车辆信息集成" src="../../assets/media/39e9872e1489ef81ba644bc55ea4944168e94b3bd4ee92ca1186c00b8eadeebb.webp"/><figcaption>当前状态作为多车未来序列的锚点。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>采样过程中 t0 被强制写回，减少轨迹起点漂移。</li><li>P 表示 ego 加上 predicted neighbors。</li><li>多车 self-attention 让车辆 token 之间建交互。</li></ul></div></div></section>
+<section id="card07"><h2>07 历史车辆融合：稀疏历史轨迹如何压成 dense token</h2><p>历史邻车是 B×P×V×D 的序列。AgentFusionEncoder 先 mask 空邻车，再用 channel/token MLP 与 MixerBlock 提取紧凑表示。</p><div class="figure-wrap"><figure><img alt="历史车辆融合" src="../../assets/media/aa9c7a4fa09a56c0eb5379acf6961ecbf54c55e148a0c7e542f2f211cea673ed.webp"/><figcaption>AgentFusionEncoder 处理流程。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>channel MLP 混合特征维，token MLP 混合时间维。</li><li>mean pooling 把一段历史压成一个 agent token。</li><li>type embedding 补充车辆类别信息。</li></ul></div></div></section>
+<section id="card08"><h2>08 车道与静态物融合：地图如何变成场景上下文</h2><p>地图在这篇论文中主要以 vector set 进入模型，LaneFusionEncoder 结合 lane points、speed limit、traffic light 等信息。</p><div class="figure-wrap"><figure><img alt="车道与静态物融合" src="../../assets/media/a389522fa34f973794feeef893052f50a9a09fab2ccc762788d89fa4590b91f3.webp"/><figcaption>地图与静态物编码。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>LaneFusionEncoder 使用 MLP-Mixer 编码车道点序列。</li><li>StaticFusionEncoder 用 MLP 编码静态物。</li><li>pos/type embedding 帮助 token 保留类别和位置。</li></ul></div></div></section>
+<section id="card09"><h2>09 导航信息融合：route 如何进入 timestep condition</h2><p>导航路线不是普通输出，而是生成过程的条件。RouteEncoder 的输出与 timestep embedding 相加，进入 AdaLN 调制。</p><div class="figure-wrap"><figure><img alt="导航信息融合" src="../../assets/media/06e3bc437981f111c30543d9a145310fc088a2e558b778f4cb22de21e97efe83.webp"/><figcaption>Route 与 timestep 条件。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>Route lane 代表意图路线。</li><li>timestep 代表当前去噪阶段。</li><li>二者合成 y 后通过 AdaLN 影响 DiT block。</li></ul></div></div></section>
+<section id="card10"><h2>10 DiT Block 细节</h2><p>DiT block 同时做三件事：vehicle tokens 内部交互、读取 encoder 场景上下文、接受 route+timestep 的 AdaLN 调制。</p><div class="figure-wrap"><figure><img alt="DiT Block 细节" src="../../assets/media/3cbfd19321c2c17abe106e386b7bb2bc9df6c4b7f51b1320e6217a7ca73314e4.webp"/><figcaption>DiT block 的条件化去噪结构。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>self-attention 建模多车 token 之间的关系。</li><li>cross-attention 从 scene context 中读取条件。</li><li>AdaLN 用 shift/scale/gate 调制网络层。</li></ul></div></div></section>
+<section id="card11"><h2>11 预测头与联合输出</h2><p>Decoder 最终输出 B×P×80×4 的未来状态，其中 P 的第一项是 ego，后续是被预测邻车。</p><div class="figure-wrap"><figure><img alt="预测头与联合输出" src="../../assets/media/2082b06ffa969437e3b0b3ca419bd541fe72bb0e53dba04ada6f2c206a4d81d6.webp"/><figcaption>联合规划与预测输出。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>current state 第 0 点在输出未来时被切掉。</li><li>inverse StateNormalizer 把标准化状态转回真实坐标。</li><li>联合输出是模型处理交互的关键形式。</li></ul></div></div></section>
+<section id="card12"><h2>12 扩散目标：从噪声恢复轨迹分布</h2><p>训练时随机采样 t 和噪声 z，把真实未来轨迹加噪为 Xt，再让模型在条件 C 下恢复 X0 或 score。</p><div class="figure-wrap"><figure><img alt="扩散目标" src="../../assets/media/fb9e18f49d59c6a364da05ea8af3473bcb75aa33eede4494cb240b0086344456.webp"/><figcaption>扩散训练目标。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>默认 diffusion_model_type 是 x_start。</li><li>score 模式也在代码中保留。</li><li>目标是学习 P(X|C) 的条件去噪方向。</li></ul></div></div></section>
+<section id="card13"><h2>13 Loss 拆解</h2><p>训练 loss 由邻车预测 loss 与 ego planning loss 组成。它们来自同一个 dpm_loss，只是切片和 mask 不同。</p><div class="figure-wrap"><figure><img alt="Loss 拆解" src="../../assets/media/4cd3b811a0124ac65b4d90bf6fa81127232ad2036f7789ac285875f6d8a67908.webp"/><figcaption>Diffusion loss 的规划/预测统一形式。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>ego_planning_loss 取 dpm_loss 的第 0 个 agent。</li><li>neighbor_prediction_loss 只统计 valid neighbor future。</li><li>guidance 不是训练 loss，而是推理时采样偏置。</li></ul></div></div></section>
+<section id="card14"><h2>14 Mask 与归一化</h2><p>mask 和 normalizer 是复现时最容易被忽略的细节。它们不一定导致代码报错，但会直接污染训练目标和闭环结果。</p><div class="figure-wrap"><figure><img alt="Mask 与归一化" src="../../assets/media/54d39c8c25f684b79fe725b62eea9ef5e91b1f7e6868a3dc3fc30cebf344075a.webp"/><figcaption>训练稳定性的隐藏关键。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>无效邻车不能进入 neighbor loss。</li><li>ObservationNormalizer 和 StateNormalizer 分别对应条件与轨迹。</li><li>heading 的 cos/sin 表示减少角度不连续。</li></ul></div></div></section>
+<section id="card15"><h2>15 训练 Forward 闭环</h2><p>一次训练 batch 会经历数据增强、heading 转换、归一化、加噪、模型前向和 loss 计算。</p><div class="figure-wrap"><figure><img alt="训练 forward 闭环" src="../../assets/media/48a93c5144a26dd62a899ce854a7ddab70212304d1451fa2be6cd06f6239ae61.webp"/><figcaption>训练时的数据流。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>StatePerturbation 帮助模型抵抗 OOD 起点。</li><li>diffusion_loss_func 构造 sampled_trajectories 与 diffusion_time。</li><li>Encoder 和 Decoder 在训练时共同接受梯度。</li></ul></div></div></section>
+<section id="card16"><h2>16 Backward / Update</h2><p>训练工程侧使用 AdamW、梯度裁剪、EMA、scheduler 和 DDP。它们不是论文创新点，但决定训练是否稳定。</p><div class="figure-wrap"><figure><img alt="Backward update" src="../../assets/media/72f88a198fe320fec6412c746007af5a43b09210b6ddb16b2ad8866a6a56caa6.webp"/><figcaption>训练更新环路。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>clip_grad_norm_ 上限为 5。</li><li>EMA decay 为 0.999。</li><li>默认 batch size、lr、epoch 等来自 train_predictor.py。</li></ul></div></div></section>
+<section id="card17"><h2>17 推理采样：DPM-Solver 从 xT 到 x0</h2><p>推理时从 current state 加随机未来噪声开始，DPM-Solver++ 用少步数还原轨迹，并持续固定当前状态。</p><div class="figure-wrap"><figure><img alt="推理采样" src="../../assets/media/17d60f5267790fd810e719ef24f6b87ed126c0e0ed7f0ad0c1e29e72a31e0baa.webp"/><figcaption>DPM-Solver 推理链路。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>默认 diffusion_steps 为 10。</li><li>initial_state_constraint 每步修正 t0。</li><li>guidance_fn 可以接入 model wrapper 改变采样方向。</li></ul></div></div></section>
+<section id="card18"><h2>18 Classifier Guidance 原理</h2><p>Guidance 的核心是用可微 energy 的梯度改变扩散采样方向。它不改模型参数，而是在推理时引导生成。</p><div class="figure-wrap"><figure><img alt="Classifier guidance 原理" src="../../assets/media/b07aeb7fd2749e3642f658ad6cb1e850e3a27815150cf413c11fcc1c0b58e5af.webp"/><figcaption>Guidance 如何改写采样方向。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>base score 保持模型原本驾驶分布。</li><li>energy gradient 推向安全、舒适、速度等偏好。</li><li>多个 guidance 可以组合，但尺度需要谨慎。</li></ul></div></div></section>
+<section id="card19"><h2>19 Guidance Energy 设计</h2><p>论文列出速度、舒适性、碰撞、可行驶区域等可微评价函数。它们可以被组合成推理时的偏好约束。</p><div class="figure-wrap"><figure><img alt="Guidance energy 设计" src="../../assets/media/5797faa464be9efdbd8c25fe33fd421591dcf020a74ee2a3eafb94d7d7e2274b.webp"/><figcaption>四类可微 guidance energy。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>速度 guidance 对齐目标速度。</li><li>舒适 guidance 关注 jerk/加速度等超限。</li><li>碰撞和可行驶区域 guidance 常需要组合，避免单目标副作用。</li></ul></div></div></section>
+<section id="card20"><h2>20 Collision Guidance 实现</h2><p>官方代码示例实现了 collision guidance：从预测轨迹构造车辆 bbox，计算 signed distance，再通过 autograd 得到推开轨迹的梯度。</p><div class="figure-wrap"><figure><img alt="Collision guidance 实现" src="../../assets/media/dd78c9ba24c71cbe648a5877efdf74957b468345245a2df41afaa4582aac037c.webp"/><figcaption>碰撞 guidance 的几何与梯度链路。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>center_rect_to_points 把中心状态转成四角点。</li><li>signed distance 衡量 ego 与邻车 rectangle 距离。</li><li>GuidanceWrapper 会先做 inverse normalization。</li></ul></div></div></section>
+<section id="card21"><h2>21 Guidance 工程接入</h2><p>新增 guidance 的工程入口很薄：写一个可微 guidance 函数，注册到 GuidanceWrapper，再用 guidance planner config 运行。</p><div class="figure-wrap"><figure><img alt="Guidance 工程接入" src="../../assets/media/0efbbff4f6ff3e07b0647f448d4cf6dd6dbd3c5169f54e6fd79e5ed966ab642b.webp"/><figcaption>自定义 guidance 接入步骤。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>函数签名接收 x、t、cond、inputs。</li><li>输出 reward/energy，必须能对 x 求梯度。</li><li>难点通常在尺度、可微性和 normalizer 配对。</li></ul></div></div></section>
+<section id="card22"><h2>22 多模态行为</h2><p>扩散模型能表达同一个起点下的多种合理未来。无导航时可以出现左转、直行、右转；有导航时则被 route condition 选中。</p><div class="figure-wrap"><figure><img alt="多模态行为" src="../../assets/media/cb401d8292b32f83d1668b1c56d52b7c943e61d67918ced53af89e667d04f92b.webp"/><figcaption>多模态驾驶分布与导航条件。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>多模态不是输出抖动，而是多个合理意图。</li><li>导航通过 AdaLN 条件影响去噪分布。</li><li>低温采样让闭环执行更稳定。</li></ul></div></div></section>
+<section id="card23"><h2>23 实验主结果</h2><p>nuPlan 上，Diffusion Planner 不加 refinement 的学习式输出已经很强；加现有 refinement 后还能进一步提升。</p><div class="figure-wrap"><figure><img alt="实验主结果" src="../../assets/media/21e56842ab6a4f3cb75d17b8aa7a4a633a1ddde9ad1c269cd81ce3a362ef1027.webp"/><figcaption>nuPlan 主结果摘要。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>NR/R 分别表示 non-reactive 与 reactive。</li><li>结果重点是直接模型输出质量，而不是只靠后处理。</li><li>对比时要注意 reference-line prior 等输入先验差异。</li></ul></div></div></section>
+<section id="card24"><h2>24 Guidance 案例效果</h2><p>目标速度、舒适性、碰撞和可行驶区域 guidance 体现了推理时行为可调的价值。</p><div class="figure-wrap"><figure><img alt="Guidance 案例效果" src="../../assets/media/d8d3fbd33d3bd9b0d6fcb81d394c625d1f066b70a6524d7bcb95064dd4c4e3bf.webp"/><figcaption>Guidance 前后对比。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>目标速度 guidance 可以调节速度范围。</li><li>舒适 guidance 可以缓解 jerk 异常。</li><li>collision 与 drivable guidance 组合能处理单目标冲突。</li></ul></div></div></section>
+<section id="card25"><h2>25 消融：训练设计为什么重要</h2><p>消融说明 augmentation、interpolation、z-score、current state 处理都不是小细节，去掉后闭环分数会明显下降。</p><div class="figure-wrap"><figure><img alt="训练设计消融" src="../../assets/media/dcc7f30f4fd3be17534aaa8b8a9acfdc17b113f78c50360513c825644078bb7c.webp"/><figcaption>训练设计消融结果。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>去掉 augmentation 的下降最大。</li><li>只扰动当前状态但不插值，会造成不物理过渡。</li><li>过多 ego 状态信息可能形成 shortcut。</li></ul></div></div></section>
+<section id="card26"><h2>26 消融：推理步数和低温采样</h2><p>推理不只是“多采几步”。闭环规划同时受质量、稳定性和实时性约束，DPM-Solver 的少步采样是关键工程点。</p><div class="figure-wrap"><figure><img alt="推理设计消融" src="../../assets/media/1d11f80e6ec61b784062094779b2b6e8044b0e2da736a90afdd7b91aff540941.webp"/><figcaption>推理步数与低温采样 trade-off。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>低温采样提升轨迹稳定性。</li><li>10-20 steps 通常是质量与耗时的平衡区间。</li><li>采样器参数错误会让闭环表现与训练质量脱节。</li></ul></div></div></section>
+<section id="card27"><h2>27 代码实现映射</h2><p>读官方仓库时，不要从 simulation runner 直接猜模型。先按 Encoder、Decoder、Loss、Sampling 四条主线建立映射。</p><div class="figure-wrap"><figure><img alt="代码实现映射" src="../../assets/media/b0008ec7f7f5ec52dac5a3f35b4939c87aebeff0e49f3801827fa5cee0b07388.webp"/><figcaption>论文模块到代码文件的映射。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>model/diffusion_planner.py 是入口。</li><li>encoder.py、decoder.py、dit.py 是结构主线。</li><li>loss.py、sampling.py、guidance/ 是训练和推理机制主线。</li></ul></div></div></section>
+<section id="card28"><h2>28 复现风险清单</h2><p>这篇论文最容易错的不是“代码能不能跑”，而是 mask、normalizer、current-state constraint、sampler 和 guidance 尺度是否真的对。</p><div class="figure-wrap"><figure><img alt="复现风险清单" src="../../assets/media/c584cb4c4e78b8ac42538105d7c30512b8c6c27f8fe9782b94bdbdf06f8bf7c0.webp"/><figcaption>复现与调试 checklist。</figcaption></figure><div class="notes"><h3>读图要点</h3><ul><li>先查 B/P/T/4 shape，再查 neighbor mask。</li><li>StateNormalizer 与 ObservationNormalizer 不能混用。</li><li>Guidance energy 过强/过弱都会破坏采样。</li></ul></div></div></section>
+<div class="source">
+<strong>主要来源：</strong>
+<a href="https://arxiv.org/html/2501.15564v1">arXiv HTML</a>；
+        <a href="https://github.com/ZhengYinan-AIR/Diffusion-Planner">官方 GitHub 仓库</a>；
+        官方 README、`diffusion_planner/model/*`、`loss.py`、`guidance/*`、`sampling.py`、`train_epoch.py`、`data_process/data_processor.py`。
+      </div>
+</main>
+</div>
+<div aria-hidden="true" class="lightbox" id="lightbox">
+<button aria-label="关闭" id="closeLightbox" type="button">×</button>
+<img alt="" id="lightboxImage" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="/>
+</div>
+<script>
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImage = document.getElementById('lightboxImage');
+    document.querySelectorAll('figure img').forEach((img) => {
+      img.addEventListener('click', () => {
+        lightboxImage.src = img.src;
+        lightboxImage.alt = img.alt;
+        lightbox.classList.add('open');
+        lightbox.setAttribute('aria-hidden', 'false');
+      });
+    });
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      lightboxImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==';
+    }
+    document.getElementById('closeLightbox').addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (event) => {
+      if (event.target === lightbox) closeLightbox();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeLightbox();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>setup.py</title><style>body{margin:0;background:#152a2e;color:#e4f3f3;font:13px/1.55 Consolas,monospace}.head{padding:16px;overflow-wrap:anywhere}.code{padding:16px;overflow:auto;white-space:pre}.line{display:block;min-width:max-content}.line:target{background:#665b18}a{color:#b9d9e3}</style><link href="../../../../favicon.ico" rel="icon"/></head><body><div class="head">setup.py<br/>COMMIT: 0ffec86436239d41cecaff34abcf57dca5539839<br/>SHA-256: c8ff99410d0826886f00eadcac30b53e5afc3face8a14a7c22ea7bd605d54994</div><pre class="code"><span class="line" id="L1"><a href="#L1">0001</a> # Copyright 2019 The Dreamer Authors. All rights reserved.</span>
+<span class="line" id="L2"><a href="#L2">0002</a> #</span>
+<span class="line" id="L3"><a href="#L3">0003</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span class="line" id="L4"><a href="#L4">0004</a> # you may not use this file except in compliance with the License.</span>
+<span class="line" id="L5"><a href="#L5">0005</a> # You may obtain a copy of the License at</span>
+<span class="line" id="L6"><a href="#L6">0006</a> #</span>
+<span class="line" id="L7"><a href="#L7">0007</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="line" id="L8"><a href="#L8">0008</a> #</span>
+<span class="line" id="L9"><a href="#L9">0009</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span class="line" id="L10"><a href="#L10">0010</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span class="line" id="L11"><a href="#L11">0011</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="line" id="L12"><a href="#L12">0012</a> # See the License for the specific language governing permissions and</span>
+<span class="line" id="L13"><a href="#L13">0013</a> # limitations under the License.</span>
+<span class="line" id="L14"><a href="#L14">0014</a> </span>
+<span class="line" id="L15"><a href="#L15">0015</a> from __future__ import absolute_import</span>
+<span class="line" id="L16"><a href="#L16">0016</a> from __future__ import division</span>
+<span class="line" id="L17"><a href="#L17">0017</a> from __future__ import print_function</span>
+<span class="line" id="L18"><a href="#L18">0018</a> </span>
+<span class="line" id="L19"><a href="#L19">0019</a> import setuptools</span>
+<span class="line" id="L20"><a href="#L20">0020</a> </span>
+<span class="line" id="L21"><a href="#L21">0021</a> </span>
+<span class="line" id="L22"><a href="#L22">0022</a> setuptools.setup(</span>
+<span class="line" id="L23"><a href="#L23">0023</a>     name='dreamer',</span>
+<span class="line" id="L24"><a href="#L24">0024</a>     version='1.0.0',</span>
+<span class="line" id="L25"><a href="#L25">0025</a>     description=(</span>
+<span class="line" id="L26"><a href="#L26">0026</a>         'Dream to Explore: Learning Behaviors by Latent Imagination'),</span>
+<span class="line" id="L27"><a href="#L27">0027</a>     license='Apache 2.0',</span>
+<span class="line" id="L28"><a href="#L28">0028</a>     url='http://github.com/google-research/dreamer',</span>
+<span class="line" id="L29"><a href="#L29">0029</a>     install_requires=[</span>
+<span class="line" id="L30"><a href="#L30">0030</a>         'dm_control',</span>
+<span class="line" id="L31"><a href="#L31">0031</a>         'gym',</span>
+<span class="line" id="L32"><a href="#L32">0032</a>         'matplotlib',</span>
+<span class="line" id="L33"><a href="#L33">0033</a>         'ruamel.yaml',</span>
+<span class="line" id="L34"><a href="#L34">0034</a>         'scikit-image',</span>
+<span class="line" id="L35"><a href="#L35">0035</a>         'scipy',</span>
+<span class="line" id="L36"><a href="#L36">0036</a>         'tensorflow-gpu==1.13.1',</span>
+<span class="line" id="L37"><a href="#L37">0037</a>         'tensorflow_probability==0.6.0',</span>
+<span class="line" id="L38"><a href="#L38">0038</a>     ],</span>
+<span class="line" id="L39"><a href="#L39">0039</a>     packages=setuptools.find_packages(),</span>
+<span class="line" id="L40"><a href="#L40">0040</a>     classifiers=[</span>
+<span class="line" id="L41"><a href="#L41">0041</a>         'Programming Language :: Python :: 3',</span>
+<span class="line" id="L42"><a href="#L42">0042</a>         'License :: OSI Approved :: Apache Software License',</span>
+<span class="line" id="L43"><a href="#L43">0043</a>         'Topic :: Scientific/Engineering :: Artificial Intelligence',</span>
+<span class="line" id="L44"><a href="#L44">0044</a>         'Intended Audience :: Science/Research',</span>
+<span class="line" id="L45"><a href="#L45">0045</a>     ],</span>
+<span class="line" id="L46"><a href="#L46">0046</a> )</span></pre></body></html>

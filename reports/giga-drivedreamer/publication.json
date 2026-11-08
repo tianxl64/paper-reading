@@ -6,7 +6,7 @@
   "source_html_sha256": "83773673d4e6378670f23d8310f5eb8bbe0c6b93cc619b15f6aa03a4eb0b8b9c",
   "upstream_stage": "v3_delivery_complete",
   "upstream_content_revision": "r4-v3.0-native-figures-accepted-reader",
-  "public_html_sha256": "a0a7c5c5ed43432cb237eeac946007873148b2ff505bb746028032514db96dcf",
+  "public_html_sha256": "001261257ff2fcbe09179f081cdf12997cdfe3cbbaec52576d1148793aa738ac",
   "content_preservation": {
     "main_text": true,
     "headings": true,
@@ -52,306 +52,306 @@
   "resources": [
     {
       "path": "assets/katex/katex.min.css",
-      "bytes": 23335,
-      "sha256": "717bc9ae7853b61f0f76455dddf0ecd4f527a783f42de2ac24684899c1c46258"
+      "bytes": 27244,
+      "sha256": "a67b09a3d0ae6eab813a2019c80d553ea8beab70a36e78fd50036d708f6234fc"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_AMS-Regular.woff2",
+      "path": "../../assets/fonts/0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308.woff2",
       "bytes": 28076,
       "sha256": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_AMS-Regular.woff",
+      "path": "../../assets/fonts/30da91e84c893f875e252689faebdc590b2871145e8adc7f9a9d4dbd8ce0b251.woff",
       "bytes": 33516,
       "sha256": "30da91e84c893f875e252689faebdc590b2871145e8adc7f9a9d4dbd8ce0b251"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_AMS-Regular.ttf",
+      "path": "../../assets/fonts/68534840bcfdd2bffb6f0e8deb48684dd01e7f04ea2813267577afb906de1d13.ttf",
       "bytes": 63632,
       "sha256": "68534840bcfdd2bffb6f0e8deb48684dd01e7f04ea2813267577afb906de1d13"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Caligraphic-Bold.woff2",
+      "path": "../../assets/fonts/de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c.woff2",
       "bytes": 6912,
       "sha256": "de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Caligraphic-Bold.woff",
+      "path": "../../assets/fonts/1ae6bd7475590e97e7f145a89e09ccde322f7a6bc0b91607b1c8b8ee28290fed.woff",
       "bytes": 7716,
       "sha256": "1ae6bd7475590e97e7f145a89e09ccde322f7a6bc0b91607b1c8b8ee28290fed"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Caligraphic-Bold.ttf",
+      "path": "../../assets/fonts/07d8e303ce4fc12b4bb54f1004170dd190a1f3db45d400fe68060df3e0897268.ttf",
       "bytes": 12368,
       "sha256": "07d8e303ce4fc12b4bb54f1004170dd190a1f3db45d400fe68060df3e0897268"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Caligraphic-Regular.woff2",
+      "path": "../../assets/fonts/5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b.woff2",
       "bytes": 6908,
       "sha256": "5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Caligraphic-Regular.woff",
+      "path": "../../assets/fonts/3398dd02302557a793f2863f88e02d96ce10df2abffa07c8e9fa90775116e65c.woff",
       "bytes": 7656,
       "sha256": "3398dd02302557a793f2863f88e02d96ce10df2abffa07c8e9fa90775116e65c"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Caligraphic-Regular.ttf",
+      "path": "../../assets/fonts/ed0b74372feefcbb9c0666b2e210da37b7e49fa7fbbf3eeb11db5f693dacfbb7.ttf",
       "bytes": 12344,
       "sha256": "ed0b74372feefcbb9c0666b2e210da37b7e49fa7fbbf3eeb11db5f693dacfbb7"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Fraktur-Bold.woff2",
+      "path": "../../assets/fonts/74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f.woff2",
       "bytes": 11348,
       "sha256": "74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Fraktur-Bold.woff",
+      "path": "../../assets/fonts/9be7ceb88004ab8ad124082246fbfcca4091e36385d4ec6ed1df67375dad50fb.woff",
       "bytes": 13296,
       "sha256": "9be7ceb88004ab8ad124082246fbfcca4091e36385d4ec6ed1df67375dad50fb"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Fraktur-Bold.ttf",
+      "path": "../../assets/fonts/9163df9c7122432e6495b4229fa9071cf9ae86a758ae5efc4924ec2e1a6dbce1.ttf",
       "bytes": 19584,
       "sha256": "9163df9c7122432e6495b4229fa9071cf9ae86a758ae5efc4924ec2e1a6dbce1"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Fraktur-Regular.woff2",
+      "path": "../../assets/fonts/51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc.woff2",
       "bytes": 11316,
       "sha256": "51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Fraktur-Regular.woff",
+      "path": "../../assets/fonts/5e28753be717dac97f559f49bc10be9cf3c124ddcabda6659d11cb68febc6463.woff",
       "bytes": 13208,
       "sha256": "5e28753be717dac97f559f49bc10be9cf3c124ddcabda6659d11cb68febc6463"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Fraktur-Regular.ttf",
+      "path": "../../assets/fonts/1e6f9579e90e2cac37f8f60a597c436e075c114385652b7cbeb0dec0421291b3.ttf",
       "bytes": 19572,
       "sha256": "1e6f9579e90e2cac37f8f60a597c436e075c114385652b7cbeb0dec0421291b3"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-Bold.woff2",
+      "path": "../../assets/fonts/0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021.woff2",
       "bytes": 25324,
       "sha256": "0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-Bold.woff",
+      "path": "../../assets/fonts/c76c5d696297d51b9cb1639c7da4334f0e7dec81b42b11213b5e25ef671bb822.woff",
       "bytes": 29912,
       "sha256": "c76c5d696297d51b9cb1639c7da4334f0e7dec81b42b11213b5e25ef671bb822"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-Bold.ttf",
+      "path": "../../assets/fonts/138ac28d1663b3037e9c5f52371fa5c63d8324f4a38d22cd573e6ea3a3fd0cf8.ttf",
       "bytes": 51336,
       "sha256": "138ac28d1663b3037e9c5f52371fa5c63d8324f4a38d22cd573e6ea3a3fd0cf8"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-BoldItalic.woff2",
+      "path": "../../assets/fonts/99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b.woff2",
       "bytes": 16780,
       "sha256": "99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-BoldItalic.woff",
+      "path": "../../assets/fonts/a6f7ec0d846ac7ad975adb8959c37ed49b94acbc4ae436db9ce9e20287e4a64c.woff",
       "bytes": 19412,
       "sha256": "a6f7ec0d846ac7ad975adb8959c37ed49b94acbc4ae436db9ce9e20287e4a64c"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-BoldItalic.ttf",
+      "path": "../../assets/fonts/70ee1f64a20f2048c21940ef46d0144fd215baa953ca69afd1e31e98544f708f.ttf",
       "bytes": 32968,
       "sha256": "70ee1f64a20f2048c21940ef46d0144fd215baa953ca69afd1e31e98544f708f"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-Italic.woff2",
+      "path": "../../assets/fonts/97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267.woff2",
       "bytes": 16988,
       "sha256": "97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-Italic.woff",
+      "path": "../../assets/fonts/f1d6ef86f3b11a528bd5185199bd2443ecb2b0dead96d88674b5a2c12be24bdf.woff",
       "bytes": 19676,
       "sha256": "f1d6ef86f3b11a528bd5185199bd2443ecb2b0dead96d88674b5a2c12be24bdf"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-Italic.ttf",
+      "path": "../../assets/fonts/0d85ae7cc30f23790a7f1a58c4a112fdca8aae769b6ba11429af1d98b1b6cb3a.ttf",
       "bytes": 33580,
       "sha256": "0d85ae7cc30f23790a7f1a58c4a112fdca8aae769b6ba11429af1d98b1b6cb3a"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-Regular.woff2",
+      "path": "../../assets/fonts/c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866.woff2",
       "bytes": 26272,
       "sha256": "c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-Regular.woff",
+      "path": "../../assets/fonts/c6368d87e8a1a3a5d337623d83d8dc4b868f242a9ad476237d6f8d1e0f168cdc.woff",
       "bytes": 30772,
       "sha256": "c6368d87e8a1a3a5d337623d83d8dc4b868f242a9ad476237d6f8d1e0f168cdc"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Main-Regular.ttf",
+      "path": "../../assets/fonts/d0332f52868370fd83ae7fa46470f90c8f2eab2fcf12bc4f88080b340c95a830.ttf",
       "bytes": 53580,
       "sha256": "d0332f52868370fd83ae7fa46470f90c8f2eab2fcf12bc4f88080b340c95a830"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Math-BoldItalic.woff2",
+      "path": "../../assets/fonts/dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1.woff2",
       "bytes": 16400,
       "sha256": "dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Math-BoldItalic.woff",
+      "path": "../../assets/fonts/850c0af5c2238497febaf5e461d880bf458c341f42f4f330f1b1ab5698b1998e.woff",
       "bytes": 18668,
       "sha256": "850c0af5c2238497febaf5e461d880bf458c341f42f4f330f1b1ab5698b1998e"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Math-BoldItalic.ttf",
+      "path": "../../assets/fonts/f9377ab0271cda59af24bcffbd46a4d0c8a3572ffafdbb38de2ad5ea7b0d5ee5.ttf",
       "bytes": 31196,
       "sha256": "f9377ab0271cda59af24bcffbd46a4d0c8a3572ffafdbb38de2ad5ea7b0d5ee5"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Math-Italic.woff2",
+      "path": "../../assets/fonts/7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264.woff2",
       "bytes": 16440,
       "sha256": "7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Math-Italic.woff",
+      "path": "../../assets/fonts/8a8d244581371912b8f3f5a23e2437cb2a59cd9bcaebb0346e722c05737a2571.woff",
       "bytes": 18748,
       "sha256": "8a8d244581371912b8f3f5a23e2437cb2a59cd9bcaebb0346e722c05737a2571"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Math-Italic.ttf",
+      "path": "../../assets/fonts/08ce98e51b04d58945a301e639e02b6998af29fdfd61a7b8afdd07bbfc479d4a.ttf",
       "bytes": 31308,
       "sha256": "08ce98e51b04d58945a301e639e02b6998af29fdfd61a7b8afdd07bbfc479d4a"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_SansSerif-Bold.woff2",
+      "path": "../../assets/fonts/e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62.woff2",
       "bytes": 12216,
       "sha256": "e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_SansSerif-Bold.woff",
+      "path": "../../assets/fonts/ece03cfd83e22c212cdef66feb8442d25a083beb988db3f1883f3f9738d750ba.woff",
       "bytes": 14408,
       "sha256": "ece03cfd83e22c212cdef66feb8442d25a083beb988db3f1883f3f9738d750ba"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_SansSerif-Bold.ttf",
+      "path": "../../assets/fonts/1ece03f79f95277d57dc7f6b435a74e1379b0d46104a8530286b60ff49369ea0.ttf",
       "bytes": 24504,
       "sha256": "1ece03f79f95277d57dc7f6b435a74e1379b0d46104a8530286b60ff49369ea0"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_SansSerif-Italic.woff2",
+      "path": "../../assets/fonts/00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a.woff2",
       "bytes": 12028,
       "sha256": "00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_SansSerif-Italic.woff",
+      "path": "../../assets/fonts/91ee67500cc0129aa0ace3ac5c61ff1692102f0f31d02b69347fba35dcb75bf2.woff",
       "bytes": 14112,
       "sha256": "91ee67500cc0129aa0ace3ac5c61ff1692102f0f31d02b69347fba35dcb75bf2"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_SansSerif-Italic.ttf",
+      "path": "../../assets/fonts/3931dd81faed86ba021bb2bbdc36f5bed9a38d6b4f4077aca59b265aa1b02083.ttf",
       "bytes": 22364,
       "sha256": "3931dd81faed86ba021bb2bbdc36f5bed9a38d6b4f4077aca59b265aa1b02083"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_SansSerif-Regular.woff2",
+      "path": "../../assets/fonts/68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342.woff2",
       "bytes": 10344,
       "sha256": "68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_SansSerif-Regular.woff",
+      "path": "../../assets/fonts/11e4dc8a6471ff6d6ee561d53d10fde8f7489e798257ff449c5d37c197435605.woff",
       "bytes": 12316,
       "sha256": "11e4dc8a6471ff6d6ee561d53d10fde8f7489e798257ff449c5d37c197435605"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_SansSerif-Regular.ttf",
+      "path": "../../assets/fonts/f36ea897e19f4a2e571d1e900e4e3710e438deb05a842486045ba0a3e616a4ad.ttf",
       "bytes": 19436,
       "sha256": "f36ea897e19f4a2e571d1e900e4e3710e438deb05a842486045ba0a3e616a4ad"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Script-Regular.woff2",
+      "path": "../../assets/fonts/036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b.woff2",
       "bytes": 9644,
       "sha256": "036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Script-Regular.woff",
+      "path": "../../assets/fonts/d96cdf2b3bdd4d64a8fd5f74a4c467f123a8a73931cd435889f08ffaf9bf947a.woff",
       "bytes": 10588,
       "sha256": "d96cdf2b3bdd4d64a8fd5f74a4c467f123a8a73931cd435889f08ffaf9bf947a"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Script-Regular.ttf",
+      "path": "../../assets/fonts/1c67f068fea8bb09bf099c088b1cf64bd27516a6e07f4684344873564bb66a67.ttf",
       "bytes": 16648,
       "sha256": "1c67f068fea8bb09bf099c088b1cf64bd27516a6e07f4684344873564bb66a67"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size1-Regular.woff2",
+      "path": "../../assets/fonts/6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe.woff2",
       "bytes": 5468,
       "sha256": "6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size1-Regular.woff",
+      "path": "../../assets/fonts/c943cc986384f59e86bea5fd7dc50a9c4dfe567a7c05eb40d6790720dead97c9.woff",
       "bytes": 6496,
       "sha256": "c943cc986384f59e86bea5fd7dc50a9c4dfe567a7c05eb40d6790720dead97c9"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size1-Regular.ttf",
+      "path": "../../assets/fonts/95b6d2f1a50173bfedb8c63e1d1c99b10427d0a4df4201cb44513b226951a22b.ttf",
       "bytes": 12228,
       "sha256": "95b6d2f1a50173bfedb8c63e1d1c99b10427d0a4df4201cb44513b226951a22b"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size2-Regular.woff2",
+      "path": "../../assets/fonts/d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd.woff2",
       "bytes": 5208,
       "sha256": "d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size2-Regular.woff",
+      "path": "../../assets/fonts/2014c523c3210bcc166648c4d4cc57f05b747df07a24277bf71c51e67dc79e3d.woff",
       "bytes": 6188,
       "sha256": "2014c523c3210bcc166648c4d4cc57f05b747df07a24277bf71c51e67dc79e3d"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size2-Regular.ttf",
+      "path": "../../assets/fonts/a6b2099fb555c60e3a0db3a08842ebf1d732c6eb4e4bf44913613bed4fc4e39b.ttf",
       "bytes": 11508,
       "sha256": "a6b2099fb555c60e3a0db3a08842ebf1d732c6eb4e4bf44913613bed4fc4e39b"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size3-Regular.woff2",
+      "path": "../../assets/fonts/73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995.woff2",
       "bytes": 3624,
       "sha256": "73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size3-Regular.woff",
+      "path": "../../assets/fonts/6ab6b62e9b62dae2c00dd90f791bd10950be0ecc3490d7d6045f51c2e8fe0949.woff",
       "bytes": 4420,
       "sha256": "6ab6b62e9b62dae2c00dd90f791bd10950be0ecc3490d7d6045f51c2e8fe0949"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size3-Regular.ttf",
+      "path": "../../assets/fonts/500e04d54f0d51666332c9d2089aa803be22aa878eca539e59fa53c6e522b082.ttf",
       "bytes": 7588,
       "sha256": "500e04d54f0d51666332c9d2089aa803be22aa878eca539e59fa53c6e522b082"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size4-Regular.woff2",
+      "path": "../../assets/fonts/a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0.woff2",
       "bytes": 4928,
       "sha256": "a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size4-Regular.woff",
+      "path": "../../assets/fonts/99f9c6750b489c9462bf04900bd3f939df9b829339daaaaa99ef5495cdddea58.woff",
       "bytes": 5980,
       "sha256": "99f9c6750b489c9462bf04900bd3f939df9b829339daaaaa99ef5495cdddea58"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Size4-Regular.ttf",
+      "path": "../../assets/fonts/c647367d1dd4e162468717d020e1fc0f1dc5c26ebfdffbe55261713bf88c5877.ttf",
       "bytes": 10364,
       "sha256": "c647367d1dd4e162468717d020e1fc0f1dc5c26ebfdffbe55261713bf88c5877"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Typewriter-Regular.woff2",
+      "path": "../../assets/fonts/71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b.woff2",
       "bytes": 13568,
       "sha256": "71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Typewriter-Regular.woff",
+      "path": "../../assets/fonts/e14fed02b1aba7ce9f5afd5844b5d0321b22351febc720e0de8b8723527609f7.woff",
       "bytes": 16028,
       "sha256": "e14fed02b1aba7ce9f5afd5844b5d0321b22351febc720e0de8b8723527609f7"
     },
     {
-      "path": "assets/katex/fonts/KaTeX_Typewriter-Regular.ttf",
+      "path": "../../assets/fonts/f01f3e87d9c6a61c0c081ceb577abd864eb00a612f7ac1620dd6915fad2ef5aa.ttf",
       "bytes": 27556,
       "sha256": "f01f3e87d9c6a61c0c081ceb577abd864eb00a612f7ac1620dd6915fad2ef5aa"
     },
@@ -361,149 +361,209 @@
       "sha256": "06530448405ccebf7cdaba97825219b3cb2eddb30bf885c931463cbf2852a80b"
     },
     {
-      "path": "source-assets/10_figures/accepted/F01-series-mechanism-overview.png",
-      "bytes": 1507322,
-      "sha256": "a591d89a2ab27ba1d56de2461874e4ba041998314230d92ec98df807496e077a"
+      "path": "../../assets/media/a591d89a2ab27ba1d56de2461874e4ba041998314230d92ec98df807496e077a.webp",
+      "bytes": 1025522,
+      "sha256": "6d6976aa44b0a2c9f7949521c6bc541ae185eb82952db7abf9ce1f3484653c43",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F11-data-task-map.png",
-      "bytes": 1638504,
-      "sha256": "436a31e72481d25fb95554b945c9e8b6f0a80ba884fe5046844e47d6ff4385a2"
+      "path": "../../assets/media/436a31e72481d25fb95554b945c9e8b6f0a80ba884fe5046844e47d6ff4385a2.webp",
+      "bytes": 1200516,
+      "sha256": "ce5cd58d7ce6f8832955b97146e05888bcb801c7224e1d56d038fd45ce1c8079",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/original-paper/crops/OP01.png",
-      "bytes": 113693,
-      "sha256": "e8e012b7db922b261c4c3c334bbff0090ce04c43faaf997025a7ebfd4da53f89"
+      "path": "../../assets/media/e8e012b7db922b261c4c3c334bbff0090ce04c43faaf997025a7ebfd4da53f89.webp",
+      "bytes": 54866,
+      "sha256": "d8bd262d1f77e06bb2d013759e94fcbef82f28ceee963c6e1af7f75e3974e617",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/original-paper/crops/OP02.png",
-      "bytes": 562818,
-      "sha256": "cce50ef60bc70343b0957e39f0c982ccb418fd3b9d0088c1e770f3fba42a4068"
+      "path": "../../assets/media/cce50ef60bc70343b0957e39f0c982ccb418fd3b9d0088c1e770f3fba42a4068.webp",
+      "bytes": 431518,
+      "sha256": "8f73ededc262c19f6f6f7717a76c88e0a0871d7085bdac952098ca114065c2c2",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F02-gaia1-token-flow.png",
-      "bytes": 1500321,
-      "sha256": "a9da7280f30e038afafa064bbe1dc4ca05e2fae9e475aec6b2a725b4b5108171"
+      "path": "../../assets/media/a9da7280f30e038afafa064bbe1dc4ca05e2fae9e475aec6b2a725b4b5108171.webp",
+      "bytes": 1025730,
+      "sha256": "1e3f1d772774962e8b0287d6bc53058a231c67f62067185e896b2142f665c9e2",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/original-paper/crops/OP03.png",
-      "bytes": 416745,
-      "sha256": "db9f91c745c44278bbe57aeb8a7b23e0f4ca3a07e4e3f4808c0c58274e194b8e"
+      "path": "../../assets/media/db9f91c745c44278bbe57aeb8a7b23e0f4ca3a07e4e3f4808c0c58274e194b8e.webp",
+      "bytes": 232516,
+      "sha256": "aabd0cf5a2834015a5f2eef106795c9edf77aa285835dd2cd7431ac686a50d5c",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/original-paper/crops/OP04.png",
-      "bytes": 177633,
-      "sha256": "cb32f16de5be8612d7574e37abbc1836551f839b872db792fd4ad1ceb5063e80"
+      "path": "../../assets/media/cb32f16de5be8612d7574e37abbc1836551f839b872db792fd4ad1ceb5063e80.webp",
+      "bytes": 102842,
+      "sha256": "5ab2f208613a0a51ea0e978d129152e68a11f5f9e990fd41d017e5f2f1242072",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F03-drivedreamer-auto-dm.png",
-      "bytes": 1536145,
-      "sha256": "1346b2f6a787ccff7551e6fa3a74080f3be89755130f3ed6c7a8d66ae0869b85"
+      "path": "../../assets/media/1346b2f6a787ccff7551e6fa3a74080f3be89755130f3ed6c7a8d66ae0869b85.webp",
+      "bytes": 1069024,
+      "sha256": "4d526511b7bc62848d949ef7a8012dcdd3582563f761e477f6c72b746c7ecfb9",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F04-actionformer-dynamics.png",
-      "bytes": 1551258,
-      "sha256": "0e6d9ce23a0db2e1abdd74536f04101c1e8d39e50c9580aaf37a65a192e62c25"
+      "path": "../../assets/media/0e6d9ce23a0db2e1abdd74536f04101c1e8d39e50c9580aaf37a65a192e62c25.webp",
+      "bytes": 1091912,
+      "sha256": "3cca9122fa22b7c7eb2c2f9991584274c4b2e72e112efd44390a6ce7fde9513c",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/original-paper/assets/OP05-framework_1.png",
-      "bytes": 163799,
-      "sha256": "a67c6f254dce5e4bf9336fab4247f484a836065254eb1b6426ab4b2b07f62ab2"
+      "path": "../../assets/media/a67c6f254dce5e4bf9336fab4247f484a836065254eb1b6426ab4b2b07f62ab2.webp",
+      "bytes": 93370,
+      "sha256": "fdb0e15d3755bc211b99ad6a0ff68372ae69cfbfd631a05d04c35eda4c1f8df6",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/original-paper/crops/OP06.png",
-      "bytes": 244264,
-      "sha256": "b90e0760e59c87d21aa6e68f52e5017027fb7f6f6db6ccecff265b1915815f44"
+      "path": "../../assets/media/b90e0760e59c87d21aa6e68f52e5017027fb7f6f6db6ccecff265b1915815f44.webp",
+      "bytes": 70398,
+      "sha256": "20ce8bb7e187d7e87a601ac8f6eee582fb6e37c8d7de086a4ec183c77d9f70d1",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F05-drivedreamer2-llm-multiview.png",
-      "bytes": 1571595,
-      "sha256": "b8c63ff5c08f4603438dd05947bf19ded79c08645c184b23a91f678091f50d17"
+      "path": "../../assets/media/b8c63ff5c08f4603438dd05947bf19ded79c08645c184b23a91f678091f50d17.webp",
+      "bytes": 1112096,
+      "sha256": "2559aa3f3752650b211e9f77a5f0643004c6eb89819179d0d03bc4d7042dd6fe",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/original-paper/crops/OP07.png",
-      "bytes": 642550,
-      "sha256": "549e26d0246be4bc35bf6ebe659c18e1e5c183495debdae0fc468f8a2458595f"
+      "path": "../../assets/media/549e26d0246be4bc35bf6ebe659c18e1e5c183495debdae0fc468f8a2458595f.webp",
+      "bytes": 356484,
+      "sha256": "b8e1f71c880734af51d1d3b1fd91b45cec126969e8b8897851a6e2bb26dbea04",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/original-paper/crops/OP08.png",
-      "bytes": 118297,
-      "sha256": "9cd2929d7c560116c8176ddf5aaacdd572b134aecccda61f1c812f5b8e194714"
+      "path": "../../assets/media/9cd2929d7c560116c8176ddf5aaacdd572b134aecccda61f1c812f5b8e194714.webp",
+      "bytes": 45528,
+      "sha256": "dd86685684d0504f41a62554d68411724b39f9d022b516e5423f4d8fc7538b93",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F06-drivedreamer4d-4dgs.png",
-      "bytes": 1608573,
-      "sha256": "9fae74db55a08059ef58ba41f485c32028f38b0374f169ae55b7651bc795f3af"
+      "path": "../../assets/media/9fae74db55a08059ef58ba41f485c32028f38b0374f169ae55b7651bc795f3af.webp",
+      "bytes": 1139310,
+      "sha256": "442b6e3d7d8a5d676725783165dc5f3a3298e94ffcf9a14a6b4974c1295dee69",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/original-paper/crops/OP09.png",
-      "bytes": 256127,
-      "sha256": "a98820a96674652b25e4c6766f63f98b7b13445e7d6333ab3c367748ffe9e53a"
+      "path": "../../assets/media/a98820a96674652b25e4c6766f63f98b7b13445e7d6333ab3c367748ffe9e53a.webp",
+      "bytes": 149508,
+      "sha256": "f2e38bde5e15da7a51ee040ac5016454d1bd640d0f1affcbdf199f8a32af7b6a",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/original-paper/crops/OP10.png",
-      "bytes": 82913,
-      "sha256": "c7857047c518b8ce4633f97bf47cd9ac42fc5839a8156f5112db8f5dfb2f32e8"
+      "path": "../../assets/media/c7857047c518b8ce4633f97bf47cd9ac42fc5839a8156f5112db8f5dfb2f32e8.webp",
+      "bytes": 31192,
+      "sha256": "d7fcf8a4e81c78f6f31323f31611114fafbabec6e82e1eb3f51a8b51198ec48f",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F07-policy-world-action.png",
-      "bytes": 1723711,
-      "sha256": "d4958ba262abe84151e64b429e2490804509fecf16d64c2396651a6defd5207a"
+      "path": "../../assets/media/d4958ba262abe84151e64b429e2490804509fecf16d64c2396651a6defd5207a.webp",
+      "bytes": 1216338,
+      "sha256": "278c9d8117717d7d8d2fe2eae97144ee4fac3cd84284f160dc5725bc63884f51",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F13-inference-state-cache-planning.png",
-      "bytes": 2161440,
-      "sha256": "9771237860af948d0a64b4bfc45396752b698f0979730f6d8b475007721c3cae"
+      "path": "../../assets/media/9771237860af948d0a64b4bfc45396752b698f0979730f6d8b475007721c3cae.webp",
+      "bytes": 1638092,
+      "sha256": "ca656f6521dc357546c7909e073a531bc44987d3cdb844bc9b45fc69447438a3",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F15-mechanism-lineage-evidence.png",
-      "bytes": 2081871,
-      "sha256": "675b5e4f27005617b82fffdc0162357d9121dd497b01da128efbe55e9826dc8c"
+      "path": "../../assets/media/675b5e4f27005617b82fffdc0162357d9121dd497b01da128efbe55e9826dc8c.webp",
+      "bytes": 1572620,
+      "sha256": "8617401a729dea3998a40bd35364e6a9b94aa706f0565b78ff6a93f93c5d0e7f",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F10-mechanism-boundary-matrix.png",
-      "bytes": 1728895,
-      "sha256": "92df1cf89f28b48137c4de78dbd16355ca5bb87d172e071ee13549e89379e3e4"
+      "path": "../../assets/media/92df1cf89f28b48137c4de78dbd16355ca5bb87d172e071ee13549e89379e3e4.webp",
+      "bytes": 1221818,
+      "sha256": "7fc40bb987212aed882ad272339bfda884f21733c2770f49fc5265af27763f12",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F14-code-entry-crosswalk.png",
-      "bytes": 2130459,
-      "sha256": "52903a9f4e40ee29743509938919a7055cfd1810e49d4aaaad013d8d49c26940"
+      "path": "../../assets/media/52903a9f4e40ee29743509938919a7055cfd1810e49d4aaaad013d8d49c26940.webp",
+      "bytes": 1617756,
+      "sha256": "c6ae773cec5559005c15d173c91cf5933acd476488120733cd85daeda3da2693",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F16-representation-boundary-matrix.png",
-      "bytes": 2077023,
-      "sha256": "e4f8c2533a48d2fe15462c1c261f8fab992b9b292537418934694e2973704c51"
+      "path": "../../assets/media/e4f8c2533a48d2fe15462c1c261f8fab992b9b292537418934694e2973704c51.webp",
+      "bytes": 1578688,
+      "sha256": "03cff47eecae7102d5248e5cc962acf272797f9cf11b2a747c50ddb297e1b4d3",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F09-paper-code-crosswalk.png",
-      "bytes": 1863526,
-      "sha256": "a85aaa8af8f4d68d9f8a9f3709591515c97dfda1d10b23126e60ea0fa377bc44"
+      "path": "../../assets/media/a85aaa8af8f4d68d9f8a9f3709591515c97dfda1d10b23126e60ea0fa377bc44.webp",
+      "bytes": 1350418,
+      "sha256": "75946e2cc6faedb57a7152a37176ac443ae5cd34e4dc776df18094c49dcfef95",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F17-metric-protocol-boundary.png",
-      "bytes": 1964121,
-      "sha256": "a67aac35d737a4aa7d998925da95a040b768000e106e7b4cc53ae92993c7a4d6"
+      "path": "../../assets/media/a67aac35d737a4aa7d998925da95a040b768000e106e7b4cc53ae92993c7a4d6.webp",
+      "bytes": 1482632,
+      "sha256": "07aa87f1a78f05f20580a1be1169773ea155f55c4a275d6d04776e657ab46d16",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F08-training-inference-boundary.png",
-      "bytes": 1694253,
-      "sha256": "b9eb9117ace7e284766e893bed07d921a2f196e308b687783a6da0ca72c4ff7c"
+      "path": "../../assets/media/b9eb9117ace7e284766e893bed07d921a2f196e308b687783a6da0ca72c4ff7c.webp",
+      "bytes": 1202818,
+      "sha256": "72c954928bf9f6ea368712882a5e770f97a81066b1eda986d33f97c32a6ea0af",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F18-failure-safety-boundary.png",
-      "bytes": 2019364,
-      "sha256": "99d78771152267f66d8c9cdc9cd300df26e4dfdcc61ab70b08420725d168a1e6"
+      "path": "../../assets/media/99d78771152267f66d8c9cdc9cd300df26e4dfdcc61ab70b08420725d168a1e6.webp",
+      "bytes": 1515266,
+      "sha256": "199435f937e49a7351d733a851c0814f82921e4ff196a6814bb868671296dc47",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "source-assets/10_figures/accepted/F12-training-inference-policy-boundary.png",
-      "bytes": 1951204,
-      "sha256": "a693aa63ecaa00232079f55c6683e831324f90c445bb4a6f07b5f2224b5da76a"
+      "path": "../../assets/media/a693aa63ecaa00232079f55c6683e831324f90c445bb4a6f07b5f2224b5da76a.webp",
+      "bytes": 1458490,
+      "sha256": "267e76855373ce597dd1562d219131bdacc9b74ff89489a1577663e03dfe59f4",
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
       "path": "assets/reader-v3.js",
       "bytes": 6318,
       "sha256": "137ec5f871b60b701df815c46756cf71b471205b6a11451d7120fb6a9ce708c4"
     }
-  ]
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
 }

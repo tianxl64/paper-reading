@@ -1,0 +1,158 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "diffusion-rl-study",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "flowgrpo-vs-diffusiondrivev2.html",
+  "source_html_sha256": "fbb544a9f9b57d46a4b975137f28626ba98dc99dfa1d6bb77323ccefee50f8d9",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "b3e3518c4800968105b74006636f734345c44c09e75b0ea6fadeb97f23fa1002",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 124,
+      "original_static_math": 0,
+      "added_static_math": 621
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 621,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "../../assets/media/70e0370ec854e70b47b9178139fd21bcedf5b3d69b2267a2874d6e46f5c31f5a.webp",
+      "source_sha256": "70e0370ec854e70b47b9178139fd21bcedf5b3d69b2267a2874d6e46f5c31f5a",
+      "sha256": "8d11a5c5b61640925b2fe38ca831c6e56c58929ae8ecce91cf63d0842bae7a7f",
+      "bytes": 103844,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/6f0018116bbc5b4553a9cdf802f4b423d49e3ce7222e50c453159fe1cb7f7fe5.webp",
+      "source_sha256": "6f0018116bbc5b4553a9cdf802f4b423d49e3ce7222e50c453159fe1cb7f7fe5",
+      "sha256": "a35f9e674e5557e9d52d1b4a421f48397fe026ff7f07b3247c480a1d061e06c5",
+      "bytes": 392800,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/5d745af7d5dcce6d683851976dc8800516e4cde9b54dc3d9d4a5c649aed749ae.webp",
+      "source_sha256": "5d745af7d5dcce6d683851976dc8800516e4cde9b54dc3d9d4a5c649aed749ae",
+      "sha256": "6090d7cc14b723a801e7d859b94ec32338157dfbbcbda3f9088d9abe0db411f8",
+      "bytes": 264428,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/bdf8b2f2cd53d61cfd3df3316a73dc1c8ba8891bd0cc6dfcbd63ddbb40cc4573.webp",
+      "source_sha256": "bdf8b2f2cd53d61cfd3df3316a73dc1c8ba8891bd0cc6dfcbd63ddbb40cc4573",
+      "sha256": "0249b8862b9a677f2ef5894499cb5c9ae71aee3d803386f325e5ac2ab47b3d83",
+      "bytes": 817046,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/313a2d1b0c3d5947f384cc458aab394fa8d1e610f8899ae05da5e8b7ce86f929.webp",
+      "source_sha256": "313a2d1b0c3d5947f384cc458aab394fa8d1e610f8899ae05da5e8b7ce86f929",
+      "sha256": "ba1efc0fd56d4663d190d5410cb8b7b38e1f5abb050c84cd75bf182adae2a888",
+      "bytes": 565948,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/131e5a03aebb6864e810cf5f71e4b5bc235b385b88a6c7c5aedc17944c286770.webp",
+      "source_sha256": "131e5a03aebb6864e810cf5f71e4b5bc235b385b88a6c7c5aedc17944c286770",
+      "sha256": "33e46b7227ab8e5a06e1743d22d476891ef08af6752ace4441d0352d4134685c",
+      "bytes": 892688,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "assets/generated/T04/T04-F01-four-routes.svg",
+      "source_sha256": "65b8fe045819bcc442d9e83f494a074617d67d496d1088114fc77f830b584e90",
+      "sha256": "65b8fe045819bcc442d9e83f494a074617d67d496d1088114fc77f830b584e90",
+      "bytes": 7882
+    },
+    {
+      "path": "assets/generated/T04/T04-F02-gradient-map.svg",
+      "source_sha256": "44679dcf6436c995b5fc1c38a5110f8a877c264f5298e9a0da6b985f5047b142",
+      "sha256": "44679dcf6436c995b5fc1c38a5110f8a877c264f5298e9a0da6b985f5047b142",
+      "bytes": 7404
+    },
+    {
+      "path": "../../assets/media/f3cb652813c47f858b18487bccb3da6b72c09c3aa5bbfc9c9573e775e0d9b772.webp",
+      "source_sha256": "f3cb652813c47f858b18487bccb3da6b72c09c3aa5bbfc9c9573e775e0d9b772",
+      "sha256": "dc0283ed053823c7f37cca0bb690f22e0ea006cd7d531dd18cec6a8f08b2d9d8",
+      "bytes": 59554,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "assets/source/T04/blog-awm.jpg",
+      "source_sha256": "e302c78c842bd85ec7eb329ad9f943e4170722ff7742bd5bcc5d1e830e72821e",
+      "sha256": "e302c78c842bd85ec7eb329ad9f943e4170722ff7742bd5bcc5d1e830e72821e",
+      "bytes": 90523
+    },
+    {
+      "path": "../../assets/media/7f6409daaef08ac6ab76689cda0d127e1e69d08967de91abfa2e403f02c0da8f.webp",
+      "source_sha256": "7f6409daaef08ac6ab76689cda0d127e1e69d08967de91abfa2e403f02c0da8f",
+      "sha256": "9132aa9910990f47d53bd50fc39444c30e8372d7a62d3aabfe377f5f96207aa6",
+      "bytes": 59380,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "assets/source/T04/blog-diffusionnft-algorithm.jpg",
+      "source_sha256": "ce156947776a2e33048d1930d46775854273dfcecfcb71a109bf7f37e50bd9d8",
+      "sha256": "ce156947776a2e33048d1930d46775854273dfcecfcb71a109bf7f37e50bd9d8",
+      "bytes": 117403
+    },
+    {
+      "path": "assets/source/T04/blog-flow-improvement.jpg",
+      "source_sha256": "6df8ac56e692e5f879432740a4fc693a4ce10ce3ec697bf73f3f2347b13386ef",
+      "sha256": "6df8ac56e692e5f879432740a4fc693a4ce10ce3ec697bf73f3f2347b13386ef",
+      "bytes": 18867
+    },
+    {
+      "path": "../../assets/media/d23e0c8b11180f644fbd4a2062102e1afd611f49ad8981cb4fbca8443d63b595.webp",
+      "source_sha256": "d23e0c8b11180f644fbd4a2062102e1afd611f49ad8981cb4fbca8443d63b595",
+      "sha256": "b9b1c890a7fca2211c7c412bd9b747f9af9e5b38166e7f3fd1fb30d387353a3a",
+      "bytes": 61904,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "assets/source/T04/blog-q-steering-overview.jpg",
+      "source_sha256": "eb33f57063f0eae080998e581da428bffcb906fabc0ce256ebcaa6ad123cb1f8",
+      "sha256": "eb33f57063f0eae080998e581da428bffcb906fabc0ce256ebcaa6ad123cb1f8",
+      "bytes": 60931
+    },
+    {
+      "path": "assets/source/T04/blog-q-steering-detail.jpg",
+      "source_sha256": "fd073bb193bda24679df1bcb2e57e92e5e165d59e0f7f587d6c4c144c25d43f4",
+      "sha256": "fd073bb193bda24679df1bcb2e57e92e5e165d59e0f7f587d6c4c144c25d43f4",
+      "bytes": 92976
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "fbb544a9f9b57d46a4b975137f28626ba98dc99dfa1d6bb77323ccefee50f8d9",
+      "sha256": "b3e3518c4800968105b74006636f734345c44c09e75b0ea6fadeb97f23fa1002",
+      "bytes": 1452754
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

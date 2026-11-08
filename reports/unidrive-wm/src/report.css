@@ -1,0 +1,59 @@
+:root {
+  --ink: #17202a;
+  --muted: #5f6b76;
+  --paper: #ffffff;
+  --bg: #eef2f5;
+  --line: #d8e0e7;
+  --blue: #1769aa;
+  --cyan: #0b8f9c;
+  --orange: #d46a1f;
+  --green: #27734d;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif; line-height: 1.78; }
+.shell { max-width: 1880px; margin: auto; display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 24px; padding: 24px; }
+.toc { position: sticky; top: 20px; height: calc(100vh - 40px); overflow: auto; background: #152536; color: #eaf3f8; padding: 22px 18px; border-radius: 8px; }
+.toc h2 { font-size: 18px; margin: 0 0 14px; }
+.toc a { display: block; color: #c9d9e5; text-decoration: none; font-size: 13px; padding: 5px 8px; border-left: 3px solid transparent; }
+.toc a.h3 { padding-left: 22px; font-size: 12px; }
+.toc a.h4 { padding-left: 34px; font-size: 12px; }
+.toc a.active { color: #fff; background: #21445e; border-left-color: #f2a65a; }
+.article { background: var(--paper); padding: 42px 64px 80px; border-radius: 8px; min-width: 0; }
+.hero { border-bottom: 1px solid var(--line); padding-bottom: 26px; margin-bottom: 30px; }
+.kicker { color: var(--blue); font-weight: 700; letter-spacing: .04em; }
+.hero h1 { font-size: 38px; line-height: 1.25; margin: 8px 0 16px; }
+.meta { display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted); font-size: 14px; }
+.meta span { border: 1px solid var(--line); padding: 4px 9px; border-radius: 4px; }
+.abstract, .callout { background: #f4f8fb; border-left: 5px solid var(--blue); padding: 18px 22px; margin: 24px 0; }
+.warning { border-left-color: var(--orange); background: #fff8f1; }
+.evidence { font-size: 13px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
+.article h2 { font-size: 28px; border-bottom: 2px solid var(--ink); padding-bottom: 7px; margin-top: 54px; scroll-margin-top: 20px; }
+.article h3 { font-size: 21px; color: #1a4c70; margin-top: 34px; scroll-margin-top: 20px; }
+.article h4 { font-size: 17px; color: #34515f; scroll-margin-top: 20px; }
+.figure-card { margin: 26px 0 30px; border: 1px solid var(--line); padding: 14px; background: #fbfcfd; }
+.figure-card img { display: block; width: 100%; height: auto; min-height: 180px; object-fit: contain; background: #edf1f4; cursor: zoom-in; }
+.figure-card img[data-status="pending"] { opacity: .55; }
+.figure-card figcaption { font-weight: 700; margin-top: 12px; }
+.figure-details { background: #f6f8fa; border-left: 4px solid var(--cyan); padding: 14px 18px; margin-top: 10px; }
+.figure-details h4 { margin: 0 0 6px; color: #0b6872; }
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+table { border-collapse: collapse; width: 100%; min-width: 720px; font-size: 13px; }
+th, td { border: 1px solid var(--line); padding: 8px 9px; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+th { background: #edf4f8; color: #173b50; }
+.code { background: #17212b; color: #e8f0f4; padding: 16px 18px; overflow: auto; font: 13px/1.6 Consolas, monospace; border-radius: 5px; }
+.formula { text-align: center; overflow-x: auto; padding: 14px 0; }
+.note { color: var(--muted); font-size: 14px; }
+.footer { border-top: 1px solid var(--line); margin-top: 60px; padding-top: 20px; color: var(--muted); font-size: 13px; }
+.overlay { display: none; position: fixed; inset: 0; background: rgba(10,20,30,.86); z-index: 10; align-items: center; justify-content: center; overflow: hidden; }
+.overlay.open { display: flex; }
+.viewer-stage { width: 100vw; height: 100vh; overflow: hidden; position: relative; display: grid; place-items: center; }
+.overlay img { max-width: 92vw; max-height: 88vh; transform: translate(0,0) scale(1); transition: transform .15s; cursor: grab; user-select: none; touch-action: none; }
+.overlay img.dragging { cursor: grabbing; }
+.viewer-tools { position: absolute; left: 18px; top: 18px; z-index: 12; display: flex; gap: 6px; }
+.viewer-tools button, #viewer-close { border: 0; color: #fff; background: #334b5d; padding: 8px 12px; cursor: pointer; }
+#viewer-close { position: absolute; right: 22px; top: 18px; z-index: 12; font-size: 20px; }
+.zoom-readout { color: #fff; align-self: center; padding: 4px 8px; font-size: 13px; }
+@media (max-width: 1000px) { .shell { display: block; padding: 0; } .toc { position: relative; height: auto; border-radius: 0; } .article { border-radius: 0; padding: 28px 18px 60px; } .hero h1 { font-size: 30px; } }
+@media (max-width: 700px) { .viewer-tools { left: 8px; top: 8px; gap: 3px; } .viewer-tools button, #viewer-close { padding: 7px 9px; } .article h2 { font-size: 24px; } }

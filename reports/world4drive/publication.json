@@ -1,0 +1,108 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "world4drive",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "report.html",
+  "source_html_sha256": "26529e75a85d8470a34bec79127d0581c1b3cd74de9c2c7e38a2126c913deb65",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "966e1dbba0c777b0d975377164c3d9f089f9396123103c65b971dc3492cc7f77",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 31,
+      "original_static_math": 0,
+      "added_static_math": 0
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 0,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "../../assets/media/e725ba988c5b07cf1389ea999004d7754b5e1c3d1eb118ecf90b03ed2c842b96.webp",
+      "source_sha256": "e725ba988c5b07cf1389ea999004d7754b5e1c3d1eb118ecf90b03ed2c842b96",
+      "sha256": "d98d299667fc66a350825012bbe3d1ac02cd88f7d771540a2a906ffbc17d3c9c",
+      "bytes": 1237472,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/32594866743e142713810cb0b1b0560287d015a50875d29c4ae9061ec57a45e4.webp",
+      "source_sha256": "32594866743e142713810cb0b1b0560287d015a50875d29c4ae9061ec57a45e4",
+      "sha256": "c515ceea541af71317bb35255ac6ed1e4ef19ea2ddcb41a458761f130ed19a10",
+      "bytes": 1304960,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/e78813d934e2dcf36995497ffcd3edb3ffe74bd0096e76581eaa3a4bd08768a5.webp",
+      "source_sha256": "e78813d934e2dcf36995497ffcd3edb3ffe74bd0096e76581eaa3a4bd08768a5",
+      "sha256": "f4696e37a578b5d971260258ccd02d9122600ce60e689969a0da2849d7c6d034",
+      "bytes": 1234842,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/255b7f71aea839f1c59fb038b54f04062394c50a705ef59022266617b4a010d6.webp",
+      "source_sha256": "255b7f71aea839f1c59fb038b54f04062394c50a705ef59022266617b4a010d6",
+      "sha256": "1bf86f37629256b2a5e5a91e0470d04987a6dc4b8da551e5af5156481cb4856c",
+      "bytes": 1335768,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/04c29dd9bb4b332681a45c6578f327e70c0df6d3299b00e1e95758e6d8a280fd.webp",
+      "source_sha256": "04c29dd9bb4b332681a45c6578f327e70c0df6d3299b00e1e95758e6d8a280fd",
+      "sha256": "ae895a2a1d80f7332a08a40f4437a23791626e24b197946dfef79e55ef037253",
+      "bytes": 1383524,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/4af976259b490ed8b537b59df0c31e8709eb2f9c147a37917223d776a1a9ac77.webp",
+      "source_sha256": "4af976259b490ed8b537b59df0c31e8709eb2f9c147a37917223d776a1a9ac77",
+      "sha256": "faac7729284568d8b37a2191459e3a2b82c375278c4230fc3e3f0383debacc11",
+      "bytes": 1369190,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/ee9c309ada0e74b31d8ddb812e86c965ea9dbc358ede44d2f8073870cfb978f7.webp",
+      "source_sha256": "ee9c309ada0e74b31d8ddb812e86c965ea9dbc358ede44d2f8073870cfb978f7",
+      "sha256": "b9795fd4eb33a09ec31f0c02ace901a0a182a7d6c1c463e3261256121cfd8e7f",
+      "bytes": 1331214,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/362766fbcf2d94b9ed534aeb912748b43956f13a2533d71aeef9165f6717c9aa.webp",
+      "source_sha256": "362766fbcf2d94b9ed534aeb912748b43956f13a2533d71aeef9165f6717c9aa",
+      "sha256": "96391af8964a7c830de8167a93c94e59f64a54358ebf76e502835b38987dc0c0",
+      "bytes": 1252634,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "26529e75a85d8470a34bec79127d0581c1b3cd74de9c2c7e38a2126c913deb65",
+      "sha256": "966e1dbba0c777b0d975377164c3d9f089f9396123103c65b971dc3492cc7f77",
+      "bytes": 32248
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "vla-diffusion-rl",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "index.html",
+  "source_html_sha256": "ac07aae331bdacac6f838ed1fd22a04d681f6c23085a7042021cb14de937f640",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "a839ba38ab92e61afa3a27faf2a24d3a0801a38eace125cfdc973158c10c2eec",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 72,
+      "original_static_math": 0,
+      "added_static_math": 6
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 6,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "vendor/mathjax/tex-chtml.js",
+      "source_sha256": "0a6ded5abbce13331658dd239f34382abd06492c74b71b61e8caa8112ec55fa5",
+      "sha256": "0a6ded5abbce13331658dd239f34382abd06492c74b71b61e8caa8112ec55fa5",
+      "bytes": 1160989
+    },
+    {
+      "path": "../../assets/media/3b294a8e02d01e10ad6c05520c411c86bac71e915b2d646032909ae9ffb7e422.webp",
+      "source_sha256": "3b294a8e02d01e10ad6c05520c411c86bac71e915b2d646032909ae9ffb7e422",
+      "sha256": "d25a3205032b1826860d8e330852e3e1d51426e1eaafeeaec313bb667a38512f",
+      "bytes": 941714,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/f8ca3cd29bf525fc81ee47abc06d948630709fb1aeeba760b87e4d78636e0e1a.webp",
+      "source_sha256": "f8ca3cd29bf525fc81ee47abc06d948630709fb1aeeba760b87e4d78636e0e1a",
+      "sha256": "df5b248c1b84bdf7d7d5b5de5b304c98dbfb8b36527ee692b4dc8c0ef2306363",
+      "bytes": 1152088,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/57a5b517f789388fb27f29df689122eb58640f7063aea09868f386305f5664d6.webp",
+      "source_sha256": "57a5b517f789388fb27f29df689122eb58640f7063aea09868f386305f5664d6",
+      "sha256": "e120f9228a68c5e6fd410642576c6159e23386dd89e5bf4d0198e0baa69e20c0",
+      "bytes": 790408,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/5e18f3d7dd7055434b62ef96228610dfc91e3e993640eabb96ab9c44ff4fb969.webp",
+      "source_sha256": "5e18f3d7dd7055434b62ef96228610dfc91e3e993640eabb96ab9c44ff4fb969",
+      "sha256": "d0bbdfd58b320eddf1514d99c5910abfe0ac8685d76deff0588cb4746f42d31a",
+      "bytes": 769930,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/fca8016645f32a0c271e96087e957c0701b427e958b61c087d79ea8b61a63391.webp",
+      "source_sha256": "fca8016645f32a0c271e96087e957c0701b427e958b61c087d79ea8b61a63391",
+      "sha256": "1b14edb8ce5b11cabe33b0edee9badc5273abd73db923261a659d0366a636914",
+      "bytes": 879376,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "ac07aae331bdacac6f838ed1fd22a04d681f6c23085a7042021cb14de937f640",
+      "sha256": "a839ba38ab92e61afa3a27faf2a24d3a0801a38eace125cfdc973158c10c2eec",
+      "bytes": 332015
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

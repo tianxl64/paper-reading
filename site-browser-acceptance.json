@@ -1,11 +1,28 @@
 {
-  "status": "accepted",
-  "reports": 11,
-  "index_cards_desktop": 11,
-  "index_cards_mobile": 11,
-  "search_filter": "accepted",
-  "category_filter": "accepted",
-  "report_navigation": "accepted",
-  "mobile_overflow": false,
-  "browser_errors": 0
+  "schema": "paper-reading-browser-acceptance.v2",
+  "verified_on": "2026-11-08",
+  "reports": 50,
+  "http_readers_passed": 50,
+  "offline_file_readers_passed": 50,
+  "home_cards": 50,
+  "search_verified": true,
+  "content_preservation_reports": 50,
+  "broken_images": 0,
+  "page_errors": 0,
+  "failed_runtime_requests": 0,
+  "visible_raw_math": 0,
+  "duplicate_ids": 0,
+  "missing_toc_targets": 0,
+  "desktop_width": 1440,
+  "mobile_width": 390,
+  "mobile_reports": [
+    "rl-token",
+    "dreamer-series",
+    "dreamer-v1",
+    "wam",
+    "vjepa2-jepa"
+  ],
+  "lossless_source_images": 1186,
+  "pixel_equality_verified": true,
+  "temporary_server_closed": true
 }

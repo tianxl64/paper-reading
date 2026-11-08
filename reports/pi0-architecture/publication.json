@@ -1,0 +1,91 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "pi0-architecture",
+  "published_at": "2026-11-08T04:18:33+00:00",
+  "complete": true,
+  "source_relative_html": "index.html",
+  "source_html_sha256": "8619fc1baa52026f7ede01c642c77bb3022c01392bda0f5fd3492b2eebac683e",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "8a20693761287abcdfb322893cd5d837dc0855f4e78504dbd83f348a30e145f5",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 35,
+      "original_static_math": 0,
+      "added_static_math": 19
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 19,
+    "documents": 1
+  },
+  "source_math_recovery": [
+    {
+      "raw_source_fragment": "\\[\\begin{aligned}o_t&=[I_t^1,\\ldots,I_t^n,\\ell_t,q_t]\\\\A_t&=[a_t,\\ldots,a_{t+H-1}]\\\\H&=50\\end{aligned}\\]",
+      "recovered_tex_fragment": "\\[\\begin{aligned}o_t&=[I_t^1,\\ldots,I_t^n,\\ell_t,q_t]\\\\A_t&=[a_t,\\ldots,a_{t+H-1}]\\\\H&=50\\end{aligned}\\]",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    }
+  ],
+  "resources": [
+    {
+      "path": "../../assets/media/303921d796861595e82c578bd7cbd4fe7b8af07c961487e3fa1c7af3c5cfc92d.webp",
+      "source_sha256": "303921d796861595e82c578bd7cbd4fe7b8af07c961487e3fa1c7af3c5cfc92d",
+      "sha256": "e679c74eb145d65f1291a3b4162ba310cd2f1734e0424dde3aa4ad451da14060",
+      "bytes": 341826,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/af335eda8f7768d8cedc85911f07a63be7f75c3cf0f582d92147671c51287444.webp",
+      "source_sha256": "af335eda8f7768d8cedc85911f07a63be7f75c3cf0f582d92147671c51287444",
+      "sha256": "7d3025fd85cdbf251128cbabbd439ddcbd5e1516cf9954a3cdb2a425977835e0",
+      "bytes": 5480,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "sources/openpi-pi0-config.py",
+      "source_sha256": "3e803fae376cb3bd1481e6b4cf3a1ee3b976de1411d62b035822af4be8584f7a",
+      "sha256": "d321858c30b398126035ea2b6da09e1c422eeeebb5ebf8df631daf9dc77647fa",
+      "bytes": 4435
+    },
+    {
+      "path": "sources/openpi-pi0.py",
+      "source_sha256": "19b25188bd1c7a56c84c93762776a480c103d4060d30e790234939f5063640a2",
+      "sha256": "24b32d7c6ed5e409459afa8ca5af96a4dae09c2dcdf48e828907e411f4f12342",
+      "bytes": 12887
+    },
+    {
+      "path": "sources/openpi-gemma.py",
+      "source_sha256": "543fb8ef8ac04195704f4ad402dc08821657005aec88a8a413efd870f5228ec0",
+      "sha256": "7e42ada4ae7e9995f0ef3e33a0c224758323c2015e2d9d72ec15726a8a001d2a",
+      "bytes": 17146
+    },
+    {
+      "path": "sources/openpi-siglip.py",
+      "source_sha256": "289bde3dc8dfb46c07d7ed4fbdd29a4dda2cc30f5e8a1b76cc7326d5d5959eca",
+      "sha256": "14b4df0be280d5769fb0dc31a40cde27525dbb1980cc998c28475d62fa3cad32",
+      "bytes": 12078
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "8619fc1baa52026f7ede01c642c77bb3022c01392bda0f5fd3492b2eebac683e",
+      "sha256": "8a20693761287abcdfb322893cd5d837dc0855f4e78504dbd83f348a30e145f5",
+      "bytes": 112014
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Qwen-VL 系列重点模块实现与设计细节白话详解</title>
+<link href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%232266aa'/%3E%3Ctext x='8' y='11' font-size='8' text-anchor='middle' fill='white'%3EQ%3C/text%3E%3C/svg%3E" rel="icon"/>
+<script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)'], ['$', '$']], displayMath: [['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+<script defer="" src="../../assets/vendor/static-math-ready.js"></script>
+<style>
+    :root {
+      --bg: #f6f7f9;
+      --paper: #ffffff;
+      --ink: #1f2933;
+      --muted: #5b6777;
+      --line: #d9dee7;
+      --accent: #2266aa;
+      --accent-soft: #e7f0fb;
+      --code: #111827;
+      --green: #0f766e;
+      --orange: #a45114;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; line-height: 1.78; }
+    .layout { display: grid; grid-template-columns: 292px minmax(0, 1fr); min-height: 100vh; }
+    aside { position: sticky; top: 0; height: 100vh; overflow: auto; padding: 20px 16px; border-right: 1px solid var(--line); background: #fbfcfe; }
+    aside h1 { font-size: 18px; line-height: 1.35; margin: 0 0 8px; }
+    aside .meta { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+    nav a { display: block; color: #334155; text-decoration: none; padding: 7px 9px; margin: 2px 0; border-left: 3px solid transparent; border-radius: 4px; font-size: 13px; line-height: 1.45; }
+    nav a:hover { background: #eef2f7; }
+    nav a.active { background: var(--accent-soft); color: var(--accent); border-left-color: var(--accent); font-weight: 700; }
+    main { min-width: 0; }
+    article { width: min(100%, 980px); margin: 0 auto; padding: 42px 34px 96px; background: var(--paper); box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.04); }
+    header.report-header { border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 28px; }
+    header h1 { font-size: 34px; line-height: 1.2; margin: 0 0 14px; letter-spacing: 0; }
+    header p { color: var(--muted); margin: 8px 0; }
+    section { scroll-margin-top: 20px; padding: 24px 0 32px; border-bottom: 1px solid #edf0f5; }
+    h2 { font-size: 25px; line-height: 1.35; margin: 0 0 18px; }
+    h3 { margin: 16px 0 8px; line-height: 1.35; }
+    p { margin: 12px 0; font-size: 16px; }
+    .math-block { overflow-x: auto; padding: 8px 0; }
+    pre { background: #101827; color: #dbeafe; padding: 16px; border-radius: 8px; overflow-x: auto; line-height: 1.55; font-size: 13px; }
+    code { font-family: "Cascadia Mono", Consolas, monospace; }
+    .table-wrap { overflow-x: auto; margin: 18px 0; border: 1px solid var(--line); border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; min-width: 680px; }
+    th, td { padding: 10px 12px; border-bottom: 1px solid #e8edf3; vertical-align: top; text-align: left; }
+    th { background: #f0f4f8; font-size: 13px; }
+    td { font-size: 14px; }
+    .report-figure { margin: 22px 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+    .image-button { display: block; width: 100%; padding: 0; border: 0; background: #fff; cursor: zoom-in; }
+    .report-figure img { display: block; width: 100%; height: auto; max-height: 680px; object-fit: contain; background: #f8fafc; }
+    figcaption { padding: 12px 14px; color: var(--muted); font-size: 13px; border-top: 1px solid #edf0f5; }
+    figcaption strong { display: block; color: var(--ink); margin-bottom: 4px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 18px 0; }
+    .source-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #fbfcfe; }
+    .source-card h3 { font-size: 15px; margin-top: 0; }
+    .source-card p { font-size: 13px; margin: 7px 0; }
+    .lightbox { position: fixed; inset: 0; z-index: 40; display: none; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.82); padding: 26px; }
+    .lightbox.open { display: flex; }
+    .lightbox-panel { width: min(96vw, 1400px); max-height: 94vh; background: #fff; border-radius: 8px; overflow: hidden; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+    .lightbox-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    .lightbox-head h3 { margin: 0; font-size: 16px; }
+    .lightbox-close { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+    .lightbox-img-wrap { overflow: auto; background: #f8fafc; }
+    .lightbox img { display: block; max-width: none; width: 100%; height: auto; margin: 0 auto; }
+    .lightbox-caption { padding: 10px 14px; color: var(--muted); border-top: 1px solid var(--line); }
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+    .badge { border: 1px solid #c7d2fe; color: #27367b; background: #eef2ff; padding: 4px 8px; border-radius: 999px; font-size: 12px; }
+    @media (max-width: 900px) {
+      .layout { display: block; }
+      aside { position: relative; height: auto; max-height: 42vh; border-right: 0; border-bottom: 1px solid var(--line); }
+      article { padding: 28px 18px 80px; }
+      header h1 { font-size: 27px; }
+    }
+  </style>
+<link href="../../assets/vendor/katex/katex.min.css" rel="stylesheet"/></head>
+<body>
+<div class="layout">
+<aside>
+<h1>Qwen-VL 模块详解</h1>
+<div class="meta">生成时间：2026-07-05 23:23:59<br/>目录固定、滚动高亮、点击跳转</div>
+<nav id="toc"><a data-target="overview" href="#overview">0. 先给一个全局地图：Qwen-VL 系列到底在解决什么</a>
+<a data-target="pipeline" href="#pipeline">1. 一条样本从输入到生成答案：最小闭环</a>
+<a data-target="dynamic-resolution" href="#dynamic-resolution">2. 动态分辨率：不是“不缩放”，而是“按预算缩放”</a>
+<a data-target="qwen2" href="#qwen2">3. Qwen2-VL：把视觉 token 稳定接进 Qwen2</a>
+<a data-target="mrope" href="#mrope">4. M-RoPE：为什么视觉位置不能只用一维 token 序号</a>
+<a data-target="qwen25" href="#qwen25">5. Qwen2.5-VL：窗口注意力、动态时间和结构化输出</a>
+<a data-target="qwen3" href="#qwen3">6. Qwen3-VL：DeepStack、Interleaved-MRoPE、timestamp 和 MoE</a>
+<a data-target="implementation" href="#implementation">7. 关键模块逐个拆：processor、视觉塔、Merger、LLM 注入</a>
+<a data-target="formulas" href="#formulas">8. 几个必须掌握的公式和复杂度</a>
+<a data-target="misunderstandings" href="#misunderstandings">9. 常见误解：很多坑都在这些地方</a>
+<a data-target="code-reading" href="#code-reading">10. 如果你要读源码，建议按这个顺序</a>
+<a data-target="comparison" href="#comparison">11. 三代模块对比矩阵</a>
+<a data-target="learning-path" href="#learning-path">12. 分层学习路线</a>
+<a data-target="glossary" href="#glossary">13. 术语表：白话 + 工程含义</a>
+<a data-target="source-cards" href="#source-cards">14. 资料卡片与证据链</a>
+<a data-target="takeaways" href="#takeaways">15. 最后总结：你应该带走的判断框架</a>
+<a data-target="basic-module-walkthrough" href="#basic-module-walkthrough">16. 补充：processor、视觉塔、Merger、LLM 的逐步处理逻辑</a></nav>
+</aside>
+<main>
+<article>
+<header class="report-header">
+<h1>Qwen-VL 系列重点模块实现与设计细节白话详解</h1>
+<p>结合三篇知乎源码解读文章、官方 Qwen 博客/GitHub、arXiv 技术报告和本地 Transformers 源码，对 Qwen2-VL、Qwen2.5-VL、Qwen3-VL 的关键模块做工程化拆解。</p>
+<div class="badge-row">
+<span class="badge">固定左侧目录</span>
+<span class="badge">滚动高亮</span>
+<span class="badge">图片点击放大</span>
+<span class="badge">MathJax 公式</span>
+<span class="badge">原文/官方图片本地化</span>
+</div>
+</header>
+<section id="overview"><h2>0. 先给一个全局地图：Qwen-VL 系列到底在解决什么</h2><p>这一系列 Qwen-VL 模型可以先按一句白话理解：它把图片、视频变成一串“能被大语言模型读懂的视觉 token”，再让 Qwen 文本模型像读一段特殊文本一样读这些 token。真正难的不是“接一张图进去”，而是三件事：第一，任意大小图片怎么变成长度可控的 token；第二，视觉 token 的空间/时间位置怎么编码；第三，训练时如何让语言模型学会把这些 token 当作真实视觉证据，而不是把它们当作普通噪声。</p>
+<p>从 Qwen2-VL 到 Qwen2.5-VL，再到 Qwen3-VL，主线可以概括成：先把动态分辨率和 M-RoPE 跑通；再把长视频、窗口注意力、动态 FPS、坐标输出和 agent 能力补强；最后把 DeepStack、Interleaved-MRoPE、Thinking 模式、MoE 大模型和更长上下文堆上去。它不是每一代都推翻前一代，而是在同一条“视觉 token 接入 LLM”的工程主线上不断修补瓶颈。</p>
+<p>初学者容易误解的一点是：Qwen-VL 不是 CLIP 加一个聊天模型那么简单。CLIP 式视觉编码器通常输出一个图像级或局部语义表示，而 Qwen-VL 需要保留足够细的局部结构，以支持 OCR、表格、目标定位、视频时间推理和多图对比。因此它的视觉塔、PatchMerger、processor 的占位符展开、M-RoPE 的位置索引，都属于核心模块，而不是边角料。</p>
+<div class="table-wrap"><table><thead><tr><th>代际</th><th>核心新增</th><th>主要解决的痛点</th><th>工程关键词</th></tr></thead><tbody><tr><td>Qwen2-VL</td><td>Naive Dynamic Resolution、M-RoPE、统一图像/视频 token 接入</td><td>任意分辨率图像和视频如何不丢位置信息地接入 LLM</td><td>`grid_thw`、`PatchEmbed`、`PatchMerger`、`get_rope_index`</td></tr><tr><td>Qwen2.5-VL</td><td>Window Attention、dynamic FPS / absolute time、结构化输出和 grounding</td><td>长视频成本、时间对齐、坐标定位和 agent 输出格式</td><td>`get_window_index`、`second_per_grid_ts`、`fullatt_block_indexes`</td></tr><tr><td>Qwen3-VL</td><td>DeepStack、Interleaved-MRoPE、timestamp text、Thinking/MoE/长上下文</td><td>细粒度视觉细节、长视频定位、复杂推理和大模型推理效率</td><td>`deepstack_visual_indexes`、`apply_interleaved_mrope`、`Qwen3VLMoeTextSparseMoeBlock`</td></tr></tbody></table></div></section>
+<section id="pipeline"><h2>1. 一条样本从输入到生成答案：最小闭环</h2><p>先不看论文术语，只看一次推理的流水线：用户输入一段 chat message，里面可能有文字、图片、视频路径。`processor` 会把图片/视频预处理成 `pixel_values`，同时把文本里的 `&lt;|image_pad|&gt;` 或 `&lt;|video_pad|&gt;` 按视觉 token 数量扩展成一串占位符。模型前向时，视觉塔先把 `pixel_values` 编码成 `image_embeds` / `video_embeds`，再用 mask 把这些视觉 embedding 填回 LLM 的 token embedding 序列。</p>
+<p>这个设计的工程好处很朴素：LLM 不需要额外开一个复杂 cross-attention 模块，而是看到一串已经投影到隐藏维度的“特殊 token”。白话说，就是把图片先翻译成一段模型内部语言，然后插进提示词里。代价是 token 数和位置必须严格对齐，错一个 token 都会直接报错或产生错位理解。</p>
+<pre><code>messages -&gt; processor.apply_chat_template
+images/videos -&gt; image_processor/video_processor -&gt; pixel_values + grid_thw
+text placeholders -&gt; repeat &lt;|image_pad|&gt; or &lt;|video_pad|&gt; by prod(grid_thw) // merge_size^2
+vision tower -&gt; image_embeds/video_embeds
+LLM input embeddings -&gt; replace placeholder positions with visual embeddings
+language model -&gt; next token generation</code></pre>
+<p>源码里可以看到非常硬的对齐检查：如果 image token 数和 image feature 数不一致，就抛出类似 “Image features and image tokens do not match” 的错误。这不是小题大做，因为视觉 token 与文本位置一旦错位，模型后面的 RoPE 位置、attention mask 和生成语义都会一起错。</p>
+<p>`grid_thw` 是理解整套系统的钥匙。它表示视觉特征网格的时间、宽高三维尺寸：`T` 是帧或时间片数，`H/W` 是 patch 网格高宽。后面所有 token 数、位置编码、窗口切分、视频时间索引都围着它转。很多源码读不懂，根本原因就是没有先把 `grid_thw` 当成中心变量。</p></section>
+<section id="dynamic-resolution"><h2>2. 动态分辨率：不是“不缩放”，而是“按预算缩放”</h2><p>Qwen2-VL 官方称为 Naive Dynamic Resolution。白话解释：输入图片不用硬裁成固定 224×224 或 448×448，而是保留接近原始宽高比的尺寸，再把长宽调整到 patch/merge 需要的倍数范围内。这样文档截图、长图、表格、海报、多栏文本能保留更多细节。</p>
+<p>但它绝不是无限吃原图。processor 仍然会有 `min_pixels`、`max_pixels`、patch size、merge size 等约束。模型实际看到的是经过预算控制后的网格。公式上，图像最终进入 LLM 的视觉 token 数大致是：</p>
+<div class="math-block"><span data-publication-math="\[N_{vision} \approx \frac{T \times H_{grid} \times W_{grid}}{merge\_size^2}\]"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mrow><mi>v</mi><mi>i</mi><mi>s</mi><mi>i</mi><mi>o</mi><mi>n</mi></mrow></msub><mo>≈</mo><mfrac><mrow><mi>T</mi><mo>×</mo><msub><mi>H</mi><mrow><mi>g</mi><mi>r</mi><mi>i</mi><mi>d</mi></mrow></msub><mo>×</mo><msub><mi>W</mi><mrow><mi>g</mi><mi>r</mi><mi>i</mi><mi>d</mi></mrow></msub></mrow><mrow><mi>m</mi><mi>e</mi><mi>r</mi><mi>g</mi><mi>e</mi><mi mathvariant="normal">_</mi><mi>s</mi><mi>i</mi><mi>z</mi><msup><mi>e</mi><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">N_{vision} \approx \frac{T \times H_{grid} \times W_{grid}}{merge\_size^2}</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.8333em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">v</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">s</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.3563em;vertical-align:-0.996em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">m</span><span class="mord mathnormal" style="margin-right:0.02778em;">er</span><span class="mord mathnormal" style="margin-right:0.03588em;">g</span><span class="mord mathnormal">e</span><span class="mord" style="margin-right:0.02778em;">_</span><span class="mord mathnormal">s</span><span class="mord mathnormal">i</span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7401em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">g</span><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">d</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">g</span><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">d</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.996em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></span></div>
+<p>对于 Qwen2/Qwen2.5 常见设置，patch size 为 14、spatial merge size 为 2。单图在视觉塔 patch 化后是 `H/14 × W/14`，再每 2×2 合并一次，所以最终 LLM 视觉 token 大约是 `H×W/784`。这解释了为什么大图很贵：分辨率翻倍，token 数按面积涨。</p>
+<p>工程上最重要的 tradeoff 是：动态分辨率提高了 OCR 和细粒度定位能力，但上下文预算、显存和 attention 成本也会变大。实际部署时往往要给不同场景设不同图片预算：普通照片可以低一些，文档/表格/代码截图需要更高，视频要更谨慎，因为视频还多了时间维度。</p></section>
+<section id="qwen2"><h2>3. Qwen2-VL：把视觉 token 稳定接进 Qwen2</h2>
+<figure class="report-figure" id="fig-qwen2-arch">
+<button class="image-button" data-caption="视觉塔负责提视觉特征，Merger 负责压缩并投影到 LLM 隐藏维度，语言模型负责统一推理与生成。" data-title="Qwen2-VL 架构图" type="button">
+<img alt="Qwen2-VL 架构图" loading="eager" src="assets/zhihu-qwen2-vl-architecture.jpg"/>
+</button>
+<figcaption><strong>Qwen2-VL 架构图</strong><span>视觉塔负责提视觉特征，Merger 负责压缩并投影到 LLM 隐藏维度，语言模型负责统一推理与生成。</span></figcaption>
+</figure>
+<p>Qwen2-VL 的骨架可以拆成四块：输入 processor、视觉 transformer、PatchMerger、Qwen2 语言模型。processor 负责把外部图片/视频变成张量和占位符；视觉 transformer 把 patch 序列做自注意力；PatchMerger 把 2×2 空间邻域压到一个 LLM token，并把维度投影到语言模型隐藏维；最后语言模型在同一 token 序列里处理文本和视觉 token。</p>
+<p>源码里 `Qwen2VisionTransformerPretrainedModel.forward` 的顺序很直：`patch_embed -&gt; rot_pos_emb -&gt; blocks -&gt; merger`。这说明 Qwen2-VL 的视觉侧没有先做一堆花哨跨模态融合，它先把图像/视频编码成一个相对干净的视觉 token 序列，再交给语言模型统一处理。</p>
+<p>`PatchEmbed` 的任务是把图片切成 patch 并线性化。对于视频，它使用 temporal patch 的概念，让时间维也进入 patch。知乎源码解读里提到图像会按类似两帧的形式处理，这是因为统一图像/视频路径时需要一个时间维；对单图而言，时间只是占位，真正主要区分还是高宽二维。</p>
+<p>`PatchMerger` 很关键。它不是简单平均池化，而是把若干相邻 patch 的隐藏向量拼接后经过 MLP/投影，输出 LLM 维度。白话说：视觉塔内部 token 还比较细，Merger 把一小块局部视觉信息打包成一个语言模型能消费的 token。这个设计兼顾两个目标：保留局部结构，又不要让 LLM 被过多视觉 token 淹没。</p>
+<pre><code>Qwen2-VL vision forward:
+hidden_states = patch_embed(pixel_values)
+rotary_pos_emb = rot_pos_emb(grid_thw)
+for block in vision_blocks:
+    hidden_states = block(hidden_states, cu_seqlens, rotary_pos_emb)
+image_embeds = merger(hidden_states)
+inputs_embeds[image_token_mask] = image_embeds</code></pre>
+<p>训练阶段可以从职责上理解：第一阶段让视觉塔和语言模型对齐基础视觉语义；第二阶段加入更多多模态任务让模型学会 OCR、定位、图文推理等；第三阶段通过指令数据让模型像聊天助手一样输出。不要把训练阶段只看成数据量堆叠，它本质上是在逐步教模型“看见、对齐、服从指令”。</p></section>
+<section id="mrope"><h2>4. M-RoPE：为什么视觉位置不能只用一维 token 序号</h2>
+<figure class="report-figure" id="fig-qwen2-mrope">
+<button class="image-button" data-caption="图中展示了文本一维、图像二维、视频三维位置如何统一到 rotary embedding 体系里。" data-title="Qwen2-VL M-RoPE 机制图" type="button">
+<img alt="Qwen2-VL M-RoPE 机制图" loading="eager" src="assets/zhihu-qwen2-vl-mrope.jpg"/>
+</button>
+<figcaption><strong>Qwen2-VL M-RoPE 机制图</strong><span>图中展示了文本一维、图像二维、视频三维位置如何统一到 rotary embedding 体系里。</span></figcaption>
+</figure>
+<p>普通文本模型的 RoPE 很简单：第 0 个词、第 1 个词、第 2 个词……一维递增即可。图像不一样。如果把一张图按扫描顺序拉平，模型虽然知道 token 先后，却天然不知道“同一行相邻”和“跨行相邻”的几何差异。视频更麻烦，还要知道帧时间。M-RoPE 就是给 token 补上多维位置感。</p>
+<p>Qwen2/Qwen2.5 的 `get_rope_index` 会构造三路 position ids：文本 token 三路都用同一个一维位置；图像 token 用 `[t, h, w]`，其中单图的时间维通常只是 0 或 1 个逻辑时间片；视频 token 则同时有时间、高、宽。最终这三路位置进入 RoPE，让 attention 的 q/k 旋转角带上空间/时间信息。</p>
+<p>白话比喻：普通 RoPE 像给书页每个字标一个页内序号；M-RoPE 像给地图上的每个格子标“第几帧、第几行、第几列”。同样是一串 token，模型内部能感知到二维/三维邻近关系。</p>
+<div class="math-block"><span data-publication-math="\[position_{vision} = (t, h, w), \quad N_{LLM\_vision}=\frac{T\cdot H\cdot W}{merge\_size^2}\]"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mi>o</mi><mi>s</mi><mi>i</mi><mi>t</mi><mi>i</mi><mi>o</mi><msub><mi>n</mi><mrow><mi>v</mi><mi>i</mi><mi>s</mi><mi>i</mi><mi>o</mi><mi>n</mi></mrow></msub><mo>=</mo><mo stretchy="false">(</mo><mi>t</mi><mo separator="true">,</mo><mi>h</mi><mo separator="true">,</mo><mi>w</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="1em"></mspace><msub><mi>N</mi><mrow><mi>L</mi><mi>L</mi><mi>M</mi><mi mathvariant="normal">_</mi><mi>v</mi><mi>i</mi><mi>s</mi><mi>i</mi><mi>o</mi><mi>n</mi></mrow></msub><mo>=</mo><mfrac><mrow><mi>T</mi><mo>⋅</mo><mi>H</mi><mo>⋅</mo><mi>W</mi></mrow><mrow><mi>m</mi><mi>e</mi><mi>r</mi><mi>g</mi><mi>e</mi><mi mathvariant="normal">_</mi><mi>s</mi><mi>i</mi><mi>z</mi><msup><mi>e</mi><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">position_{vision} = (t, h, w), \quad N_{LLM\_vision}=\frac{T\cdot H\cdot W}{merge\_size^2}</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.854em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">p</span><span class="mord mathnormal">os</span><span class="mord mathnormal">i</span><span class="mord mathnormal">t</span><span class="mord mathnormal">i</span><span class="mord mathnormal">o</span><span class="mord"><span class="mord mathnormal">n</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3117em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">v</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">s</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.117em;vertical-align:-0.367em;"></span><span class="mopen">(</span><span class="mord mathnormal">t</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">h</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.02691em;">w</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">LL</span><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span><span class="mord mtight" style="margin-right:0.02778em;">_</span><span class="mord mathnormal mtight" style="margin-right:0.03588em;">v</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">s</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.367em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.3563em;vertical-align:-0.996em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">m</span><span class="mord mathnormal" style="margin-right:0.02778em;">er</span><span class="mord mathnormal" style="margin-right:0.03588em;">g</span><span class="mord mathnormal">e</span><span class="mord" style="margin-right:0.02778em;">_</span><span class="mord mathnormal">s</span><span class="mord mathnormal">i</span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7401em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">W</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.996em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></span></div>
+<p>`rope_deltas` 是另一个容易忽略的工程细节。多模态 token 的 position ids 不是普通连续 0..N，它会因为图像/视频网格插入而产生和文本序列长度的差值。缓存生成时如果不记录这个 delta，后续增量解码的位置会错。</p></section>
+<section id="qwen25"><h2>5. Qwen2.5-VL：窗口注意力、动态时间和结构化输出</h2>
+<figure class="report-figure" id="fig-qwen25-training">
+<button class="image-button" data-caption="Qwen2.5-VL 的升级不是单点优化，而是视觉塔、长视频、定位、结构化输出和训练数据共同推进。" data-title="Qwen2.5-VL 训练阶段" type="button">
+<img alt="Qwen2.5-VL 训练阶段" loading="eager" src="assets/zhihu-qwen25-training-stages.jpg"/>
+</button>
+<figcaption><strong>Qwen2.5-VL 训练阶段</strong><span>Qwen2.5-VL 的升级不是单点优化，而是视觉塔、长视频、定位、结构化输出和训练数据共同推进。</span></figcaption>
+</figure>
+<figure class="report-figure" id="fig-qwen25-compare">
+<button class="image-button" data-caption="图中对比帮助定位哪些能力来自结构改动，哪些更可能来自数据和后训练。" data-title="Qwen2.5-VL 与 Qwen2-VL 对比" type="button">
+<img alt="Qwen2.5-VL 与 Qwen2-VL 对比" loading="eager" src="assets/zhihu-qwen25-vs-qwen2.jpg"/>
+</button>
+<figcaption><strong>Qwen2.5-VL 与 Qwen2-VL 对比</strong><span>图中对比帮助定位哪些能力来自结构改动，哪些更可能来自数据和后训练。</span></figcaption>
+</figure>
+<p>Qwen2.5-VL 最核心的工程改动之一是视觉塔 Window Attention。Qwen2-VL 视觉侧更接近对每个图/视频样本做完整注意力，而 Qwen2.5-VL 会先按窗口重排 token，大多数层在窗口内做 attention，少数指定层仍做全局 attention。这样可以降低长图、长视频的视觉侧计算成本，同时让少数全局层负责跨窗口信息交换。</p>
+<p>源码里 `get_window_index` 会把 LLM 视觉网格按窗口切块，padding 不足的窗口位置为 -100，再生成 `window_index` 和 `cu_window_seqlens`。forward 时先用 `window_index` 重排 hidden states 和 rotary embedding；每层根据 `fullatt_block_indexes` 决定用全局 `cu_seqlens` 还是窗口 `cu_window_seqlens`；最后用 `reverse_indices` 把 token 顺序还原。</p>
+<pre><code>Qwen2.5-VL window attention:
+window_index, cu_window_seqlens = get_window_index(grid_thw)
+hidden_states = hidden_states[window_index]
+for layer_num, block in enumerate(blocks):
+    if layer_num in fullatt_block_indexes:
+        cu = cu_seqlens          # global attention
+    else:
+        cu = cu_window_seqlens   # local window attention
+    hidden_states = block(hidden_states, cu)
+hidden_states = merger(hidden_states)
+hidden_states = hidden_states[argsort(window_index)]</code></pre>
+<p>第二个关键改动是视频时间。Qwen2.5-VL 引入 `second_per_grid_ts`，把视频 grid 的第 t 个时间片映射到真实秒数，再乘以 `tokens_per_second` 得到时间位置。也就是说，它不是只知道“第 0 帧、第 1 帧”，还尽量知道这些帧隔了多少真实时间。对长视频问答、事件顺序、定位某一秒发生了什么，这很重要。</p>
+<p>第三个改动是面向真实产品的输出形态。官方博客强调 Qwen2.5-VL 能更好地产生 structured outputs、QwenVL HTML 等结果，并具备更强 grounding 能力。白话说，模型不只是能“看懂”，还要能按机器可消费的格式回答，例如框坐标、JSON、HTML、UI 操作指令。这是从 demo 能力走向 agent/自动化能力的关键一步。</p></section>
+<section id="qwen3"><h2>6. Qwen3-VL：DeepStack、Interleaved-MRoPE、timestamp 和 MoE</h2>
+<figure class="report-figure" id="fig-qwen3-arch">
+<button class="image-button" data-caption="Qwen3-VL 在视觉侧和语言侧都更复杂，特别是 DeepStack 与长上下文/Thinking/MoE 的组合。" data-title="Qwen3-VL 架构图" type="button">
+<img alt="Qwen3-VL 架构图" loading="eager" src="assets/zhihu-qwen3-vl-architecture.jpg"/>
+</button>
+<figcaption><strong>Qwen3-VL 架构图</strong><span>Qwen3-VL 在视觉侧和语言侧都更复杂，特别是 DeepStack 与长上下文/Thinking/MoE 的组合。</span></figcaption>
+</figure>
+<figure class="report-figure" id="fig-qwen3-github-arch">
+<button class="image-button" data-caption="官方图用于校验知乎解读，避免只依赖单一博客。" data-title="Qwen3-VL 官方仓库架构图" type="button">
+<img alt="Qwen3-VL 官方仓库架构图" loading="eager" src="assets/github-qwen3-vl-architecture.jpg"/>
+</button>
+<figcaption><strong>Qwen3-VL 官方仓库架构图</strong><span>官方图用于校验知乎解读，避免只依赖单一博客。</span></figcaption>
+</figure>
+<p>Qwen3-VL 的官方仓库列出了 Dense 和 MoE 两条线：Dense 有 2B/4B/8B/32B，MoE 有 30B-A3B 和 235B-A22B，并区分 Instruct 与 Thinking。Instruct 更像直接回答型助手，Thinking 更强调复杂推理链路。对用户来说，这意味着选模型时不是只看总参数，还要看激活参数、上下文长度、是否需要推理过程、部署显存和吞吐。</p>
+<p>DeepStack 是 Qwen3-VL 最值得重点理解的结构之一。传统做法通常只把视觉塔最后一层输出交给 LLM；DeepStack 会从视觉塔的若干中间层取特征，经多个 merger 变成 `deepstack_visual_embeds`，再在语言模型前几层把这些视觉特征加回对应视觉 token 位置。白话说：不是只把“最终压缩版视觉理解”递给语言模型，而是把早中层的细节也沿着语言模型浅层注入，减少小字、局部结构、图表细节在最后层被过度抽象的问题。</p>
+<pre><code>Qwen3-VL DeepStack idea:
+for layer_num, vision_block in enumerate(vision_blocks):
+    hidden_states = vision_block(hidden_states)
+    if layer_num in deepstack_visual_indexes:
+        deepstack_feature_lists.append(deepstack_merger(hidden_states))
+
+language_model(...,
+    visual_pos_masks=visual_token_positions,
+    deepstack_visual_embeds=deepstack_feature_lists)</code></pre>
+<p>Interleaved-MRoPE 解决的是三维位置频率分配问题。旧式 chunked M-RoPE 更像把频率维度切成一段给 T、一段给 H、一段给 W。Qwen3-VL 源码里的注释明确说它把 `[TTT...HHH...WWW]` 重排为 interleaved 形式，例如 `[THTHWHTHW...]`，以保持频率连续性。白话说，就是不要让时间、行、列各自占一整段频率，而是交错分布，让三种位置维度都能用到更连续的频率带。</p>
+<p>Qwen3-VL 对视频时间的处理又和 Qwen2.5 不一样。processor 会根据视频 metadata 计算每个视觉帧/时间片的秒数，并在 prompt 中插入类似 `&lt;1.5 seconds&gt;&lt;|vision_start|&gt;...&lt;|vision_end|&gt;` 的文本时间戳。源码里的 `get_rope_index` 甚至有注释说明：时间维 `t_index` 始终为 0，因为视频 temporal information 用 timestamps 编码。也就是说，Qwen3-VL 把一部分时间理解交给语言 token 的显式文本时间戳，而不是完全塞进视觉 RoPE 的时间坐标里。</p>
+<p>MoE 版本的核心是 `Qwen3VLMoeTextSparseMoeBlock`。它先用一个 gate 产生 router logits，再 softmax，取 top-k expert，把 token 分派给少数专家。默认配置里能看到 `num_experts_per_tok=4`、`num_experts=60` 这类参数。白话说：总参数很大，但每个 token 只走一小部分专家，所以推理时的激活参数小于总参数。代价是路由负载均衡、专家并行、显存分布和部署复杂度都上升。</p></section>
+<section id="implementation"><h2>7. 关键模块逐个拆：processor、视觉塔、Merger、LLM 注入</h2><p>`processor` 是很多人忽略但最容易出错的模块。它不仅做 resize/normalize，还会按照 `image_grid_thw.prod() // merge_size^2` 计算视觉 token 数，把文本里的一个 `&lt;|image_pad|&gt;` 扩展成很多占位符。Qwen3-VL 还会为每个视频帧加秒级 timestamp 文本。processor 错了，模型主体再正确也没用。</p>
+<p>视觉塔是 ViT 变体，但不能按普通分类 ViT 理解。普通 ViT 最后可能只要 CLS 或全局池化；Qwen-VL 需要保留一串 patch token，给 LLM 做局部阅读。因此它要关心 patch size、temporal patch、grid_thw、cu_seqlens、window attention 和 rotary/pos embedding。</p>
+<p>Merger 是跨模态接口的“插头转换器”。视觉塔隐藏维和 LLM 隐藏维往往不同，token 粒度也太细。Merger 把空间邻域组合起来，变成数量较少、维度合适的视觉 token。把它理解成一个 learnable pooling + projection，比理解成普通 linear 更准确。</p>
+<p>LLM 注入阶段并不是 cross-attention，而是 embedding replacement：先得到文本 token embedding，再用 `image_mask` / `video_mask` 找到占位符位置，把这些位置替换成视觉 embedding。优点是实现和推理路径接近纯 decoder-only LLM；缺点是 token 对齐必须绝对正确。</p>
+<div class="table-wrap"><table><thead><tr><th>模块</th><th>源码/变量线索</th><th>白话解释</th><th>常见坑</th></tr></thead><tbody><tr><td>Processor</td><td>`image_grid_thw`, `video_grid_thw`, placeholder repeat</td><td>把外部媒体转成张量，并在文本里预留同样数量的位置</td><td>只看 tokenizer，不看 image_processor，会漏掉 token 数计算</td></tr><tr><td>Vision Transformer</td><td>`patch_embed`, `rot_pos_emb`, `cu_seqlens`, `window_index`</td><td>把 patch 序列编码成视觉隐藏状态</td><td>把它当普通分类 ViT，忽略序列输出</td></tr><tr><td>PatchMerger</td><td>`merge_size^2`, MLP/proj</td><td>把局部 patch 打包成 LLM token</td><td>误以为只是减少分辨率，忽略维度投影</td></tr><tr><td>RoPE/M-RoPE</td><td>`position_ids` shape `[3, B, L]`, `rope_deltas`</td><td>告诉模型 token 的文本/空间/时间位置</td><td>增量解码时忘记 delta</td></tr><tr><td>LLM replacement</td><td>`special_image_mask`, `image_features.numel()`</td><td>把占位符 embedding 换成视觉 embedding</td><td>视觉特征数和占位符数不一致</td></tr></tbody></table></div></section>
+<section id="formulas"><h2>8. 几个必须掌握的公式和复杂度</h2><p>第一条是视觉 token 数。令 `P` 是 patch size，`M` 是 spatial merge size，输入 resize 后尺寸为 `H×W`，视频时间 patch 后为 `T`，则大致有：</p>
+<div class="math-block"><span data-publication-math="\[N_{patch}=T\cdot \frac{H}{P}\cdot \frac{W}{P},\qquad N_{LLM}=\frac{N_{patch}}{M^2}\]"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mrow><mi>p</mi><mi>a</mi><mi>t</mi><mi>c</mi><mi>h</mi></mrow></msub><mo>=</mo><mi>T</mi><mo>⋅</mo><mfrac><mi>H</mi><mi>P</mi></mfrac><mo>⋅</mo><mfrac><mi>W</mi><mi>P</mi></mfrac><mo separator="true">,</mo><mspace width="2em"></mspace><msub><mi>N</mi><mrow><mi>L</mi><mi>L</mi><mi>M</mi></mrow></msub><mo>=</mo><mfrac><msub><mi>N</mi><mrow><mi>p</mi><mi>a</mi><mi>t</mi><mi>c</mi><mi>h</mi></mrow></msub><msup><mi>M</mi><mn>2</mn></msup></mfrac></mrow><annotation encoding="application/x-tex">N_{patch}=T\cdot \frac{H}{P}\cdot \frac{W}{P},\qquad N_{LLM}=\frac{N_{patch}}{M^2}</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">p</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight">t</span><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight">h</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.0463em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">P</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:2.0463em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">P</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">LL</span><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0463em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">M</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7401em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">p</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight">t</span><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight">h</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></span></div>
+<p>Qwen2/Qwen2.5 常见 `P=14, M=2`，所以单图约为 `H×W/784` 个 LLM 视觉 token。Qwen3-VL 常见 patch size 变为 16，`M=2` 时单图约为 `H×W/1024`。这也是为什么 Qwen3-VL 可以支持更高图像 token 上限，但仍必须靠预算控制。</p>
+<p>第二条是 attention 复杂度。全局注意力对视觉 token 数近似二次：</p>
+<div class="math-block"><span data-publication-math="\[Cost_{full}\sim O(N^2),\qquad Cost_{window}\sim O(K\cdot W_s^2)\approx O(N\cdot W_s)\]"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mi>o</mi><mi>s</mi><msub><mi>t</mi><mrow><mi>f</mi><mi>u</mi><mi>l</mi><mi>l</mi></mrow></msub><mo>∼</mo><mi>O</mi><mo stretchy="false">(</mo><msup><mi>N</mi><mn>2</mn></msup><mo stretchy="false">)</mo><mo separator="true">,</mo><mspace width="2em"></mspace><mi>C</mi><mi>o</mi><mi>s</mi><msub><mi>t</mi><mrow><mi>w</mi><mi>i</mi><mi>n</mi><mi>d</mi><mi>o</mi><mi>w</mi></mrow></msub><mo>∼</mo><mi>O</mi><mo stretchy="false">(</mo><mi>K</mi><mo>⋅</mo><msubsup><mi>W</mi><mi>s</mi><mn>2</mn></msubsup><mo stretchy="false">)</mo><mo>≈</mo><mi>O</mi><mo stretchy="false">(</mo><mi>N</mi><mo>⋅</mo><msub><mi>W</mi><mi>s</mi></msub><mo stretchy="false">)</mo></mrow><annotation encoding="application/x-tex">Cost_{full}\sim O(N^2),\qquad Cost_{window}\sim O(K\cdot W_s^2)\approx O(N\cdot W_s)</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mord mathnormal">os</span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.10764em;">f</span><span class="mord mathnormal mtight">u</span><span class="mord mathnormal mtight" style="margin-right:0.01968em;">ll</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∼</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:2em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.07153em;">C</span><span class="mord mathnormal">os</span><span class="mord"><span class="mord mathnormal">t</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.02691em;">w</span><span class="mord mathnormal mtight">in</span><span class="mord mathnormal mtight">d</span><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight" style="margin-right:0.02691em;">w</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">∼</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.07153em;">K</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-2.453em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.02778em;">O</span><span class="mopen">(</span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">⋅</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.1514em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">s</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose">)</span></span></span></span></span></span></div>
+<p>这里 `W_s` 是窗口内 token 数，`K` 是窗口数。Window Attention 不是免费，它牺牲了每层跨窗口通信，所以需要少数全局层来补回来。这就是 `fullatt_block_indexes` 的意义：大多数层省算力，少数层做全局整合。</p>
+<p>第三条是 MoE 激活成本。总专家数为 `E`，每个 token 选择 `k` 个专家，则每个 token 的 FFN 激活大致只走 `k/E` 的专家子集。当然真实成本还受专家大小、通信、batch、并行策略影响。</p>
+<div class="math-block"><span data-publication-math="\[Activated\ Expert\ Ratio \approx \frac{k}{E}\]"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mi>c</mi><mi>t</mi><mi>i</mi><mi>v</mi><mi>a</mi><mi>t</mi><mi>e</mi><mi>d</mi><mtext> </mtext><mi>E</mi><mi>x</mi><mi>p</mi><mi>e</mi><mi>r</mi><mi>t</mi><mtext> </mtext><mi>R</mi><mi>a</mi><mi>t</mi><mi>i</mi><mi>o</mi><mo>≈</mo><mfrac><mi>k</mi><mi>E</mi></mfrac></mrow><annotation encoding="application/x-tex">Activated\ Expert\ Ratio \approx \frac{k}{E}</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">A</span><span class="mord mathnormal">c</span><span class="mord mathnormal">t</span><span class="mord mathnormal">i</span><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="mord mathnormal">a</span><span class="mord mathnormal">t</span><span class="mord mathnormal">e</span><span class="mord mathnormal">d</span><span class="mspace"> </span><span class="mord mathnormal" style="margin-right:0.05764em;">E</span><span class="mord mathnormal">x</span><span class="mord mathnormal">p</span><span class="mord mathnormal" style="margin-right:0.02778em;">er</span><span class="mord mathnormal">t</span><span class="mspace"> </span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="mord mathnormal">a</span><span class="mord mathnormal">t</span><span class="mord mathnormal">i</span><span class="mord mathnormal">o</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">≈</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.0574em;vertical-align:-0.686em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3714em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">E</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03148em;">k</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></span></div></section>
+<section id="misunderstandings"><h2>9. 常见误解：很多坑都在这些地方</h2><p>误解一：动态分辨率等于原图不动。实际是按 token 预算和 patch/merge 约束 resize，只是比固定方图更尊重宽高比和细节。</p>
+<p>误解二：视觉塔越强，LLM 就自然看懂。视觉特征必须被正确投影、正确占位、正确位置编码，语言模型还要经过训练学会使用这些 token。没有对齐训练，视觉特征只是一串外来向量。</p>
+<p>误解三：Qwen2.5 的 Window Attention 只是加速。它同时改变了信息流：窗口层局部整合，全局层跨窗口整合。窗口大小和全局层位置会影响细粒度 OCR、跨区域推理和长图理解。</p>
+<p>误解四：Qwen3-VL 的 timestamp 就是换个 prompt 文本。它和 M-RoPE 设计配套：源码里视频 t_index 固定为 0，时间信息显式变成文本 token，这会影响长视频问答的定位方式和可解释性。</p>
+<p>误解五：DeepStack 等于把更多 token 塞进上下文。更准确地说，它把中间层视觉特征注入语言模型前几层的视觉位置，强化细节通道；它不应被理解成简单扩大上下文。</p>
+<p>误解六：MoE 总参数越大就一定越慢。MoE 的关键是 activated parameters，不是 total parameters。但部署时通信、负载均衡和专家并行会带来新的系统复杂度。</p></section>
+<section id="code-reading"><h2>10. 如果你要读源码，建议按这个顺序</h2><p>第一步读 processor，不要直接跳模型主体。先确认 `&lt;|image_pad|&gt;` 和 `&lt;|video_pad|&gt;` 如何扩展，`num_image_tokens` 如何由 `grid_thw` 和 `merge_size` 算出来。读懂这一层，后面很多 mask 和 shape 检查自然就通了。</p>
+<p>第二步读视觉塔 forward。Qwen2 看 `patch_embed -&gt; rot_pos_emb -&gt; blocks -&gt; merger`；Qwen2.5 重点看 `get_window_index` 如何重排和还原；Qwen3 重点看 `fast_pos_embed_interpolate`、`deepstack_visual_indexes` 和 `deepstack_merger_list`。</p>
+<p>第三步读 `get_rope_index`。这是多模态模型比纯文本模型多出的脑力成本。你要跟踪文本段、图像段、视频段如何交替，`st`/`ed` 如何移动，`t/h/w` 如何变成 position ids。</p>
+<p>第四步读 LLM forward 里的 replacement。确认 `image_features` 数量和 `image_token_mask` 数量一致，理解它为什么用 `masked_scatter` 或等价逻辑把视觉 embedding 填进 token embedding。</p>
+<p>第五步才去看训练和能力。否则很容易把“模型会 OCR/定位/视频理解”当成抽象能力，而不知道这些能力受 token 预算、位置编码、窗口注意力、训练阶段和输出格式共同约束。</p>
+<pre><code>Recommended reading order:
+1. processing_qwen*_vl.py
+2. image/video processing: resize, grid_thw, merge_size
+3. modeling_qwen*_vl.py vision tower
+4. get_rope_index / Interleaved-MRoPE
+5. feature-token replacement in forward
+6. MoE router / DeepStack only after the base path is clear</code></pre></section>
+<section id="comparison"><h2>11. 三代模块对比矩阵</h2><div class="table-wrap"><table><thead><tr><th>维度</th><th>Qwen2-VL</th><th>Qwen2.5-VL</th><th>Qwen3-VL</th></tr></thead><tbody><tr><td>视觉输入</td><td>动态分辨率，图像/视频统一 `grid_thw`</td><td>动态分辨率继续强化，适配更长视频</td><td>更高图像 token 上限，更长上下文与多图/长视频能力</td></tr><tr><td>视觉塔 attention</td><td>以样本级完整视觉序列注意力为主</td><td>Window Attention + 少数全局层</td><td>全局/分块实现结合，重点转向 DeepStack 和位置体系</td></tr><tr><td>位置编码</td><td>M-RoPE：文本一维，视觉三维</td><td>M-RoPE + dynamic FPS / absolute time</td><td>Interleaved-MRoPE + timestamp 文本时间对齐</td></tr><tr><td>视觉-语言接口</td><td>PatchMerger 后替换 LLM 占位符 embedding</td><td>同主线，但 token/窗口和时间处理更复杂</td><td>替换 embedding + DeepStack 中间层视觉特征注入</td></tr><tr><td>输出能力</td><td>图文问答、OCR、基础定位/视频理解</td><td>结构化输出、grounding、QwenVL HTML、长视频</td><td>Thinking/Instruct、agent、长上下文、复杂视觉推理、MoE 大模型</td></tr><tr><td>主要风险</td><td>高分辨率 token 成本、位置索引错位</td><td>窗口切分影响全局信息，视频时间对齐复杂</td><td>DeepStack/Interleaved-MRoPE/MoE 部署和调试复杂</td></tr></tbody></table></div></section>
+<section id="learning-path"><h2>12. 分层学习路线</h2><p>如果你没有多模态背景：先只记住“图片/视频被变成视觉 token，再插进 LLM 输入”。不要一开始钻 MoE 和 DeepStack。第一周目标是能画出 processor、视觉塔、Merger、LLM replacement 四块。</p>
+<p>如果你有 CV 背景：重点补 LLM 输入组织、special token、RoPE、attention cache。你可能熟 ViT，但 Qwen-VL 的关键不是分类 head，而是 token 序列如何保持可读局部结构。</p>
+<p>如果你有 LLM 背景：重点补动态分辨率、patch grid、空间/时间位置。你可能熟 decoder-only，但视觉 token 的长度和 position ids 不再是普通文本序列。</p>
+<p>如果你要复现或微调：先写一个 shape audit。打印 `pixel_values.shape`、`image_grid_thw`、`num_image_tokens`、`input_ids` 中 image token 数、`image_embeds.shape`。只要这些对不上，训练 loss 再正常也可能是在学错对齐。</p>
+<p>如果你要做产品：重点研究 token 预算、长视频抽帧、文档 OCR 大图预算、structured output 校验、坐标系转换和失败 fallback。这些比单次 benchmark 分数更影响线上可靠性。</p></section>
+<section id="glossary"><h2>13. 术语表：白话 + 工程含义</h2><div class="table-wrap"><table><thead><tr><th>术语</th><th>白话解释</th><th>工程含义</th><th>常见误解</th></tr></thead><tbody><tr><td>`grid_thw`</td><td>视觉 token 的时间、高、宽网格</td><td>后续 token 数、位置编码、窗口切分的核心 shape</td><td>把它当普通 metadata</td></tr><tr><td>PatchMerger</td><td>把邻近 patch 打包成 LLM token</td><td>降低视觉 token 数并投影到 LLM hidden size</td><td>误以为只是平均池化</td></tr><tr><td>M-RoPE</td><td>多维位置编码</td><td>文本/图像/视频共用 RoPE 框架</td><td>以为视觉 token 只要一维位置</td></tr><tr><td>Window Attention</td><td>只在局部窗口内注意力</td><td>降低视觉侧长序列成本，需要全局层补信息交换</td><td>只看成加速 trick</td></tr><tr><td>DeepStack</td><td>把视觉中间层细节也送给语言模型</td><td>中间层特征经 merger 注入浅层 LLM hidden states</td><td>以为是简单增加图像 token</td></tr><tr><td>Text-Timestamp Alignment</td><td>把视频秒数写进 prompt</td><td>Qwen3-VL processor 为视频帧插入 `<x.x seconds="">`</x.x></td><td>以为时间仍完全靠 t 位置编码</td></tr><tr><td>MoE</td><td>多个专家，token 只走一部分</td><td>router 选择 top-k experts，降低激活参数</td><td>只看总参数判断速度</td></tr></tbody></table></div></section>
+<section id="source-cards"><h2>14. 资料卡片与证据链</h2><p>这份报告没有大段复制知乎原文，而是把三篇知乎文章中的图和关键解读，与官方博客、GitHub、arXiv、Transformers 源码互相校验。尤其涉及实现细节时，优先使用本地源码里的类名、函数和变量作为锚点。</p>
+<div class="table-wrap"><table><thead><tr><th>本地抓取文件</th><th>页面标题</th><th>页面正文长度</th><th>本地保存窗口</th><th>图片数</th></tr></thead><tbody><tr><td><code>zhihu_browser_capture_1956306982970586546.json</code></td><td>【多模态大模型】Qwen3-VL解剖</td><td>48753</td><td>30000</td><td>6</td></tr><tr><td><code>zhihu_browser_capture_24986805514.json</code></td><td>【多模态大模型】Qwen2.5-VL解剖</td><td>30355</td><td>30000</td><td>12</td></tr><tr><td><code>zhihu_browser_capture_7352653203.json</code></td><td>【多模态大模型】Qwen2-VL解剖</td><td>51541</td><td>20000</td><td>8</td></tr></tbody></table></div>
+<div class="cards"><article class="source-card"><h3>Qwen2-VL 源码解读类知乎文章</h3><p><b>类型：</b>Zhihu deep-dive</p><p><b>用途：</b>Qwen2-VL 架构图、PatchEmbed/PatchMerger、M-RoPE、processor 占位符扩展、源码读法</p><p><a href="https://zhuanlan.zhihu.com/p/7352653203" rel="noreferrer" target="_blank">打开来源</a></p></article><article class="source-card"><h3>Qwen2.5-VL 源码解读类知乎文章</h3><p><b>类型：</b>Zhihu deep-dive</p><p><b>用途：</b>Qwen2.5-VL 训练阶段、Window Attention、动态 FPS / absolute time、grounding 输出</p><p><a href="https://zhuanlan.zhihu.com/p/24986805514" rel="noreferrer" target="_blank">打开来源</a></p></article><article class="source-card"><h3>Qwen3-VL 源码解读类知乎文章</h3><p><b>类型：</b>Zhihu deep-dive</p><p><b>用途：</b>Qwen3-VL 架构图、DeepStack、Interleaved-MRoPE、Text-Timestamp Alignment、MoE</p><p><a href="https://zhuanlan.zhihu.com/p/1956306982970586546" rel="noreferrer" target="_blank">打开来源</a></p></article><article class="source-card"><h3>Qwen2-VL official blog</h3><p><b>类型：</b>official blog</p><p><b>用途：</b>Naive Dynamic Resolution, M-ROPE, video understanding, multilingual OCR/object grounding claims</p><p><a href="https://qwenlm.github.io/blog/qwen2-vl/" rel="noreferrer" target="_blank">打开来源</a></p></article><article class="source-card"><h3>Qwen2.5-VL official blog</h3><p><b>类型：</b>official blog</p><p><b>用途：</b>long-video, dynamic FPS, QwenVL HTML, structured outputs, localization ability</p><p><a href="https://qwenlm.github.io/blog/qwen2.5-vl/" rel="noreferrer" target="_blank">打开来源</a></p></article><article class="source-card"><h3>Qwen3-VL official GitHub</h3><p><b>类型：</b>official repository</p><p><b>用途：</b>model families, Thinking/Instruct split, 256K/1M context, grounding/OCR/agent claims</p><p><a href="https://github.com/qwenlm/qwen3-vl" rel="noreferrer" target="_blank">打开来源</a></p></article><article class="source-card"><h3>Qwen2-VL technical report</h3><p><b>类型：</b>paper</p><p><b>用途：</b>architecture and M-RoPE terminology sanity check</p><p><a href="https://arxiv.org/abs/2409.12191" rel="noreferrer" target="_blank">打开来源</a></p></article><article class="source-card"><h3>Local Transformers Qwen2-VL source</h3><p><b>类型：</b>local source code</p><p><b>用途：</b>processor token expansion, vision transformer forward, get_rope_index, feature/token count checks</p><p><span data-publication-local-link="true">打开来源</span><small data-publication-note="archive-only">（来源记录保存在完整本地归档中）</small></p></article><article class="source-card"><h3>Local Transformers Qwen2.5-VL source</h3><p><b>类型：</b>local source code</p><p><b>用途：</b>Window Attention implementation, second_per_grid_ts, full-attention layer switch</p><p><span data-publication-local-link="true">打开来源</span><small data-publication-note="archive-only">（来源记录保存在完整本地归档中）</small></p></article><article class="source-card"><h3>Local Transformers Qwen3-VL / Qwen3-VL-MoE source</h3><p><b>类型：</b>local source code</p><p><b>用途：</b>DeepStack, Interleaved-MRoPE, timestamp text insertion, MoE router</p><p><span data-publication-local-link="true">打开来源</span><small data-publication-note="archive-only">（来源记录保存在完整本地归档中）</small></p></article></div></section>
+<section id="takeaways"><h2>15. 最后总结：你应该带走的判断框架</h2><p>判断一个 Qwen-VL 模块时，先问它解决的是哪种瓶颈：token 数瓶颈、位置感瓶颈、细节保真瓶颈、长视频时间瓶颈、结构化输出瓶颈，还是推理/部署效率瓶颈。模块名字不同，但都能放进这个框架里。</p>
+<p>Qwen2-VL 的重点是把动态图像/视频输入和 M-RoPE 稳定跑通；Qwen2.5-VL 的重点是把长视频、窗口注意力、动态时间和结构化输出做得更产品化；Qwen3-VL 的重点是用 DeepStack、Interleaved-MRoPE、timestamp、Thinking 和 MoE 提升细粒度理解、长上下文推理和大模型扩展效率。</p>
+<p>读源码时不要被大模型名字吓住。抓住四个变量：`grid_thw`、`merge_size`、`position_ids`、`image/video token mask`。这四个变量贯穿输入、视觉塔、位置编码、LLM 注入和生成缓存。只要它们通了，整套实现就有了骨架。</p>
+<p>真正落地时，最值得做的不是盲目换更大的模型，而是建立一套 shape/token/position 审计：每次输入的视觉 token 预算、位置编码、替换 mask、输出格式、坐标系都可检查。多模态模型的失败经常不是“不会推理”，而是某个下层对齐细节已经错了。</p></section>
+<section id="basic-module-walkthrough"><h2>16. 补充：processor、视觉塔、Merger、LLM 的逐步处理逻辑</h2><p>这一节专门补你要的“基础模块每一步干什么”。三篇知乎博客其实给了很完整的代码路径：Qwen2-VL 那篇把图片推理从 `apply_chat_template`、resize、patchify、占位符扩展、视觉塔 forward、LLM 替换讲了一遍；Qwen2.5-VL 那篇重点补了 Window Attention 和绝对时间编码；Qwen3-VL 那篇补了 processor 的时间戳文本插入、patch size 变化、绝对位置插值、DeepStack 多层注入和 MoE 语言模型。下面把它们合成一条从输入到输出的完整流水线。</p>
+<h3>16.1 先看总流水线：一张图不是直接喂给 LLM，而是先变成一串“视觉词”</h3>
+<p>白话版：用户发来的图片/视频，先被 processor 切成很多小块；视觉塔把每个小块变成向量；Merger 把相邻的小块打包，减少 token 数并投影到 LLM 的 hidden size；LLM 再把这些视觉向量当成特殊 token 读进去，像读一段夹着图像证据的文本一样生成答案。</p>
+<pre><code>messages
+  -&gt; apply_chat_template: 把对话变成带 &lt;|vision_start|&gt;&lt;|image_pad|&gt;&lt;|vision_end|&gt; 的文本
+  -&gt; process_vision_info / image_processor / video_processor: 读图、抽帧、resize、patchify
+  -&gt; processor.__call__: 根据 grid_thw 把 1 个 image/video 占位符扩成 N 个占位符
+  -&gt; tokenizer: 得到 input_ids / attention_mask
+  -&gt; vision tower: pixel_values -&gt; patch embedding -&gt; vision blocks -&gt; visual hidden states
+  -&gt; PatchMerger: 每 2x2 个空间 patch 打包成 1 个 LLM 视觉 token
+  -&gt; LLM forward: embed_tokens 后，用 visual embeddings 替换 image/video 占位符位置
+  -&gt; get_rope_index / position_ids: 给文本、图片、视频 token 配位置
+  -&gt; decoder layers + lm_head: 预测下一个文本 token</code></pre>
+<p>这条链路里最容易出错的是 processor 和 LLM 接口之间的数量对齐：processor 扩展出来多少个 `&lt;|image_pad|&gt;`，视觉塔+Merger 就必须产出多少个视觉 embedding。少一个或多一个都不行，源码里会直接检查并报类似“image features and image tokens do not match”的错误。</p>
+<div class="table-wrap"><table><thead><tr><th>阶段</th><th>输入</th><th>做什么</th><th>输出</th><th>为什么重要</th></tr></thead><tbody><tr><td>Processor</td><td>messages、图片、视频</td><td>套 chat template、resize、patchify、计算 `grid_thw`、扩展占位符</td><td>`input_ids`、`pixel_values`、`image_grid_thw`、`video_grid_thw`</td><td>决定视觉 token 数量和文本中预留位置是否一致</td></tr><tr><td>视觉塔</td><td>`pixel_values` + `grid_thw`</td><td>3D Conv patch embedding、位置编码、Transformer blocks</td><td>逐 patch 的视觉 hidden states</td><td>把像素块翻译成模型可处理的视觉表示</td></tr><tr><td>Merger</td><td>视觉 hidden states</td><td>按 `merge_size^2` 分组、归一化、MLP 投影</td><td>LLM hidden size 的视觉 token</td><td>减少 token 数，并对齐语言模型维度</td></tr><tr><td>LLM 接入</td><td>`input_ids`、文本 embedding、视觉 embedding</td><td>用 mask 找到占位符，把视觉 embedding 填进去</td><td>`inputs_embeds`</td><td>让 decoder-only LLM 不需要额外 cross-attention 也能读图</td></tr><tr><td>生成</td><td>`inputs_embeds`、`position_ids`、cache</td><td>自回归解码、lm_head 预测词表分布</td><td>答案 token</td><td>视觉只在 prefill 阶段注入，后续靠 KV cache 继续生成</td></tr></tbody></table></div>
+<h3>16.2 Processor 第一步：把“用户消息”改写成模型能解析的模板</h3>
+<p>以 Qwen2-VL 博客里的 demo 为例，用户消息本来是一个列表：里面有一张图片和一句“Describe this image.”。`processor.apply_chat_template` 会先把它改写成 ChatML 风格文本，图片位置暂时不是图片本身，而是 `&lt;|vision_start|&gt;&lt;|image_pad|&gt;&lt;|vision_end|&gt;`。这一步的作用是告诉后面的 tokenizer 和模型：这里将来会有一段视觉 token。</p>
+<p>注意，`&lt;|image_pad|&gt;` 一开始只有一个。它不是最终 token 数，只是一个“先占个坑”的标记。真正要占多少坑，要等图片 resize、patchify、merge 以后才能算出来。所以 processor 的逻辑分成两段：先放一个抽象占位符，再根据视觉网格把它扩成很多个占位符。</p>
+<pre><code>原始消息:
+  user: [image, text]
+
+套模板后:
+  &lt;|im_start|&gt;user
+  &lt;|vision_start|&gt;&lt;|image_pad|&gt;&lt;|vision_end|&gt;Describe this image.&lt;|im_end|&gt;
+  &lt;|im_start|&gt;assistant</code></pre>
+<p>白话理解：这像是在一篇文章里先写“这里插图”，但还不知道这张图最终会占几页。等图像处理器算出图像会变成多少个视觉 token，再把“这里插图”扩成对应数量的空位。</p>
+<h3>16.3 Processor 第二步：resize 不是随便缩放，而是为了 patch 和 merge 对齐</h3>
+<p>Qwen2-VL 和 Qwen2.5-VL 的默认 patch size 是 14，spatial merge size 是 2，所以图片高宽要调整到 `14 * 2 = 28` 的倍数。Qwen3-VL 把 patch size 改成 16，merge size 仍常见为 2，所以 factor 变成 `16 * 2 = 32`。三篇博客都反复强调这个点：尺寸约束不是审美问题，而是为了后面切 patch 和 2x2 merge 不出零头。</p>
+<p>resize 的约束通常有四个：高宽必须是 factor 的倍数；总像素数不能低于 `min_pixels`；总像素数不能超过 `max_pixels`；尽量保持原宽高比。极端长条图还会被拒绝，因为宽高比太夸张时，模型很难稳定处理。</p>
+<div class="math-block"><span data-publication-math="\[factor = patch\_size \times merge\_size\]"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mi>a</mi><mi>c</mi><mi>t</mi><mi>o</mi><mi>r</mi><mo>=</mo><mi>p</mi><mi>a</mi><mi>t</mi><mi>c</mi><mi>h</mi><mi mathvariant="normal">_</mi><mi>s</mi><mi>i</mi><mi>z</mi><mi>e</mi><mo>×</mo><mi>m</mi><mi>e</mi><mi>r</mi><mi>g</mi><mi>e</mi><mi mathvariant="normal">_</mi><mi>s</mi><mi>i</mi><mi>z</mi><mi>e</mi></mrow><annotation encoding="application/x-tex">factor = patch\_size \times merge\_size</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.8889em;vertical-align:-0.1944em;"></span><span class="mord mathnormal" style="margin-right:0.10764em;">f</span><span class="mord mathnormal">a</span><span class="mord mathnormal">c</span><span class="mord mathnormal">t</span><span class="mord mathnormal" style="margin-right:0.02778em;">or</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1.0044em;vertical-align:-0.31em;"></span><span class="mord mathnormal">p</span><span class="mord mathnormal">a</span><span class="mord mathnormal">t</span><span class="mord mathnormal">c</span><span class="mord mathnormal">h</span><span class="mord" style="margin-right:0.02778em;">_</span><span class="mord mathnormal">s</span><span class="mord mathnormal">i</span><span class="mord mathnormal">ze</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9695em;vertical-align:-0.31em;"></span><span class="mord mathnormal">m</span><span class="mord mathnormal" style="margin-right:0.02778em;">er</span><span class="mord mathnormal" style="margin-right:0.03588em;">g</span><span class="mord mathnormal">e</span><span class="mord" style="margin-right:0.02778em;">_</span><span class="mord mathnormal">s</span><span class="mord mathnormal">i</span><span class="mord mathnormal">ze</span></span></span></span></span></span></div>
+<div class="math-block"><span data-publication-math="\[N_{patch}=T\times H_{grid}\times W_{grid}, \quad N_{LLM\_vision}=\frac{N_{patch}}{merge\_size^2}\]"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>N</mi><mrow><mi>p</mi><mi>a</mi><mi>t</mi><mi>c</mi><mi>h</mi></mrow></msub><mo>=</mo><mi>T</mi><mo>×</mo><msub><mi>H</mi><mrow><mi>g</mi><mi>r</mi><mi>i</mi><mi>d</mi></mrow></msub><mo>×</mo><msub><mi>W</mi><mrow><mi>g</mi><mi>r</mi><mi>i</mi><mi>d</mi></mrow></msub><mo separator="true">,</mo><mspace width="1em"></mspace><msub><mi>N</mi><mrow><mi>L</mi><mi>L</mi><mi>M</mi><mi mathvariant="normal">_</mi><mi>v</mi><mi>i</mi><mi>s</mi><mi>i</mi><mi>o</mi><mi>n</mi></mrow></msub><mo>=</mo><mfrac><msub><mi>N</mi><mrow><mi>p</mi><mi>a</mi><mi>t</mi><mi>c</mi><mi>h</mi></mrow></msub><mrow><mi>m</mi><mi>e</mi><mi>r</mi><mi>g</mi><mi>e</mi><mi mathvariant="normal">_</mi><mi>s</mi><mi>i</mi><mi>z</mi><msup><mi>e</mi><mn>2</mn></msup></mrow></mfrac></mrow><annotation encoding="application/x-tex">N_{patch}=T\times H_{grid}\times W_{grid}, \quad N_{LLM\_vision}=\frac{N_{patch}}{merge\_size^2}</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">p</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight">t</span><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight">h</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.9694em;vertical-align:-0.2861em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.08125em;">H</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0813em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">g</span><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">d</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.0503em;vertical-align:-0.367em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.13889em;">W</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.1389em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.03588em;">g</span><span class="mord mathnormal mtight" style="margin-right:0.02778em;">r</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">d</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3283em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">LL</span><span class="mord mathnormal mtight" style="margin-right:0.10903em;">M</span><span class="mord mtight" style="margin-right:0.02778em;">_</span><span class="mord mathnormal mtight" style="margin-right:0.03588em;">v</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">s</span><span class="mord mathnormal mtight">i</span><span class="mord mathnormal mtight">o</span><span class="mord mathnormal mtight">n</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.367em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:2.3563em;vertical-align:-0.996em;"></span><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3603em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathnormal">m</span><span class="mord mathnormal" style="margin-right:0.02778em;">er</span><span class="mord mathnormal" style="margin-right:0.03588em;">g</span><span class="mord mathnormal">e</span><span class="mord" style="margin-right:0.02778em;">_</span><span class="mord mathnormal">s</span><span class="mord mathnormal">i</span><span class="mord mathnormal" style="margin-right:0.04398em;">z</span><span class="mord"><span class="mord mathnormal">e</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7401em;"><span style="top:-2.989em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span></span></span></span></span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.109em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight">p</span><span class="mord mathnormal mtight">a</span><span class="mord mathnormal mtight">t</span><span class="mord mathnormal mtight">c</span><span class="mord mathnormal mtight">h</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.2861em;"><span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.996em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span></span></span></div>
+<p>白话理解：patch size 决定“一刀切多大”；merge size 决定“后面几块打包成一块”。如果图片尺寸不是 factor 的倍数，最后就会出现一排或一列 patch 凑不成 2x2 的包，Merger 处理就不整齐。</p>
+<div class="table-wrap"><table><thead><tr><th>版本</th><th>patch size</th><th>常见 merge size</th><th>resize factor</th><th>含义</th></tr></thead><tbody><tr><td>Qwen2-VL</td><td>14</td><td>2</td><td>28</td><td>高宽调到 28 的倍数，方便 14x14 patch 后再 2x2 merge</td></tr><tr><td>Qwen2.5-VL</td><td>14</td><td>2</td><td>28</td><td>沿用 Qwen2-VL 的切块粒度，同时新增窗口注意力</td></tr><tr><td>Qwen3-VL</td><td>16</td><td>2</td><td>32</td><td>patch 更大，图片/视频预算规则也随之变化</td></tr></tbody></table></div>
+<h3>16.4 Processor 第三步：图片为什么会被复制成两个相同帧</h3>
+<p>Qwen2-VL 博客里讲得很细：Qwen2 系列用 3D Conv 处理视觉输入，卷积核的时间深度是 2，也就是 `temporal_patch_size=2`。为了让图片和视频走同一套视觉塔路径，单张图片会被复制成两个相同帧。这样图片也能被看成一个长度为 2 的极短视频。</p>
+<p>这一步不是为了增加信息量，因为两帧是一样的；它是为了统一张量形状。视频天然有时间维，图片没有时间维。复制一份以后，图片也有了 `T=2` 的临时时间维，后面的 `Conv3d(3, hidden, kernel_size=(2, patch, patch), stride=(2, patch, patch))` 就能同时处理图片和视频。</p>
+<pre><code>单张图片:
+  [C, H, W]
+
+为了适配 temporal_patch_size=2:
+  [2, C, H, W]   # 两个相同帧
+
+patchify 后:
+  grid_t = 2 // 2 = 1
+  grid_h = resized_h // patch_size
+  grid_w = resized_w // patch_size</code></pre>
+<p>白话理解：视觉塔是一台“每次吃两帧”的机器。图片只有一帧，不够吃，所以复制一帧凑成两帧。凑出来不是为了让模型看到新内容，而是为了让输入格式统一。</p>
+<h3>16.5 Processor 第四步：patchify 的 reshape/transpose 到底在整理什么</h3>
+<p>博客里最关键的一段是 patchify：先把 resize 后的图像转成 channel-first，再根据 `grid_t`、`grid_h`、`grid_w` reshape；然后 transpose，把将来要 merge 的相邻 2x2 patch 提前排到一起；最后 flatten 成 `pixel_values`。</p>
+<p>这一步很多人只记住“切 patch”，但忽略了“提前按 merge 顺序排好”。Qwen2/Qwen2.5 的 processor 并不是随便把 patch 从左到右拉平，而是会把空间上相邻的 2x2 patch 放到一起，方便后面的 PatchMerger 直接 `view(-1, context_dim * 4)`。</p>
+<pre><code>概念化流程:
+  patches: [T, C, H, W]
+  grid_t = T // temporal_patch_size
+  grid_h = H // patch_size
+  grid_w = W // patch_size
+
+reshape 成:
+  [grid_t, temporal_patch_size, C,
+   grid_h // merge_size, merge_size,
+   grid_w // merge_size, merge_size,
+   patch_size, patch_size]
+
+transpose:
+  把同一个 2x2 merge 组里的 patch 排到相邻位置
+
+flatten:
+  pixel_values: [grid_t * grid_h * grid_w, C * temporal_patch_size * patch_size * patch_size]</code></pre>
+<p>Qwen2-VL 博客里的具体例子是：resize 后图片大约为 2044x1372，patch size 为 14，所以 patch 数为 `1 * 146 * 98 = 14308`；因为 merge size 为 2，最终给 LLM 的视觉 token 数是 `14308 / 4 = 3577`。这解释了为什么 `input_ids` 里会突然多出几千个 `&lt;|image_pad|&gt;`。</p>
+<div class="math-block"><span data-publication-math="\[2044/14=146, \quad 1372/14=98, \quad 146\times98=14308, \quad 14308/4=3577\]"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2044</mn><mi mathvariant="normal">/</mi><mn>14</mn><mo>=</mo><mn>146</mn><mo separator="true">,</mo><mspace width="1em"></mspace><mn>1372</mn><mi mathvariant="normal">/</mi><mn>14</mn><mo>=</mo><mn>98</mn><mo separator="true">,</mo><mspace width="1em"></mspace><mn>146</mn><mo>×</mo><mn>98</mn><mo>=</mo><mn>14308</mn><mo separator="true">,</mo><mspace width="1em"></mspace><mn>14308</mn><mi mathvariant="normal">/</mi><mn>4</mn><mo>=</mo><mn>3577</mn></mrow><annotation encoding="application/x-tex">2044/14=146, \quad 1372/14=98, \quad 146\times98=14308, \quad 14308/4=3577</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">2044/14</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">146</span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">1372/14</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.8389em;vertical-align:-0.1944em;"></span><span class="mord">98</span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">146</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">×</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">98</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord">14308</span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord">14308/4</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6444em;"></span><span class="mord">3577</span></span></span></span></span></span></div>
+<h3>16.6 Processor 第五步：把一个占位符扩成 N 个占位符</h3>
+<p>视觉处理器得到 `image_grid_thw` 后，processor 才知道这张图会生成多少个 LLM 视觉 token。核心公式是 `image_grid_thw[index].prod() // merge_length`，其中 `merge_length = merge_size ** 2`。然后它把文本中的一个 `&lt;|image_pad|&gt;` 临时替换成 N 个 `&lt;|placeholder|&gt;`，最后再统一换回 N 个 `&lt;|image_pad|&gt;`。</p>
+<pre><code>merge_length = image_processor.merge_size ** 2
+num_image_tokens = image_grid_thw[index].prod() // merge_length
+
+text = text.replace(
+    "&lt;|image_pad|&gt;",
+    "&lt;|placeholder|&gt;" * num_image_tokens,
+    1,
+)
+text = text.replace("&lt;|placeholder|&gt;", "&lt;|image_pad|&gt;")</code></pre>
+<p>为什么不直接一开始放 N 个 `&lt;|image_pad|&gt;`？因为 N 取决于图片实际尺寸、resize 后尺寸、patch size、merge size、视频抽帧数。文本模板阶段还不知道这些。processor 必须先处理视觉输入，再回头改写文本。</p>
+<p>到这一步，tokenizer 才真正开始把长文本转成 `input_ids`。所以最终 `input_ids` 的长度不是原 prompt 的文字长度，而是文字 token 数加上全部视觉占位符数。图片越大、视频帧越多，这个序列越长。</p>
+<h3>16.7 视频 processor：Qwen2.5 用绝对时间，Qwen3 把时间戳写进文本</h3>
+<p>Qwen2.5-VL 博客补充的关键点是：视频不能只知道“第几帧”，还要知道真实时间间隔。它在 `get_rope_index` 里引入 `second_per_grid_ts`，再结合 `tokens_per_second`，让时间维 position id 和真实秒数挂钩。比如同样是 8 帧，1 秒采 8 帧和 4 秒采 2 帧，不应该拥有完全一样的时间位置。</p>
+<p>Qwen3-VL 博客则进一步说明：Qwen3 把原来的 T-RoPE 思路改成文本时间戳对齐。processor 会利用视频 metadata 里的帧索引和 fps 算出每个时间块的中心时间，然后构造类似 `&lt;0.2 seconds&gt;&lt;|vision_start|&gt;...&lt;|vision_end|&gt;` 的文本片段。也就是说，时间不只是藏在 RoPE 的 t 轴里，还显式作为文本 token 出现在 LLM 输入里。</p>
+<pre><code>Qwen3-VL 视频占位符概念化:
+  原始: &lt;|video_pad|&gt;
+
+  展开后:
+  &lt;0.2 seconds&gt;&lt;|vision_start|&gt;&lt;|video_pad|&gt; ... &lt;|video_pad|&gt;&lt;|vision_end|&gt;
+  &lt;0.8 seconds&gt;&lt;|vision_start|&gt;&lt;|video_pad|&gt; ... &lt;|video_pad|&gt;&lt;|vision_end|&gt;
+  ...
+
+每一帧/时间块:
+  frame_seqlen = video_grid_thw[index][1:].prod() // merge_length</code></pre>
+<p>白话理解：Qwen2.5 像是在视觉 token 的位置编码里写“这一块对应第几秒”；Qwen3 更像是在视频帧前直接贴一个字幕“0.2 seconds”。这样 LLM 在做长视频问答时，可以直接用文本方式引用时间点，事件定位也更自然。</p>
+<h3>16.8 视觉塔第一步：PatchEmbed 用 3D Conv 把像素块变成向量</h3>
+<p>processor 产出的 `pixel_values` 还是“像素块展开后的数值”，不能直接给 LLM。视觉塔第一步是 PatchEmbed。Qwen2/Qwen2.5 对应 `Conv3d(3, 1280, kernel_size=(2,14,14), stride=(2,14,14))`；Qwen3 对应 `Conv3d(3,1152,kernel_size=(2,16,16), stride=(2,16,16))`，并且 Qwen3 版本里带 bias。</p>
+<p>Conv3d 的意思是：一次看 2 帧、14x14 或 16x16 的空间块，把这个小立方体投影成一个 hidden vector。它做的事情类似文本模型的 embedding 层：文本 token id 会查表变成向量，视觉 patch 会经过 3D 卷积变成向量。</p>
+<pre><code>Qwen2/Qwen2.5:
+  pixel patch: [C * 2 * 14 * 14]
+  PatchEmbed -&gt; [vision_hidden=1280]
+
+Qwen3:
+  pixel patch: [C * 2 * 16 * 16]
+  PatchEmbed -&gt; [vision_hidden=1152]</code></pre>
+<p>白话理解：PatchEmbed 是“像素到视觉词向量”的翻译器。它不负责理解整张图，只负责把每个小块变成 Transformer 能继续处理的向量。</p>
+<h3>16.9 视觉塔第二步：位置编码告诉模型每个视觉词来自哪里</h3>
+<p>只把 patch 变成向量还不够，因为 Transformer 本身不知道第几个向量来自图片左上角还是右下角。Qwen2/Qwen2.5 主要使用视觉 RoPE / M-RoPE 体系，让每个视觉 token 带上空间位置；Qwen3 在视觉塔里还额外加了可学习的绝对位置编码，并通过 `fast_pos_embed_interpolate` 适配任意分辨率。</p>
+<p>Qwen3 的绝对位置插值可以这样理解：模型内部有一个 48x48 的基础位置表，但输入图片可能是任意 HxW 网格。代码会把目标网格坐标映射回 48x48 基础网格，用双线性插值拿到位置向量，再重复到每个时间块，并按 merge 顺序重排。</p>
+<div class="table-wrap"><table><thead><tr><th>版本</th><th>视觉塔位置处理</th><th>解决的问题</th></tr></thead><tbody><tr><td>Qwen2-VL</td><td>视觉 rotary position + M-RoPE 接入 LLM</td><td>让图片/视频 token 有二维/三维位置感</td></tr><tr><td>Qwen2.5-VL</td><td>沿用 M-RoPE，并在视频时间维加入 `second_per_grid_ts`</td><td>让时间位置与真实秒数对齐</td></tr><tr><td>Qwen3-VL</td><td>`fast_pos_embed_interpolate` + `rot_pos_emb` + Interleaved-MRoPE</td><td>任意分辨率下保留空间位置，并让 t/h/w 频率分布更均匀</td></tr></tbody></table></div>
+<p>白话理解：PatchEmbed 告诉模型“这是什么样的小块”，位置编码告诉模型“这个小块在图里的什么地方、视频里的什么时候”。没有位置编码，OCR、表格、坐标定位、视频事件顺序都会明显受影响。</p>
+<h3>16.10 视觉塔第三步：cu_seqlens 限制注意力范围，避免不同图片混在一起</h3>
+<p>视觉塔 forward 里常见一个变量 `cu_seqlens`。它是 cumulative sequence lengths，也就是累计序列边界。假设 batch 里有多张图片或多个视频，所有 patch 会拼成一个长序列，但注意力计算时不能让第一张图的 patch 随便 attend 到第二张图的 patch。`cu_seqlens` 就是告诉 FlashAttention/SDPA：每个样本的起止边界在哪里。</p>
+<pre><code>概念化:
+  image A patches: 0 ... 99
+  image B patches: 100 ... 239
+
+cu_seqlens = [0, 100, 240]
+
+含义:
+  attention 在 [0,100) 内部算一次
+  attention 在 [100,240) 内部算一次
+  不把 A 和 B 的视觉 patch 混在一个 attention 块里</code></pre>
+<p>白话理解：`cu_seqlens` 像是给拼接后的长队伍画分隔线。队伍看起来连在一起，但计算注意力时每张图/每个视频仍然是独立小组。</p>
+<h3>16.11 Qwen2 视觉塔：全局视觉注意力后直接 Merger</h3>
+<p>Qwen2-VL 的视觉塔流程最直：`patch_embed -&gt; rot_pos_emb -&gt; blocks -&gt; merger`。博客里也指出，Qwen2-VL 没有很重的 Connector，视觉编码向量经过 PatchMerger 后直接进入语言模型。</p>
+<pre><code>Qwen2-VL visual forward:
+  hidden_states = patch_embed(pixel_values)
+  rotary_pos_emb = rot_pos_emb(grid_thw)
+  cu_seqlens = build_boundaries_from(grid_thw)
+  for block in vision_blocks:
+      hidden_states = block(hidden_states, cu_seqlens, rotary_pos_emb)
+  image_embeds = merger(hidden_states)</code></pre>
+<p>这说明 Qwen2-VL 的融合策略偏轻量：视觉塔负责把图像局部信息编码好，Merger 负责压缩和投影，LLM 负责统一推理。它没有在视觉和语言之间塞一个很复杂的跨模态模块。</p>
+<h3>16.12 Qwen2.5 视觉塔：Window Attention 先重排，再局部注意力，最后还原</h3>
+<p>Qwen2.5-VL 博客重点解释了 `get_window_index`。它先基于 `grid_thw` 算出 merge 后的 LLM 网格尺寸 `llm_grid_h = grid_h // spatial_merge_size`、`llm_grid_w = grid_w // spatial_merge_size`；然后按窗口大小给网格 padding；再把一个窗口内的索引排到一起；最后得到 `window_index` 和 `cu_window_seqlens`。</p>
+<p>forward 时，hidden states 和 rotary position 都会按 `window_index` 重排。大多数视觉 block 使用 `cu_window_seqlens`，也就是只在窗口内部算 attention；少数 `fullatt_block_indexes` 层使用全局 `cu_seqlens`，负责跨窗口整合。Merger 后再用 `reverse_indices = argsort(window_index)` 把顺序还原。</p>
+<pre><code>Qwen2.5-VL visual forward:
+  hidden_states = patch_embed(pixel_values)
+  rotary_pos_emb = rot_pos_emb(grid_thw)
+  window_index, cu_window_seqlens = get_window_index(grid_thw)
+
+  hidden_states = group_by_window(hidden_states, window_index)
+  rotary_pos_emb = group_by_window(rotary_pos_emb, window_index)
+
+  for layer_num, block in enumerate(blocks):
+      if layer_num in fullatt_block_indexes:
+          cu = cu_seqlens          # 全局注意力
+      else:
+          cu = cu_window_seqlens   # 窗口注意力
+      hidden_states = block(hidden_states, cu)
+
+  hidden_states = merger(hidden_states)
+  hidden_states = restore_original_order(hidden_states, window_index)</code></pre>
+<p>白话理解：全局注意力像让全班所有人互相交流，成本很高；窗口注意力像把学生分成小组讨论，便宜很多；少数全局层像全班代表再开会，把小组信息打通。Qwen2.5 的设计就是大部分时间小组讨论，偶尔全班交流。</p>
+<h3>16.13 Qwen3 视觉塔：去掉 Qwen2.5 的窗口主线，改成绝对位置插值 + DeepStack</h3>
+<p>Qwen3-VL 博客说得很明确：Qwen3 的结构变化较大，前一代 Qwen2.5-VL 的窗口注意力被抛弃，ViT 又更接近常见 ViT 结构；但它新增了更重要的 DeepStack。视觉塔不只输出最后一层 Merger 结果，还会在指定层，比如 `[8,16,24]`，取出中间视觉特征，经过 `deepstack_merger_list` 投影，后面注入 LLM 的浅层 hidden states。</p>
+<pre><code>Qwen3-VL visual forward:
+  hidden_states = patch_embed(pixel_values)
+  hidden_states = hidden_states + fast_pos_embed_interpolate(grid_thw)
+  rotary_pos_emb = rot_pos_emb(grid_thw)
+  cu_seqlens = build_boundaries_from(grid_thw)
+
+  deepstack_feature_lists = []
+  for layer_num, block in enumerate(blocks):
+      hidden_states = block(hidden_states, cu_seqlens, position_embeddings)
+      if layer_num in deepstack_visual_indexes:
+          deepstack_feature = deepstack_merger_list[k](hidden_states)
+          deepstack_feature_lists.append(deepstack_feature)
+
+  final_visual_embeds = merger(hidden_states)
+  return final_visual_embeds, deepstack_feature_lists</code></pre>
+<p>白话理解：Qwen2/Qwen2.5 像是只把视觉塔最后一层的总结交给 LLM；Qwen3 还把中间层的细节也分批送进去。底层视觉层更保留边缘、纹理、局部形状；高层视觉层更偏语义。DeepStack 的目的就是别让 LLM 只看到最后的抽象总结，而是也能拿到不同层次的视觉证据。</p>
+<h3>16.14 Merger：为什么要把 2x2 patch 压成 1 个视觉 token</h3>
+<p>Merger 的核心目的有两个：第一，把视觉 token 数减少到 LLM 可承受的范围；第二，把视觉塔 hidden size 投影到 LLM hidden size。Qwen2/Qwen2.5 的 Merger 结构大致是 `ln_q -&gt; view(-1, context_dim * 4) -&gt; Linear -&gt; GELU -&gt; Linear(dim)`。这里的 4 就来自 `merge_size^2 = 2^2`。</p>
+<p>在 Qwen2/Qwen2.5 里，视觉塔 hidden size 常见为 1280，LLM hidden size 为 3584。Merger 会把 4 个 1280 维 patch 拼成 5120 维，再通过 MLP 变成 3584 维。Qwen3 里视觉 hidden size 是 1152，4 个拼成 4608，再投影到 4096 维语言模型空间。</p>
+<div class="table-wrap"><table><thead><tr><th>版本</th><th>Merger 输入分组</th><th>Merger 中间维度</th><th>Merger 输出维度</th><th>输出给谁</th></tr></thead><tbody><tr><td>Qwen2-VL</td><td>4 个相邻视觉 patch</td><td>1280 * 4 = 5120</td><td>3584</td><td>Qwen2 LLM</td></tr><tr><td>Qwen2.5-VL</td><td>4 个相邻视觉 patch</td><td>1280 * 4 = 5120</td><td>3584</td><td>Qwen2.5 LLM</td></tr><tr><td>Qwen3-VL</td><td>4 个相邻视觉 patch</td><td>1152 * 4 = 4608</td><td>4096</td><td>Qwen3 / Qwen3-MoE LLM</td></tr></tbody></table></div>
+<p>白话理解：Merger 像把相邻 2x2 的小图块装进一个文件袋，再贴上 LLM 能读懂的标签。它不是简单平均，也不是纯裁剪，而是一个可学习的打包器：模型可以自己学哪些局部信息应该保留、哪些可以压缩。</p>
+<h3>16.15 LLM 接入第一步：先得到普通文本 embedding</h3>
+<p>进入 `Qwen*_VLForConditionalGeneration.forward` 后，如果没有外部传入 `inputs_embeds`，模型会先用语言模型的 embedding 表把 `input_ids` 转成普通 token embedding。此时 `&lt;|image_pad|&gt;` 和 `&lt;|video_pad|&gt;` 也只是普通特殊 token 的 embedding，还没有真正视觉内容。</p>
+<pre><code>if inputs_embeds is None:
+    inputs_embeds = embed_tokens(input_ids)
+
+此时:
+  文本 token -&gt; 文本 embedding
+  &lt;|image_pad|&gt; -&gt; 一个普通特殊 token embedding
+  &lt;|video_pad|&gt; -&gt; 一个普通特殊 token embedding</code></pre>
+<p>白话理解：这一步像先把整篇文章排版好，图片位置也放了占位框，但框里还没有真正图片内容。</p>
+<h3>16.16 LLM 接入第二步：视觉塔算出 image_embeds / video_embeds</h3>
+<p>如果 `pixel_values` 不为空，模型调用 `get_image_features` 或直接 `self.visual(pixel_values, grid_thw=image_grid_thw)` 得到 `image_embeds`。如果 `pixel_values_videos` 不为空，同样得到 `video_embeds`。Qwen3 会额外拿到 `deepstack_image_embeds` / `deepstack_video_embeds`。</p>
+<p>这里有一个关键点：视觉特征的数量已经是 Merger 后的数量，不再是原始 patch 数。也就是说，如果 processor 把一个图片占位符扩展成 3577 个 `&lt;|image_pad|&gt;`，视觉塔+Merger 最终就必须输出 3577 条 image embedding。</p>
+<h3>16.17 LLM 接入第三步：用 mask 把占位符 embedding 替换成视觉 embedding</h3>
+<p>Qwen2 的代码里直接用 `image_mask = input_ids == image_token_id`，然后 `inputs_embeds[image_mask] = image_embeds`。Qwen2.5/Qwen3 的实现更封装，会先通过 `get_placeholder_mask` 检查数量，再用 `masked_scatter` 替换。逻辑是一回事：找到所有 image/video 占位符位置，把这些位置的 embedding 换成视觉塔输出。</p>
+<pre><code>image_mask = (input_ids == image_token_id)
+video_mask = (input_ids == video_token_id)
+
+检查:
+  image_mask 对应的元素数量 == image_features.numel()
+  video_mask 对应的元素数量 == video_features.numel()
+
+替换:
+  inputs_embeds = inputs_embeds.masked_scatter(image_mask_expanded, image_embeds)
+  inputs_embeds = inputs_embeds.masked_scatter(video_mask_expanded, video_embeds)</code></pre>
+<p>白话理解：原来文章里有 3577 个空白图片框，现在把 3577 个视觉向量按顺序塞进去。塞完以后，LLM 看到的就是一整串 embedding：前面可能是 system prompt，中间夹着视觉 embedding，后面是用户问题。</p>
+<h3>16.18 LLM 接入第四步：get_rope_index 给混合序列分配位置</h3>
+<p>文本模型原本只需要一维位置：第 0 个 token、第 1 个 token、第 2 个 token。多模态输入不够，因为视觉 token 有空间和时间结构。`get_rope_index` 的任务就是给文本、图片、视频混排后的序列分配三路位置：time、height、width。</p>
+<p>Qwen2/Qwen2.5 的逻辑是：纯文本段三路位置都一样；遇到图片段，就根据 `image_grid_thw` 构造 h/w 网格，time 通常不发挥真实视频时间作用；遇到视频段，就根据 `video_grid_thw` 构造 t/h/w。Qwen2.5 多了 `second_per_grid_ts`，让 t 轴按真实秒数拉开。</p>
+<p>Qwen3 的逻辑发生变化：源码注释里明确说 Qwen3VL 使用 timestamps 而不是 absolute time position ids。也就是说，视频时间被写成文本时间戳插入序列，视觉 RoPE 里的 `t_index` 在相应处理下不再承担同样的真实时间建模责任。</p>
+<div class="table-wrap"><table><thead><tr><th>位置对象</th><th>Qwen2-VL</th><th>Qwen2.5-VL</th><th>Qwen3-VL</th></tr></thead><tbody><tr><td>图片</td><td>`image_grid_thw` -&gt; h/w 空间网格</td><td>同 Qwen2</td><td>同样有空间网格，并叠加绝对位置插值与 Interleaved-MRoPE</td></tr><tr><td>视频</td><td>`video_grid_thw` -&gt; t/h/w</td><td>`second_per_grid_ts * tokens_per_second` 让时间位置对齐真实秒数</td><td>processor 插入文本时间戳，视频帧与时间文本交错</td></tr><tr><td>文本</td><td>三路 position ids 同步递增</td><td>同 Qwen2，但要接在视觉最大位置之后</td><td>同样作为 LLM 文本 token 参与统一解码</td></tr><tr><td>生成缓存</td><td>`rope_deltas` 修正多模态位置与序列长度差值</td><td>继续使用 `rope_deltas`</td><td>继续需要处理多模态 prefill 后的位置延续</td></tr></tbody></table></div>
+<h3>16.19 LLM 主体：视觉 token 已经混进输入，后面就是 decoder-only 生成</h3>
+<p>完成 embedding replacement 和 position ids 后，后面的 LLM 主体基本就是 decoder-only Transformer：self-attention、MLP/MoE、RMSNorm、残差连接、最后 `lm_head` 输出词表 logits。区别在于输入 embedding 中一部分来自文本 embedding 表，一部分来自视觉塔输出。</p>
+<p>Qwen2/Qwen2.5 的语言模型是 dense LLM；Qwen3-VL-MoE 版本的语言模型里有 sparse MoE block，router 会为每个 token 选择部分专家。白话说，总参数可以很大，但每个 token 激活的专家只是一部分，所以“总参数”和“每 token 推理计算量”不是一回事。</p>
+<p>生成时还有一个重要工程点：视觉塔通常只在 prefill 阶段跑一次。第一步已经把完整 prompt，包括视觉 token，都送入模型并建立 KV cache；后续每生成一个新 token，只需要把新文本 token 接着喂进去，不会每一步都重新编码图片。否则生成 100 个 token 就要重复跑 100 次视觉塔，成本会非常高。</p>
+<pre><code>prefill 阶段:
+  编码图片/视频
+  替换视觉占位符
+  计算完整 prompt 的 KV cache
+
+decode 阶段:
+  每次只输入上一步生成的新 token
+  复用 past_key_values
+  根据 rope_deltas / cache_position 延续位置</code></pre>
+<h3>16.20 DeepStack 在 LLM 里到底怎么用</h3>
+<p>Qwen3-VL 博客把 DeepStack 比作多层视觉特征注入。源码里，视觉塔在若干中间层取出 hidden states，经过 `deepstack_merger_list` 变成 LLM hidden size 的视觉特征列表；语言模型 forward 里带着 `deepstack_visual_embeds`，在前几层通过 `_deepstack_process` 注入到对应视觉位置。</p>
+<p>这和普通 image embedding replacement 不一样。普通 replacement 只发生在 LLM 输入层：把占位符 embedding 换成最终视觉 embedding。DeepStack 是在 LLM 的若干层内部继续补充视觉特征，相当于让浅层/中层 LLM 也能直接接触来自 ViT 中间层的视觉细节。</p>
+<p>白话理解：普通方式像只在开头给 LLM 一份图片摘要；DeepStack 像在 LLM 阅读过程中，隔几层又递给它一份不同粒度的视觉笔记。这样对 OCR、细粒度定位、复杂图文对齐更有帮助。</p>
+<h3>16.21 三代基础模块差异压缩成一张表</h3>
+<div class="table-wrap"><table><thead><tr><th>模块</th><th>Qwen2-VL</th><th>Qwen2.5-VL</th><th>Qwen3-VL</th><th>你读源码时应该盯什么</th></tr></thead><tbody><tr><td>Processor 图片</td><td>28 倍数 resize，图片复制成 2 帧，patchify 后扩展 `image_pad`</td><td>基本沿用 Qwen2 图片路径</td><td>32 倍数 resize，patch size 16，token 上限和预算变化</td><td>`patch_size`、`merge_size`、`image_grid_thw`、占位符扩展数量</td></tr><tr><td>Processor 视频</td><td>统一图像/视频框架，视频按帧 patchify</td><td>动态 FPS，`second_per_grid_ts` 进入时间位置编码</td><td>插入文本时间戳，按帧构造 `timestamp + vision span`</td><td>`video_grid_thw`、`video_metadata`、fps、timestamp 插入</td></tr><tr><td>视觉塔</td><td>PatchEmbed + RoPE + 全局视觉 blocks</td><td>PatchEmbed + RoPE + Window Attention + 少数全局层</td><td>PatchEmbed + 绝对位置插值 + RoPE + DeepStack</td><td>`cu_seqlens`、`window_index`、`deepstack_visual_indexes`</td></tr><tr><td>Merger</td><td>4 patch -&gt; 1 token，1280*4 -&gt; 3584</td><td>同主线，配合窗口重排后还原</td><td>4 patch -&gt; 1 token，1152*4 -&gt; 4096，并有 deepstack mergers</td><td>Merger 前后 token 数和 hidden size</td></tr><tr><td>LLM 接入</td><td>mask 直接替换 image/video 占位符</td><td>`get_placeholder_mask` 检查后 `masked_scatter`</td><td>replacement + DeepStack 多层注入</td><td>占位符数量、features 数量、`masked_scatter`、`rope_deltas`</td></tr><tr><td>位置编码</td><td>M-RoPE 三路位置</td><td>M-RoPE + 绝对时间</td><td>Interleaved-MRoPE + 文本时间戳</td><td>`get_rope_index` 的 t/h/w 构造方式</td></tr></tbody></table></div>
+<h3>16.22 如果你自己调试，按这个顺序打印 shape</h3>
+<p>多模态模型最常见的问题不是模型“不聪明”，而是下层 shape、token 数、位置、mask 已经错了。建议你从 processor 到 LLM 一路打印下面这些变量。只要这些对不上，后面 loss 正常下降也可能是在学错误对齐。</p>
+<pre><code>Processor 侧:
+  text after apply_chat_template
+  resized image/video size
+  pixel_values.shape
+  image_grid_thw / video_grid_thw
+  expected_visual_tokens = prod(grid_thw) // merge_size**2
+  input_ids.shape
+  count(input_ids == image_token_id)
+  count(input_ids == video_token_id)
+
+Vision 侧:
+  after patch_embed: hidden_states.shape
+  rotary_pos_emb.shape / position_embeddings shape
+  cu_seqlens / cu_window_seqlens
+  after merger: image_embeds.shape / video_embeds.shape
+  deepstack_visual_embeds shapes, if Qwen3
+
+LLM 侧:
+  inputs_embeds.shape
+  special_image_mask.sum()
+  special_video_mask.sum()
+  position_ids.shape
+  rope_deltas
+  past_key_values after prefill</code></pre>
+<p>最实用的自检公式是：`count(input_ids == image_token_id)` 必须等于 `image_embeds.shape[0]`；`count(input_ids == video_token_id)` 必须等于 `video_embeds.shape[0]`。如果是 Qwen3，还要额外确认 timestamp 文本是否真的插入、每个时间块的 `frame_seqlen` 是否和 `video_grid_thw` 对得上。</p>
+<h3>16.23 三篇博客怎么合成同一条主线</h3>
+<p>三篇博客不是三套互不相关的笔记，而是在同一条多模态 forward 链路上分别补了不同薄弱环节。Qwen2-VL 文章把最基础的图片输入链路讲清楚：模板、视觉预处理、patchify、占位符扩展、视觉塔、Merger、LLM 替换。Qwen2.5-VL 文章把长图长视频时的视觉塔成本和时间建模补上：窗口注意力、`cu_window_seqlens`、少数全局层、`second_per_grid_ts`。Qwen3-VL 文章再把更细粒度的视觉细节和更长视频时间对齐补上：32 倍数 resize、`fast_pos_embed_interpolate`、timestamp 文本插入、DeepStack、Interleaved-MRoPE 和 MoE。</p>
+<div class="table-wrap"><table><thead><tr><th>来源</th><th>它重点解释了哪一段</th><th>这段在总链路里的位置</th><th>应该记住的核心变量</th></tr></thead><tbody><tr><td>Qwen2-VL 博客</td><td>`apply_chat_template`、`process_vision_info`、图片复制两帧、patch reshape/transpose、`image_grid_thw`、PatchMerger、LLM 占位符替换</td><td>从外部图片到 LLM 能读的视觉 token，是最基础的主干</td><td>`pixel_values`、`grid_thw`、`merge_size`、`image_token_id`、`image_embeds`</td></tr><tr><td>Qwen2.5-VL 博客</td><td>`get_window_index`、`cu_window_seqlens`、`fullatt_block_indexes`、`reverse_indices`、`second_per_grid_ts`、动态 FPS</td><td>视觉塔内部如何降计算量，以及视频时间位置如何变得更真实</td><td>`window_index`、`cu_window_seqlens`、`cu_seqlens`、`tokens_per_second`</td></tr><tr><td>Qwen3-VL 博客</td><td>`fast_pos_embed_interpolate`、`deepstack_visual_indexes`、`deepstack_merger_list`、timestamp 文本、`masked_scatter`、MoE router</td><td>视觉塔输出不再只是一份最终摘要，而是带中间层细节和显式时间文本进入 LLM</td><td>`pos_embeds`、`deepstack_visual_embeds`、`frame_seqlen`、`rope_deltas`、`router_logits`</td></tr></tbody></table></div>
+<p>所以读的时候不要按“版本更新日志”来背。更好的读法是沿着一次推理走：先问 processor 生成了多少坑位，再问视觉塔生成了多少视觉向量，再问 Merger 是否把数量和维度压到 LLM 能接收，再问 LLM 是否把这些向量准确塞回占位符，最后才看位置编码、DeepStack 和 MoE 怎么增强这条主干。</p>
+<h3>16.24 一次图片 forward 的逐步账本：每一步输入什么、输出什么</h3>
+<p>下面把 Qwen2-VL 博客里的图片 demo 拆成更细的账本。你可以把它理解成模型内部的物流单：每一步只做一件事，并把货物交给下一步。</p>
+<pre><code>0. 用户消息
+   输入: messages = [{role: user, content: [image_url, text]}]
+   输出: 仍是 Python list/dict，还不是 token
+
+1. apply_chat_template
+   输入: messages
+   动作: 插入 ChatML 标记，并把图片位置写成 &lt;|vision_start|&gt;&lt;|image_pad|&gt;&lt;|vision_end|&gt;
+   输出: text 字符串
+   白话: 先在文章里写“这里以后要放图”
+
+2. process_vision_info
+   输入: messages
+   动作: 读取图片 URL/路径，整理成 image_inputs；视频同理整理成 video_inputs
+   输出: image_inputs, video_inputs
+   白话: 把外部文件先搬到视觉处理器能读的位置
+
+3. image_processor.preprocess
+   输入: image_inputs
+   动作: resize 到 factor 倍数，normalize，转 channel-first
+   输出: processed_images
+   白话: 把图片尺寸和数值范围整理干净
+
+4. 图片补 temporal 维
+   输入: processed_images.shape[0] == 1
+   动作: np.tile(..., temporal_patch_size=2)
+   输出: 两个相同帧
+   白话: 图片伪装成一个两帧小视频，统一走 3D Conv
+
+5. patchify + merge-order reshape
+   输入: [T, C, H, W]
+   动作: 按 patch_size 切块，并通过 reshape/transpose 让 2x2 邻近 patch 靠在一起
+   输出: pixel_values, image_grid_thw
+   白话: 不只是切小块，还提前把将来要打包的邻居排好队
+
+6. placeholder expansion
+   输入: text, image_grid_thw
+   动作: num_image_tokens = prod(grid_thw) // merge_size**2
+   输出: 展开后的 text，里面有 N 个 &lt;|image_pad|&gt;
+   白话: 根据图片实际会产生多少视觉 token，在文本里挖出同样数量的坑
+
+7. tokenizer
+   输入: 展开后的 text
+   动作: 文本转 token id
+   输出: input_ids, attention_mask
+   白话: 现在视觉坑位也已经变成真实 token id
+
+8. visual.patch_embed
+   输入: pixel_values
+   动作: Conv3d 把每个像素块投影成视觉 hidden vector
+   输出: vision hidden states
+   白话: 像素块变成“视觉词向量”
+
+9. visual blocks
+   输入: vision hidden states + position embeddings + cu_seqlens
+   动作: 自注意力和 MLP 建立局部/全局视觉关系
+   输出: 上下文增强后的视觉 hidden states
+   白话: 每个小块不再孤立，开始知道周围小块是什么
+
+10. PatchMerger
+    输入: 每 4 个相邻视觉 patch hidden states
+    动作: view 拼接 -&gt; LayerNorm/MLP -&gt; 投影到 LLM hidden size
+    输出: image_embeds
+    白话: 把 2x2 小块打包成一个 LLM 能读的视觉 token
+
+11. LLM embedding replacement
+    输入: input_ids, image_embeds
+    动作: 找到 &lt;|image_pad|&gt; 的位置，把普通 token embedding 换成 image_embeds
+    输出: inputs_embeds
+    白话: 把空图片框逐个填成真实视觉向量
+
+12. decoder-only generation
+    输入: inputs_embeds, position_ids, attention_mask
+    动作: prefill 建 KV cache，随后自回归生成文本
+    输出: generated_ids
+    白话: 后面就像普通 LLM 生成，只是上下文里已经夹进了视觉证据</code></pre>
+<p>这份账本的关键是“数量守恒”：第 6 步挖了 N 个视觉坑，第 10 步就必须产出 N 个 image embedding，第 11 步才能一一填进去。Qwen-VL 的很多 runtime error 都不是注意力层本身错，而是这条数量守恒链在 processor 或 Merger 附近断了。</p>
+<h3>16.25 一次视频 forward 的逐步账本：Qwen2.5 和 Qwen3 的分歧在哪里</h3>
+<p>视频路径和图片路径共用很多部件，但多了时间问题。Qwen2.5 的重点是把真实秒数写进时间位置编码；Qwen3 的重点是把时间戳直接写进文本序列。二者都想解决同一个问题：模型不能只知道“这是第几个视觉块”，还要知道“它大概发生在第几秒”。</p>
+<div class="table-wrap"><table><thead><tr><th>步骤</th><th>Qwen2.5-VL 做法</th><th>Qwen3-VL 做法</th><th>白话解释</th></tr></thead><tbody><tr><td>抽帧/采样</td><td>动态 FPS，长视频不固定死每秒多少帧</td><td>同样依赖视频 metadata、帧索引、fps</td><td>先决定看哪些帧，避免长视频 token 爆炸</td></tr><tr><td>视觉占位符</td><td>一个 `&lt;|video_pad|&gt;` 根据 `video_grid_thw` 展开成大量视频 token 坑位</td><td>按每个时间块构造 `&lt;seconds&gt; + vision span`，每帧/时间块有自己的视觉 span</td><td>Qwen3 不只是挖坑，还给每段视觉 token 前贴时间标签</td></tr><tr><td>时间建模</td><td>`second_per_grid_ts * tokens_per_second` 进入 `get_rope_index` 的 t 轴</td><td>源码注释强调 timestamp 文本承担时间信息，视觉 `t_index` 不再按旧式绝对时间承担全部责任</td><td>Qwen2.5 更像在坐标里写秒数，Qwen3 更像在输入文本里写字幕</td></tr><tr><td>视觉塔</td><td>Window Attention 降低长视频视觉侧成本，少数全局层交换跨窗口信息</td><td>绝对位置插值 + RoPE，并引入 DeepStack 多层视觉特征</td><td>Qwen2.5 重点省算力，Qwen3 重点补细节和长上下文理解</td></tr><tr><td>LLM 接入</td><td>`masked_scatter` 或等价逻辑替换视频占位符</td><td>替换最终视觉 embedding，同时把 deepstack visual embeds 带进语言层</td><td>普通视频向量填入口层，DeepStack 在后续层继续补视觉证据</td></tr></tbody></table></div>
+<pre><code>Qwen2.5 视频时间主线:
+  video_grid_thw -&gt; get_rope_index(...)
+  second_per_grid_ts -&gt; temporal position ids
+  tokens_per_second -&gt; 时间位置粒度
+
+Qwen3 视频时间主线:
+  video_metadata(frame_indices, fps) -&gt; _calculate_timestamps(...)
+  for each frame/time block:
+      text += f"&lt;{curr_time:.1f} seconds&gt;"
+      text += vision_start + placeholder * frame_seqlen + vision_end
+  tokenizer 把秒数也当普通文本 token 编进去</code></pre>
+<p>这就是为什么 Qwen3 的视频 processor 更像“给每段视频帧加字幕”。模型后面回答“第 12 秒发生了什么”时，语言模型可以直接在文本 token 中看到 `&lt;12.0 seconds&gt;` 这种锚点，而不是完全依赖隐藏在 RoPE t 轴里的时间坐标。</p>
+<h3>16.26 Qwen2.5 Window Attention 的实际执行顺序</h3>
+<p>Qwen2.5 的 Window Attention 不是简单把 attention mask 改小，而是先重排 token，再按窗口算 attention，最后还原顺序。博客里给出的 `get_window_index` 和 forward 代码非常关键，因为它解释了为什么 `reverse_indices` 必须存在。</p>
+<pre><code>1. hidden_states = patch_embed(pixel_values)
+2. rotary_pos_emb = rot_pos_emb(grid_thw)
+3. window_index, cu_window_seqlens = get_window_index(grid_thw)
+
+4. hidden_states reshape 成 [merge 后 token 组, spatial_merge_unit, hidden]
+5. hidden_states = hidden_states[window_index]
+6. rotary_pos_emb = rotary_pos_emb[window_index]
+
+7. for layer_num, block in blocks:
+       if layer_num in fullatt_block_indexes:
+           cu_seqlens_now = cu_seqlens          # 全局注意力
+       else:
+           cu_seqlens_now = cu_window_seqlens   # 窗口内注意力
+       hidden_states = block(hidden_states, cu_seqlens_now, position_embeddings)
+
+8. hidden_states = merger(hidden_states)
+9. reverse_indices = argsort(window_index)
+10. hidden_states = hidden_states[reverse_indices]</code></pre>
+<p>白话解释：先把同一个窗口里的 token 排到连续位置，这样 FlashAttention/SDPA 就能按一段一段的 `cu_window_seqlens` 高效计算。多数层只看窗口内，便宜；少数层看全局，负责跨窗口信息流。Merger 后必须用 `reverse_indices` 把顺序恢复，否则视觉 embedding 填回 LLM 占位符时就会错位。</p>
+<h3>16.27 Qwen3 DeepStack 和 MoE 在 forward 里各自干什么</h3>
+<p>Qwen3 的复杂度主要来自两条增强线。第一条是 DeepStack，它增强视觉细节；第二条是 MoE，它增强语言模型规模和推理能力。它们不是同一件事：DeepStack 管“视觉证据怎么多层进入 LLM”，MoE 管“LLM 每个 token 走哪些专家”。</p>
+<div class="table-wrap"><table><thead><tr><th>机制</th><th>发生位置</th><th>输入</th><th>动作</th><th>输出</th><th>白话</th></tr></thead><tbody><tr><td>普通视觉 replacement</td><td>LLM 输入层之前</td><td>`input_ids`、最终 `image_embeds/video_embeds`</td><td>用 mask 或 `masked_scatter` 替换视觉占位符</td><td>`inputs_embeds`</td><td>把图片内容塞进文本序列的空位</td></tr><tr><td>DeepStack</td><td>LLM 若干浅层/中间层内部</td><td>ViT 中间层 hidden states 经 `deepstack_merger_list` 投影后的列表</td><td>`_deepstack_process` 把中间视觉特征加到对应视觉 token 位置</td><td>更新后的 layer hidden states</td><td>读图过程中不断补充不同层级的视觉笔记</td></tr><tr><td>MoE</td><td>语言模型 MLP 子层</td><td>当前 token hidden state</td><td>router 选 top-k experts，专家 MLP 处理后加权合并</td><td>token 的 FFN 输出</td><td>不是所有专家都跑，每个 token 只走一部分专家</td></tr></tbody></table></div>
+<pre><code>Qwen3 forward 概念顺序:
+  final_visual_embeds, deepstack_visual_embeds = visual(pixel_values, grid_thw)
+  inputs_embeds = replace_placeholders(input_ids, final_visual_embeds)
+
+  for layer_idx, decoder_layer in enumerate(language_layers):
+      hidden_states = decoder_layer.self_attn(hidden_states, position_embeddings, cache)
+      hidden_states = maybe_deepstack_process(layer_idx, hidden_states, deepstack_visual_embeds)
+      hidden_states = decoder_layer.mlp_or_moe(hidden_states)
+      # MoE 只影响语言层 FFN 计算，不负责视觉 token 数量对齐</code></pre>
+<p>所以不要把 DeepStack 理解成“又加了一堆图片 token”。它更像在相同视觉位置上补充中间层视觉特征。也不要把 MoE 理解成“图像专家”。Qwen3-VL-MoE 里的 MoE 主要是语言模型稀疏 FFN 路由，视觉信息已经通过 replacement 和 DeepStack 进入 hidden states，MoE 只是继续处理这些混合后的 token 表示。</p>
+<h3>16.28 逐步逻辑的常见错误定位表</h3>
+<div class="table-wrap"><table><thead><tr><th>现象</th><th>优先怀疑哪一步</th><th>具体检查</th><th>为什么</th></tr></thead><tbody><tr><td>报 image/video features 与 tokens 不匹配</td><td>Processor 占位符扩展或 Merger 输出数量</td><td>`prod(grid_thw)//merge_size**2`、`count(input_ids == image/video token)`、`image_embeds.shape[0]`</td><td>坑位数量和视觉 embedding 数量没有守恒</td></tr><tr><td>图片能跑但 OCR/小字差</td><td>resize 预算、patch 粒度、DeepStack 是否启用</td><td>`min_pixels/max_pixels`、patch size、Qwen3 `deepstack_visual_embeds` shape</td><td>小字信息可能在 resize 或最终层抽象中丢失</td></tr><tr><td>长视频时间回答乱</td><td>Qwen2.5 的 `second_per_grid_ts` 或 Qwen3 timestamp 插入</td><td>`video_grid_thw`、fps、frame index、timestamp 文本、`tokens_per_second`</td><td>模型不知道视觉块对应真实第几秒</td></tr><tr><td>Qwen2.5 视觉 embedding 顺序错</td><td>Window Attention 重排/还原</td><td>`window_index`、`reverse_indices`、Merger 前后顺序</td><td>窗口重排后没有正确还原会导致视觉 token 填错位置</td></tr><tr><td>多图互相串信息</td><td>`cu_seqlens` 或 attention 边界</td><td>每张图/视频的 `grid_thw` 累计边界，FlashAttention/SDPA 的 sequence lengths</td><td>batch 内视觉序列拼接后必须保留样本边界</td></tr><tr><td>生成阶段位置异常或 cache 出问题</td><td>`get_rope_index`、`rope_deltas`、`cache_position`</td><td>prefill 后 position ids 如何延续，新增 token 是否接在多模态最大位置之后</td><td>多模态位置不是简单文本长度，后续 decode 要补偿差值</td></tr><tr><td>MoE 版本显存/速度不符合直觉</td><td>router 和激活专家数</td><td>`router_logits`、top-k experts、activated params</td><td>总参数大不等于每 token 激活参数大</td></tr></tbody></table></div>
+<p>调试顺序也按这张表来：先查 processor 和 token 数，再查视觉塔 shape，再查 Merger 输出，再查 replacement mask，最后查位置编码、DeepStack、MoE。不要一上来就怀疑模型权重，因为基础链路错位时，模型表现会像“看不懂图”，但根因通常只是视觉 token 填错、少填或位置错。</p>
+<h3>16.29 一句话串起来</h3>
+<p>processor 负责“准备坑位和像素块”：把外部图片/视频整理成 `pixel_values + grid_thw`，同时把文本里的一个视觉占位符扩成对应数量的占位符；视觉塔负责“看局部”：把每个 patch 编成视觉向量，并通过位置编码和 attention 建立空间/时间关系；Merger 负责“打包翻译”：把相邻视觉 patch 压成更少的 LLM 视觉 token，并投影到语言模型维度；LLM 负责“统一阅读和生成”：把视觉 token 塞进文本序列，用多模态位置编码保持顺序和位置，最后自回归生成答案。Qwen2 是把这条链路跑通，Qwen2.5 是让长视频/高分辨率更省更准，Qwen3 是把时间戳、DeepStack 和更大的语言模型能力叠上去。</p></section>
+</article>
+</main>
+</div>
+<div aria-hidden="true" class="lightbox" id="lightbox">
+<div aria-labelledby="lightbox-title" aria-modal="true" class="lightbox-panel" role="dialog">
+<div class="lightbox-head">
+<h3 id="lightbox-title"></h3>
+<button class="lightbox-close" type="button">关闭</button>
+</div>
+<div class="lightbox-img-wrap"><img alt="" id="lightbox-img"/></div>
+<div class="lightbox-caption" id="lightbox-caption"></div>
+</div>
+</div>
+<script>
+    const tocLinks = Array.from(document.querySelectorAll('#toc a'));
+    const sections = tocLinks.map(a => document.getElementById(a.dataset.target)).filter(Boolean);
+    const setActive = id => {
+      tocLinks.forEach(a => a.classList.toggle('active', a.dataset.target === id));
+    };
+    const observer = new IntersectionObserver(entries => {
+      const visible = entries.filter(e => e.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (visible) setActive(visible.target.id);
+    }, { root: null, rootMargin: '-12% 0px -70% 0px', threshold: [0, 0.2, 0.5, 1] });
+    sections.forEach(sec => observer.observe(sec));
+    function updateActiveByScroll() {
+      const probe = window.scrollY + Math.max(120, window.innerHeight * 0.22);
+      let current = sections[0]?.id || null;
+      for (const sec of sections) {
+        if (sec.offsetTop <= probe) current = sec.id;
+      }
+      if (current) setActive(current);
+    }
+    window.addEventListener('scroll', updateActiveByScroll, { passive: true });
+    if (sections[0]) setActive(sections[0].id);
+    updateActiveByScroll();
+
+    const lightbox = document.getElementById('lightbox');
+    const lbImg = document.getElementById('lightbox-img');
+    const lbTitle = document.getElementById('lightbox-title');
+    const lbCaption = document.getElementById('lightbox-caption');
+    const closeBtn = document.querySelector('.lightbox-close');
+    document.querySelectorAll('.image-button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const img = btn.querySelector('img');
+        lbImg.src = img.src;
+        lbImg.alt = img.alt;
+        lbTitle.textContent = btn.dataset.title || img.alt;
+        lbCaption.textContent = btn.dataset.caption || '';
+        lightbox.classList.add('open');
+        lightbox.setAttribute('aria-hidden', 'false');
+      });
+    });
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      lbImg.removeAttribute('src');
+    }
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', e => { if (e.target === lightbox) closeLightbox(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && lightbox.classList.contains('open')) closeLightbox(); });
+  </script>
+</body>
+</html>

@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="zh-CN">
 <head><link href="../../favicon.ico" rel="icon"/>
 <meta charset="utf-8"/>
@@ -8,7 +7,7 @@
 <script>
     window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] }, svg: { fontCache: 'global' } };
   </script>
-<script async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script async="" src="../../assets/vendor/static-math-ready.js"></script>
 <style>
 :root {
   --bg: #f6f7f4;
@@ -86,7 +85,7 @@ summary { cursor: pointer; font-weight: 800; color: #344054; }
   h1 { font-size: 34px; }
 }
 </style>
-</head>
+<link href="../../assets/vendor/katex/katex.min.css" rel="stylesheet"/></head>
 <body>
 <div class="shell">
 <nav class="toc">
@@ -163,17 +162,23 @@ summary { cursor: pointer; font-weight: 800; color: #344054; }
 <p>论文中说模型总规模约 3.3B，其中 action expert 约 300M。openpi 默认配置也对应这个设计：<code>paligemma_variant=&amp;quot;gemma_2b&amp;quot;</code>、<code>action_expert_variant=&amp;quot;gemma_300m&amp;quot;</code>、<code>dtype=&amp;quot;bfloat16&amp;quot;</code>、<code>action_horizon=50</code>、<code>action_dim=32</code>。这里要注意一个差异：论文正文按机器人最大动作维度讨论时提到的动作维度和 openpi 默认 <code>action_dim=32</code> 不完全等同，后者是开源实现为多平台 padding/接口统一保留的配置。</p>
 <h3 id="3-3-flow-matching-目标">3.3 Flow matching 目标</h3>
 <p>论文把真实动作块记为 A，把高斯噪声记为 epsilon，并在 0 到 1 的连续时间 tau 上构造插值动作。</p>
-<div class="formula">$$
+<div class="formula"><span data-publication-math="$$
 A^\tau = \tau A + (1-\tau)\epsilon
-$$</div>
+$$"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>A</mi><mi>τ</mi></msup><mo>=</mo><mi>τ</mi><mi>A</mi><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>τ</mi><mo stretchy="false">)</mo><mi>ϵ</mi></mrow><annotation encoding="application/x-tex">
+A^\tau = \tau A + (1-\tau)\epsilon
+</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.7144em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.1132em;">τ</span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mclose">)</span><span class="mord mathnormal">ϵ</span></span></span></span></span></span></div>
 <p>目标向量场可以写成从噪声点走向真实动作点的方向。</p>
-<div class="formula">$$
+<div class="formula"><span data-publication-math="$$
 u = A - \epsilon
-$$</div>
+$$"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>=</mo><mi>A</mi><mo>−</mo><mi>ϵ</mi></mrow><annotation encoding="application/x-tex">
+u = A - \epsilon
+</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">u</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.7667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">A</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.4306em;"></span><span class="mord mathnormal">ϵ</span></span></span></span></span></span></div>
 <p>训练时模型接收观测、时间和带噪动作，预测向量场，并用均方误差拟合。</p>
-<div class="formula">$$
+<div class="formula"><span data-publication-math="$$
 \mathcal{L} = \mathbb{E}[\mathrm{MSE}(v_\theta(o, A^\tau, \tau), u)]
-$$</div>
+$$"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="script">L</mi><mo>=</mo><mi mathvariant="double-struck">E</mi><mo stretchy="false">[</mo><mrow><mi mathvariant="normal">M</mi><mi mathvariant="normal">S</mi><mi mathvariant="normal">E</mi></mrow><mo stretchy="false">(</mo><msub><mi>v</mi><mi>θ</mi></msub><mo stretchy="false">(</mo><mi>o</mi><mo separator="true">,</mo><msup><mi>A</mi><mi>τ</mi></msup><mo separator="true">,</mo><mi>τ</mi><mo stretchy="false">)</mo><mo separator="true">,</mo><mi>u</mi><mo stretchy="false">)</mo><mo stretchy="false">]</mo></mrow><annotation encoding="application/x-tex">
+\mathcal{L} = \mathbb{E}[\mathrm{MSE}(v_\theta(o, A^\tau, \tau), u)]
+</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.6833em;"></span><span class="mord mathcal">L</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathbb">E</span><span class="mopen">[</span><span class="mord"><span class="mord mathrm">MSE</span></span><span class="mopen">(</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">θ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">o</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">A</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.7144em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.1132em;">τ</span></span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal" style="margin-right:0.1132em;">τ</span><span class="mclose">)</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">u</span><span class="mclose">)]</span></span></span></span></span></span></div>
 <p>openpi 代码采用了等价但时间方向相反的约定：<code>x_t = time * noise + (1 - time) * actions</code>，<code>u_t = noise - actions</code>，推理时 <code>dt = -1.0 / num_steps</code> 从噪声端往动作端积分。论文写法和代码写法不是矛盾，而是坐标方向不同。关键点是：模型学习的是连接噪声动作和真实动作的速度场，而不是逐 token 生成动作。</p>
 <h3 id="3-4-推理过程">3.4 推理过程</h3>
 <p>推理从随机噪声动作块开始，使用模型预测的向量场做 Euler 更新。论文和 openpi 默认都使用 10 个 integration steps。openpi 的 <code>sample_actions</code> 中 <code>num_steps=10</code>、<code>dt=-1.0/num_steps</code>，并循环更新 <code>x_t + dt * v_t</code>。这意味着 π0 的推理成本主要由一次 prefix 编码和 10 次 action expert 相关前向构成。</p>
@@ -222,7 +227,7 @@ $$</div>
 <p>这一节是 HTML 版补充的深度展开，用来修复上一版过短的问题。核心判断是：π0 的能力不是由 flow matching 单点产生，而是由语义主干、动作专家、动作块、数据混合、post-training 和真实机器人评测共同支撑。只讲“VLM + flow matching”会把论文读浅。</p>
 <div class="figure-grid">
 <figure class="figure-block">
-<img alt="Teaser: π0 在多类真实机器人任务上的能力展示。" loading="lazy" src="assets/paper_fig01_teaser.png"/>
+<img alt="Teaser: π0 在多类真实机器人任务上的能力展示。" loading="lazy" src="../../assets/media/cb03584465278cb97dea45d72661fb18d600f51d8959d0290ac7b89f0c0873d2.webp"/>
 <figcaption><span>Original paper figure</span>Teaser: π0 在多类真实机器人任务上的能力展示。</figcaption>
 </figure>
 <figure class="figure-block">
@@ -230,11 +235,11 @@ $$</div>
 <figcaption><span>Original paper figure</span>方法图: VLM 主干、机器人观测和动作输出的组合。</figcaption>
 </figure>
 <figure class="figure-block">
-<img alt="π0 机制链路：VLM、action expert 和 flow matching 的关系。" loading="lazy" src="assets/generated_mechanism.png"/>
+<img alt="π0 机制链路：VLM、action expert 和 flow matching 的关系。" loading="lazy" src="../../assets/media/0ee59a66ad53f86eadbbfc4988ade8e43befc7e46aaed618a1e91154173f9978.webp"/>
 <figcaption><span>Generated explanatory visual</span>π0 机制链路：VLM、action expert 和 flow matching 的关系。</figcaption>
 </figure>
 </div>
-<h3>14.1 机制链路逐步拆解</h3>
+<h3 id="14-1">14.1 机制链路逐步拆解</h3>
 <div class="table-wrap"><table><thead><tr><th>步骤</th><th>输入/状态</th><th>模型处理</th><th>输出/风险</th></tr></thead><tbody><tr><td>Prefix 编码</td><td>多视角图像、语言指令、token mask</td><td>PaliGemma 图像编码器和 LLM 形成上下文</td><td>得到可被 action expert 查询的语义/视觉前缀</td></tr>
 <tr><td>Suffix 构造</td><td>机器人 state、noisy actions、timestep</td><td>state/action/time 投影到 action expert token 空间</td><td>形成要预测向量场的动作序列</td></tr>
 <tr><td>训练前向</td><td>prefix + suffix</td><td>joint attention 让动作 token 查询上下文</td><td>输出每个动作步的速度向量</td></tr>
@@ -244,66 +249,66 @@ $$</div>
 <p><code>compute_loss</code> 里先采样高斯噪声和 Beta 分布时间，再构造 <code>x_t = time * noise + (1 - time) * actions</code>，目标是 <code>u_t = noise - actions</code>。随后模型前向得到 <code>v_t</code>，返回 <code>mean(square(v_t - u_t))</code>。</p>
 <p><code>sample_actions</code> 里先对 prefix 建 KV cache，再循环调用 suffix/action expert，使用 <code>dt=-1/num_steps</code> 从 t=1 积分到 t=0。这解释了为什么论文附录会把 10 次动作前向列入延迟预算。</p>
 </details>
-<h3>14.2 数学目标的直觉和边界</h3>
+<h3 id="14-2">14.2 数学目标的直觉和边界</h3>
 <p>flow matching 的直觉是：不要让模型一步直接猜动作，而是学习“从噪声动作块走到真实动作块”的速度场。对连续控制来说，这比把动作离散成 token 更自然，因为关节、夹爪、末端位姿本来就是连续量。</p>
-<div class="formula">$$x_t = t\epsilon + (1-t)a, \quad u_t = \epsilon-a, \quad \mathcal{L}=\lVert v_\theta(o,x_t,t)-u_t\rVert_2^2$$</div>
+<div class="formula"><span data-publication-math="$$x_t = t\epsilon + (1-t)a, \quad u_t = \epsilon-a, \quad \mathcal{L}=\lVert v_\theta(o,x_t,t)-u_t\rVert_2^2$$"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>x</mi><mi>t</mi></msub><mo>=</mo><mi>t</mi><mi>ϵ</mi><mo>+</mo><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>t</mi><mo stretchy="false">)</mo><mi>a</mi><mo separator="true">,</mo><mspace width="1em"></mspace><msub><mi>u</mi><mi>t</mi></msub><mo>=</mo><mi>ϵ</mi><mo>−</mo><mi>a</mi><mo separator="true">,</mo><mspace width="1em"></mspace><mi mathvariant="script">L</mi><mo>=</mo><mo stretchy="false">∥</mo><msub><mi>v</mi><mi>θ</mi></msub><mo stretchy="false">(</mo><mi>o</mi><mo separator="true">,</mo><msub><mi>x</mi><mi>t</mi></msub><mo separator="true">,</mo><mi>t</mi><mo stretchy="false">)</mo><mo>−</mo><msub><mi>u</mi><mi>t</mi></msub><msubsup><mo stretchy="false">∥</mo><mn>2</mn><mn>2</mn></msubsup></mrow><annotation encoding="application/x-tex">x_t = t\epsilon + (1-t)a, \quad u_t = \epsilon-a, \quad \mathcal{L}=\lVert v_\theta(o,x_t,t)-u_t\rVert_2^2</annotation></semantics></math></span><span aria-hidden="true" class="katex-html"><span class="base"><span class="strut" style="height:0.5806em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6984em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">t</span><span class="mord mathnormal">ϵ</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mord mathnormal">a</span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">u</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:0.6667em;vertical-align:-0.0833em;"></span><span class="mord mathnormal">ϵ</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:0.8778em;vertical-align:-0.1944em;"></span><span class="mord mathnormal">a</span><span class="mpunct">,</span><span class="mspace" style="margin-right:1em;"></span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathcal">L</span><span class="mspace" style="margin-right:0.2778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2778em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">∥</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.03588em;">v</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.3361em;"><span style="top:-2.55em;margin-left:-0.0359em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight" style="margin-right:0.02778em;">θ</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mopen">(</span><span class="mord mathnormal">o</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord"><span class="mord mathnormal">x</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.1667em;"></span><span class="mord mathnormal">t</span><span class="mclose">)</span><span class="mspace" style="margin-right:0.2222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222em;"></span></span><span class="base"><span class="strut" style="height:1.1141em;vertical-align:-0.25em;"></span><span class="mord"><span class="mord mathnormal">u</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.2806em;"><span style="top:-2.55em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mathnormal mtight">t</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose"><span class="mclose">∥</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.8641em;"><span style="top:-2.453em;margin-left:0em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight">2</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.247em;"><span></span></span></span></span></span></span></span></span></span></span></span></div>
 <p>但这个目标本身不能单独解释 π0 的全部能力。若没有 PaliGemma 初始化，它缺少语义和视觉先验；若没有私有机器人数据，它缺少跨任务物理覆盖；若没有 post-training，它很难压到洗衣、装盒、多阶段操作这样的复杂任务。</p>
 <figure class="figure-block">
-<img alt="Timestep sampling: flow matching 时间采样细节。" loading="lazy" src="assets/paper_fig09_timestep_sampling.png"/>
+<img alt="Timestep sampling: flow matching 时间采样细节。" loading="lazy" src="../../assets/media/af335eda8f7768d8cedc85911f07a63be7f75c3cf0f582d92147671c51287444.webp"/>
 <figcaption><span>Original paper figure</span>Timestep sampling: flow matching 时间采样细节。</figcaption>
 </figure>
-<h3>14.3 数据混合不是背景信息，而是论文的核心机制</h3>
+<h3 id="14-3">14.3 数据混合不是背景信息，而是论文的核心机制</h3>
 <p>π0 的数据分布决定它是否真的“通用”。论文报告开源数据只占 9.1%，PI 私有数据达到 903M timesteps，且双臂数据远大于单臂数据。这个事实直接改变论文结论的解释方式：外部复现可以验证 openpi 的模型接口和 fine-tuning recipe，但不能完整复现论文的基础模型能力。</p>
 <div class="figure-grid">
 <figure class="figure-block">
-<img alt="Overview: pre-training、post-training 与多机器人数据混合。" loading="lazy" src="assets/paper_fig03_overview.png"/>
+<img alt="Overview: pre-training、post-training 与多机器人数据混合。" loading="lazy" src="../../assets/media/303921d796861595e82c578bd7cbd4fe7b8af07c961487e3fa1c7af3c5cfc92d.webp"/>
 <figcaption><span>Original paper figure</span>Overview: pre-training、post-training 与多机器人数据混合。</figcaption>
 </figure>
 <figure class="figure-block">
-<img alt="数据分布: 机器人/任务 allocation，是复现边界的核心证据。" loading="lazy" src="assets/paper_fig04_data_mix.png"/>
+<img alt="数据分布: 机器人/任务 allocation，是复现边界的核心证据。" loading="lazy" src="../../assets/media/52982e1fcf9601e1a168f2e7f673ce073c36c23564cae188d8e62c468cf669ee.webp"/>
 <figcaption><span>Original paper figure</span>数据分布: 机器人/任务 allocation，是复现边界的核心证据。</figcaption>
 </figure>
 <figure class="figure-block">
-<img alt="机器人平台: 跨本体训练和评测所覆盖的硬件形态。" loading="lazy" src="assets/paper_fig05_robots.png"/>
+<img alt="机器人平台: 跨本体训练和评测所覆盖的硬件形态。" loading="lazy" src="../../assets/media/4b7494cfd6335cd01f093622ee451606a099d5ea5a28439439b411e3f49aa0ef.webp"/>
 <figcaption><span>Original paper figure</span>机器人平台: 跨本体训练和评测所覆盖的硬件形态。</figcaption>
 </figure>
 </div>
 <div class="table-wrap"><table><thead><tr><th>读图问题</th><th>应该看到什么</th><th>为什么重要</th></tr></thead><tbody><tr><td>数据 allocation chart</td><td>机器人/任务分布不是均匀的</td><td>通用能力来自数据覆盖和重加权，不只是模型规模</td></tr>
 <tr><td>机器人平台图</td><td>不同本体的传感器和动作空间不同</td><td>跨本体泛化依赖接口规范化与动作空间 padding</td></tr>
 <tr><td>overview 图</td><td>pre-training 与 post-training 是两段式</td><td>基础能力和复杂任务能力不能混为一谈</td></tr></tbody></table></div>
-<h3>14.4 实验结果应该怎样读</h3>
+<h3 id="14-4">14.4 实验结果应该怎样读</h3>
 <p>π0 的实验不是传统“一个表格秒杀 baseline”。它更像一个系统能力谱：out-of-box 说明基础技能覆盖，语言任务说明语义条件控制，dexterous fine-tuning 说明后训练有效，多阶段 filmstrip 说明真实世界闭环能跑起来。</p>
 <div class="figure-grid">
 <figure class="figure-block">
-<img alt="预训练任务集合: out-of-box 评测覆盖面。" loading="lazy" src="assets/paper_fig06_pretrain_tasks.png"/>
+<img alt="预训练任务集合: out-of-box 评测覆盖面。" loading="lazy" src="../../assets/media/08f0b6993df2982e5da103694cf9370fbed1be7f788514a94729e32c2a8913ab.webp"/>
 <figcaption><span>Original paper figure</span>预训练任务集合: out-of-box 评测覆盖面。</figcaption>
 </figure>
 <figure class="figure-block">
-<img alt="语言跟随任务集合: 语言条件控制能力。" loading="lazy" src="assets/paper_fig07_language_tasks.png"/>
+<img alt="语言跟随任务集合: 语言条件控制能力。" loading="lazy" src="../../assets/media/0692bb68e45953ac8953f921e0d77a3b6e48f7af0257b2e776079121945915e4.webp"/>
 <figcaption><span>Original paper figure</span>语言跟随任务集合: 语言条件控制能力。</figcaption>
 </figure>
 <figure class="figure-block">
-<img alt="复杂 fine-tuning 任务集合。" loading="lazy" src="assets/paper_fig08_complex_finetune.png"/>
+<img alt="复杂 fine-tuning 任务集合。" loading="lazy" src="../../assets/media/892009b841aa9466c1368a7cfa678dde8f79feb8983beaa29288055b49c58861.webp"/>
 <figcaption><span>Original paper figure</span>复杂 fine-tuning 任务集合。</figcaption>
 </figure>
 <figure class="figure-block">
-<img alt="预训练任务 filmstrip: 真实机器人执行片段。" loading="lazy" src="assets/paper_fig10_pretrain_filmstrip.png"/>
+<img alt="预训练任务 filmstrip: 真实机器人执行片段。" loading="lazy" src="../../assets/media/01e44010243ea91e8cd4271563cf91adf3c403b96804544bc799264c692e740a.webp"/>
 <figcaption><span>Original paper figure</span>预训练任务 filmstrip: 真实机器人执行片段。</figcaption>
 </figure>
 <figure class="figure-block">
-<img alt="语言引导 filmstrip: 指令条件下的行为变化。" loading="lazy" src="assets/paper_fig11_language_filmstrip.png"/>
+<img alt="语言引导 filmstrip: 指令条件下的行为变化。" loading="lazy" src="../../assets/media/15aec4c84d9c03723649e079e82a946982bafe44785692d4c46530283e9e3b24.webp"/>
 <figcaption><span>Original paper figure</span>语言引导 filmstrip: 指令条件下的行为变化。</figcaption>
 </figure>
 <figure class="figure-block">
-<img alt="灵巧任务 filmstrip: post-training 让基础策略压到新任务。" loading="lazy" src="assets/paper_fig12_dexterous_filmstrip.png"/>
+<img alt="灵巧任务 filmstrip: post-training 让基础策略压到新任务。" loading="lazy" src="../../assets/media/7fe411feaa763b0a0323197aadabe3b9c48427578dbe9f6cd37b1658c53cf3d2.webp"/>
 <figcaption><span>Original paper figure</span>灵巧任务 filmstrip: post-training 让基础策略压到新任务。</figcaption>
 </figure>
 <figure class="figure-block">
-<img alt="多阶段任务 filmstrip: 长时程任务证据。" loading="lazy" src="assets/paper_fig13_multistage_filmstrip.png"/>
+<img alt="多阶段任务 filmstrip: 长时程任务证据。" loading="lazy" src="../../assets/media/cd3a15138f498737dba56e4032e16e417763ea426f7c4ed0c06e22ea20cfdcef.webp"/>
 <figcaption><span>Original paper figure</span>多阶段任务 filmstrip: 长时程任务证据。</figcaption>
 </figure>
 <figure class="figure-block">
-<img alt="Fine-tune tasks over time: post-training 任务谱随时间扩展。" loading="lazy" src="assets/paper_fig14_finetune_tasks_over_time.png"/>
+<img alt="Fine-tune tasks over time: post-training 任务谱随时间扩展。" loading="lazy" src="../../assets/media/7ad9ea197bb313195f3b9dd8ff5f02c1b3547e7c1fee3198c52d73c8430e187c.webp"/>
 <figcaption><span>Original paper figure</span>Fine-tune tasks over time: post-training 任务谱随时间扩展。</figcaption>
 </figure>
 </div>
@@ -311,7 +316,7 @@ $$</div>
 <tr><td>语言任务图/filmstrip</td><td>语言条件确实影响动作</td><td>不能证明长指令规划完全由模型内部完成</td></tr>
 <tr><td>灵巧任务/fine-tune 图</td><td>post-training 能把基础能力压到复杂任务</td><td>不能说明少量数据总是足够</td></tr>
 <tr><td>多阶段 filmstrip</td><td>系统可以执行长时程任务</td><td>不能提供公开 benchmark 式可复验数字</td></tr></tbody></table></div>
-<h3>14.5 Paper vs Code：复现时真正会踩的坑</h3>
+<h3 id="14-5">14.5 Paper vs Code：复现时真正会踩的坑</h3>
 <div class="table-wrap"><table><thead><tr><th>坑</th><th>论文读者容易忽略的点</th><th>openpi 证据/处理</th></tr></thead><tbody><tr><td>时间方向相反</td><td>论文公式和代码里的 t 方向不同</td><td><code>sample_actions</code> 注释明确说明 t=1 是噪声、t=0 是目标</td></tr>
 <tr><td>action_dim=32</td><td>不是每台机器人都有 32 维动作</td><td><code>Pi0Config.action_dim=32</code> 是统一接口，低维动作需要 padding/mask/定义一致</td></tr>
 <tr><td>norm stats</td><td>动作尺度不是无关预处理</td><td><code>docs/norm_stats.md</code> 要求决定复用或重算统计</td></tr>
@@ -319,16 +324,16 @@ $$</div>
 <tr><td>idle filtering</td><td>真实机器人数据有大量静止片段</td><td>DROID recipe 预计算 non-idle ranges</td></tr>
 <tr><td>资源预算</td><td>fine-tune 和 full training 不是一个量级</td><td>full DROID 1.8TB，8x H100 约 2 天；PaliGemma 起训约 5 天</td></tr></tbody></table></div>
 <figure class="figure-block">
-<img alt="复现风险面：数据、norm stats、硬件和训练成本。" loading="lazy" src="assets/generated_repro_surface.png"/>
+<img alt="复现风险面：数据、norm stats、硬件和训练成本。" loading="lazy" src="../../assets/media/98dde525db5da1ec57188a21822affb0153d85df21249323cd68a2842e2b821a.webp"/>
 <figcaption><span>Generated explanatory visual</span>复现风险面：数据、norm stats、硬件和训练成本。</figcaption>
 </figure>
-<h3>14.6 五个严肃反驳问题</h3>
+<h3 id="14-6">14.6 五个严肃反驳问题</h3>
 <details><summary>Q1：是不是只要 flow matching 就能得到 π0？</summary><p>不能。flow matching 是动作建模头，π0 的系统能力还依赖 PaliGemma 初始化、大规模机器人数据、post-training、动作归一化和实时推理工程。</p></details>
 <details><summary>Q2：私有数据占比这么高，论文是否可复现？</summary><p>完整基础模型不可完全复现；但 openpi 使 checkpoint inference、部分 fine-tuning 和代码级机制复现成为可能。复现目标必须分层定义。</p></details>
 <details><summary>Q3：跨机器人能力是不是被夸大？</summary><p>论文展示了多本体覆盖，但跨本体成功依赖动作空间定义、norm stats 和任务数据质量。把任意新机器人接上并不自动成立。</p></details>
 <details><summary>Q4：语言能力是否等同于规划能力？</summary><p>语言指令提供条件，但真实长时程任务仍依赖动作闭环、环境反馈和 post-training 数据。不能把语言跟随成功直接等同于通用规划。</p></details>
 <details><summary>Q5：实验视频是否足够科学？</summary><p>视频和 filmstrip 对真实机器人论文很重要，但公开 benchmark、失败率分布、环境随机性和第三方复验仍然不足。这是系统论文常见的证据边界。</p></details>
-<h3>14.7 读者实践路线</h3>
+<h3 id="14-7">14.7 读者实践路线</h3>
 <div class="table-wrap"><table><thead><tr><th>目标</th><th>推荐动作</th><th>停止条件</th></tr></thead><tbody><tr><td>快速理解</td><td>读本 HTML 的 0/3/5/8/14 节，再看 Figure Inventory</td><td>能解释 action expert 与 flow matching 的区别</td></tr>
 <tr><td>代码复现</td><td>定位 <code>pi0_config.py</code>、<code>pi0.py</code>、<code>norm_stats.md</code></td><td>能跑通 checkpoint 或小数据 fine-tune</td></tr>
 <tr><td>研究比较</td><td>对比 OpenVLA、Octo、Diffusion Policy、RT 系列</td><td>能说清动作 token/动作块/flow head 的取舍</td></tr>

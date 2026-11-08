@@ -1,0 +1,63 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='2000' height='1320' viewBox='0 0 2000 1320' role='img'>
+<title>Wan2.2 MoE + CFG 端到端系统架构图</title>
+<metadata>task=wan22-moe-cfg-svg-redesign; generated=2026-08-06; source_commit=42bf4cfaa384bc21833865abc2f9e6c0e67233dc; diagram=system-overview</metadata>
+<defs>
+<linearGradient id='bg' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='#F7FAFF'/><stop offset='1' stop-color='#EDF3FF'/></linearGradient>
+<linearGradient id='header' x1='0' y1='0' x2='1' y2='0'><stop offset='0' stop-color='#0B132B'/><stop offset='1' stop-color='#183B70'/></linearGradient>
+<marker id='arrow' markerWidth='12' markerHeight='12' refX='10' refY='6' orient='auto'><path d='M0 0L12 6 0 12Z' fill='#2855B6'/></marker>
+<style>.t{font-family:Arial,sans-serif;fill:#14213D}.title{font-size:38px;font-weight:800;fill:white}.sub{font-size:17px;fill:#D7E5FF}.sec{font-size:22px;font-weight:800;fill:#1B3768}.lab{font-size:18px;font-weight:750}.body{font-size:15px}.sm{font-size:13px;fill:#53627A}.dim{font-family:Consolas,monospace;font-size:13px;fill:#23437A}.c{text-anchor:middle}.n{fill:white;stroke:#AFC2E8;stroke-width:2}.shared{fill:#FFF8E7;stroke:#E2B94E;stroke-width:2}.state{fill:#EAF2FF;stroke:#4E79D9;stroke-width:2}.cfg{fill:#FFF0E7;stroke:#F08A44;stroke-width:2}.solver{fill:#E9F8F4;stroke:#26A17B;stroke-width:2}.opt{fill:#FAFAFC;stroke:#94A3B8;stroke-width:2;stroke-dasharray:9 7}.ln{fill:none;stroke:#2855B6;stroke-width:3;marker-end:url(#arrow)}.dash{fill:none;stroke:#7C3AED;stroke-width:3;stroke-dasharray:10 8;marker-end:url(#arrow)}</style>
+</defs>
+<rect width='2000' height='1320' fill='url(#bg)'/><rect width='2000' height='118' fill='url(#header)'/>
+<text class='t title' x='70' y='58'>Wan2.2 A14B · MoE + CFG 端到端数据流</text>
+<text class='t sub' x='72' y='92'>T2V / I2V · 81 帧 1280×720 · 单步激活一个 14B Expert，该 Expert 为 CFG 前向两次</text>
+<rect class='n' x='45' y='145' width='1910' height='245' rx='24'/>
+<text class='t sec' x='75' y='184'>A. 循环外条件准备（只做一次）</text>
+<rect class='shared' x='80' y='215' width='245' height='135' rx='18'/>
+<text class='t lab c' x='202' y='252'>Positive Prompt</text><text class='t sm c' x='202' y='282'>用户希望出现的语义</text><text class='t sm c' x='202' y='313'>例：白狐穿越雪原</text>
+<rect class='shared' x='370' y='215' width='245' height='135' rx='18'/>
+<text class='t lab c' x='492' y='252'>Negative Prompt</text><text class='t sm c' x='492' y='282'>希望远离的语义基线</text><text class='t sm c' x='492' y='313'>模糊、静态、低质量</text>
+<rect class='n' x='680' y='215' width='250' height='135' rx='18'/>
+<text class='t lab c' x='805' y='252'>UMT5-XXL</text><text class='t sm c' x='805' y='282'>两份文本分别编码</text><text class='t dim c' x='805' y='314'>[1, ≤512, 4096] × 2</text>
+<path class='ln' d='M325 282H665'/><path class='ln' d='M615 305C645 305 650 294 665 294'/>
+<rect class='n' x='985' y='215' width='265' height='135' rx='18'/>
+<text class='t lab c' x='1118' y='252'>Text Projection</text><text class='t sm c' x='1118' y='282'>4096 → DiT hidden 5120</text><text class='t dim c' x='1118' y='314'>[1,512,5120] × 2</text><path class='ln' d='M930 282H970'/>
+<rect class='opt' x='1310' y='205' width='285' height='155' rx='18'/>
+<text class='t lab c' x='1452' y='242'>I2V 首图条件（可选）</text><text class='t sm c' x='1452' y='272'>首图 → VAE + mask</text><text class='t dim c' x='1452' y='304'>y≈[1,20,21,90,160]</text><text class='t sm c' x='1452' y='330'>T2V 无此路径</text>
+<rect class='state' x='1650' y='215' width='260' height='135' rx='18'/>
+<text class='t lab c' x='1780' y='252'>Random Video Latent</text><text class='t sm c' x='1780' y='282'>seed → torch.randn</text><text class='t dim c' x='1780' y='314'>x_T=[1,16,21,90,160]</text>
+<rect x='45' y='420' width='1910' height='710' rx='28' fill='#F4F7FF' stroke='#99AFDA' stroke-width='3'/>
+<text class='t sec' x='75' y='462'>B. 40-step 去噪循环（每个 timestep 重复）</text>
+<text class='t sm' x='75' y='490'>唯一主状态：x_t；文字 embedding 固定复用；solver 保存少量数值历史</text>
+<rect class='state' x='80' y='545' width='230' height='145' rx='20'/>
+<text class='t lab c' x='195' y='584'>当前 latent x_t</text><text class='t dim c' x='195' y='619'>[1,16,21,90,160]</text><text class='t sm c' x='195' y='650'>当前唯一视频状态</text>
+<rect class='n' x='365' y='530' width='250' height='175' rx='20'/>
+<text class='t lab c' x='490' y='570'>Timestep Router</text><text class='t dim c' x='490' y='602'>boundary × 1000</text><text class='t sm c' x='490' y='632'>t ≥ boundary → High</text><text class='t sm c' x='490' y='658'>t &lt; boundary → Low</text><text class='t sm c' x='490' y='683'>确定性 if/else</text><path class='ln' d='M310 617H350'/>
+<rect x='675' y='510' width='330' height='120' rx='20' fill='#E8DDFF' stroke='#8767CF' stroke-width='3'/>
+<text class='t lab c' x='840' y='550'>High-noise Expert · 14B</text><text class='t sm c' x='840' y='580'>布局、主体、粗运动</text><text class='t dim c' x='840' y='607'>T2V CFG scale=4.0</text>
+<rect x='675' y='660' width='330' height='120' rx='20' fill='#DCF4E0' stroke='#55A768' stroke-width='3'/>
+<text class='t lab c' x='840' y='700'>Low-noise Expert · 14B</text><text class='t sm c' x='840' y='730'>纹理、边界、局部运动</text><text class='t dim c' x='840' y='757'>T2V CFG scale=3.0</text>
+<path class='dash' d='M615 575H660'/><path class='ln' d='M615 660C640 660 640 720 660 720'/>
+<text class='t sm' x='688' y='807'>每个 timestep 二选一；未激活 Expert 可 offload 到 CPU</text>
+<rect class='n' x='1070' y='505' width='300' height='145' rx='20'/>
+<text class='t lab c' x='1220' y='544'>Expert Forward #1</text><text class='t sm c' x='1220' y='575'>x_t + t + context_pos</text><text class='t dim c' x='1220' y='607'>v_pos=[1,16,21,90,160]</text><text class='t sm c' x='1220' y='630'>同一套当前 Expert 权重</text>
+<rect class='n' x='1070' y='680' width='300' height='145' rx='20'/>
+<text class='t lab c' x='1220' y='719'>Expert Forward #2</text><text class='t sm c' x='1220' y='750'>x_t + t + context_neg</text><text class='t dim c' x='1220' y='782'>v_neg=[1,16,21,90,160]</text><text class='t sm c' x='1220' y='805'>读取的仍是原始 x_t</text>
+<path class='ln' d='M1005 570H1055'/><path class='ln' d='M1005 720H1055'/>
+<path class='dash' d='M1118 350V485H1160'/><path class='dash' d='M1165 350V660H1160'/>
+<path class='dash' d='M1595 282C1620 282 1600 870 1180 870V840'/>
+<rect class='cfg' x='1435' y='565' width='260' height='200' rx='22'/>
+<text class='t lab c' x='1565' y='610'>CFG Merge</text><text class='t body c' x='1565' y='650'>v_cfg = v_neg</text><text class='t body c' x='1565' y='680'>+ s·(v_pos − v_neg)</text><text class='t dim c' x='1565' y='720'>[1,16,21,90,160]</text><text class='t sm c' x='1565' y='747'>无额外网络参数</text>
+<path class='ln' d='M1370 577C1400 577 1400 620 1420 620'/><path class='ln' d='M1370 752H1420'/>
+<rect class='solver' x='1760' y='545' width='165' height='240' rx='22'/>
+<text class='t lab c' x='1842' y='590'>Solver</text><text class='t body c' x='1842' y='625'>UniPC</text><text class='t body c' x='1842' y='653'>或 DPM++</text><text class='t sm c' x='1842' y='692'>flow → x0_pred</text><text class='t sm c' x='1842' y='720'>利用历史输出</text><text class='t sm c' x='1842' y='748'>积分得到 x_next</text><path class='ln' d='M1695 665H1745'/>
+<rect class='n' x='80' y='860' width='345' height='170' rx='20'/>
+<text class='t lab c' x='252' y='900'>当前 Expert 内部</text><text class='t sm c' x='252' y='933'>Conv3D Patch → 75,600 tokens</text><text class='t sm c' x='252' y='961'>40× Self-Attn / Cross-Attn / FFN</text><text class='t dim c' x='252' y='993'>[1,75600,5120] → flow latent</text><path class='ln' d='M1005 805C920 860 650 900 440 930'/>
+<rect class='state' x='1510' y='885' width='270' height='145' rx='20'/>
+<text class='t lab c' x='1645' y='925'>更新后的 x_next</text><text class='t dim c' x='1645' y='960'>[1,16,21,90,160]</text><text class='t sm c' x='1645' y='992'>覆盖 latents，进入下一轮</text><path class='ln' d='M1842 785V850C1842 875 1810 905 1795 930'/>
+<path class='dash' d='M1510 958H330C290 958 250 880 250 705'/><text class='t sm' x='680' y='945'>循环回边：下一步无论是否换专家，都读取刚更新的 x_next</text>
+<rect class='n' x='45' y='1160' width='1910' height='120' rx='24'/><text class='t sec' x='75' y='1202'>C. 循环结束：最终 latent 只解码一次</text>
+<rect class='state' x='610' y='1185' width='245' height='70' rx='16'/><text class='t lab c' x='732' y='1215'>最终 x₀</text><text class='t dim c' x='732' y='1242'>[1,16,21,90,160]</text>
+<rect class='shared' x='925' y='1185' width='245' height='70' rx='16'/><text class='t lab c' x='1047' y='1215'>VAE Decoder</text><text class='t sm c' x='1047' y='1242'>latent → RGB</text>
+<rect class='state' x='1240' y='1185' width='310' height='70' rx='16'/><text class='t lab c' x='1395' y='1215'>最终 RGB 视频</text><text class='t dim c' x='1395' y='1242'>[1,3,81,720,1280]</text><path class='ln' d='M855 1220H910'/><path class='ln' d='M1170 1220H1225'/>
+<text class='t sm' x='70' y='1300'>Source: text2video.py · image2video.py · model.py · vae2_1.py · commit 42bf4cfa…</text>
+</svg>

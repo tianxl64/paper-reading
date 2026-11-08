@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>S002 固定源码：sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/models/rssm.py</title><style>body{max-width:100%;margin:1.2rem;font-family:system-ui,sans-serif}pre{overflow:auto;line-height:1.55}pre span{display:block}pre a{color:#667;text-decoration:none}:target{background:#fff3ba}</style><link href="../../../../../../../../../../../../../favicon.ico" rel="icon"/></head><body><h1>S002 固定源码：sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/models/rssm.py</h1><p>源码字节 SHA-256：<code>7462f36a40a504ec912435bd6c5a78fd6878308826888341a20c602291b12712</code>。<a download="" href="rssm.py">下载原始源码</a></p><pre><span id="L1"><a aria-label="第 1 行" href="#L1">   1</a> # Copyright 2019 The PlaNet Authors. All rights reserved.</span>
+<span id="L2"><a aria-label="第 2 行" href="#L2">   2</a> #</span>
+<span id="L3"><a aria-label="第 3 行" href="#L3">   3</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span id="L4"><a aria-label="第 4 行" href="#L4">   4</a> # you may not use this file except in compliance with the License.</span>
+<span id="L5"><a aria-label="第 5 行" href="#L5">   5</a> # You may obtain a copy of the License at</span>
+<span id="L6"><a aria-label="第 6 行" href="#L6">   6</a> #</span>
+<span id="L7"><a aria-label="第 7 行" href="#L7">   7</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span id="L8"><a aria-label="第 8 行" href="#L8">   8</a> #</span>
+<span id="L9"><a aria-label="第 9 行" href="#L9">   9</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span id="L10"><a aria-label="第 10 行" href="#L10">  10</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span id="L11"><a aria-label="第 11 行" href="#L11">  11</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span id="L12"><a aria-label="第 12 行" href="#L12">  12</a> # See the License for the specific language governing permissions and</span>
+<span id="L13"><a aria-label="第 13 行" href="#L13">  13</a> # limitations under the License.</span>
+<span id="L14"><a aria-label="第 14 行" href="#L14">  14</a> </span>
+<span id="L15"><a aria-label="第 15 行" href="#L15">  15</a> from __future__ import absolute_import</span>
+<span id="L16"><a aria-label="第 16 行" href="#L16">  16</a> from __future__ import division</span>
+<span id="L17"><a aria-label="第 17 行" href="#L17">  17</a> from __future__ import print_function</span>
+<span id="L18"><a aria-label="第 18 行" href="#L18">  18</a> </span>
+<span id="L19"><a aria-label="第 19 行" href="#L19">  19</a> import tensorflow as tf</span>
+<span id="L20"><a aria-label="第 20 行" href="#L20">  20</a> from tensorflow_probability import distributions as tfd</span>
+<span id="L21"><a aria-label="第 21 行" href="#L21">  21</a> </span>
+<span id="L22"><a aria-label="第 22 行" href="#L22">  22</a> from planet import tools</span>
+<span id="L23"><a aria-label="第 23 行" href="#L23">  23</a> from planet.models import base</span>
+<span id="L24"><a aria-label="第 24 行" href="#L24">  24</a> </span>
+<span id="L25"><a aria-label="第 25 行" href="#L25">  25</a> </span>
+<span id="L26"><a aria-label="第 26 行" href="#L26">  26</a> class RSSM(base.Base):</span>
+<span id="L27"><a aria-label="第 27 行" href="#L27">  27</a>   """Deterministic and stochastic state model.</span>
+<span id="L28"><a aria-label="第 28 行" href="#L28">  28</a> </span>
+<span id="L29"><a aria-label="第 29 行" href="#L29">  29</a>   The stochastic latent is computed from the hidden state at the same time</span>
+<span id="L30"><a aria-label="第 30 行" href="#L30">  30</a>   step. If an observation is present, the posterior latent is compute from both</span>
+<span id="L31"><a aria-label="第 31 行" href="#L31">  31</a>   the hidden state and the observation.</span>
+<span id="L32"><a aria-label="第 32 行" href="#L32">  32</a> </span>
+<span id="L33"><a aria-label="第 33 行" href="#L33">  33</a>   Prior:    Posterior:</span>
+<span id="L34"><a aria-label="第 34 行" href="#L34">  34</a> </span>
+<span id="L35"><a aria-label="第 35 行" href="#L35">  35</a>   (a)       (a)</span>
+<span id="L36"><a aria-label="第 36 行" href="#L36">  36</a>      \         \</span>
+<span id="L37"><a aria-label="第 37 行" href="#L37">  37</a>       v         v</span>
+<span id="L38"><a aria-label="第 38 行" href="#L38">  38</a>   [h]-&gt;[h]  [h]-&gt;[h]</span>
+<span id="L39"><a aria-label="第 39 行" href="#L39">  39</a>       ^ |       ^ :</span>
+<span id="L40"><a aria-label="第 40 行" href="#L40">  40</a>      /  v      /  v</span>
+<span id="L41"><a aria-label="第 41 行" href="#L41">  41</a>   (s)  (s)  (s)  (s)</span>
+<span id="L42"><a aria-label="第 42 行" href="#L42">  42</a>                   ^</span>
+<span id="L43"><a aria-label="第 43 行" href="#L43">  43</a>                   :</span>
+<span id="L44"><a aria-label="第 44 行" href="#L44">  44</a>                  (o)</span>
+<span id="L45"><a aria-label="第 45 行" href="#L45">  45</a>   """</span>
+<span id="L46"><a aria-label="第 46 行" href="#L46">  46</a> </span>
+<span id="L47"><a aria-label="第 47 行" href="#L47">  47</a>   def __init__(</span>
+<span id="L48"><a aria-label="第 48 行" href="#L48">  48</a>       self, state_size, belief_size, embed_size,</span>
+<span id="L49"><a aria-label="第 49 行" href="#L49">  49</a>       future_rnn=True, mean_only=False, min_stddev=0.1, activation=tf.nn.elu,</span>
+<span id="L50"><a aria-label="第 50 行" href="#L50">  50</a>       num_layers=1):</span>
+<span id="L51"><a aria-label="第 51 行" href="#L51">  51</a>     self._state_size = state_size</span>
+<span id="L52"><a aria-label="第 52 行" href="#L52">  52</a>     self._belief_size = belief_size</span>
+<span id="L53"><a aria-label="第 53 行" href="#L53">  53</a>     self._embed_size = embed_size</span>
+<span id="L54"><a aria-label="第 54 行" href="#L54">  54</a>     self._future_rnn = future_rnn</span>
+<span id="L55"><a aria-label="第 55 行" href="#L55">  55</a>     self._cell = tf.contrib.rnn.GRUBlockCell(self._belief_size)</span>
+<span id="L56"><a aria-label="第 56 行" href="#L56">  56</a>     self._kwargs = dict(units=self._embed_size, activation=activation)</span>
+<span id="L57"><a aria-label="第 57 行" href="#L57">  57</a>     self._mean_only = mean_only</span>
+<span id="L58"><a aria-label="第 58 行" href="#L58">  58</a>     self._min_stddev = min_stddev</span>
+<span id="L59"><a aria-label="第 59 行" href="#L59">  59</a>     self._num_layers = num_layers</span>
+<span id="L60"><a aria-label="第 60 行" href="#L60">  60</a>     super(RSSM, self).__init__(</span>
+<span id="L61"><a aria-label="第 61 行" href="#L61">  61</a>         tf.make_template('transition', self._transition),</span>
+<span id="L62"><a aria-label="第 62 行" href="#L62">  62</a>         tf.make_template('posterior', self._posterior))</span>
+<span id="L63"><a aria-label="第 63 行" href="#L63">  63</a> </span>
+<span id="L64"><a aria-label="第 64 行" href="#L64">  64</a>   @property</span>
+<span id="L65"><a aria-label="第 65 行" href="#L65">  65</a>   def state_size(self):</span>
+<span id="L66"><a aria-label="第 66 行" href="#L66">  66</a>     return {</span>
+<span id="L67"><a aria-label="第 67 行" href="#L67">  67</a>         'mean': self._state_size,</span>
+<span id="L68"><a aria-label="第 68 行" href="#L68">  68</a>         'stddev': self._state_size,</span>
+<span id="L69"><a aria-label="第 69 行" href="#L69">  69</a>         'sample': self._state_size,</span>
+<span id="L70"><a aria-label="第 70 行" href="#L70">  70</a>         'belief': self._belief_size,</span>
+<span id="L71"><a aria-label="第 71 行" href="#L71">  71</a>         'rnn_state': self._belief_size,</span>
+<span id="L72"><a aria-label="第 72 行" href="#L72">  72</a>     }</span>
+<span id="L73"><a aria-label="第 73 行" href="#L73">  73</a> </span>
+<span id="L74"><a aria-label="第 74 行" href="#L74">  74</a>   def dist_from_state(self, state, mask=None):</span>
+<span id="L75"><a aria-label="第 75 行" href="#L75">  75</a>     """Extract the latent distribution from a prior or posterior state."""</span>
+<span id="L76"><a aria-label="第 76 行" href="#L76">  76</a>     if mask is not None:</span>
+<span id="L77"><a aria-label="第 77 行" href="#L77">  77</a>       stddev = tools.mask(state['stddev'], mask, value=1)</span>
+<span id="L78"><a aria-label="第 78 行" href="#L78">  78</a>     else:</span>
+<span id="L79"><a aria-label="第 79 行" href="#L79">  79</a>       stddev = state['stddev']</span>
+<span id="L80"><a aria-label="第 80 行" href="#L80">  80</a>     dist = tfd.MultivariateNormalDiag(state['mean'], stddev)</span>
+<span id="L81"><a aria-label="第 81 行" href="#L81">  81</a>     return dist</span>
+<span id="L82"><a aria-label="第 82 行" href="#L82">  82</a> </span>
+<span id="L83"><a aria-label="第 83 行" href="#L83">  83</a>   def features_from_state(self, state):</span>
+<span id="L84"><a aria-label="第 84 行" href="#L84">  84</a>     """Extract features for the decoder network from a prior or posterior."""</span>
+<span id="L85"><a aria-label="第 85 行" href="#L85">  85</a>     return tf.concat([state['sample'], state['belief']], -1)</span>
+<span id="L86"><a aria-label="第 86 行" href="#L86">  86</a> </span>
+<span id="L87"><a aria-label="第 87 行" href="#L87">  87</a>   def divergence_from_states(self, lhs, rhs, mask=None):</span>
+<span id="L88"><a aria-label="第 88 行" href="#L88">  88</a>     """Compute the divergence measure between two states."""</span>
+<span id="L89"><a aria-label="第 89 行" href="#L89">  89</a>     lhs = self.dist_from_state(lhs, mask)</span>
+<span id="L90"><a aria-label="第 90 行" href="#L90">  90</a>     rhs = self.dist_from_state(rhs, mask)</span>
+<span id="L91"><a aria-label="第 91 行" href="#L91">  91</a>     divergence = tfd.kl_divergence(lhs, rhs)</span>
+<span id="L92"><a aria-label="第 92 行" href="#L92">  92</a>     if mask is not None:</span>
+<span id="L93"><a aria-label="第 93 行" href="#L93">  93</a>       divergence = tools.mask(divergence, mask)</span>
+<span id="L94"><a aria-label="第 94 行" href="#L94">  94</a>     return divergence</span>
+<span id="L95"><a aria-label="第 95 行" href="#L95">  95</a> </span>
+<span id="L96"><a aria-label="第 96 行" href="#L96">  96</a>   def _transition(self, prev_state, prev_action, zero_obs):</span>
+<span id="L97"><a aria-label="第 97 行" href="#L97">  97</a>     """Compute prior next state by applying the transition dynamics."""</span>
+<span id="L98"><a aria-label="第 98 行" href="#L98">  98</a>     hidden = tf.concat([prev_state['sample'], prev_action], -1)</span>
+<span id="L99"><a aria-label="第 99 行" href="#L99">  99</a>     for _ in range(self._num_layers):</span>
+<span id="L100"><a aria-label="第 100 行" href="#L100"> 100</a>       hidden = tf.layers.dense(hidden, **self._kwargs)</span>
+<span id="L101"><a aria-label="第 101 行" href="#L101"> 101</a>     belief, rnn_state = self._cell(hidden, prev_state['rnn_state'])</span>
+<span id="L102"><a aria-label="第 102 行" href="#L102"> 102</a>     if self._future_rnn:</span>
+<span id="L103"><a aria-label="第 103 行" href="#L103"> 103</a>       hidden = belief</span>
+<span id="L104"><a aria-label="第 104 行" href="#L104"> 104</a>     for _ in range(self._num_layers):</span>
+<span id="L105"><a aria-label="第 105 行" href="#L105"> 105</a>       hidden = tf.layers.dense(hidden, **self._kwargs)</span>
+<span id="L106"><a aria-label="第 106 行" href="#L106"> 106</a>     mean = tf.layers.dense(hidden, self._state_size, None)</span>
+<span id="L107"><a aria-label="第 107 行" href="#L107"> 107</a>     stddev = tf.layers.dense(hidden, self._state_size, tf.nn.softplus)</span>
+<span id="L108"><a aria-label="第 108 行" href="#L108"> 108</a>     stddev += self._min_stddev</span>
+<span id="L109"><a aria-label="第 109 行" href="#L109"> 109</a>     if self._mean_only:</span>
+<span id="L110"><a aria-label="第 110 行" href="#L110"> 110</a>       sample = mean</span>
+<span id="L111"><a aria-label="第 111 行" href="#L111"> 111</a>     else:</span>
+<span id="L112"><a aria-label="第 112 行" href="#L112"> 112</a>       sample = tfd.MultivariateNormalDiag(mean, stddev).sample()</span>
+<span id="L113"><a aria-label="第 113 行" href="#L113"> 113</a>     return {</span>
+<span id="L114"><a aria-label="第 114 行" href="#L114"> 114</a>         'mean': mean,</span>
+<span id="L115"><a aria-label="第 115 行" href="#L115"> 115</a>         'stddev': stddev,</span>
+<span id="L116"><a aria-label="第 116 行" href="#L116"> 116</a>         'sample': sample,</span>
+<span id="L117"><a aria-label="第 117 行" href="#L117"> 117</a>         'belief': belief,</span>
+<span id="L118"><a aria-label="第 118 行" href="#L118"> 118</a>         'rnn_state': rnn_state,</span>
+<span id="L119"><a aria-label="第 119 行" href="#L119"> 119</a>     }</span>
+<span id="L120"><a aria-label="第 120 行" href="#L120"> 120</a> </span>
+<span id="L121"><a aria-label="第 121 行" href="#L121"> 121</a>   def _posterior(self, prev_state, prev_action, obs):</span>
+<span id="L122"><a aria-label="第 122 行" href="#L122"> 122</a>     """Compute posterior state from previous state and current observation."""</span>
+<span id="L123"><a aria-label="第 123 行" href="#L123"> 123</a>     prior = self._transition_tpl(prev_state, prev_action, tf.zeros_like(obs))</span>
+<span id="L124"><a aria-label="第 124 行" href="#L124"> 124</a>     hidden = tf.concat([prior['belief'], obs], -1)</span>
+<span id="L125"><a aria-label="第 125 行" href="#L125"> 125</a>     for _ in range(self._num_layers):</span>
+<span id="L126"><a aria-label="第 126 行" href="#L126"> 126</a>       hidden = tf.layers.dense(hidden, **self._kwargs)</span>
+<span id="L127"><a aria-label="第 127 行" href="#L127"> 127</a>     mean = tf.layers.dense(hidden, self._state_size, None)</span>
+<span id="L128"><a aria-label="第 128 行" href="#L128"> 128</a>     stddev = tf.layers.dense(hidden, self._state_size, tf.nn.softplus)</span>
+<span id="L129"><a aria-label="第 129 行" href="#L129"> 129</a>     stddev += self._min_stddev</span>
+<span id="L130"><a aria-label="第 130 行" href="#L130"> 130</a>     if self._mean_only:</span>
+<span id="L131"><a aria-label="第 131 行" href="#L131"> 131</a>       sample = mean</span>
+<span id="L132"><a aria-label="第 132 行" href="#L132"> 132</a>     else:</span>
+<span id="L133"><a aria-label="第 133 行" href="#L133"> 133</a>       sample = tfd.MultivariateNormalDiag(mean, stddev).sample()</span>
+<span id="L134"><a aria-label="第 134 行" href="#L134"> 134</a>     return {</span>
+<span id="L135"><a aria-label="第 135 行" href="#L135"> 135</a>         'mean': mean,</span>
+<span id="L136"><a aria-label="第 136 行" href="#L136"> 136</a>         'stddev': stddev,</span>
+<span id="L137"><a aria-label="第 137 行" href="#L137"> 137</a>         'sample': sample,</span>
+<span id="L138"><a aria-label="第 138 行" href="#L138"> 138</a>         'belief': prior['belief'],</span>
+<span id="L139"><a aria-label="第 139 行" href="#L139"> 139</a>         'rnn_state': prior['rnn_state'],</span>
+<span id="L140"><a aria-label="第 140 行" href="#L140"> 140</a>     }</span></pre></body></html>

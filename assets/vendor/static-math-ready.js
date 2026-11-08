@@ -1,0 +1,1 @@
+document.documentElement.classList.add('mathjax-ready');document.documentElement.dataset.mathjax='ready';window.MathJax=window.MathJax||{};window.MathJax.typesetPromise=()=>Promise.resolve();window.MathJax.typeset=()=>{};window.MathJax.startup={promise:Promise.resolve(),defaultReady:()=>{}};

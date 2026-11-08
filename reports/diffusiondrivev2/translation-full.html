@@ -1,8 +1,8 @@
-<!doctype html>
-<html lang="zh-CN" data-translation-source="original-paper" data-paper-id="2512.07745">
+<!DOCTYPE html>
+<html data-paper-id="2512.07745" data-translation-source="original-paper" lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
 <title>DiffusionDriveV2: Reinforcement Learning-Constrained Truncated Diffusion Modeling in End-to-End Autonomous Driving 中文全文翻译</title>
 <style>
 :root { --ink:#172033; --muted:#5c6878; --line:#d8dee8; --paper:#fff; --bg:#f5f7fa; --accent:#1456a0; }
@@ -37,9 +37,9 @@ ul { padding-left:23px; }
 <p>DiffusionDriveV2 面向端到端自动驾驶中的轨迹规划扩散模型。论文指出，普通扩散模型容易发生 mode collapse，而基于锚点的 DiffusionDrive 虽然能生成多模态轨迹，却因为 imitation learning 只监督接近专家轨迹的正模式，留下大量低质量负模式。本文用强化学习同时约束低质量模式并探索更优轨迹，在保留 GMM 多模态能力的同时提高整体输出质量。</p>
 <h2 id="1-引言">1 引言</h2>
 <p>论文首先解释为什么轨迹规划中的多模态不是装饰性指标。路口、变道和跟车场景存在多个合理意图，如果模型只收敛到单一高概率行为，就会失去未来行为覆盖能力。DiffusionDrive 用 K-Means 锚点构造 GMM prior，把动作空间划分为不同驾驶意图；但 IL 训练只把最接近专家的模式作为正样本，其他大量模式没有安全和质量约束。</p>
-<figure class="paper-figure"><img src="assets/figures/paper_archv2.png" alt="原论文图：archv2，用于说明方法架构或定性对比。"><figcaption>原论文图：archv2，用于说明方法架构或定性对比。</figcaption></figure>
-<figure class="paper-figure"><img src="assets/figures/paper_intro.png" alt="原论文图：intro，用于说明方法架构或定性对比。"><figcaption>原论文图：intro，用于说明方法架构或定性对比。</figcaption></figure>
-<figure class="paper-figure"><img src="assets/figures/paper_multi.png" alt="原论文图：multi，用于说明方法架构或定性对比。"><figcaption>原论文图：multi，用于说明方法架构或定性对比。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文图：archv2，用于说明方法架构或定性对比。" src="../../assets/media/0bf68c95eb2a066c913cf3d413a1c0a311e8fd094ff409398a28173c4fdc9c46.webp"/><figcaption>原论文图：archv2，用于说明方法架构或定性对比。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文图：intro，用于说明方法架构或定性对比。" src="../../assets/media/e8f2514b80526c422fb96fe3774424e3cfa377151de548ac87fd7bdaf66d7f5d.webp"/><figcaption>原论文图：intro，用于说明方法架构或定性对比。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文图：multi，用于说明方法架构或定性对比。" src="../../assets/media/7cd1a84469c00c6a4a22c29f4b5d7aa794e1610db09d5c1240b9963ecc4380bb.webp"/><figcaption>原论文图：multi，用于说明方法架构或定性对比。</figcaption></figure>
 <h2 id="2-相关工作">2 相关工作</h2>
 <p>相关工作覆盖模块化自动驾驶、端到端规划、扩散策略和自动驾驶强化学习。论文的定位不是重新提出一个大 backbone，而是在已有 DiffusionDrive/TransFuser 风格骨架上解决锚点截断扩散的训练监督不足。</p>
 <h2 id="3-预备知识">3 预备知识</h2>
@@ -62,13 +62,13 @@ ul { padding-left:23px; }
 <p>代码和模型权重由 HUSTVL 发布。本文档是面向本地阅读器的中文全文翻译草稿，保留原论文结构并补充必要术语对齐。</p>
 <h2 id="附录">附录</h2>
 <p>附录包含进一步实验设置、NAVSIM 指标公式、selector 训练细节和更多定性对比。PDMS 公式可写为 NC × DAC × (5 × EP + 5 × TTC + 2 × C) / 12；NAVSIM v2 的 EPDMS 在此基础上扩展了更多交通规则指标。selector 训练阶段使用 20 epoch、batch size 512，并用乘性噪声增强候选轨迹，再随机抽取 GTRS vocabulary 的 1% 轨迹提升鲁棒性。</p>
-<figure class="paper-figure"><img src="assets/figures/paper_multi_comp_0.png" alt="原论文补充定性图：multi_comp_0。"><figcaption>原论文补充定性图：multi_comp_0。</figcaption></figure>
-<figure class="paper-figure"><img src="assets/figures/paper_multi_comp_1.png" alt="原论文补充定性图：multi_comp_1。"><figcaption>原论文补充定性图：multi_comp_1。</figcaption></figure>
-<figure class="paper-figure"><img src="assets/figures/paper_straight_comp_0.png" alt="原论文补充定性图：straight_comp_0。"><figcaption>原论文补充定性图：straight_comp_0。</figcaption></figure>
-<figure class="paper-figure"><img src="assets/figures/paper_straight_comp_1.png" alt="原论文补充定性图：straight_comp_1。"><figcaption>原论文补充定性图：straight_comp_1。</figcaption></figure>
-<figure class="paper-figure"><img src="assets/figures/paper_straight_comp_2.png" alt="原论文补充定性图：straight_comp_2。"><figcaption>原论文补充定性图：straight_comp_2。</figcaption></figure>
-<figure class="paper-figure"><img src="assets/figures/paper_turn_comp_0.png" alt="原论文补充定性图：turn_comp_0。"><figcaption>原论文补充定性图：turn_comp_0。</figcaption></figure>
-<figure class="paper-figure"><img src="assets/figures/paper_turn_comp_1.png" alt="原论文补充定性图：turn_comp_1。"><figcaption>原论文补充定性图：turn_comp_1。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：multi_comp_0。" src="../../assets/media/a40937f19dd1a5e3b24152519c55e5d3c2f28099a61c9b7dfa7cc11470be8a8d.webp"/><figcaption>原论文补充定性图：multi_comp_0。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：multi_comp_1。" src="../../assets/media/d9c26b59a39e212ce58a6a94930095cfc95cf417acc9531b9dc8da3f491d3007.webp"/><figcaption>原论文补充定性图：multi_comp_1。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：straight_comp_0。" src="../../assets/media/5864c2803a43d898131c3df08b5c419daa51a10fdb6062d3caac1bb742999840.webp"/><figcaption>原论文补充定性图：straight_comp_0。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：straight_comp_1。" src="../../assets/media/3b4264f51c5c3442488d3d469414a0b0379c03ec0d904ce8fbf7896342197632.webp"/><figcaption>原论文补充定性图：straight_comp_1。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：straight_comp_2。" src="../../assets/media/15cfab7390b55d55b7d4970838ba0b67f87e81f419c03651d8904473732cb421.webp"/><figcaption>原论文补充定性图：straight_comp_2。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：turn_comp_0。" src="../../assets/media/391094c8f0a805dda32096c00014b8fe25037a18aa8d5de904c1165401d8fed2.webp"/><figcaption>原论文补充定性图：turn_comp_0。</figcaption></figure>
+<figure class="paper-figure"><img alt="原论文补充定性图：turn_comp_1。" src="../../assets/media/837c6ad9d63bfa902c5f6e19f3d30625d9da04739e2c0b3b0616d55a81c86ffa.webp"/><figcaption>原论文补充定性图：turn_comp_1。</figcaption></figure>
 <h2 id="参考文献">参考文献</h2>
 <p>参考文献包含 NAVSIM、DiffusionDrive、TransFuser、GRPO/DeepSeek-R1 相关强化学习工作、端到端自动驾驶和扩散规划相关论文。</p>
 <h2 id="全文翻译补充-问题设定与贡献边界">全文翻译补充：问题设定与贡献边界</h2>
@@ -149,7 +149,7 @@ ul { padding-left:23px; }
 <h3 id="翻译详注-6">翻译详注 6</h3>
 <p>这一部分保留原论文论证链：问题来自多模态轨迹的监督不完整，机制是锚点分组、截断扩散、乘性探索和 PDM 奖励共同作用，证据来自主表、消融表和定性图。阅读时应把 PDMS 提升拆成三个层面：安全下界提高、Top-K 质量提高、以及 selector 依赖降低。</p>
 </main>
-<div id="translationLightbox" class="lightbox" aria-hidden="true"><button type="button">关闭</button><img alt=""></div>
+<div aria-hidden="true" class="lightbox" id="translationLightbox"><button type="button">关闭</button><img alt=""/></div>
 <script>
 const box = document.getElementById('translationLightbox');
 const boxImg = box.querySelector('img');

@@ -1,0 +1,86 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "qwen-vl-modules",
+  "published_at": "2026-11-08T03:55:36+00:00",
+  "complete": true,
+  "source_relative_html": "qwen_vl_module_design_report.html",
+  "source_html_sha256": "c91fcefa72068b32d9a13fe10a9e2370a56575d4c598b88368f547ae354250e0",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "03c7c6cfb245275698821516d9f742dcafce6b528556edc9730ce6d29535f2dc",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 59,
+      "original_static_math": 0,
+      "added_static_math": 8
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 8,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "assets/tex-svg.js",
+      "source_sha256": "d4295dc33744836935c1399feece5159577b34c5c8ffb9f1c6324cd82e03a882",
+      "sha256": "d4295dc33744836935c1399feece5159577b34c5c8ffb9f1c6324cd82e03a882",
+      "bytes": 2108580
+    },
+    {
+      "path": "assets/zhihu-qwen2-vl-architecture.jpg",
+      "source_sha256": "5238c0a6e393ee542927d7c89e2dd265fd66c3724c1bdb692cbab7ec97ef9417",
+      "sha256": "5238c0a6e393ee542927d7c89e2dd265fd66c3724c1bdb692cbab7ec97ef9417",
+      "bytes": 167565
+    },
+    {
+      "path": "assets/zhihu-qwen2-vl-mrope.jpg",
+      "source_sha256": "7bea9ef383e075aa410a1a49fa0b0f358d74ae89c8219a220bdeb738f57268bf",
+      "sha256": "7bea9ef383e075aa410a1a49fa0b0f358d74ae89c8219a220bdeb738f57268bf",
+      "bytes": 78620
+    },
+    {
+      "path": "assets/zhihu-qwen25-training-stages.jpg",
+      "source_sha256": "69423bf160c30f1d3545a7b7f77e50ec74659c4d18e7ce9859ce2c0d5e52482e",
+      "sha256": "69423bf160c30f1d3545a7b7f77e50ec74659c4d18e7ce9859ce2c0d5e52482e",
+      "bytes": 84466
+    },
+    {
+      "path": "assets/zhihu-qwen25-vs-qwen2.jpg",
+      "source_sha256": "4738ec9393ed408d55dbd4fc3d15093bc719fa55cbbeeb8e285fe3c47fbddf6e",
+      "sha256": "4738ec9393ed408d55dbd4fc3d15093bc719fa55cbbeeb8e285fe3c47fbddf6e",
+      "bytes": 585591
+    },
+    {
+      "path": "assets/zhihu-qwen3-vl-architecture.jpg",
+      "source_sha256": "2a8538b10c37eefeb924f5d420dd1b910da070766f7c7243c57e8262f69026ce",
+      "sha256": "2a8538b10c37eefeb924f5d420dd1b910da070766f7c7243c57e8262f69026ce",
+      "bytes": 580232
+    },
+    {
+      "path": "assets/github-qwen3-vl-architecture.jpg",
+      "source_sha256": "820a8c1b6755fc407330d016795acf5de0cfaa92e26d7b8c6798b0cdbc427238",
+      "sha256": "29e1ea18bfbd463a4cdfcae475855afcf14634d774679aa3668a6959b36e2af4",
+      "bytes": 1042693
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "c91fcefa72068b32d9a13fe10a9e2370a56575d4c598b88368f547ae354250e0",
+      "sha256": "03c7c6cfb245275698821516d9f742dcafce6b528556edc9730ce6d29535f2dc",
+      "bytes": 136825
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

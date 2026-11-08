@@ -1,0 +1,43 @@
+\section{Methods}
+\label{sec: methods}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{asset/figure/PLD-Framework.png}
+    \caption{\textbf{An overview of \method.} Our pipeline consists of three stages: 1) learning specialist residual policy for each task via online off-policy RL, with efficient exploration guided by a frozen VLA generalist; 2) Automatic generation of hybrid trajectories by having the VLA rollout for the first $t$ steps and let the specialist takeover to generate recovery data; 3) Supervised fine-tuning using collected multi-task \method data; 4) Deploy the fine-tuned generalist to diverse manipulation tasks in zero-shot.}
+    \label{fig:overview}
+\end{figure}
+
+
+\paragraph{Method Overview}
+We study the synergy between data produced by our method when a modest \emph{generalist} VLA serves as the policy prior. The premise is that, if we exploit the base policy’s prior correctly, it can both \emph{solve hard tasks quickly} and \emph{explore efficiently}. While recent work explores direct RL fine-tuning of large VLA~\citep{mark2024PARL, dong2025expo}, such formulas can be resource-intensive even for single-task tuning: \eg OpenVLA-OFT requires per-GPU memory up to $\sim$62.5\ GB for LIBERO training at a batch size of~8~\citep{openvla-oft}. Meanwhile, it remains unclear whether these approaches scale gracefully to multi-task fine-tuning under heterogeneous setups. We therefore opt for a \emph{decoupled} pipeline. We freeze the base policy $\pi_b$ and learn a lightweight residual action policy $\pi_{\delta}$ with sample-efficient off-policy RL (Gaussian policy parameterization). We then \emph{collect expert data} by letting the residual ``take over’’ after specified steps of ``base policy probing’’. Finally, we \emph{distill} these skills back into the base model via SFT and deploy the generalist on diverse manipulation tasks. We provide the overview of \method in~\Cref{fig:overview}.
+
+
+
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=1.0\linewidth]{asset/figure/VLA-RL-SFT-Data-Pipeline-crop.pdf}
+%     \caption{\mathbf{Framework overview.}}
+%     \label{fig:placeholder}
+% \end{figure}
+
+\subsection{Data Efficient RL via Policy Prior Warm-start}
+
+Building upon the previous success of sample-efficient RL with prior data~\citep{RLPD}, we consider an off-policy actor-critic framework and maintain two separate buffers for offline and online experience replay. We first fill the offline buffer with successful rollouts $\mathcal{B}_{offline} = \{\tau_1, \tau_2, \dots\}$ from the base policy $\pi_{b}$. This process serves as an importance sampling to preserve only the successful attempts. During training, the offline and online experiences will be replayed symmetrically; for example, mini-batches consist of equal samples from both buffers, ensuring that the value function is constantly trained on high-value state-action pairs. 
+
+In practice, we train a task-specific residual action module $\pi_{\delta}(\cdot | s, a_b)$ conditioned on $a_b \sim \pi_b$. We use $\pi_{\delta}$ to explore near the base policy behavior, actively searching for more optimal solutions guided by the Q-function. To modulate exploration and avoid deviating drastically from $\pi_{b}$ during the initial phase, the delta action's magnitude is scaled down to $[-\xi, \xi]$, where $\xi \in [0, 1]$ is tuned by a scheduler. This design choice is two-fold: First, although unable to perfectly generalize to an unseen manipulation task or scenario, the base policy can make reasonable attempts to solve the task, serving as a useful initialization for exploration. Moreover, directly training the expressive foundation policy (\eg flow action heads) to maximize the Q-value can be extremely difficult \citep{mark2024PARL}. In contrast, a residual Gaussian policy can be easily trained through any off-the-shelf off-policy RL algorithm.
+
+Alongside $\pi_{\delta}$, action value function $Q^{\bar{
+\pi}}$ acquired through policy iteration and TD-learning~\citep{sutton2018reinforcement} as in~\Cref{eqn: Q def}, where $\bar{\pi}(\cdot | s)$ is the combined policy.
+\begin{equation}
+    \label{eqn: Q def}
+    Q^{\bar{\pi}}(s_t, \bar{a}_t) \leftarrow r(s, a) + \gamma \mathbb{E}_{s_{t+1}\sim p(\cdot | s_t, \bar{a}_t)} [Q_{target}^{\bar{\pi}}(s_{t+1}, \bar{a}_{t+1}) ] 
+     , \ \bar{a}=a_b+a_\delta
+\end{equation}
+
+To stabilize off-policy learning and mitigate forgetting, we introduce a warm-up stage using solely $\pi_b$ for data collection akin to~\citep{WSRL}. Meanwhile, the Q-function is initialized by a conservative objective such as Cal-QL~\citep{cal-QL}. Importantly, we do not explicitly enforce behavior constraints to policy loss, such that the resulting expert \(\bar{\pi}\) is less influenced by either data quality or base policy performance.
+
+\subsection{Bootstrapping RL Specialist for Scalable Data Generation}
+We then turn to the question of how to collect demonstration data using RL specialists. Data collected through RL experts is highly optimal, with consistent behavior and nearly no hesitation, demonstrating smooth solutions that finish tasks with a shorter horizon. However, such a narrow distribution of unimodal expert behavior may leave out-of-distribution and failure states underrepresented. Thus, scaling purely expert data may not result in a performance gain, but instead risks the generalist overfitting on these data and harming both robustness and generalization (As discussed in the following section).
+
+To mitigate this issue, we propose a hybrid data collection scheme that incorporates base-policy initialization: We first rollout the base policy for random steps, then let the learned residual RL policy to take over, resulting in demonstration trajectories $\tau_{demo} = \{ (s_1, a_{b,1}),\dots, (s_{t-1}, a_{b,t-1})\} \cup \{(s_t, a_{b,t}+\bar{a}_t), \dots \}$ that contain the behavior of the expert recovering from a potential suboptimal region. We refer to this procedure as \textbf{base policy probing}. Accordingly, we boost the robustness of the RL expert by training the RL expert on an initial state distribution $s_0 \sim p_0^{\pi_b}$ given by random steps of base policy probing. The probing step only serves as state initialization and will not be added to the replay buffer. The details of \method are summarized in~\Cref{alg: pipeline}.

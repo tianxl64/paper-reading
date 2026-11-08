@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1320" viewBox="0 0 1900 1320">
+<defs><linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7fbff"/><stop offset="1" stop-color="#eef8f3"/></linearGradient><filter id="sh3"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-opacity=".13"/></filter><marker id="ar3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L10,3 L0,6 Z" fill="#3f61bd"/></marker><marker id="ag3" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L10,3 L0,6 Z" fill="#348358"/></marker><style>.t{font-family:Arial,'Microsoft YaHei',sans-serif;fill:#17233c}.title{font-size:34px;font-weight:800}.sub{font-size:18px;fill:#56647d}.h{font-size:24px;font-weight:800}.m{font-size:17px;font-weight:700}.s{font-size:14px;fill:#526079}.tiny{font-size:13px;fill:#64728b}.box{rx:17;stroke-width:2;filter:url(#sh3)}.a{stroke:#3f61bd;stroke-width:3;fill:none;marker-end:url(#ar3)}.g{stroke:#348358;stroke-width:3;fill:none;marker-end:url(#ag3)}.d{stroke:#bd7253;stroke-width:2.5;stroke-dasharray:9 7;fill:none;marker-end:url(#ar3)}</style></defs>
+<rect width="1900" height="1320" fill="url(#bg3)"/>
+<text x="950" y="55" text-anchor="middle" class="t title">LingBot-VA Release 闭环推理：预测 KV 是临时占位，环境反馈会删除并以真实历史重建</text>
+<text x="950" y="88" text-anchor="middle" class="t sub">同一共享 30 层 backbone 被多次调用；每层 self-attention 都维护自己的 sliding K/V slot pool</text>
+
+<rect x="50" y="125" width="1800" height="165" fill="#fff" stroke="#91a2c9" class="box"/>
+<text x="90" y="165" class="t h">持久 cache（每层一份）</text>
+<rect x="90" y="195" width="250" height="60" fill="#dff4e7" stroke="#4c9b69" class="box"/><text x="215" y="222" text-anchor="middle" class="t m">Real V history</text><text x="215" y="244" text-anchor="middle" class="t tiny">is_pred=False</text>
+<rect x="365" y="195" width="250" height="60" fill="#eaf5e8" stroke="#62a469" class="box"/><text x="490" y="222" text-anchor="middle" class="t m">Executed A history</text><text x="490" y="244" text-anchor="middle" class="t tiny">is_pred=False</text>
+<rect x="640" y="195" width="250" height="60" fill="#e7ecff" stroke="#657fd0" class="box"/><text x="765" y="222" text-anchor="middle" class="t m">Predicted Vg</text><text x="765" y="244" text-anchor="middle" class="t tiny">is_pred=True（临时）</text>
+<rect x="915" y="195" width="250" height="60" fill="#fff0e7" stroke="#d27851" class="box"/><text x="1040" y="222" text-anchor="middle" class="t m">Predicted Ag</text><text x="1040" y="244" text-anchor="middle" class="t tiny">is_pred=True（临时）</text>
+<rect x="1215" y="187" width="590" height="76" fill="#f5f7fb" stroke="#9aa8bf" class="box"/><text x="1510" y="215" text-anchor="middle" class="t m">固定容量 slot pool</text><text x="1510" y="239" text-anchor="middle" class="t s">slot 不足：按 cache id 淘汰最老 token；不是 Python list 无限增长</text>
+
+<text x="90" y="343" class="t h">一次控制循环 g</text>
+<rect x="70" y="375" width="310" height="300" fill="#edf3ff" stroke="#5e7bd0" class="box"/>
+<text x="225" y="414" text-anchor="middle" style="font-family:Arial,'Microsoft YaHei';font-size:21px;font-weight:800;fill:#17233c">Stage 1 · Video denoise</text><text x="225" y="447" text-anchor="middle" class="t s">输入：noise Ṽg + 历史 cache</text><text x="225" y="475" text-anchor="middle" class="t s">循环 Nv 次共享 Wan blocks</text><rect x="105" y="500" width="240" height="55" fill="#fff" stroke="#8da3df" rx="12"/><text x="225" y="526" text-anchor="middle" class="t m">中间 step</text><text x="225" y="547" text-anchor="middle" class="t tiny">update_cache=0 → 写后 restore</text><rect x="105" y="575" width="240" height="65" fill="#dbe7ff" stroke="#5e7bd0" rx="12"/><text x="225" y="602" text-anchor="middle" class="t m">额外 t=0 prefill</text><text x="225" y="625" text-anchor="middle" class="t tiny">update_cache=1 · Pred Vg 保留</text>
+<path d="M380 525 H440" class="a"/>
+<rect x="440" y="375" width="310" height="300" fill="#fff2ea" stroke="#d27851" class="box"/>
+<text x="595" y="414" text-anchor="middle" style="font-family:Arial,'Microsoft YaHei';font-size:21px;font-weight:800;fill:#17233c">Stage 2 · Action denoise</text><text x="595" y="447" text-anchor="middle" class="t s">输入：noise Ãg + 历史 cache</text><text x="595" y="475" text-anchor="middle" class="t s">关键：cache 已含 Pred Vg K/V</text><rect x="475" y="500" width="240" height="55" fill="#fff" stroke="#e1a084" rx="12"/><text x="595" y="526" text-anchor="middle" class="t m">循环 Na 次</text><text x="595" y="547" text-anchor="middle" class="t tiny">读取当前 future-video memory</text><rect x="475" y="575" width="240" height="65" fill="#ffe2d5" stroke="#d27851" rx="12"/><text x="595" y="602" text-anchor="middle" class="t m">额外 t=0 prefill</text><text x="595" y="625" text-anchor="middle" class="t tiny">update_cache=1 · Pred Ag 保留</text>
+<path d="M750 525 H810" class="a"/>
+<rect x="810" y="375" width="310" height="300" fill="#fff7df" stroke="#bf8a30" class="box"/>
+<text x="965" y="414" text-anchor="middle" class="t h">Stage 3 · Execute</text><text x="965" y="447" text-anchor="middle" class="t s">机器人执行 Ag 的高频 actions</text><text x="965" y="475" text-anchor="middle" class="t s">每 Nₐ 个 action 收集一帧观测</text><rect x="845" y="505" width="240" height="105" fill="#fff" stroke="#d6b36b" rx="12"/><text x="965" y="535" text-anchor="middle" class="t m">Environment</text><text x="965" y="562" text-anchor="middle" class="t s">真实动力学 + 扰动 + 控制误差</text><text x="965" y="586" text-anchor="middle" class="t s">输出真实 observation frames</text>
+<path d="M1120 525 H1180" class="g"/>
+<rect x="1180" y="375" width="650" height="300" fill="#eaf8ef" stroke="#459567" class="box"/>
+<text x="1505" y="414" text-anchor="middle" class="t h">Stage 4 · Feedback prefill / cache correction</text>
+<rect x="1215" y="455" width="270" height="75" fill="#fae6e3" stroke="#c8665e" rx="12"/><text x="1350" y="484" text-anchor="middle" class="t m">clear_pred_cache()</text><text x="1350" y="508" text-anchor="middle" class="t s">删除 Pred Vg / Pred Ag slots</text>
+<path d="M1485 492 H1530" class="g"/>
+<rect x="1530" y="445" width="265" height="95" fill="#fff" stroke="#77ad89" rx="12"/><text x="1662" y="474" text-anchor="middle" class="t m">VAE encode real obs</text><text x="1662" y="498" text-anchor="middle" class="t s">preprocess executed actions</text><text x="1662" y="520" text-anchor="middle" class="t tiny">t=0 condition tokens</text>
+<path d="M1662 540 V575 H1505" class="g"/>
+<rect x="1285" y="575" width="440" height="65" fill="#dff4e7" stroke="#459567" rx="12"/><text x="1505" y="602" text-anchor="middle" class="t m">共享 backbone prefill 两次：Real V → Executed A</text><text x="1505" y="626" text-anchor="middle" class="t tiny">update_cache=2 · is_pred=False · frame_st_id 前移</text>
+
+<path d="M1505 675 V730 H225 V705" class="g"/>
+<text x="870" y="721" text-anchor="middle" class="t s">下一循环 g+1 从“真实反馈校正后的历史”开始，而非永远沿用 speculative future</text>
+
+<rect x="70" y="775" width="870" height="425" fill="#fff" stroke="#7c91c8" class="box"/>
+<text x="505" y="818" text-anchor="middle" class="t h">Closed-loop server evaluation（官方 LIBERO/RoboTwin client）</text>
+<text x="110" y="862" class="t m">历史 video latent：</text><text x="300" y="862" class="t s">环境执行后采集的真实图像，经 streaming VAE 编码；预测 video 只服务本轮 action stage。</text>
+<text x="110" y="904" class="t m">历史 action latent：</text><text x="300" y="904" class="t s">本轮实际下发/执行的 action chunk，再以 t=0 prefill；不是环境“真值标签”，但它是已执行控制命令。</text>
+<text x="110" y="946" class="t m">误差链：</text><text x="300" y="938" class="t s">Pred Vg 的错误会直接影响 Ag；下一轮真实观测会截断 video rollout 漂移，</text><text x="300" y="960" class="t s">但不能撤销本轮已经执行的错误动作。</text>
+<rect x="110" y="985" width="790" height="165" fill="#eef5ff" stroke="#7790cf" rx="14"/><text x="505" y="1020" text-anchor="middle" class="t m">“shared sliding KV cache”精确定义</text><text x="505" y="1052" text-anchor="middle" class="t s">shared：video/action 两种 forward 写入并读取同一组、同名、逐层 self-attention cache</text><text x="505" y="1080" text-anchor="middle" class="t s">sliding：容量有限，按最老 id 淘汰；保留最近若干 V/A token，而非全历史</text><text x="505" y="1108" text-anchor="middle" class="t s">KV：存每一层处理后的 K/V，不是只缓存 VAE latent，也不是缓存最终输出帧文件</text><text x="505" y="1136" text-anchor="middle" class="t s">pred flag：区分可被反馈覆盖的 speculative slots 与不可清除的真实/已执行历史 slots</text>
+
+<rect x="980" y="775" width="870" height="425" fill="#fff" stroke="#c89255" class="box"/>
+<text x="1415" y="818" text-anchor="middle" class="t h">Open-loop i2va generate() demo</text>
+<text x="1020" y="862" class="t m">调用方式：</text><text x="1150" y="862" class="t s">循环 `_infer(init_obs, frame_st_id=chunk_id*K)`，没有环境执行与 `_compute_kv_cache`。</text>
+<text x="1020" y="904" class="t m">历史 video：</text><text x="1150" y="904" class="t s">上一 chunk 的 Pred V K/V 保留。</text>
+<text x="1020" y="946" class="t m">历史 action：</text><text x="1150" y="946" class="t s">上一 chunk 的 Pred A K/V 保留。</text>
+<rect x="1020" y="985" width="790" height="165" fill="#fff1e6" stroke="#d18755" rx="14"/><text x="1415" y="1020" text-anchor="middle" class="t m">这里确实会 stage-by-stage 累积预测误差</text><text x="1415" y="1052" text-anchor="middle" class="t s">Vg error → Ag error → Vg+1 error → Ag+1 error …</text><text x="1415" y="1080" text-anchor="middle" class="t s">Noisy-history augmentation 只提高鲁棒性，不能消除 exposure bias</text><text x="1415" y="1108" text-anchor="middle" class="t s">论文异步 Algorithm 2 另有 FDM grounding；当前公开 server.py 未实现论文完整异步临时 cache/FDM 流程</text><text x="1415" y="1136" text-anchor="middle" class="t s">因此必须区分：论文算法、公开闭环 server、公开 open-loop demo 三种运行语义</text>
+
+<rect x="185" y="1235" width="1530" height="55" fill="#17233c" rx="15"/><text x="950" y="1270" text-anchor="middle" style="font-family:Arial,'Microsoft YaHei';font-size:18px;font-weight:700;fill:white">最关键结论：t2 Video 不读取“同 chunk t1 Action”的未来信息；它只读取已经进入历史 cache 的 action。闭环中该历史会被已执行 action + 真实观测校正。</text>
+</svg>

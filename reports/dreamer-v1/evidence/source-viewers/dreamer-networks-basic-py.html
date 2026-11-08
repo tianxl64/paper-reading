@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>dreamer/networks/basic.py</title><style>body{margin:0;background:#152a2e;color:#e4f3f3;font:13px/1.55 Consolas,monospace}.head{padding:16px;overflow-wrap:anywhere}.code{padding:16px;overflow:auto;white-space:pre}.line{display:block;min-width:max-content}.line:target{background:#665b18}a{color:#b9d9e3}</style><link href="../../../../favicon.ico" rel="icon"/></head><body><div class="head">dreamer/networks/basic.py<br/>COMMIT: 0ffec86436239d41cecaff34abcf57dca5539839<br/>SHA-256: cb03e7d9f0e5023c8513a580cda080ef7aaa90051f20293bdae0b40477e5e4a5</div><pre class="code"><span class="line" id="L1"><a href="#L1">0001</a> # Copyright 2019 The Dreamer Authors. All rights reserved.</span>
+<span class="line" id="L2"><a href="#L2">0002</a> #</span>
+<span class="line" id="L3"><a href="#L3">0003</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span class="line" id="L4"><a href="#L4">0004</a> # you may not use this file except in compliance with the License.</span>
+<span class="line" id="L5"><a href="#L5">0005</a> # You may obtain a copy of the License at</span>
+<span class="line" id="L6"><a href="#L6">0006</a> #</span>
+<span class="line" id="L7"><a href="#L7">0007</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="line" id="L8"><a href="#L8">0008</a> #</span>
+<span class="line" id="L9"><a href="#L9">0009</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span class="line" id="L10"><a href="#L10">0010</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span class="line" id="L11"><a href="#L11">0011</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="line" id="L12"><a href="#L12">0012</a> # See the License for the specific language governing permissions and</span>
+<span class="line" id="L13"><a href="#L13">0013</a> # limitations under the License.</span>
+<span class="line" id="L14"><a href="#L14">0014</a> </span>
+<span class="line" id="L15"><a href="#L15">0015</a> from __future__ import absolute_import</span>
+<span class="line" id="L16"><a href="#L16">0016</a> from __future__ import division</span>
+<span class="line" id="L17"><a href="#L17">0017</a> from __future__ import print_function</span>
+<span class="line" id="L18"><a href="#L18">0018</a> </span>
+<span class="line" id="L19"><a href="#L19">0019</a> import numpy as np</span>
+<span class="line" id="L20"><a href="#L20">0020</a> import tensorflow as tf</span>
+<span class="line" id="L21"><a href="#L21">0021</a> from tensorflow_probability import distributions as tfd</span>
+<span class="line" id="L22"><a href="#L22">0022</a> </span>
+<span class="line" id="L23"><a href="#L23">0023</a> from dreamer import distributions</span>
+<span class="line" id="L24"><a href="#L24">0024</a> from dreamer import tools</span>
+<span class="line" id="L25"><a href="#L25">0025</a> </span>
+<span class="line" id="L26"><a href="#L26">0026</a> </span>
+<span class="line" id="L27"><a href="#L27">0027</a> def feed_forward(</span>
+<span class="line" id="L28"><a href="#L28">0028</a>     features, data_shape, num_layers=2, activation=tf.nn.relu,</span>
+<span class="line" id="L29"><a href="#L29">0029</a>     mean_activation=None, stop_gradient=False, trainable=True, units=100,</span>
+<span class="line" id="L30"><a href="#L30">0030</a>     std=1.0, low=-1.0, high=1.0, dist='normal', min_std=1e-2, init_std=1.0):</span>
+<span class="line" id="L31"><a href="#L31">0031</a>   hidden = features</span>
+<span class="line" id="L32"><a href="#L32">0032</a>   if stop_gradient:</span>
+<span class="line" id="L33"><a href="#L33">0033</a>     hidden = tf.stop_gradient(hidden)</span>
+<span class="line" id="L34"><a href="#L34">0034</a>   for _ in range(num_layers):</span>
+<span class="line" id="L35"><a href="#L35">0035</a>     hidden = tf.layers.dense(hidden, units, activation, trainable=trainable)</span>
+<span class="line" id="L36"><a href="#L36">0036</a>   mean = tf.layers.dense(</span>
+<span class="line" id="L37"><a href="#L37">0037</a>       hidden, int(np.prod(data_shape)), mean_activation, trainable=trainable)</span>
+<span class="line" id="L38"><a href="#L38">0038</a>   mean = tf.reshape(mean, tools.shape(features)[:-1] + data_shape)</span>
+<span class="line" id="L39"><a href="#L39">0039</a>   if std == 'learned':</span>
+<span class="line" id="L40"><a href="#L40">0040</a>     std = tf.layers.dense(</span>
+<span class="line" id="L41"><a href="#L41">0041</a>         hidden, int(np.prod(data_shape)), None, trainable=trainable)</span>
+<span class="line" id="L42"><a href="#L42">0042</a>     init_std = np.log(np.exp(init_std) - 1)</span>
+<span class="line" id="L43"><a href="#L43">0043</a>     std = tf.nn.softplus(std + init_std) + min_std</span>
+<span class="line" id="L44"><a href="#L44">0044</a>     std = tf.reshape(std, tools.shape(features)[:-1] + data_shape)</span>
+<span class="line" id="L45"><a href="#L45">0045</a>   if dist == 'normal':</span>
+<span class="line" id="L46"><a href="#L46">0046</a>     dist = tfd.Normal(mean, std)</span>
+<span class="line" id="L47"><a href="#L47">0047</a>     dist = tfd.Independent(dist, len(data_shape))</span>
+<span class="line" id="L48"><a href="#L48">0048</a>   elif dist == 'deterministic':</span>
+<span class="line" id="L49"><a href="#L49">0049</a>     dist = tfd.Deterministic(mean)</span>
+<span class="line" id="L50"><a href="#L50">0050</a>     dist = tfd.Independent(dist, len(data_shape))</span>
+<span class="line" id="L51"><a href="#L51">0051</a>   elif dist == 'binary':</span>
+<span class="line" id="L52"><a href="#L52">0052</a>     dist = tfd.Bernoulli(mean)</span>
+<span class="line" id="L53"><a href="#L53">0053</a>     dist = tfd.Independent(dist, len(data_shape))</span>
+<span class="line" id="L54"><a href="#L54">0054</a>   elif dist == 'trunc_normal':</span>
+<span class="line" id="L55"><a href="#L55">0055</a>     # https://www.desmos.com/calculator/rnksmhtgui</span>
+<span class="line" id="L56"><a href="#L56">0056</a>     dist = tfd.TruncatedNormal(mean, std, low, high)</span>
+<span class="line" id="L57"><a href="#L57">0057</a>     dist = tfd.Independent(dist, len(data_shape))</span>
+<span class="line" id="L58"><a href="#L58">0058</a>   elif dist == 'tanh_normal':</span>
+<span class="line" id="L59"><a href="#L59">0059</a>     # https://www.desmos.com/calculator/794s8kf0es</span>
+<span class="line" id="L60"><a href="#L60">0060</a>     dist = distributions.TanhNormal(mean, std)</span>
+<span class="line" id="L61"><a href="#L61">0061</a>   elif dist == 'tanh_normal_tanh':</span>
+<span class="line" id="L62"><a href="#L62">0062</a>     # https://www.desmos.com/calculator/794s8kf0es</span>
+<span class="line" id="L63"><a href="#L63">0063</a>     mean = 5.0 * tf.tanh(mean / 5.0)</span>
+<span class="line" id="L64"><a href="#L64">0064</a>     dist = distributions.TanhNormal(mean, std)</span>
+<span class="line" id="L65"><a href="#L65">0065</a>   elif dist == 'onehot_score':</span>
+<span class="line" id="L66"><a href="#L66">0066</a>     dist = distributions.OneHot(mean, gradient='score')</span>
+<span class="line" id="L67"><a href="#L67">0067</a>   elif dist == 'onehot_straight':</span>
+<span class="line" id="L68"><a href="#L68">0068</a>     dist = distributions.OneHot(mean, gradient='straight')</span>
+<span class="line" id="L69"><a href="#L69">0069</a>   else:</span>
+<span class="line" id="L70"><a href="#L70">0070</a>     raise NotImplementedError(dist)</span>
+<span class="line" id="L71"><a href="#L71">0071</a>   return dist</span></pre></body></html>

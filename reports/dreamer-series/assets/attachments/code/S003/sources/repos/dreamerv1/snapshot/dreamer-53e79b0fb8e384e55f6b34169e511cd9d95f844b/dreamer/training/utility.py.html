@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>S003 固定源码：sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/training/utility.py</title><style>body{max-width:100%;margin:1.2rem;font-family:system-ui,sans-serif}pre{overflow:auto;line-height:1.55}pre span{display:block}pre a{color:#667;text-decoration:none}:target{background:#fff3ba}</style><link href="../../../../../../../../../../../../../favicon.ico" rel="icon"/></head><body><h1>S003 固定源码：sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/training/utility.py</h1><p>源码字节 SHA-256：<code>46668df6942013d81a69ff5d73280fb32d4eaa1fb344e3a482441986ff29ea23</code>。<a download="" href="utility.py">下载原始源码</a></p><pre><span id="L1"><a aria-label="第 1 行" href="#L1">   1</a> # Copyright 2019 The Dreamer Authors. All rights reserved.</span>
+<span id="L2"><a aria-label="第 2 行" href="#L2">   2</a> #</span>
+<span id="L3"><a aria-label="第 3 行" href="#L3">   3</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span id="L4"><a aria-label="第 4 行" href="#L4">   4</a> # you may not use this file except in compliance with the License.</span>
+<span id="L5"><a aria-label="第 5 行" href="#L5">   5</a> # You may obtain a copy of the License at</span>
+<span id="L6"><a aria-label="第 6 行" href="#L6">   6</a> #</span>
+<span id="L7"><a aria-label="第 7 行" href="#L7">   7</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span id="L8"><a aria-label="第 8 行" href="#L8">   8</a> #</span>
+<span id="L9"><a aria-label="第 9 行" href="#L9">   9</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span id="L10"><a aria-label="第 10 行" href="#L10">  10</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span id="L11"><a aria-label="第 11 行" href="#L11">  11</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span id="L12"><a aria-label="第 12 行" href="#L12">  12</a> # See the License for the specific language governing permissions and</span>
+<span id="L13"><a aria-label="第 13 行" href="#L13">  13</a> # limitations under the License.</span>
+<span id="L14"><a aria-label="第 14 行" href="#L14">  14</a> </span>
+<span id="L15"><a aria-label="第 15 行" href="#L15">  15</a> from __future__ import absolute_import</span>
+<span id="L16"><a aria-label="第 16 行" href="#L16">  16</a> from __future__ import division</span>
+<span id="L17"><a aria-label="第 17 行" href="#L17">  17</a> from __future__ import print_function</span>
+<span id="L18"><a aria-label="第 18 行" href="#L18">  18</a> </span>
+<span id="L19"><a aria-label="第 19 行" href="#L19">  19</a> import collections</span>
+<span id="L20"><a aria-label="第 20 行" href="#L20">  20</a> import datetime</span>
+<span id="L21"><a aria-label="第 21 行" href="#L21">  21</a> import functools</span>
+<span id="L22"><a aria-label="第 22 行" href="#L22">  22</a> import os</span>
+<span id="L23"><a aria-label="第 23 行" href="#L23">  23</a> import re</span>
+<span id="L24"><a aria-label="第 24 行" href="#L24">  24</a> </span>
+<span id="L25"><a aria-label="第 25 行" href="#L25">  25</a> import numpy as np</span>
+<span id="L26"><a aria-label="第 26 行" href="#L26">  26</a> import ruamel.yaml as yaml</span>
+<span id="L27"><a aria-label="第 27 行" href="#L27">  27</a> import tensorflow as tf</span>
+<span id="L28"><a aria-label="第 28 行" href="#L28">  28</a> </span>
+<span id="L29"><a aria-label="第 29 行" href="#L29">  29</a> from dreamer import control</span>
+<span id="L30"><a aria-label="第 30 行" href="#L30">  30</a> from dreamer import tools</span>
+<span id="L31"><a aria-label="第 31 行" href="#L31">  31</a> from dreamer.training import trainer as trainer_</span>
+<span id="L32"><a aria-label="第 32 行" href="#L32">  32</a> </span>
+<span id="L33"><a aria-label="第 33 行" href="#L33">  33</a> </span>
+<span id="L34"><a aria-label="第 34 行" href="#L34">  34</a> Objective = collections.namedtuple(</span>
+<span id="L35"><a aria-label="第 35 行" href="#L35">  35</a>     'Objective', 'name, value, goal, include, exclude')</span>
+<span id="L36"><a aria-label="第 36 行" href="#L36">  36</a> </span>
+<span id="L37"><a aria-label="第 37 行" href="#L37">  37</a> </span>
+<span id="L38"><a aria-label="第 38 行" href="#L38">  38</a> def LOG(x, m, *a):</span>
+<span id="L39"><a aria-label="第 39 行" href="#L39">  39</a>   xf = tf.cast(x, tf.float32)</span>
+<span id="L40"><a aria-label="第 40 行" href="#L40">  40</a>   print_op = tf.print(</span>
+<span id="L41"><a aria-label="第 41 行" href="#L41">  41</a>       m, '(',</span>
+<span id="L42"><a aria-label="第 42 行" href="#L42">  42</a>       tf.shape(xf),</span>
+<span id="L43"><a aria-label="第 43 行" href="#L43">  43</a>       tf.reduce_min(xf),</span>
+<span id="L44"><a aria-label="第 44 行" href="#L44">  44</a>       tf.reduce_mean(xf),</span>
+<span id="L45"><a aria-label="第 45 行" href="#L45">  45</a>       tf.reduce_max(xf),</span>
+<span id="L46"><a aria-label="第 46 行" href="#L46">  46</a>       ')', *a)</span>
+<span id="L47"><a aria-label="第 47 行" href="#L47">  47</a>   with tf.control_dependencies([print_op]):</span>
+<span id="L48"><a aria-label="第 48 行" href="#L48">  48</a>     return tf.identity(x)</span>
+<span id="L49"><a aria-label="第 49 行" href="#L49">  49</a> </span>
+<span id="L50"><a aria-label="第 50 行" href="#L50">  50</a> </span>
+<span id="L51"><a aria-label="第 51 行" href="#L51">  51</a> def save_config(config, logdir=None):</span>
+<span id="L52"><a aria-label="第 52 行" href="#L52">  52</a>   if logdir:</span>
+<span id="L53"><a aria-label="第 53 行" href="#L53">  53</a>     with config.unlocked:</span>
+<span id="L54"><a aria-label="第 54 行" href="#L54">  54</a>       config.logdir = logdir</span>
+<span id="L55"><a aria-label="第 55 行" href="#L55">  55</a>     message = 'Start a new run and write summaries and checkpoints to {}.'</span>
+<span id="L56"><a aria-label="第 56 行" href="#L56">  56</a>     print(message.format(config.logdir))</span>
+<span id="L57"><a aria-label="第 57 行" href="#L57">  57</a>     tf.gfile.MakeDirs(config.logdir)</span>
+<span id="L58"><a aria-label="第 58 行" href="#L58">  58</a>     config_path = os.path.join(config.logdir, 'config.yaml')</span>
+<span id="L59"><a aria-label="第 59 行" href="#L59">  59</a>     with tf.gfile.GFile(config_path, 'w') as file_:</span>
+<span id="L60"><a aria-label="第 60 行" href="#L60">  60</a>       yaml.dump(</span>
+<span id="L61"><a aria-label="第 61 行" href="#L61">  61</a>           config, file_, yaml.Dumper,</span>
+<span id="L62"><a aria-label="第 62 行" href="#L62">  62</a>           allow_unicode=True,</span>
+<span id="L63"><a aria-label="第 63 行" href="#L63">  63</a>           default_flow_style=False)</span>
+<span id="L64"><a aria-label="第 64 行" href="#L64">  64</a>   else:</span>
+<span id="L65"><a aria-label="第 65 行" href="#L65">  65</a>     message = (</span>
+<span id="L66"><a aria-label="第 66 行" href="#L66">  66</a>         'Start a new run without storing summaries and checkpoints since no '</span>
+<span id="L67"><a aria-label="第 67 行" href="#L67">  67</a>         'logging directory was specified.')</span>
+<span id="L68"><a aria-label="第 68 行" href="#L68">  68</a>     print(message)</span>
+<span id="L69"><a aria-label="第 69 行" href="#L69">  69</a>   return config</span>
+<span id="L70"><a aria-label="第 70 行" href="#L70">  70</a> </span>
+<span id="L71"><a aria-label="第 71 行" href="#L71">  71</a> </span>
+<span id="L72"><a aria-label="第 72 行" href="#L72">  72</a> def load_config(logdir):</span>
+<span id="L73"><a aria-label="第 73 行" href="#L73">  73</a>   config_path = logdir and os.path.join(logdir, 'config.yaml')</span>
+<span id="L74"><a aria-label="第 74 行" href="#L74">  74</a>   if not config_path or not tf.gfile.Exists(config_path):</span>
+<span id="L75"><a aria-label="第 75 行" href="#L75">  75</a>     message = (</span>
+<span id="L76"><a aria-label="第 76 行" href="#L76">  76</a>         'Cannot resume an existing run since the logging directory does not '</span>
+<span id="L77"><a aria-label="第 77 行" href="#L77">  77</a>         'contain a configuration file.')</span>
+<span id="L78"><a aria-label="第 78 行" href="#L78">  78</a>     raise IOError(message)</span>
+<span id="L79"><a aria-label="第 79 行" href="#L79">  79</a>   with tf.gfile.GFile(config_path, 'r') as file_:</span>
+<span id="L80"><a aria-label="第 80 行" href="#L80">  80</a>     config = yaml.load(file_, yaml.Loader)</span>
+<span id="L81"><a aria-label="第 81 行" href="#L81">  81</a>     message = 'Resume run and write summaries and checkpoints to {}.'</span>
+<span id="L82"><a aria-label="第 82 行" href="#L82">  82</a>     print(message.format(config.logdir))</span>
+<span id="L83"><a aria-label="第 83 行" href="#L83">  83</a>   return config</span>
+<span id="L84"><a aria-label="第 84 行" href="#L84">  84</a> </span>
+<span id="L85"><a aria-label="第 85 行" href="#L85">  85</a> </span>
+<span id="L86"><a aria-label="第 86 行" href="#L86">  86</a> def train(model_fn, datasets, logdir, config):</span>
+<span id="L87"><a aria-label="第 87 行" href="#L87">  87</a>   if not config:</span>
+<span id="L88"><a aria-label="第 88 行" href="#L88">  88</a>     raise KeyError('You must specify a configuration.')</span>
+<span id="L89"><a aria-label="第 89 行" href="#L89">  89</a>   logdir = logdir and os.path.expanduser(logdir)</span>
+<span id="L90"><a aria-label="第 90 行" href="#L90">  90</a>   try:</span>
+<span id="L91"><a aria-label="第 91 行" href="#L91">  91</a>     config = load_config(logdir)</span>
+<span id="L92"><a aria-label="第 92 行" href="#L92">  92</a>   except RuntimeError:</span>
+<span id="L93"><a aria-label="第 93 行" href="#L93">  93</a>     print('Failed to load existing config.')</span>
+<span id="L94"><a aria-label="第 94 行" href="#L94">  94</a>   except IOError:</span>
+<span id="L95"><a aria-label="第 95 行" href="#L95">  95</a>     config = save_config(config, logdir)</span>
+<span id="L96"><a aria-label="第 96 行" href="#L96">  96</a>   with datasets.unlocked:</span>
+<span id="L97"><a aria-label="第 97 行" href="#L97">  97</a>     datasets.train = datasets.train.make_one_shot_iterator()</span>
+<span id="L98"><a aria-label="第 98 行" href="#L98">  98</a>     datasets.test = datasets.test.make_one_shot_iterator()</span>
+<span id="L99"><a aria-label="第 99 行" href="#L99">  99</a>   trainer = trainer_.Trainer(logdir, config=config)</span>
+<span id="L100"><a aria-label="第 100 行" href="#L100"> 100</a>   cleanups = []</span>
+<span id="L101"><a aria-label="第 101 行" href="#L101"> 101</a>   try:</span>
+<span id="L102"><a aria-label="第 102 行" href="#L102"> 102</a>     with tf.variable_scope('graph', use_resource=True):</span>
+<span id="L103"><a aria-label="第 103 行" href="#L103"> 103</a>       data = tf.cond(</span>
+<span id="L104"><a aria-label="第 104 行" href="#L104"> 104</a>           tf.equal(trainer.phase, 'train'),</span>
+<span id="L105"><a aria-label="第 105 行" href="#L105"> 105</a>           datasets.train.get_next, datasets.test.get_next)</span>
+<span id="L106"><a aria-label="第 106 行" href="#L106"> 106</a>       score, summary, cleanups = model_fn(data, trainer, config)</span>
+<span id="L107"><a aria-label="第 107 行" href="#L107"> 107</a>       message = 'Graph contains {} trainable variables.'</span>
+<span id="L108"><a aria-label="第 108 行" href="#L108"> 108</a>       print(message.format(tools.count_weights()))</span>
+<span id="L109"><a aria-label="第 109 行" href="#L109"> 109</a>       if config.train_steps:</span>
+<span id="L110"><a aria-label="第 110 行" href="#L110"> 110</a>         trainer.add_phase(</span>
+<span id="L111"><a aria-label="第 111 行" href="#L111"> 111</a>             'train', config.train_steps, score, summary,</span>
+<span id="L112"><a aria-label="第 112 行" href="#L112"> 112</a>             batch_size=config.batch_shape[0],</span>
+<span id="L113"><a aria-label="第 113 行" href="#L113"> 113</a>             report_every=None,</span>
+<span id="L114"><a aria-label="第 114 行" href="#L114"> 114</a>             log_every=config.train_log_every,</span>
+<span id="L115"><a aria-label="第 115 行" href="#L115"> 115</a>             checkpoint_every=config.train_checkpoint_every)</span>
+<span id="L116"><a aria-label="第 116 行" href="#L116"> 116</a>       if config.test_steps:</span>
+<span id="L117"><a aria-label="第 117 行" href="#L117"> 117</a>         trainer.add_phase(</span>
+<span id="L118"><a aria-label="第 118 行" href="#L118"> 118</a>             'test', config.test_steps, score, summary,</span>
+<span id="L119"><a aria-label="第 119 行" href="#L119"> 119</a>             batch_size=config.batch_shape[0],</span>
+<span id="L120"><a aria-label="第 120 行" href="#L120"> 120</a>             report_every=config.test_steps,</span>
+<span id="L121"><a aria-label="第 121 行" href="#L121"> 121</a>             log_every=config.test_steps,</span>
+<span id="L122"><a aria-label="第 122 行" href="#L122"> 122</a>             checkpoint_every=config.test_checkpoint_every)</span>
+<span id="L123"><a aria-label="第 123 行" href="#L123"> 123</a>     for saver in config.savers:</span>
+<span id="L124"><a aria-label="第 124 行" href="#L124"> 124</a>       trainer.add_saver(**saver)</span>
+<span id="L125"><a aria-label="第 125 行" href="#L125"> 125</a>     for score in trainer.iterate(config.max_steps):</span>
+<span id="L126"><a aria-label="第 126 行" href="#L126"> 126</a>       yield score</span>
+<span id="L127"><a aria-label="第 127 行" href="#L127"> 127</a>   finally:</span>
+<span id="L128"><a aria-label="第 128 行" href="#L128"> 128</a>     for cleanup in cleanups:</span>
+<span id="L129"><a aria-label="第 129 行" href="#L129"> 129</a>       cleanup()</span>
+<span id="L130"><a aria-label="第 130 行" href="#L130"> 130</a> </span>
+<span id="L131"><a aria-label="第 131 行" href="#L131"> 131</a> </span>
+<span id="L132"><a aria-label="第 132 行" href="#L132"> 132</a> def compute_objectives(posterior, prior, target, graph, config):</span>
+<span id="L133"><a aria-label="第 133 行" href="#L133"> 133</a>   raw_features = graph.cell.features_from_state(posterior)</span>
+<span id="L134"><a aria-label="第 134 行" href="#L134"> 134</a>   heads = graph.heads</span>
+<span id="L135"><a aria-label="第 135 行" href="#L135"> 135</a>   if config.imagination_horizon:</span>
+<span id="L136"><a aria-label="第 136 行" href="#L136"> 136</a>     imagination_start = posterior</span>
+<span id="L137"><a aria-label="第 137 行" href="#L137"> 137</a>     if config.imagination_skip_last:</span>
+<span id="L138"><a aria-label="第 138 行" href="#L138"> 138</a>       imagination_start = tools.nested.map(</span>
+<span id="L139"><a aria-label="第 139 行" href="#L139"> 139</a>           lambda x: x[:, :-config.imagination_skip_last], imagination_start)</span>
+<span id="L140"><a aria-label="第 140 行" href="#L140"> 140</a>     raw_states = imagine_forward(</span>
+<span id="L141"><a aria-label="第 141 行" href="#L141"> 141</a>         imagination_start, config.imagination_horizon, graph, config,</span>
+<span id="L142"><a aria-label="第 142 行" href="#L142"> 142</a>         graph.heads.action, stop_grad_post_action=False,</span>
+<span id="L143"><a aria-label="第 143 行" href="#L143"> 143</a>         stop_grad_pre_action=config.stop_grad_pre_action)</span>
+<span id="L144"><a aria-label="第 144 行" href="#L144"> 144</a>   else:</span>
+<span id="L145"><a aria-label="第 145 行" href="#L145"> 145</a>     raw_states = None</span>
+<span id="L146"><a aria-label="第 146 行" href="#L146"> 146</a>   objectives = []</span>
+<span id="L147"><a aria-label="第 147 行" href="#L147"> 147</a>   for name, scale in sorted(config.loss_scales.items(), key=lambda x: x[0]):</span>
+<span id="L148"><a aria-label="第 148 行" href="#L148"> 148</a>     if config.loss_scales[name] == 0.0:</span>
+<span id="L149"><a aria-label="第 149 行" href="#L149"> 149</a>       continue</span>
+<span id="L150"><a aria-label="第 150 行" href="#L150"> 150</a>     if name in config.heads and name not in config.gradient_heads:</span>
+<span id="L151"><a aria-label="第 151 行" href="#L151"> 151</a>       features = tf.stop_gradient(raw_features)</span>
+<span id="L152"><a aria-label="第 152 行" href="#L152"> 152</a>       include = r'.*/head_{}/.*'.format(name)</span>
+<span id="L153"><a aria-label="第 153 行" href="#L153"> 153</a>       exclude = None</span>
+<span id="L154"><a aria-label="第 154 行" href="#L154"> 154</a>     else:</span>
+<span id="L155"><a aria-label="第 155 行" href="#L155"> 155</a>       features = raw_features</span>
+<span id="L156"><a aria-label="第 156 行" href="#L156"> 156</a>       include = None</span>
+<span id="L157"><a aria-label="第 157 行" href="#L157"> 157</a>       exclude = None</span>
+<span id="L158"><a aria-label="第 158 行" href="#L158"> 158</a> </span>
+<span id="L159"><a aria-label="第 159 行" href="#L159"> 159</a>     if name == 'divergence':</span>
+<span id="L160"><a aria-label="第 160 行" href="#L160"> 160</a>       loss = graph.cell.divergence_from_states(posterior, prior)</span>
+<span id="L161"><a aria-label="第 161 行" href="#L161"> 161</a>       if config.free_nats is not None:</span>
+<span id="L162"><a aria-label="第 162 行" href="#L162"> 162</a>         loss = tf.maximum(0.0, loss - float(config.free_nats))</span>
+<span id="L163"><a aria-label="第 163 行" href="#L163"> 163</a>       objectives.append(Objective('divergence', loss, min, include, exclude))</span>
+<span id="L164"><a aria-label="第 164 行" href="#L164"> 164</a> </span>
+<span id="L165"><a aria-label="第 165 行" href="#L165"> 165</a>     elif name == 'cpc':</span>
+<span id="L166"><a aria-label="第 166 行" href="#L166"> 166</a>       pred = heads.cpc(graph.embedded)</span>
+<span id="L167"><a aria-label="第 167 行" href="#L167"> 167</a>       objective = compute_cpc_loss(pred, features, config)</span>
+<span id="L168"><a aria-label="第 168 行" href="#L168"> 168</a>       objectives.append(Objective('cpc', objective, max, include, exclude))</span>
+<span id="L169"><a aria-label="第 169 行" href="#L169"> 169</a> </span>
+<span id="L170"><a aria-label="第 170 行" href="#L170"> 170</a>     elif name == 'overshooting':</span>
+<span id="L171"><a aria-label="第 171 行" href="#L171"> 171</a>       shape = tools.shape(graph.data['action'])</span>
+<span id="L172"><a aria-label="第 172 行" href="#L172"> 172</a>       length = tf.tile(tf.constant(shape[1])[None], [shape[0]])</span>
+<span id="L173"><a aria-label="第 173 行" href="#L173"> 173</a>       _, priors, posteriors, mask = tools.overshooting(</span>
+<span id="L174"><a aria-label="第 174 行" href="#L174"> 174</a>           graph.cell, {}, graph.embedded, graph.data['action'], length,</span>
+<span id="L175"><a aria-label="第 175 行" href="#L175"> 175</a>           config.overshooting_distance, posterior)</span>
+<span id="L176"><a aria-label="第 176 行" href="#L176"> 176</a>       posteriors, priors, mask = tools.nested.map(</span>
+<span id="L177"><a aria-label="第 177 行" href="#L177"> 177</a>           lambda x: x[:, :, 1:-1], (posteriors, priors, mask))</span>
+<span id="L178"><a aria-label="第 178 行" href="#L178"> 178</a>       if config.os_stop_posterior_grad:</span>
+<span id="L179"><a aria-label="第 179 行" href="#L179"> 179</a>         posteriors = tools.nested.map(tf.stop_gradient, posteriors)</span>
+<span id="L180"><a aria-label="第 180 行" href="#L180"> 180</a>       loss = graph.cell.divergence_from_states(posteriors, priors)</span>
+<span id="L181"><a aria-label="第 181 行" href="#L181"> 181</a>       if config.free_nats is not None:</span>
+<span id="L182"><a aria-label="第 182 行" href="#L182"> 182</a>         loss = tf.maximum(0.0, loss - float(config.free_nats))</span>
+<span id="L183"><a aria-label="第 183 行" href="#L183"> 183</a>       objectives.append(Objective('overshooting', loss, min, include, exclude))</span>
+<span id="L184"><a aria-label="第 184 行" href="#L184"> 184</a> </span>
+<span id="L185"><a aria-label="第 185 行" href="#L185"> 185</a>     elif name == 'value':</span>
+<span id="L186"><a aria-label="第 186 行" href="#L186"> 186</a>       if config.value_source == 'dataset':</span>
+<span id="L187"><a aria-label="第 187 行" href="#L187"> 187</a>         loss = compute_value_loss(</span>
+<span id="L188"><a aria-label="第 188 行" href="#L188"> 188</a>             config, graph, priors, features, target['reward'])</span>
+<span id="L189"><a aria-label="第 189 行" href="#L189"> 189</a>       elif config.value_source == 'model':</span>
+<span id="L190"><a aria-label="第 190 行" href="#L190"> 190</a>         if 'action_target' in graph.heads or not config.imagination_horizon:</span>
+<span id="L191"><a aria-label="第 191 行" href="#L191"> 191</a>           if 'action_target' in graph.heads:</span>
+<span id="L192"><a aria-label="第 192 行" href="#L192"> 192</a>             policy = graph.heads.action_target</span>
+<span id="L193"><a aria-label="第 193 行" href="#L193"> 193</a>           else:</span>
+<span id="L194"><a aria-label="第 194 行" href="#L194"> 194</a>             policy = graph.heads.action</span>
+<span id="L195"><a aria-label="第 195 行" href="#L195"> 195</a>           states = imagine_forward(</span>
+<span id="L196"><a aria-label="第 196 行" href="#L196"> 196</a>               posterior, config.value_model_horizon, graph, config, policy)</span>
+<span id="L197"><a aria-label="第 197 行" href="#L197"> 197</a>         else:</span>
+<span id="L198"><a aria-label="第 198 行" href="#L198"> 198</a>           states = raw_states</span>
+<span id="L199"><a aria-label="第 199 行" href="#L199"> 199</a>         feat = graph.cell.features_from_state(states)</span>
+<span id="L200"><a aria-label="第 200 行" href="#L200"> 200</a>         loss = compute_value_loss(config, graph, states, feat, None)</span>
+<span id="L201"><a aria-label="第 201 行" href="#L201"> 201</a>       else:</span>
+<span id="L202"><a aria-label="第 202 行" href="#L202"> 202</a>         raise NotImplementedError(config.value_source)</span>
+<span id="L203"><a aria-label="第 203 行" href="#L203"> 203</a>       objectives.append(Objective('value', loss, min, include, exclude))</span>
+<span id="L204"><a aria-label="第 204 行" href="#L204"> 204</a> </span>
+<span id="L205"><a aria-label="第 205 行" href="#L205"> 205</a>     elif name == 'action':</span>
+<span id="L206"><a aria-label="第 206 行" href="#L206"> 206</a>       if config.action_source == 'model':</span>
+<span id="L207"><a aria-label="第 207 行" href="#L207"> 207</a>         if not config.imagination_horizon:</span>
+<span id="L208"><a aria-label="第 208 行" href="#L208"> 208</a>           states = imagine_forward(</span>
+<span id="L209"><a aria-label="第 209 行" href="#L209"> 209</a>               posterior, config.action_model_horizon, graph, config,</span>
+<span id="L210"><a aria-label="第 210 行" href="#L210"> 210</a>               policy=graph.heads.action, stop_grad_post_action=False)</span>
+<span id="L211"><a aria-label="第 211 行" href="#L211"> 211</a>         else:</span>
+<span id="L212"><a aria-label="第 212 行" href="#L212"> 212</a>           states = raw_states</span>
+<span id="L213"><a aria-label="第 213 行" href="#L213"> 213</a>         feat = graph.cell.features_from_state(states)</span>
+<span id="L214"><a aria-label="第 214 行" href="#L214"> 214</a>         objective = compute_action_values(config, graph, states, feat)</span>
+<span id="L215"><a aria-label="第 215 行" href="#L215"> 215</a>         objectives.append(Objective(</span>
+<span id="L216"><a aria-label="第 216 行" href="#L216"> 216</a>             'action', objective, max, include, exclude))</span>
+<span id="L217"><a aria-label="第 217 行" href="#L217"> 217</a>       elif config.action_source == 'dataset':</span>
+<span id="L218"><a aria-label="第 218 行" href="#L218"> 218</a>         objective = heads.action(features).log_prob(target[name])</span>
+<span id="L219"><a aria-label="第 219 行" href="#L219"> 219</a>         objective -= compute_action_divergence(features, graph, config)</span>
+<span id="L220"><a aria-label="第 220 行" href="#L220"> 220</a>         objectives.append(Objective(</span>
+<span id="L221"><a aria-label="第 221 行" href="#L221"> 221</a>             'action', objective, max, include, exclude))</span>
+<span id="L222"><a aria-label="第 222 行" href="#L222"> 222</a>       else:</span>
+<span id="L223"><a aria-label="第 223 行" href="#L223"> 223</a>         raise NotImplementedError(config.action_source)</span>
+<span id="L224"><a aria-label="第 224 行" href="#L224"> 224</a> </span>
+<span id="L225"><a aria-label="第 225 行" href="#L225"> 225</a>     elif name == 'reward':</span>
+<span id="L226"><a aria-label="第 226 行" href="#L226"> 226</a>       reward_mask = tf.squeeze(target['reward_mask'], [-1])</span>
+<span id="L227"><a aria-label="第 227 行" href="#L227"> 227</a>       logprob = heads.reward(features).log_prob(target[name]) * reward_mask</span>
+<span id="L228"><a aria-label="第 228 行" href="#L228"> 228</a>       objectives.append(Objective('reward', logprob, max, include, exclude))</span>
+<span id="L229"><a aria-label="第 229 行" href="#L229"> 229</a> </span>
+<span id="L230"><a aria-label="第 230 行" href="#L230"> 230</a>     elif name == 'pcont' and config.pcont_label_weight:</span>
+<span id="L231"><a aria-label="第 231 行" href="#L231"> 231</a>       terminal = tf.cast(tf.less(target[name], 0.5), tf.float32)</span>
+<span id="L232"><a aria-label="第 232 行" href="#L232"> 232</a>       logprob = heads[name](features).log_prob(target[name])</span>
+<span id="L233"><a aria-label="第 233 行" href="#L233"> 233</a>       logprob *= 1 + terminal * (config.pcont_label_weight - 1)</span>
+<span id="L234"><a aria-label="第 234 行" href="#L234"> 234</a>       objectives.append(Objective(name, logprob, max, include, exclude))</span>
+<span id="L235"><a aria-label="第 235 行" href="#L235"> 235</a> </span>
+<span id="L236"><a aria-label="第 236 行" href="#L236"> 236</a>     else:</span>
+<span id="L237"><a aria-label="第 237 行" href="#L237"> 237</a>       logprob = heads[name](features).log_prob(target[name])</span>
+<span id="L238"><a aria-label="第 238 行" href="#L238"> 238</a>       objectives.append(Objective(name, logprob, max, include, exclude))</span>
+<span id="L239"><a aria-label="第 239 行" href="#L239"> 239</a> </span>
+<span id="L240"><a aria-label="第 240 行" href="#L240"> 240</a>   objectives = [o._replace(value=tf.reduce_mean(o.value)) for o in objectives]</span>
+<span id="L241"><a aria-label="第 241 行" href="#L241"> 241</a>   return objectives</span>
+<span id="L242"><a aria-label="第 242 行" href="#L242"> 242</a> </span>
+<span id="L243"><a aria-label="第 243 行" href="#L243"> 243</a> </span>
+<span id="L244"><a aria-label="第 244 行" href="#L244"> 244</a> def imagine_forward(</span>
+<span id="L245"><a aria-label="第 245 行" href="#L245"> 245</a>     initial_state, distance, graph, config, policy,</span>
+<span id="L246"><a aria-label="第 246 行" href="#L246"> 246</a>     stop_grad_post_action=True, stop_grad_pre_action=True):</span>
+<span id="L247"><a aria-label="第 247 行" href="#L247"> 247</a>   extended_batch = np.prod(tools.shape(</span>
+<span id="L248"><a aria-label="第 248 行" href="#L248"> 248</a>       tools.nested.flatten(initial_state)[0])[:2])</span>
+<span id="L249"><a aria-label="第 249 行" href="#L249"> 249</a>   obs = tf.zeros([extended_batch] + list(graph.embedded.shape[2:]))</span>
+<span id="L250"><a aria-label="第 250 行" href="#L250"> 250</a>   use_obs = tf.zeros([extended_batch, 1], tf.bool)</span>
+<span id="L251"><a aria-label="第 251 行" href="#L251"> 251</a>   new_shape = lambda t: [</span>
+<span id="L252"><a aria-label="第 252 行" href="#L252"> 252</a>       tf.reduce_prod(tools.shape(t)[:2])] + tools.shape(t)[2:]</span>
+<span id="L253"><a aria-label="第 253 行" href="#L253"> 253</a>   initial_state = tools.nested.map(</span>
+<span id="L254"><a aria-label="第 254 行" href="#L254"> 254</a>       lambda tensor: tf.reshape(tensor, new_shape(tensor)),</span>
+<span id="L255"><a aria-label="第 255 行" href="#L255"> 255</a>       initial_state)</span>
+<span id="L256"><a aria-label="第 256 行" href="#L256"> 256</a>   def step_fn(prev, index):</span>
+<span id="L257"><a aria-label="第 257 行" href="#L257"> 257</a>     feature = graph.cell.features_from_state(prev)</span>
+<span id="L258"><a aria-label="第 258 行" href="#L258"> 258</a>     if stop_grad_pre_action:</span>
+<span id="L259"><a aria-label="第 259 行" href="#L259"> 259</a>       feature = tf.stop_gradient(feature)</span>
+<span id="L260"><a aria-label="第 260 行" href="#L260"> 260</a>     action = policy(feature).sample()</span>
+<span id="L261"><a aria-label="第 261 行" href="#L261"> 261</a>     if stop_grad_post_action:</span>
+<span id="L262"><a aria-label="第 262 行" href="#L262"> 262</a>       action = tf.stop_gradient(action)</span>
+<span id="L263"><a aria-label="第 263 行" href="#L263"> 263</a>     (_, state), _ = graph.cell((obs, action, use_obs), prev)</span>
+<span id="L264"><a aria-label="第 264 行" href="#L264"> 264</a>     return state</span>
+<span id="L265"><a aria-label="第 265 行" href="#L265"> 265</a>   states = tf.scan(step_fn, tf.range(distance), initial_state, back_prop=True)</span>
+<span id="L266"><a aria-label="第 266 行" href="#L266"> 266</a>   states = tools.nested.map(lambda x: tf.transpose(x, [1, 0, 2]), states)</span>
+<span id="L267"><a aria-label="第 267 行" href="#L267"> 267</a>   return states</span>
+<span id="L268"><a aria-label="第 268 行" href="#L268"> 268</a> </span>
+<span id="L269"><a aria-label="第 269 行" href="#L269"> 269</a> </span>
+<span id="L270"><a aria-label="第 270 行" href="#L270"> 270</a> def compute_value_loss(config, graph, states, features, reward):</span>
+<span id="L271"><a aria-label="第 271 行" href="#L271"> 271</a>   if reward is None:</span>
+<span id="L272"><a aria-label="第 272 行" href="#L272"> 272</a>     reward = graph.heads.reward(features).mode()</span>
+<span id="L273"><a aria-label="第 273 行" href="#L273"> 273</a>   if config.value_maxent:</span>
+<span id="L274"><a aria-label="第 274 行" href="#L274"> 274</a>     reward -= compute_action_divergence(features, graph, config)</span>
+<span id="L275"><a aria-label="第 275 行" href="#L275"> 275</a>     reward -= compute_state_divergence(states, graph, config)</span>
+<span id="L276"><a aria-label="第 276 行" href="#L276"> 276</a>   if config.value_loss_pcont:</span>
+<span id="L277"><a aria-label="第 277 行" href="#L277"> 277</a>     pcont = tf.stop_gradient(graph.heads.pcont(features).mean())</span>
+<span id="L278"><a aria-label="第 278 行" href="#L278"> 278</a>   else:</span>
+<span id="L279"><a aria-label="第 279 行" href="#L279"> 279</a>     pcont = tf.ones_like(reward)</span>
+<span id="L280"><a aria-label="第 280 行" href="#L280"> 280</a>   pcont *= config.value_discount</span>
+<span id="L281"><a aria-label="第 281 行" href="#L281"> 281</a>   pred = graph.heads.value(features)</span>
+<span id="L282"><a aria-label="第 282 行" href="#L282"> 282</a>   if 'value_target' in graph.heads:</span>
+<span id="L283"><a aria-label="第 283 行" href="#L283"> 283</a>     value = graph.heads.value_target(features).mode()</span>
+<span id="L284"><a aria-label="第 284 行" href="#L284"> 284</a>   else:</span>
+<span id="L285"><a aria-label="第 285 行" href="#L285"> 285</a>     value = pred.mode()</span>
+<span id="L286"><a aria-label="第 286 行" href="#L286"> 286</a>   bootstrap = None</span>
+<span id="L287"><a aria-label="第 287 行" href="#L287"> 287</a>   if config.value_bootstrap:</span>
+<span id="L288"><a aria-label="第 288 行" href="#L288"> 288</a>     reward = reward[:, :-1]</span>
+<span id="L289"><a aria-label="第 289 行" href="#L289"> 289</a>     value = value[:, :-1]</span>
+<span id="L290"><a aria-label="第 290 行" href="#L290"> 290</a>     pcont = pcont[:, :-1]</span>
+<span id="L291"><a aria-label="第 291 行" href="#L291"> 291</a>     bootstrap = value[:, -1]</span>
+<span id="L292"><a aria-label="第 292 行" href="#L292"> 292</a>   return_ = control.lambda_return(</span>
+<span id="L293"><a aria-label="第 293 行" href="#L293"> 293</a>       reward, value, bootstrap, pcont,</span>
+<span id="L294"><a aria-label="第 294 行" href="#L294"> 294</a>       config.value_lambda, axis=1, stop_gradient=True)</span>
+<span id="L295"><a aria-label="第 295 行" href="#L295"> 295</a>   return_ = tf.concat([return_, tf.zeros_like(return_[:, -1:])], 1)</span>
+<span id="L296"><a aria-label="第 296 行" href="#L296"> 296</a>   loss = -pred.log_prob(return_)[:, :-1]</span>
+<span id="L297"><a aria-label="第 297 行" href="#L297"> 297</a>   if config.value_pcont_weight:</span>
+<span id="L298"><a aria-label="第 298 行" href="#L298"> 298</a>     loss *= tf.stop_gradient(tf.cumprod(tf.concat([</span>
+<span id="L299"><a aria-label="第 299 行" href="#L299"> 299</a>         tf.ones_like(pcont[:, :1]), pcont[:, :-1]], 1), 1))</span>
+<span id="L300"><a aria-label="第 300 行" href="#L300"> 300</a>   return loss</span>
+<span id="L301"><a aria-label="第 301 行" href="#L301"> 301</a> </span>
+<span id="L302"><a aria-label="第 302 行" href="#L302"> 302</a> </span>
+<span id="L303"><a aria-label="第 303 行" href="#L303"> 303</a> def compute_action_values(config, graph, states, features):</span>
+<span id="L304"><a aria-label="第 304 行" href="#L304"> 304</a>   reward = graph.heads.reward(features).mode()</span>
+<span id="L305"><a aria-label="第 305 行" href="#L305"> 305</a>   reward -= compute_action_divergence(features, graph, config)</span>
+<span id="L306"><a aria-label="第 306 行" href="#L306"> 306</a>   reward -= compute_state_divergence(states, graph, config)</span>
+<span id="L307"><a aria-label="第 307 行" href="#L307"> 307</a>   if config.action_loss_pcont:</span>
+<span id="L308"><a aria-label="第 308 行" href="#L308"> 308</a>     pcont = graph.heads.pcont(features).mean()</span>
+<span id="L309"><a aria-label="第 309 行" href="#L309"> 309</a>     if config.action_pcont_stop_grad:</span>
+<span id="L310"><a aria-label="第 310 行" href="#L310"> 310</a>       pcont = tf.stop_gradient(pcont)</span>
+<span id="L311"><a aria-label="第 311 行" href="#L311"> 311</a>   else:</span>
+<span id="L312"><a aria-label="第 312 行" href="#L312"> 312</a>     pcont = tf.ones_like(reward)</span>
+<span id="L313"><a aria-label="第 313 行" href="#L313"> 313</a>   pcont *= config.action_discount</span>
+<span id="L314"><a aria-label="第 314 行" href="#L314"> 314</a>   if 'value' not in graph.heads:</span>
+<span id="L315"><a aria-label="第 315 行" href="#L315"> 315</a>     return control.discounted_return(</span>
+<span id="L316"><a aria-label="第 316 行" href="#L316"> 316</a>         reward, pcont, bootstrap=None, axis=1, stop_gradient=False)</span>
+<span id="L317"><a aria-label="第 317 行" href="#L317"> 317</a>   value = graph.heads.value(features).mode()</span>
+<span id="L318"><a aria-label="第 318 行" href="#L318"> 318</a>   bootstrap = None</span>
+<span id="L319"><a aria-label="第 319 行" href="#L319"> 319</a>   if config.action_bootstrap:</span>
+<span id="L320"><a aria-label="第 320 行" href="#L320"> 320</a>     reward = reward[:, :-1]</span>
+<span id="L321"><a aria-label="第 321 行" href="#L321"> 321</a>     value = value[:, :-1]</span>
+<span id="L322"><a aria-label="第 322 行" href="#L322"> 322</a>     pcont = pcont[:, :-1]</span>
+<span id="L323"><a aria-label="第 323 行" href="#L323"> 323</a>     bootstrap = value[:, -1]</span>
+<span id="L324"><a aria-label="第 324 行" href="#L324"> 324</a>   return_ = control.lambda_return(</span>
+<span id="L325"><a aria-label="第 325 行" href="#L325"> 325</a>       reward, value, bootstrap, pcont,</span>
+<span id="L326"><a aria-label="第 326 行" href="#L326"> 326</a>       config.action_lambda,</span>
+<span id="L327"><a aria-label="第 327 行" href="#L327"> 327</a>       axis=1, stop_gradient=False)</span>
+<span id="L328"><a aria-label="第 328 行" href="#L328"> 328</a>   if config.action_pcont_weight:</span>
+<span id="L329"><a aria-label="第 329 行" href="#L329"> 329</a>     return_ *= tf.stop_gradient(tf.cumprod(tf.concat([</span>
+<span id="L330"><a aria-label="第 330 行" href="#L330"> 330</a>         tf.ones_like(pcont[:, :1]), pcont[:, :-1]], 1), 1))</span>
+<span id="L331"><a aria-label="第 331 行" href="#L331"> 331</a>   return return_</span>
+<span id="L332"><a aria-label="第 332 行" href="#L332"> 332</a> </span>
+<span id="L333"><a aria-label="第 333 行" href="#L333"> 333</a> </span>
+<span id="L334"><a aria-label="第 334 行" href="#L334"> 334</a> def compute_action_divergence(features, graph, config):</span>
+<span id="L335"><a aria-label="第 335 行" href="#L335"> 335</a>   features = tf.stop_gradient(features)</span>
+<span id="L336"><a aria-label="第 336 行" href="#L336"> 336</a>   pred = graph.heads.action(features)</span>
+<span id="L337"><a aria-label="第 337 行" href="#L337"> 337</a>   if not config.action_beta:</span>
+<span id="L338"><a aria-label="第 338 行" href="#L338"> 338</a>     return 0.0</span>
+<span id="L339"><a aria-label="第 339 行" href="#L339"> 339</a>   try:</span>
+<span id="L340"><a aria-label="第 340 行" href="#L340"> 340</a>     amount = -pred.entropy()</span>
+<span id="L341"><a aria-label="第 341 行" href="#L341"> 341</a>   except NotImplementedError:</span>
+<span id="L342"><a aria-label="第 342 行" href="#L342"> 342</a>     samples = pred.sample(100)</span>
+<span id="L343"><a aria-label="第 343 行" href="#L343"> 343</a>     amount = tf.reduce_mean(pred.log_prob(samples), 0)</span>
+<span id="L344"><a aria-label="第 344 行" href="#L344"> 344</a>   amount *= config.action_beta</span>
+<span id="L345"><a aria-label="第 345 行" href="#L345"> 345</a>   value = config.action_beta_dims_value</span>
+<span id="L346"><a aria-label="第 346 行" href="#L346"> 346</a>   if value and value &lt; 0:</span>
+<span id="L347"><a aria-label="第 347 行" href="#L347"> 347</a>     amount /= value * float(pred.event_shape[-1].value)</span>
+<span id="L348"><a aria-label="第 348 行" href="#L348"> 348</a>   if value and value &gt; 0:</span>
+<span id="L349"><a aria-label="第 349 行" href="#L349"> 349</a>     amount *= value * float(pred.event_shape[-1].value)</span>
+<span id="L350"><a aria-label="第 350 行" href="#L350"> 350</a>   return amount</span>
+<span id="L351"><a aria-label="第 351 行" href="#L351"> 351</a> </span>
+<span id="L352"><a aria-label="第 352 行" href="#L352"> 352</a> </span>
+<span id="L353"><a aria-label="第 353 行" href="#L353"> 353</a> def compute_state_divergence(states, graph, config):</span>
+<span id="L354"><a aria-label="第 354 行" href="#L354"> 354</a>   pred = graph.cell.dist_from_state(states)</span>
+<span id="L355"><a aria-label="第 355 行" href="#L355"> 355</a>   if not config.state_beta:</span>
+<span id="L356"><a aria-label="第 356 行" href="#L356"> 356</a>     return 0.0</span>
+<span id="L357"><a aria-label="第 357 行" href="#L357"> 357</a>   try:</span>
+<span id="L358"><a aria-label="第 358 行" href="#L358"> 358</a>     amount = -pred.entropy()</span>
+<span id="L359"><a aria-label="第 359 行" href="#L359"> 359</a>   except NotImplementedError:</span>
+<span id="L360"><a aria-label="第 360 行" href="#L360"> 360</a>     samples = pred.sample(100)</span>
+<span id="L361"><a aria-label="第 361 行" href="#L361"> 361</a>     amount = tf.reduce_mean(pred.log_prob(samples), 0)</span>
+<span id="L362"><a aria-label="第 362 行" href="#L362"> 362</a>   amount *= config.state_beta</span>
+<span id="L363"><a aria-label="第 363 行" href="#L363"> 363</a>   return amount</span>
+<span id="L364"><a aria-label="第 364 行" href="#L364"> 364</a> </span>
+<span id="L365"><a aria-label="第 365 行" href="#L365"> 365</a> </span>
+<span id="L366"><a aria-label="第 366 行" href="#L366"> 366</a> def compute_cpc_loss(pred, features, config):</span>
+<span id="L367"><a aria-label="第 367 行" href="#L367"> 367</a>   if config.cpc_contrast == 'batch':</span>
+<span id="L368"><a aria-label="第 368 行" href="#L368"> 368</a>     ta = tf.TensorArray(tf.float32, 0, True, element_shape=[None, None])</span>
+<span id="L369"><a aria-label="第 369 行" href="#L369"> 369</a>     _, _, ta = tf.while_loop(</span>
+<span id="L370"><a aria-label="第 370 行" href="#L370"> 370</a>         lambda i, f, ta: tf.less(i, tf.shape(f)[0]),</span>
+<span id="L371"><a aria-label="第 371 行" href="#L371"> 371</a>         lambda i, f, ta: (</span>
+<span id="L372"><a aria-label="第 372 行" href="#L372"> 372</a>             i + 1, f, ta.write(ta.size(), pred.log_prob(tf.roll(f, i, 0)))),</span>
+<span id="L373"><a aria-label="第 373 行" href="#L373"> 373</a>         (0, features, ta), back_prop=True, swap_memory=True)</span>
+<span id="L374"><a aria-label="第 374 行" href="#L374"> 374</a>     positive = pred.log_prob(features)</span>
+<span id="L375"><a aria-label="第 375 行" href="#L375"> 375</a>     negative = tf.reduce_logsumexp(ta.stack(), 0)</span>
+<span id="L376"><a aria-label="第 376 行" href="#L376"> 376</a>     return positive - negative</span>
+<span id="L377"><a aria-label="第 377 行" href="#L377"> 377</a>   elif config.cpc_contrast == 'time':</span>
+<span id="L378"><a aria-label="第 378 行" href="#L378"> 378</a>     ta = tf.TensorArray(tf.float32, 0, True, element_shape=[None, None])</span>
+<span id="L379"><a aria-label="第 379 行" href="#L379"> 379</a>     _, _, ta = tf.while_loop(</span>
+<span id="L380"><a aria-label="第 380 行" href="#L380"> 380</a>         lambda i, f, ta: tf.less(i, tf.shape(f)[1]),</span>
+<span id="L381"><a aria-label="第 381 行" href="#L381"> 381</a>         lambda i, f, ta: (</span>
+<span id="L382"><a aria-label="第 382 行" href="#L382"> 382</a>             i + 1, f, ta.write(ta.size(), pred.log_prob(tf.roll(f, i, 1)))),</span>
+<span id="L383"><a aria-label="第 383 行" href="#L383"> 383</a>         (0, features, ta), back_prop=True, swap_memory=True)</span>
+<span id="L384"><a aria-label="第 384 行" href="#L384"> 384</a>     positive = pred.log_prob(features)</span>
+<span id="L385"><a aria-label="第 385 行" href="#L385"> 385</a>     negative = tf.reduce_logsumexp(ta.stack(), 0)</span>
+<span id="L386"><a aria-label="第 386 行" href="#L386"> 386</a>     return positive - negative</span>
+<span id="L387"><a aria-label="第 387 行" href="#L387"> 387</a>   elif config.cpc_contrast == 'window':</span>
+<span id="L388"><a aria-label="第 388 行" href="#L388"> 388</a>     assert config.cpc_batch_amount &lt;= config.batch_shape[0]</span>
+<span id="L389"><a aria-label="第 389 行" href="#L389"> 389</a>     assert config.cpc_time_amount &lt;= config.batch_shape[1]</span>
+<span id="L390"><a aria-label="第 390 行" href="#L390"> 390</a>     total_amount = config.cpc_batch_amount * config.cpc_time_amount</span>
+<span id="L391"><a aria-label="第 391 行" href="#L391"> 391</a>     ta = tf.TensorArray(tf.float32, 0, True, element_shape=[None, None])</span>
+<span id="L392"><a aria-label="第 392 行" href="#L392"> 392</a>     def compute_negatives(index, ta):</span>
+<span id="L393"><a aria-label="第 393 行" href="#L393"> 393</a>       batch_shift = tf.math.floordiv(index, config.cpc_time_amount)</span>
+<span id="L394"><a aria-label="第 394 行" href="#L394"> 394</a>       time_shift = tf.mod(index, config.cpc_time_amount)</span>
+<span id="L395"><a aria-label="第 395 行" href="#L395"> 395</a>       batch_shift -= config.cpc_batch_amount // 2</span>
+<span id="L396"><a aria-label="第 396 行" href="#L396"> 396</a>       time_shift -= config.cpc_time_amount // 2</span>
+<span id="L397"><a aria-label="第 397 行" href="#L397"> 397</a>       rolled = tf.roll(tf.roll(features, batch_shift, 0), time_shift, 1)</span>
+<span id="L398"><a aria-label="第 398 行" href="#L398"> 398</a>       return ta.write(ta.size(), pred.log_prob(rolled))</span>
+<span id="L399"><a aria-label="第 399 行" href="#L399"> 399</a>     _, ta = tf.while_loop(</span>
+<span id="L400"><a aria-label="第 400 行" href="#L400"> 400</a>         lambda index, ta: tf.less(index, total_amount),</span>
+<span id="L401"><a aria-label="第 401 行" href="#L401"> 401</a>         lambda index, ta: (index + 1, compute_negatives(index, ta)),</span>
+<span id="L402"><a aria-label="第 402 行" href="#L402"> 402</a>         (0, ta), back_prop=True, swap_memory=True)</span>
+<span id="L403"><a aria-label="第 403 行" href="#L403"> 403</a>     positive = pred.log_prob(features)</span>
+<span id="L404"><a aria-label="第 404 行" href="#L404"> 404</a>     negative = tf.reduce_logsumexp(ta.stack(), 0)</span>
+<span id="L405"><a aria-label="第 405 行" href="#L405"> 405</a>     return positive - negative</span>
+<span id="L406"><a aria-label="第 406 行" href="#L406"> 406</a>   else:</span>
+<span id="L407"><a aria-label="第 407 行" href="#L407"> 407</a>     raise NotImplementedError(config.cpc_contrast)</span>
+<span id="L408"><a aria-label="第 408 行" href="#L408"> 408</a> </span>
+<span id="L409"><a aria-label="第 409 行" href="#L409"> 409</a> </span>
+<span id="L410"><a aria-label="第 410 行" href="#L410"> 410</a> def apply_optimizers(objectives, trainer, config):</span>
+<span id="L411"><a aria-label="第 411 行" href="#L411"> 411</a>   # Make sure all losses are computed and apply loss scales.</span>
+<span id="L412"><a aria-label="第 412 行" href="#L412"> 412</a>   processed = []</span>
+<span id="L413"><a aria-label="第 413 行" href="#L413"> 413</a>   values = [ob.value for ob in objectives]</span>
+<span id="L414"><a aria-label="第 414 行" href="#L414"> 414</a>   for ob in objectives:</span>
+<span id="L415"><a aria-label="第 415 行" href="#L415"> 415</a>     loss = {min: ob.value, max: -ob.value}[ob.goal]</span>
+<span id="L416"><a aria-label="第 416 行" href="#L416"> 416</a>     loss *= config.loss_scales[ob.name]</span>
+<span id="L417"><a aria-label="第 417 行" href="#L417"> 417</a>     with tf.control_dependencies(values):</span>
+<span id="L418"><a aria-label="第 418 行" href="#L418"> 418</a>       loss = tf.identity(loss)</span>
+<span id="L419"><a aria-label="第 419 行" href="#L419"> 419</a>     processed.append(ob._replace(value=loss, goal=min))</span>
+<span id="L420"><a aria-label="第 420 行" href="#L420"> 420</a>   # Merge objectives that operate on the whole model to compute only one</span>
+<span id="L421"><a aria-label="第 421 行" href="#L421"> 421</a>   # backward pass and to share optimizer statistics.</span>
+<span id="L422"><a aria-label="第 422 行" href="#L422"> 422</a>   objectives = []</span>
+<span id="L423"><a aria-label="第 423 行" href="#L423"> 423</a>   losses = []</span>
+<span id="L424"><a aria-label="第 424 行" href="#L424"> 424</a>   for ob in processed:</span>
+<span id="L425"><a aria-label="第 425 行" href="#L425"> 425</a>     if ob.include is None and ob.exclude is None:</span>
+<span id="L426"><a aria-label="第 426 行" href="#L426"> 426</a>       assert ob.goal == min</span>
+<span id="L427"><a aria-label="第 427 行" href="#L427"> 427</a>       losses.append(ob.value)</span>
+<span id="L428"><a aria-label="第 428 行" href="#L428"> 428</a>     else:</span>
+<span id="L429"><a aria-label="第 429 行" href="#L429"> 429</a>       objectives.append(ob)</span>
+<span id="L430"><a aria-label="第 430 行" href="#L430"> 430</a>   loss = tf.reduce_sum(losses)</span>
+<span id="L431"><a aria-label="第 431 行" href="#L431"> 431</a>   # modules = ['encoder', 'rnn']</span>
+<span id="L432"><a aria-label="第 432 行" href="#L432"> 432</a>   # modules += ['head_{}'.format(name) for name in config.gradient_heads]</span>
+<span id="L433"><a aria-label="第 433 行" href="#L433"> 433</a>   # include = r'graph/({})/.*'.format('|'.join(modules))</span>
+<span id="L434"><a aria-label="第 434 行" href="#L434"> 434</a>   include = r'.*'</span>
+<span id="L435"><a aria-label="第 435 行" href="#L435"> 435</a>   objectives.append(Objective('model', loss, min, include, None))</span>
+<span id="L436"><a aria-label="第 436 行" href="#L436"> 436</a>   # Apply optimizers and collect loss summaries.</span>
+<span id="L437"><a aria-label="第 437 行" href="#L437"> 437</a>   summaries = []</span>
+<span id="L438"><a aria-label="第 438 行" href="#L438"> 438</a>   grad_norms = {}</span>
+<span id="L439"><a aria-label="第 439 行" href="#L439"> 439</a>   for ob in objectives:</span>
+<span id="L440"><a aria-label="第 440 行" href="#L440"> 440</a>     assert ob.name in list(config.loss_scales.keys()) + ['model'], ob</span>
+<span id="L441"><a aria-label="第 441 行" href="#L441"> 441</a>     assert ob.goal == min, ob</span>
+<span id="L442"><a aria-label="第 442 行" href="#L442"> 442</a>     if ob.name not in config.optimizers:</span>
+<span id="L443"><a aria-label="第 443 行" href="#L443"> 443</a>       with config.optimizers.unlocked:</span>
+<span id="L444"><a aria-label="第 444 行" href="#L444"> 444</a>         config.optimizers[ob.name] = config.optimizers.default.copy()</span>
+<span id="L445"><a aria-label="第 445 行" href="#L445"> 445</a>     optimizer = config.optimizers[ob.name](</span>
+<span id="L446"><a aria-label="第 446 行" href="#L446"> 446</a>         include=ob.include,</span>
+<span id="L447"><a aria-label="第 447 行" href="#L447"> 447</a>         exclude=ob.exclude,</span>
+<span id="L448"><a aria-label="第 448 行" href="#L448"> 448</a>         step=trainer.step,</span>
+<span id="L449"><a aria-label="第 449 行" href="#L449"> 449</a>         log=trainer.log,</span>
+<span id="L450"><a aria-label="第 450 行" href="#L450"> 450</a>         debug=config.debug,</span>
+<span id="L451"><a aria-label="第 451 行" href="#L451"> 451</a>         name=ob.name)</span>
+<span id="L452"><a aria-label="第 452 行" href="#L452"> 452</a>     condition = tf.equal(trainer.phase, 'train')</span>
+<span id="L453"><a aria-label="第 453 行" href="#L453"> 453</a>     summary, grad_norm = optimizer.maybe_minimize(condition, ob.value)</span>
+<span id="L454"><a aria-label="第 454 行" href="#L454"> 454</a>     summaries.append(summary)</span>
+<span id="L455"><a aria-label="第 455 行" href="#L455"> 455</a>     grad_norms[ob.name] = grad_norm</span>
+<span id="L456"><a aria-label="第 456 行" href="#L456"> 456</a>   return summaries, grad_norms</span>
+<span id="L457"><a aria-label="第 457 行" href="#L457"> 457</a> </span>
+<span id="L458"><a aria-label="第 458 行" href="#L458"> 458</a> </span>
+<span id="L459"><a aria-label="第 459 行" href="#L459"> 459</a> def simulate(metrics, config, params, graph, cleanups, gif_summary, name):</span>
+<span id="L460"><a aria-label="第 460 行" href="#L460"> 460</a>   def env_ctor():</span>
+<span id="L461"><a aria-label="第 461 行" href="#L461"> 461</a>     env = params.task.env_ctor()</span>
+<span id="L462"><a aria-label="第 462 行" href="#L462"> 462</a>     if params.save_episode_dir:</span>
+<span id="L463"><a aria-label="第 463 行" href="#L463"> 463</a>       env = control.wrappers.CollectDataset(env, params.save_episode_dir)</span>
+<span id="L464"><a aria-label="第 464 行" href="#L464"> 464</a>     return env</span>
+<span id="L465"><a aria-label="第 465 行" href="#L465"> 465</a>   bind_or_none = lambda x, **kw: x and functools.partial(x, **kw)</span>
+<span id="L466"><a aria-label="第 466 行" href="#L466"> 466</a>   cell = graph.cell</span>
+<span id="L467"><a aria-label="第 467 行" href="#L467"> 467</a>   agent_config = tools.AttrDict(</span>
+<span id="L468"><a aria-label="第 468 行" href="#L468"> 468</a>       cell=cell,</span>
+<span id="L469"><a aria-label="第 469 行" href="#L469"> 469</a>       encoder=graph.encoder,</span>
+<span id="L470"><a aria-label="第 470 行" href="#L470"> 470</a>       planner=functools.partial(params.planner, graph=graph),</span>
+<span id="L471"><a aria-label="第 471 行" href="#L471"> 471</a>       objective=bind_or_none(params.objective, graph=graph),</span>
+<span id="L472"><a aria-label="第 472 行" href="#L472"> 472</a>       exploration=params.exploration,</span>
+<span id="L473"><a aria-label="第 473 行" href="#L473"> 473</a>       preprocess_fn=config.preprocess_fn,</span>
+<span id="L474"><a aria-label="第 474 行" href="#L474"> 474</a>       postprocess_fn=config.postprocess_fn)</span>
+<span id="L475"><a aria-label="第 475 行" href="#L475"> 475</a>   params = params.copy()</span>
+<span id="L476"><a aria-label="第 476 行" href="#L476"> 476</a>   with params.unlocked:</span>
+<span id="L477"><a aria-label="第 477 行" href="#L477"> 477</a>     params.update(agent_config)</span>
+<span id="L478"><a aria-label="第 478 行" href="#L478"> 478</a>   with agent_config.unlocked:</span>
+<span id="L479"><a aria-label="第 479 行" href="#L479"> 479</a>     agent_config.update(params)</span>
+<span id="L480"><a aria-label="第 480 行" href="#L480"> 480</a>   with tf.variable_scope(name):</span>
+<span id="L481"><a aria-label="第 481 行" href="#L481"> 481</a>     summaries = []</span>
+<span id="L482"><a aria-label="第 482 行" href="#L482"> 482</a>     env = control.create_batch_env(</span>
+<span id="L483"><a aria-label="第 483 行" href="#L483"> 483</a>         env_ctor, params.num_envs, config.isolate_envs)</span>
+<span id="L484"><a aria-label="第 484 行" href="#L484"> 484</a>     agent = control.MPCAgent(env, graph.step, False, False, agent_config)</span>
+<span id="L485"><a aria-label="第 485 行" href="#L485"> 485</a>     cleanup = lambda: env.close()</span>
+<span id="L486"><a aria-label="第 486 行" href="#L486"> 486</a>     scores, lengths, data = control.simulate(</span>
+<span id="L487"><a aria-label="第 487 行" href="#L487"> 487</a>         agent, env, params.num_episodes, params.num_steps)</span>
+<span id="L488"><a aria-label="第 488 行" href="#L488"> 488</a>     summaries.append(tf.summary.scalar('return', scores[0]))</span>
+<span id="L489"><a aria-label="第 489 行" href="#L489"> 489</a>     summaries.append(tf.summary.scalar('length', lengths[0]))</span>
+<span id="L490"><a aria-label="第 490 行" href="#L490"> 490</a>     if gif_summary:</span>
+<span id="L491"><a aria-label="第 491 行" href="#L491"> 491</a>       summaries.append(tools.gif_summary(</span>
+<span id="L492"><a aria-label="第 492 行" href="#L492"> 492</a>           'gif', data['image'], max_outputs=1, fps=20))</span>
+<span id="L493"><a aria-label="第 493 行" href="#L493"> 493</a>     write_metrics = [</span>
+<span id="L494"><a aria-label="第 494 行" href="#L494"> 494</a>         metrics.add_scalars(name + '/return', scores),</span>
+<span id="L495"><a aria-label="第 495 行" href="#L495"> 495</a>         metrics.add_scalars(name + '/length', lengths),</span>
+<span id="L496"><a aria-label="第 496 行" href="#L496"> 496</a>         # metrics.add_tensor(name + '/frames', data['image']),</span>
+<span id="L497"><a aria-label="第 497 行" href="#L497"> 497</a>     ]</span>
+<span id="L498"><a aria-label="第 498 行" href="#L498"> 498</a>     with tf.control_dependencies(write_metrics):</span>
+<span id="L499"><a aria-label="第 499 行" href="#L499"> 499</a>       summary = tf.summary.merge(summaries)</span>
+<span id="L500"><a aria-label="第 500 行" href="#L500"> 500</a>   cleanups.append(cleanup)  # Work around tf.cond() tensor return type.</span>
+<span id="L501"><a aria-label="第 501 行" href="#L501"> 501</a>   return summary, tf.reduce_mean(scores)</span>
+<span id="L502"><a aria-label="第 502 行" href="#L502"> 502</a> </span>
+<span id="L503"><a aria-label="第 503 行" href="#L503"> 503</a> </span>
+<span id="L504"><a aria-label="第 504 行" href="#L504"> 504</a> def print_metrics(metrics, step, every, decimals=2, name='metrics'):</span>
+<span id="L505"><a aria-label="第 505 行" href="#L505"> 505</a>   factor = 10 ** decimals</span>
+<span id="L506"><a aria-label="第 506 行" href="#L506"> 506</a>   means, updates = [], []</span>
+<span id="L507"><a aria-label="第 507 行" href="#L507"> 507</a>   for key, value in metrics.items():</span>
+<span id="L508"><a aria-label="第 508 行" href="#L508"> 508</a>     key = 'metrics_{}_{}'.format(name, key)</span>
+<span id="L509"><a aria-label="第 509 行" href="#L509"> 509</a>     mean = tools.StreamingMean((), tf.float32, key)</span>
+<span id="L510"><a aria-label="第 510 行" href="#L510"> 510</a>     means.append(mean)</span>
+<span id="L511"><a aria-label="第 511 行" href="#L511"> 511</a>     updates.append(mean.submit(value))</span>
+<span id="L512"><a aria-label="第 512 行" href="#L512"> 512</a>   with tf.control_dependencies(updates):</span>
+<span id="L513"><a aria-label="第 513 行" href="#L513"> 513</a>     message = '{}: step/{} ='.format(name, '/'.join(metrics.keys()))</span>
+<span id="L514"><a aria-label="第 514 行" href="#L514"> 514</a>     print_metrics = tf.cond(</span>
+<span id="L515"><a aria-label="第 515 行" href="#L515"> 515</a>         tf.equal(step % every, 0),</span>
+<span id="L516"><a aria-label="第 516 行" href="#L516"> 516</a>         lambda: tf.print(message, [step] + [</span>
+<span id="L517"><a aria-label="第 517 行" href="#L517"> 517</a>             tf.round(mean.clear() * factor) / factor for mean in means]),</span>
+<span id="L518"><a aria-label="第 518 行" href="#L518"> 518</a>         tf.no_op)</span>
+<span id="L519"><a aria-label="第 519 行" href="#L519"> 519</a>   return print_metrics</span>
+<span id="L520"><a aria-label="第 520 行" href="#L520"> 520</a> </span>
+<span id="L521"><a aria-label="第 521 行" href="#L521"> 521</a> </span>
+<span id="L522"><a aria-label="第 522 行" href="#L522"> 522</a> def collect_initial_episodes(metrics, config):</span>
+<span id="L523"><a aria-label="第 523 行" href="#L523"> 523</a>   items = config.random_collects.items()</span>
+<span id="L524"><a aria-label="第 524 行" href="#L524"> 524</a>   items = sorted(items, key=lambda x: x[0])</span>
+<span id="L525"><a aria-label="第 525 行" href="#L525"> 525</a>   for name, params in items:</span>
+<span id="L526"><a aria-label="第 526 行" href="#L526"> 526</a>     metrics.set_tags(</span>
+<span id="L527"><a aria-label="第 527 行" href="#L527"> 527</a>         global_step=0,</span>
+<span id="L528"><a aria-label="第 528 行" href="#L528"> 528</a>         step=0,</span>
+<span id="L529"><a aria-label="第 529 行" href="#L529"> 529</a>         phase=name.split('-')[0],</span>
+<span id="L530"><a aria-label="第 530 行" href="#L530"> 530</a>         time=datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%S'))</span>
+<span id="L531"><a aria-label="第 531 行" href="#L531"> 531</a>     tf.gfile.MakeDirs(params.save_episode_dir)</span>
+<span id="L532"><a aria-label="第 532 行" href="#L532"> 532</a>     # Compute number of missing episodes and steps.</span>
+<span id="L533"><a aria-label="第 533 行" href="#L533"> 533</a>     filenames = tf.gfile.Glob(os.path.join(params.save_episode_dir, '*.npz'))</span>
+<span id="L534"><a aria-label="第 534 行" href="#L534"> 534</a>     num_episodes = len(filenames)</span>
+<span id="L535"><a aria-label="第 535 行" href="#L535"> 535</a>     # num_steps = sum([</span>
+<span id="L536"><a aria-label="第 536 行" href="#L536"> 536</a>     #     int(f.rsplit('.', 1)[0].split('-')[2]) for f in filenames])</span>
+<span id="L537"><a aria-label="第 537 行" href="#L537"> 537</a>     num_steps = sum([</span>
+<span id="L538"><a aria-label="第 538 行" href="#L538"> 538</a>         int(re.search(r'-([0-9]+)\.npz', f).group(1)) for f in filenames])</span>
+<span id="L539"><a aria-label="第 539 行" href="#L539"> 539</a>     remaining_episodes = params.num_episodes - num_episodes</span>
+<span id="L540"><a aria-label="第 540 行" href="#L540"> 540</a>     remaining_steps = params.num_steps - num_steps</span>
+<span id="L541"><a aria-label="第 541 行" href="#L541"> 541</a>     if remaining_episodes &lt;= 0 and remaining_steps &lt;= 0:</span>
+<span id="L542"><a aria-label="第 542 行" href="#L542"> 542</a>       continue</span>
+<span id="L543"><a aria-label="第 543 行" href="#L543"> 543</a>     # User message.</span>
+<span id="L544"><a aria-label="第 544 行" href="#L544"> 544</a>     if params.give_rewards:</span>
+<span id="L545"><a aria-label="第 545 行" href="#L545"> 545</a>       env_ctor = params.task.env_ctor</span>
+<span id="L546"><a aria-label="第 546 行" href="#L546"> 546</a>       word = 'with'</span>
+<span id="L547"><a aria-label="第 547 行" href="#L547"> 547</a>     else:</span>
+<span id="L548"><a aria-label="第 548 行" href="#L548"> 548</a>       env_ctor = functools.partial(</span>
+<span id="L549"><a aria-label="第 549 行" href="#L549"> 549</a>           lambda ctor: control.wrappers.NoRewardHint(ctor()),</span>
+<span id="L550"><a aria-label="第 550 行" href="#L550"> 550</a>           params.task.env_ctor)</span>
+<span id="L551"><a aria-label="第 551 行" href="#L551"> 551</a>       word = 'without'</span>
+<span id="L552"><a aria-label="第 552 行" href="#L552"> 552</a>     message = 'Collecting initial {} episodes or {} steps ({}) {} rewards.'</span>
+<span id="L553"><a aria-label="第 553 行" href="#L553"> 553</a>     print(message.format(remaining_episodes, remaining_steps, name, word))</span>
+<span id="L554"><a aria-label="第 554 行" href="#L554"> 554</a>     episodes = control.random_episodes(</span>
+<span id="L555"><a aria-label="第 555 行" href="#L555"> 555</a>         env_ctor, remaining_episodes, remaining_steps,</span>
+<span id="L556"><a aria-label="第 556 行" href="#L556"> 556</a>         params.save_episode_dir, config.isolate_envs)</span>
+<span id="L557"><a aria-label="第 557 行" href="#L557"> 557</a>     scores = [episode['reward'].sum() for episode in episodes]</span>
+<span id="L558"><a aria-label="第 558 行" href="#L558"> 558</a>     lengths = [len(episode['reward']) for episode in episodes]</span>
+<span id="L559"><a aria-label="第 559 行" href="#L559"> 559</a>     metrics.add_scalars(name + '/return', scores)</span>
+<span id="L560"><a aria-label="第 560 行" href="#L560"> 560</a>     metrics.add_scalars(name + '/length', lengths)</span>
+<span id="L561"><a aria-label="第 561 行" href="#L561"> 561</a>   metrics.flush()</span></pre></body></html>

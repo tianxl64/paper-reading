@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>dreamer/scripts/train.py</title><style>body{margin:0;background:#152a2e;color:#e4f3f3;font:13px/1.55 Consolas,monospace}.head{padding:16px;overflow-wrap:anywhere}.code{padding:16px;overflow:auto;white-space:pre}.line{display:block;min-width:max-content}.line:target{background:#665b18}a{color:#b9d9e3}</style><link href="../../../../favicon.ico" rel="icon"/></head><body><div class="head">dreamer/scripts/train.py<br/>COMMIT: 0ffec86436239d41cecaff34abcf57dca5539839<br/>SHA-256: 1c6954ee78af386b99dad93bd5bb28c4a793a57b0022552e469307248df8b656</div><pre class="code"><span class="line" id="L1"><a href="#L1">0001</a> # Copyright 2019 The Dreamer Authors. All rights reserved.</span>
+<span class="line" id="L2"><a href="#L2">0002</a> #</span>
+<span class="line" id="L3"><a href="#L3">0003</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span class="line" id="L4"><a href="#L4">0004</a> # you may not use this file except in compliance with the License.</span>
+<span class="line" id="L5"><a href="#L5">0005</a> # You may obtain a copy of the License at</span>
+<span class="line" id="L6"><a href="#L6">0006</a> #</span>
+<span class="line" id="L7"><a href="#L7">0007</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="line" id="L8"><a href="#L8">0008</a> #</span>
+<span class="line" id="L9"><a href="#L9">0009</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span class="line" id="L10"><a href="#L10">0010</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span class="line" id="L11"><a href="#L11">0011</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="line" id="L12"><a href="#L12">0012</a> # See the License for the specific language governing permissions and</span>
+<span class="line" id="L13"><a href="#L13">0013</a> # limitations under the License.</span>
+<span class="line" id="L14"><a href="#L14">0014</a> </span>
+<span class="line" id="L15"><a href="#L15">0015</a> from __future__ import absolute_import</span>
+<span class="line" id="L16"><a href="#L16">0016</a> from __future__ import division</span>
+<span class="line" id="L17"><a href="#L17">0017</a> from __future__ import print_function</span>
+<span class="line" id="L18"><a href="#L18">0018</a> </span>
+<span class="line" id="L19"><a href="#L19">0019</a> import argparse</span>
+<span class="line" id="L20"><a href="#L20">0020</a> import functools</span>
+<span class="line" id="L21"><a href="#L21">0021</a> import os</span>
+<span class="line" id="L22"><a href="#L22">0022</a> import pathlib</span>
+<span class="line" id="L23"><a href="#L23">0023</a> import sys</span>
+<span class="line" id="L24"><a href="#L24">0024</a> </span>
+<span class="line" id="L25"><a href="#L25">0025</a> sys.path.append(str(pathlib.Path(__file__).resolve().parent.parent.parent))</span>
+<span class="line" id="L26"><a href="#L26">0026</a> </span>
+<span class="line" id="L27"><a href="#L27">0027</a> import ruamel.yaml as yaml</span>
+<span class="line" id="L28"><a href="#L28">0028</a> import tensorflow as tf</span>
+<span class="line" id="L29"><a href="#L29">0029</a> </span>
+<span class="line" id="L30"><a href="#L30">0030</a> from dreamer import tools</span>
+<span class="line" id="L31"><a href="#L31">0031</a> from dreamer import training</span>
+<span class="line" id="L32"><a href="#L32">0032</a> from dreamer.scripts import configs</span>
+<span class="line" id="L33"><a href="#L33">0033</a> </span>
+<span class="line" id="L34"><a href="#L34">0034</a> </span>
+<span class="line" id="L35"><a href="#L35">0035</a> def process(logdir, args):</span>
+<span class="line" id="L36"><a href="#L36">0036</a>   with args.params.unlocked:</span>
+<span class="line" id="L37"><a href="#L37">0037</a>     args.params.logdir = logdir</span>
+<span class="line" id="L38"><a href="#L38">0038</a>   config = configs.make_config(args.params)</span>
+<span class="line" id="L39"><a href="#L39">0039</a>   logdir = pathlib.Path(logdir)</span>
+<span class="line" id="L40"><a href="#L40">0040</a>   metrics = tools.Metrics(logdir / 'metrics', workers=5)</span>
+<span class="line" id="L41"><a href="#L41">0041</a>   training.utility.collect_initial_episodes(metrics, config)</span>
+<span class="line" id="L42"><a href="#L42">0042</a>   tf.reset_default_graph()</span>
+<span class="line" id="L43"><a href="#L43">0043</a>   dataset = tools.numpy_episodes.numpy_episodes(</span>
+<span class="line" id="L44"><a href="#L44">0044</a>       config.train_dir, config.test_dir, config.batch_shape,</span>
+<span class="line" id="L45"><a href="#L45">0045</a>       reader=config.data_reader,</span>
+<span class="line" id="L46"><a href="#L46">0046</a>       loader=config.data_loader,</span>
+<span class="line" id="L47"><a href="#L47">0047</a>       num_chunks=config.num_chunks,</span>
+<span class="line" id="L48"><a href="#L48">0048</a>       preprocess_fn=config.preprocess_fn,</span>
+<span class="line" id="L49"><a href="#L49">0049</a>       gpu_prefetch=config.gpu_prefetch)</span>
+<span class="line" id="L50"><a href="#L50">0050</a>   metrics = tools.InGraphMetrics(metrics)</span>
+<span class="line" id="L51"><a href="#L51">0051</a>   build_graph = tools.bind(training.define_model, logdir, metrics)</span>
+<span class="line" id="L52"><a href="#L52">0052</a>   for score in training.utility.train(build_graph, dataset, logdir, config):</span>
+<span class="line" id="L53"><a href="#L53">0053</a>     yield score</span>
+<span class="line" id="L54"><a href="#L54">0054</a> </span>
+<span class="line" id="L55"><a href="#L55">0055</a> </span>
+<span class="line" id="L56"><a href="#L56">0056</a> def main(args):</span>
+<span class="line" id="L57"><a href="#L57">0057</a>   experiment = training.Experiment(</span>
+<span class="line" id="L58"><a href="#L58">0058</a>       args.logdir,</span>
+<span class="line" id="L59"><a href="#L59">0059</a>       process_fn=functools.partial(process, args=args),</span>
+<span class="line" id="L60"><a href="#L60">0060</a>       num_runs=args.num_runs,</span>
+<span class="line" id="L61"><a href="#L61">0061</a>       ping_every=args.ping_every,</span>
+<span class="line" id="L62"><a href="#L62">0062</a>       resume_runs=args.resume_runs)</span>
+<span class="line" id="L63"><a href="#L63">0063</a>   for run in experiment:</span>
+<span class="line" id="L64"><a href="#L64">0064</a>     for unused_score in run:</span>
+<span class="line" id="L65"><a href="#L65">0065</a>       pass</span>
+<span class="line" id="L66"><a href="#L66">0066</a> </span>
+<span class="line" id="L67"><a href="#L67">0067</a> </span>
+<span class="line" id="L68"><a href="#L68">0068</a> if __name__ == '__main__':</span>
+<span class="line" id="L69"><a href="#L69">0069</a>   boolean = lambda x: bool(['False', 'True'].index(x))</span>
+<span class="line" id="L70"><a href="#L70">0070</a>   parser = argparse.ArgumentParser()</span>
+<span class="line" id="L71"><a href="#L71">0071</a>   parser.add_argument('--logdir', type=pathlib.Path, required=True)</span>
+<span class="line" id="L72"><a href="#L72">0072</a>   parser.add_argument('--params', default='{}')</span>
+<span class="line" id="L73"><a href="#L73">0073</a>   parser.add_argument('--num_runs', type=int, default=1)</span>
+<span class="line" id="L74"><a href="#L74">0074</a>   parser.add_argument('--ping_every', type=int, default=0)</span>
+<span class="line" id="L75"><a href="#L75">0075</a>   parser.add_argument('--resume_runs', type=boolean, default=True)</span>
+<span class="line" id="L76"><a href="#L76">0076</a>   parser.add_argument('--dmlab_runfiles_path', default=None)</span>
+<span class="line" id="L77"><a href="#L77">0077</a>   args_, remaining = parser.parse_known_args()</span>
+<span class="line" id="L78"><a href="#L78">0078</a>   params_ = args_.params.replace('#', ',').replace('\\', '')</span>
+<span class="line" id="L79"><a href="#L79">0079</a>   args_.params = tools.AttrDict(yaml.safe_load(params_))</span>
+<span class="line" id="L80"><a href="#L80">0080</a>   if args_.dmlab_runfiles_path:</span>
+<span class="line" id="L81"><a href="#L81">0081</a>     with args_.params.unlocked:</span>
+<span class="line" id="L82"><a href="#L82">0082</a>       args_.params.dmlab_runfiles_path = args_.dmlab_runfiles_path</span>
+<span class="line" id="L83"><a href="#L83">0083</a>     assert args_.params.dmlab_runfiles_path  # Mark as accessed.</span>
+<span class="line" id="L84"><a href="#L84">0084</a>   args_.logdir = args_.logdir and os.path.expanduser(args_.logdir)</span>
+<span class="line" id="L85"><a href="#L85">0085</a>   remaining.insert(0, sys.argv[0])</span>
+<span class="line" id="L86"><a href="#L86">0086</a>   tf.app.run(lambda _: main(args_), remaining)</span></pre></body></html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>dreamer/tools/shape.py</title><style>body{margin:0;background:#152a2e;color:#e4f3f3;font:13px/1.55 Consolas,monospace}.head{padding:16px;overflow-wrap:anywhere}.code{padding:16px;overflow:auto;white-space:pre}.line{display:block;min-width:max-content}.line:target{background:#665b18}a{color:#b9d9e3}</style><link href="../../../../favicon.ico" rel="icon"/></head><body><div class="head">dreamer/tools/shape.py<br/>COMMIT: 0ffec86436239d41cecaff34abcf57dca5539839<br/>SHA-256: a26abdbe03abef3e3b655d8d1c3631763ed81533359f961aeb4791c697a24f23</div><pre class="code"><span class="line" id="L1"><a href="#L1">0001</a> # Copyright 2019 The Dreamer Authors. All rights reserved.</span>
+<span class="line" id="L2"><a href="#L2">0002</a> #</span>
+<span class="line" id="L3"><a href="#L3">0003</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span class="line" id="L4"><a href="#L4">0004</a> # you may not use this file except in compliance with the License.</span>
+<span class="line" id="L5"><a href="#L5">0005</a> # You may obtain a copy of the License at</span>
+<span class="line" id="L6"><a href="#L6">0006</a> #</span>
+<span class="line" id="L7"><a href="#L7">0007</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="line" id="L8"><a href="#L8">0008</a> #</span>
+<span class="line" id="L9"><a href="#L9">0009</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span class="line" id="L10"><a href="#L10">0010</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span class="line" id="L11"><a href="#L11">0011</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="line" id="L12"><a href="#L12">0012</a> # See the License for the specific language governing permissions and</span>
+<span class="line" id="L13"><a href="#L13">0013</a> # limitations under the License.</span>
+<span class="line" id="L14"><a href="#L14">0014</a> </span>
+<span class="line" id="L15"><a href="#L15">0015</a> from __future__ import absolute_import</span>
+<span class="line" id="L16"><a href="#L16">0016</a> from __future__ import division</span>
+<span class="line" id="L17"><a href="#L17">0017</a> from __future__ import print_function</span>
+<span class="line" id="L18"><a href="#L18">0018</a> </span>
+<span class="line" id="L19"><a href="#L19">0019</a> import tensorflow as tf</span>
+<span class="line" id="L20"><a href="#L20">0020</a> </span>
+<span class="line" id="L21"><a href="#L21">0021</a> </span>
+<span class="line" id="L22"><a href="#L22">0022</a> def shape(tensor):</span>
+<span class="line" id="L23"><a href="#L23">0023</a>   static = tensor.get_shape().as_list()</span>
+<span class="line" id="L24"><a href="#L24">0024</a>   dynamic = tf.unstack(tf.shape(tensor))</span>
+<span class="line" id="L25"><a href="#L25">0025</a>   assert len(static) == len(dynamic)</span>
+<span class="line" id="L26"><a href="#L26">0026</a>   combined = [d if s is None else s for s, d in zip(static, dynamic)]</span>
+<span class="line" id="L27"><a href="#L27">0027</a>   return combined</span></pre></body></html>

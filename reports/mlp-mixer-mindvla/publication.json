@@ -1,0 +1,123 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "mlp-mixer-mindvla",
+  "published_at": "2026-11-08T04:18:33+00:00",
+  "complete": true,
+  "source_relative_html": "mlp_mixer_analysis_report.html",
+  "source_html_sha256": "489886a753f6adb691919b7a889935c434986e375acd17edd894de2637ed2d17",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "90108ffaa537ebf7458de68a19959884ad1316b7df3427e3c6a3b21658c050f5",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 44,
+      "original_static_math": 0,
+      "added_static_math": 136
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 136,
+    "documents": 1
+  },
+  "source_math_recovery": [
+    {
+      "raw_source_fragment": "\\[\n            \\mathcal{L}_{\\mathrm{AR}}\n            =\n            -\\sum_{l=1}^{L}\n            \\log p_\\theta(a_l \\mid \\mathbf{I},\\mathbf{e},\\mathbf{q},a_{<l})\n            \\]",
+      "recovered_tex_fragment": "\\[\n            \\mathcal{L}_{\\mathrm{AR}}\n            =\n            -\\sum_{l=1}^{L}\n            \\log p_\\theta(a_l \\mid \\mathbf{I},\\mathbf{e},\\mathbf{q},a_{<l})\n            \\]",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    }
+  ],
+  "resources": [
+    {
+      "path": "../../assets/media/de990b165043af78ea30fe4bbab8cb61a327c9e52d08f18c3c08728c694e7a75.webp",
+      "source_sha256": "de990b165043af78ea30fe4bbab8cb61a327c9e52d08f18c3c08728c694e7a75",
+      "sha256": "ddabe38bbf68d78bdcb0e651a1e1990b41202ed600e6e754cc3689f585a4f4e7",
+      "bytes": 1028736,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/a774b465a66f5368b2f51b51cf4b625c3129b51add1d5b15b49c83dee6a71cbc.webp",
+      "source_sha256": "a774b465a66f5368b2f51b51cf4b625c3129b51add1d5b15b49c83dee6a71cbc",
+      "sha256": "08a5fff406b62dc103faaa1d6f35fcd7ea476cd48d7b253bee6ec56bd6923a4a",
+      "bytes": 1023184,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/b33fc8f9a403d02dc8fc17f689f418a48fa6e183245b8911bd20fcd84815869b.webp",
+      "source_sha256": "b33fc8f9a403d02dc8fc17f689f418a48fa6e183245b8911bd20fcd84815869b",
+      "sha256": "9df36e9e45d51661a632b302a8c5e1a80a2f5923ec6238b6b6e52fec71e5b32c",
+      "bytes": 495050,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/a948ffd3cbf3a7fb9453f7c1c2f2ed7eda0effb52ec4cf7f0fd895d3a262414a.webp",
+      "source_sha256": "a948ffd3cbf3a7fb9453f7c1c2f2ed7eda0effb52ec4cf7f0fd895d3a262414a",
+      "sha256": "b6428abf51ae5633ffd6b8767a5a2b26fc7d44d3078867716342ae4b4a0a1344",
+      "bytes": 872120,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/b0d2c3e471373ac9b2eb6c2fbe615fc554950e254b4d1c0e8fcc2d30319ff7dd.webp",
+      "source_sha256": "b0d2c3e471373ac9b2eb6c2fbe615fc554950e254b4d1c0e8fcc2d30319ff7dd",
+      "sha256": "ed90dd66eae549c44513370e7826fe0ecb09e340ce52c6c0cc1d60b7da82db41",
+      "bytes": 1073270,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/af1f7c7c02dfb98f6f975ed325459384f3c1739899bd9a0216a9c30bf550fb77.webp",
+      "source_sha256": "af1f7c7c02dfb98f6f975ed325459384f3c1739899bd9a0216a9c30bf550fb77",
+      "sha256": "1d6214bb7fa2855bbc81dda723ab270600d03a24d08342b7fd5aa04913775636",
+      "bytes": 13450,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/d1f5e65f9147b451f3b41034a5d8fd116ebea3e4b1ba100db506cdad45def6d0.webp",
+      "source_sha256": "d1f5e65f9147b451f3b41034a5d8fd116ebea3e4b1ba100db506cdad45def6d0",
+      "sha256": "e4424067e0a17cea0bcb2b56812dd4d6839d697feff574e17611e30723bf429b",
+      "bytes": 1085670,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/683e2573b48af7f8329eb983f5e6764a39f558083bf9a1a802a9d7f85122b81b.webp",
+      "source_sha256": "683e2573b48af7f8329eb983f5e6764a39f558083bf9a1a802a9d7f85122b81b",
+      "sha256": "bb9e51cf9506768778e1aeb7016408d381ae1ac9361edf8729c4e387b67e302c",
+      "bytes": 100410,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/b8178016df1b4a9667d1d41e4038bab52a14179953a4490eba7b174797fec3f3.webp",
+      "source_sha256": "b8178016df1b4a9667d1d41e4038bab52a14179953a4490eba7b174797fec3f3",
+      "sha256": "426574fd1712fa1aa27e274c771ed5929c2188c83fd604f08f946b454d1a21c2",
+      "bytes": 47140,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "489886a753f6adb691919b7a889935c434986e375acd17edd894de2637ed2d17",
+      "sha256": "90108ffaa537ebf7458de68a19959884ad1316b7df3427e3c6a3b21658c050f5",
+      "bytes": 220600
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

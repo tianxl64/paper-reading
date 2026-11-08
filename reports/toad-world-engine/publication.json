@@ -1,0 +1,44 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "toad-world-engine",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "index.html",
+  "source_html_sha256": "3ee3898020b2bc9ae830d800d8ff0f2476bc76eb5f27837248743702a0eb448f",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "1a3e04e6cbfb685199ba21760de2d69da30596fea97d58fbb795349f80e02a1f",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 35,
+      "original_static_math": 0,
+      "added_static_math": 0
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 0,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "index.html",
+      "source_sha256": "3ee3898020b2bc9ae830d800d8ff0f2476bc76eb5f27837248743702a0eb448f",
+      "sha256": "1a3e04e6cbfb685199ba21760de2d69da30596fea97d58fbb795349f80e02a1f",
+      "bytes": 44876
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

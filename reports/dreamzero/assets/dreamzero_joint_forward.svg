@@ -1,0 +1,192 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='1600' height='1040' viewBox='0 0 1600 1040' role='img' aria-labelledby='title desc'>
+  <title id='title'>DreamZero joint video-action DiT 单次 forward 数据流</title>
+  <desc id='desc'>视频、动作、机器人状态经模态专属编码器进入统一 5120 维 token 空间，在唯一一套 40 层 CausalWan Transformer 中联合推理，最后由视频头和动作头分别输出预测。</desc>
+  <defs>
+    <marker id='arrow-blue' markerWidth='10' markerHeight='10' refX='9' refY='3' orient='auto'><path d='M0 0 L10 3 L0 6 Z' fill='#3156C8'/></marker>
+    <marker id='arrow-amber' markerWidth='10' markerHeight='10' refX='9' refY='3' orient='auto'><path d='M0 0 L10 3 L0 6 Z' fill='#B56712'/></marker>
+    <marker id='arrow-teal' markerWidth='10' markerHeight='10' refX='9' refY='3' orient='auto'><path d='M0 0 L10 3 L0 6 Z' fill='#16806F'/></marker>
+    <marker id='arrow-gray' markerWidth='10' markerHeight='10' refX='9' refY='3' orient='auto'><path d='M0 0 L10 3 L0 6 Z' fill='#667085'/></marker>
+    <filter id='shadow' x='-20%' y='-20%' width='140%' height='140%'><feDropShadow dx='0' dy='5' stdDeviation='7' flood-color='#10213F' flood-opacity='.12'/></filter>
+    <style>
+      .t{font-family:Inter,'Segoe UI','Microsoft YaHei',Arial,sans-serif;fill:#17233C}.small{font-size:15px;fill:#596579}.tiny{font-size:13px;fill:#667085}.label{font-size:17px;font-weight:700}.section{font-size:19px;font-weight:800;letter-spacing:.2px}.mono{font-family:Consolas,'SFMono-Regular',monospace;font-size:14px;fill:#344054}.white{fill:#fff}.header-sub{fill:#C9D6F2}.line{fill:none;stroke-width:2.5}.dash{stroke-dasharray:8 7}
+    </style>
+  </defs>
+
+  <rect width='1600' height='1040' fill='#F4F7FB'/>
+  <rect x='24' y='22' width='1552' height='84' rx='18' fill='#14213D'/>
+  <text x='800' y='57' text-anchor='middle' class='t white' font-size='27' font-weight='800'>DreamZero Joint Video–Action DiT：一次 CausalWanModel Forward</text>
+  <text x='800' y='84' text-anchor='middle' class='t header-sub' font-size='16'>模态专属输入接口 → 统一 hidden space → 唯一共享 Transformer 主干 → 模态专属输出头</text>
+
+  <rect x='32' y='128' width='365' height='690' rx='18' fill='#FFFFFF' stroke='#D8E0EC' filter='url(#shadow)'/>
+  <text x='214' y='163' text-anchor='middle' class='t section'>A. 原始输入与模态编码</text>
+
+  <rect x='55' y='190' width='318' height='132' rx='14' fill='#EAF0FF' stroke='#88A2EA'/>
+  <rect x='70' y='208' width='114' height='94' rx='10' fill='#FFFFFF' stroke='#AABBE8'/>
+  <text x='127' y='235' text-anchor='middle' class='t label' fill='#24469F'>Noisy Video</text>
+  <text x='127' y='260' text-anchor='middle' class='mono'>xᵛₜ</text>
+  <text x='127' y='283' text-anchor='middle' class='tiny'>[B,Cᵢₙ,F,H,W]</text>
+  <line x1='188' y1='255' x2='220' y2='255' class='line' stroke='#3156C8' marker-end='url(#arrow-blue)'/>
+  <rect x='226' y='208' width='128' height='94' rx='10' fill='#FFFFFF' stroke='#AABBE8'/>
+  <text x='290' y='235' text-anchor='middle' class='t label' fill='#24469F'>Conv3D</text>
+  <text x='290' y='259' text-anchor='middle' class='small'>patch embedding</text>
+  <text x='290' y='283' text-anchor='middle' class='mono'>(1,2,2)</text>
+
+  <rect x='55' y='342' width='318' height='132' rx='14' fill='#FFF3DF' stroke='#D9A75E'/>
+  <rect x='70' y='360' width='114' height='94' rx='10' fill='#FFFFFF' stroke='#E0B97C'/>
+  <text x='127' y='387' text-anchor='middle' class='t label' fill='#8D5108'>Noisy Action</text>
+  <text x='127' y='412' text-anchor='middle' class='mono'>aₜ</text>
+  <text x='127' y='435' text-anchor='middle' class='tiny'>[B,Nₐ,Dₐ]</text>
+  <line x1='188' y1='407' x2='220' y2='407' class='line' stroke='#B56712' marker-end='url(#arrow-amber)'/>
+  <rect x='226' y='360' width='128' height='94' rx='10' fill='#FFFFFF' stroke='#E0B97C'/>
+  <text x='290' y='387' text-anchor='middle' class='t label' fill='#8D5108'>Action Encoder</text>
+  <text x='290' y='412' text-anchor='middle' class='small'>value + timestep</text>
+  <text x='290' y='435' text-anchor='middle' class='tiny'>MLP / projection</text>
+
+  <rect x='55' y='494' width='318' height='132' rx='14' fill='#E7F7F3' stroke='#72B7A9'/>
+  <rect x='70' y='512' width='114' height='94' rx='10' fill='#FFFFFF' stroke='#91C9BE'/>
+  <text x='127' y='539' text-anchor='middle' class='t label' fill='#126A5C'>Robot State</text>
+  <text x='127' y='564' text-anchor='middle' class='mono'>s</text>
+  <text x='127' y='587' text-anchor='middle' class='tiny'>[B,Nₛ,Dₛ]</text>
+  <line x1='188' y1='559' x2='220' y2='559' class='line' stroke='#16806F' marker-end='url(#arrow-teal)'/>
+  <rect x='226' y='512' width='128' height='94' rx='10' fill='#FFFFFF' stroke='#91C9BE'/>
+  <text x='290' y='539' text-anchor='middle' class='t label' fill='#126A5C'>State Encoder</text>
+  <text x='290' y='564' text-anchor='middle' class='small'>proprio projection</text>
+  <text x='290' y='587' text-anchor='middle' class='tiny'>clean condition</text>
+
+  <rect x='55' y='646' width='318' height='142' rx='14' fill='#F1F4F8' stroke='#AEB8C7'/>
+  <rect x='70' y='665' width='114' height='102' rx='10' fill='#FFFFFF' stroke='#C3CAD5'/>
+  <text x='127' y='693' text-anchor='middle' class='t label'>Text Context</text>
+  <text x='127' y='719' text-anchor='middle' class='mono'>[B,512,4096]</text>
+  <text x='127' y='744' text-anchor='middle' class='tiny'>task instruction</text>
+  <line x1='188' y1='716' x2='220' y2='716' class='line' stroke='#667085' marker-end='url(#arrow-gray)'/>
+  <rect x='226' y='665' width='128' height='102' rx='10' fill='#FFFFFF' stroke='#C3CAD5'/>
+  <text x='290' y='693' text-anchor='middle' class='t label'>Text Embedding</text>
+  <text x='290' y='719' text-anchor='middle' class='mono'>4096 → 5120</text>
+  <text x='290' y='744' text-anchor='middle' class='tiny'>Cross-Attn K/V</text>
+
+  <rect x='425' y='128' width='318' height='690' rx='18' fill='#FFFFFF' stroke='#D8E0EC' filter='url(#shadow)'/>
+  <text x='584' y='163' text-anchor='middle' class='t section'>B. 统一 Token 空间</text>
+  <rect x='452' y='193' width='264' height='92' rx='13' fill='#EAF0FF' stroke='#88A2EA'/>
+  <text x='584' y='222' text-anchor='middle' class='t label' fill='#24469F'>Video Tokens Xᵥ</text>
+  <text x='584' y='249' text-anchor='middle' class='mono'>[B,Lᵥ,5120]</text>
+  <text x='584' y='272' text-anchor='middle' class='tiny'>3D RoPE：frame / height / width</text>
+  <rect x='452' y='305' width='264' height='92' rx='13' fill='#FFF3DF' stroke='#D9A75E'/>
+  <text x='584' y='334' text-anchor='middle' class='t label' fill='#8D5108'>Action Tokens Xₐ</text>
+  <text x='584' y='361' text-anchor='middle' class='mono'>[B,Nₐ,5120]</text>
+  <text x='584' y='384' text-anchor='middle' class='tiny'>action time / chunk position</text>
+  <rect x='452' y='417' width='264' height='92' rx='13' fill='#E7F7F3' stroke='#72B7A9'/>
+  <text x='584' y='446' text-anchor='middle' class='t label' fill='#126A5C'>State Registers Xₛ</text>
+  <text x='584' y='473' text-anchor='middle' class='mono'>[B,Nₛ,5120]</text>
+  <text x='584' y='496' text-anchor='middle' class='tiny'>conditioning registers</text>
+  <path d='M397 256 H445' class='line' stroke='#3156C8' marker-end='url(#arrow-blue)'/>
+  <path d='M397 408 H445' class='line' stroke='#B56712' marker-end='url(#arrow-amber)'/>
+  <path d='M397 560 H445' class='line' stroke='#16806F' marker-end='url(#arrow-teal)'/>
+
+  <rect x='452' y='540' width='264' height='130' rx='14' fill='#14213D'/>
+  <text x='584' y='572' text-anchor='middle' class='t white label'>Sequence Assembly</text>
+  <rect x='473' y='592' width='94' height='46' rx='8' fill='#5C7DDB'/>
+  <rect x='567' y='592' width='70' height='46' rx='8' fill='#C9812B'/>
+  <rect x='637' y='592' width='58' height='46' rx='8' fill='#2A9B88'/>
+  <text x='520' y='621' text-anchor='middle' class='t white' font-size='14' font-weight='700'>Lᵥ</text>
+  <text x='602' y='621' text-anchor='middle' class='t white' font-size='14' font-weight='700'>Nₐ</text>
+  <text x='666' y='621' text-anchor='middle' class='t white' font-size='14' font-weight='700'>Nₛ</text>
+  <text x='584' y='658' text-anchor='middle' class='mono white'>X = [Xᵥ ; Xₐ ; Xₛ]</text>
+  <line x1='584' y1='285' x2='584' y2='532' class='line dash' stroke='#3156C8'/>
+  <line x1='584' y1='397' x2='584' y2='532' class='line dash' stroke='#B56712'/>
+  <line x1='584' y1='509' x2='584' y2='532' class='line dash' stroke='#16806F'/>
+
+  <rect x='452' y='694' width='264' height='94' rx='13' fill='#F1F4F8' stroke='#AEB8C7'/>
+  <text x='584' y='724' text-anchor='middle' class='t label'>Text Condition C</text>
+  <text x='584' y='751' text-anchor='middle' class='mono'>[B,512,5120]</text>
+  <text x='584' y='774' text-anchor='middle' class='tiny'>不拼入 self-attn 序列；供每层 cross-attn</text>
+  <path d='M397 716 H445' class='line' stroke='#667085' marker-end='url(#arrow-gray)'/>
+
+  <rect x='770' y='128' width='530' height='690' rx='18' fill='#FFFFFF' stroke='#C7D2E5' filter='url(#shadow)'/>
+  <text x='1035' y='163' text-anchor='middle' class='t section'>C. 唯一共享主干：40 × CausalWanAttentionBlock</text>
+  <rect x='795' y='186' width='480' height='76' rx='13' fill='#EEF2F8' stroke='#AAB7CB'/>
+  <text x='1035' y='214' text-anchor='middle' class='t label'>Modality-aware Time Modulation</text>
+  <text x='1035' y='240' text-anchor='middle' class='mono'>tᵥ / tₐ → sinusoidal embedding → AdaLN shift · scale · gate</text>
+
+  <rect x='795' y='283' width='480' height='117' rx='13' fill='#EAF0FF' stroke='#88A2EA'/>
+  <text x='1035' y='313' text-anchor='middle' class='t label' fill='#24469F'>① Shared Self-Attention</text>
+  <text x='1035' y='340' text-anchor='middle' class='mono'>Q,K,V,O = one shared parameter set</text>
+  <text x='1035' y='366' text-anchor='middle' class='small'>video / action / state tokens 在同一 attention 图中交换信息</text>
+  <text x='1035' y='389' text-anchor='middle' class='tiny'>3D/1D RoPE + blockwise causal mask + historical visual KV</text>
+
+  <rect x='795' y='421' width='480' height='93' rx='13' fill='#F1F4F8' stroke='#AEB8C7'/>
+  <text x='1035' y='452' text-anchor='middle' class='t label'>② Text Cross-Attention</text>
+  <text x='1035' y='479' text-anchor='middle' class='small'>所有当前 hidden tokens 查询共享文本条件 C</text>
+  <text x='1035' y='501' text-anchor='middle' class='tiny'>语言不需要复制成第二套 video/action 主干</text>
+
+  <rect x='795' y='535' width='480' height='89' rx='13' fill='#E7F7F3' stroke='#72B7A9'/>
+  <text x='1035' y='567' text-anchor='middle' class='t label' fill='#126A5C'>③ Shared FFN + Residual Gates</text>
+  <text x='1035' y='594' text-anchor='middle' class='small'>同一套 Norm / FFN / residual 更新全部 token</text>
+  <text x='1035' y='614' text-anchor='middle' class='tiny'>重复 40 层；不是 VideoDiT 跑完再调用 ActionDiT</text>
+
+  <path d='M745 605 H785' class='line' stroke='#3156C8' marker-end='url(#arrow-blue)'/>
+  <path d='M716 741 C748 741 748 468 785 468' class='line dash' stroke='#667085' marker-end='url(#arrow-gray)'/>
+  <path d='M1035 262 V275' class='line' stroke='#667085' marker-end='url(#arrow-gray)'/>
+  <path d='M1035 400 V413' class='line' stroke='#3156C8' marker-end='url(#arrow-blue)'/>
+  <path d='M1035 514 V527' class='line' stroke='#16806F' marker-end='url(#arrow-teal)'/>
+  <path d='M1260 611 C1288 611 1288 300 1260 300' class='line dash' stroke='#667085' marker-end='url(#arrow-gray)'/>
+  <text x='1268' y='460' class='tiny' transform='rotate(90 1268 460)'>repeat × 40</text>
+
+  <rect x='795' y='646' width='480' height='142' rx='13' fill='#FAFBFD' stroke='#C2CBD8'/>
+  <text x='1035' y='674' text-anchor='middle' class='t label'>因果可见性（概念）</text>
+  <rect x='820' y='695' width='126' height='60' rx='9' fill='#DCE7FF' stroke='#88A2EA'/>
+  <text x='883' y='719' text-anchor='middle' class='small'>历史 clean</text><text x='883' y='741' text-anchor='middle' class='tiny'>visual KV</text>
+  <rect x='970' y='695' width='126' height='60' rx='9' fill='#EAF0FF' stroke='#88A2EA'/>
+  <text x='1033' y='719' text-anchor='middle' class='small'>当前 video</text><text x='1033' y='741' text-anchor='middle' class='tiny'>noisy target</text>
+  <rect x='1120' y='695' width='126' height='60' rx='9' fill='#FFF3DF' stroke='#D9A75E'/>
+  <text x='1183' y='719' text-anchor='middle' class='small'>当前 action/state</text><text x='1183' y='741' text-anchor='middle' class='tiny'>joint tokens</text>
+  <line x1='946' y1='725' x2='962' y2='725' class='line' stroke='#3156C8' marker-end='url(#arrow-blue)'/>
+  <line x1='1096' y1='725' x2='1112' y2='725' class='line' stroke='#B56712' marker-end='url(#arrow-amber)'/>
+  <path d='M1183 755 C1183 778 1033 778 1033 755' class='line dash' stroke='#B56712' marker-end='url(#arrow-amber)'/>
+
+  <rect x='1328' y='128' width='240' height='690' rx='18' fill='#FFFFFF' stroke='#D8E0EC' filter='url(#shadow)'/>
+  <text x='1448' y='163' text-anchor='middle' class='t section'>D. Slice &amp; Decode</text>
+  <path d='M1300 342 H1345' class='line' stroke='#3156C8' marker-end='url(#arrow-blue)'/>
+  <path d='M1300 566 H1345' class='line' stroke='#B56712' marker-end='url(#arrow-amber)'/>
+
+  <rect x='1350' y='205' width='196' height='108' rx='13' fill='#EAF0FF' stroke='#88A2EA'/>
+  <text x='1448' y='235' text-anchor='middle' class='t label' fill='#24469F'>Video Slice</text>
+  <text x='1448' y='260' text-anchor='middle' class='mono'>H[:, :Lᵥ]</text>
+  <text x='1448' y='285' text-anchor='middle' class='tiny'>state/action slice removed</text>
+  <line x1='1448' y1='313' x2='1448' y2='340' class='line' stroke='#3156C8' marker-end='url(#arrow-blue)'/>
+  <rect x='1350' y='348' width='196' height='111' rx='13' fill='#EAF0FF' stroke='#88A2EA'/>
+  <text x='1448' y='378' text-anchor='middle' class='t label' fill='#24469F'>CausalHead</text>
+  <text x='1448' y='403' text-anchor='middle' class='small'>linear projection</text>
+  <text x='1448' y='427' text-anchor='middle' class='small'>+ unpatchify</text>
+  <text x='1448' y='448' text-anchor='middle' class='tiny'>→ video flow / noise</text>
+
+  <rect x='1350' y='504' width='196' height='108' rx='13' fill='#FFF3DF' stroke='#D9A75E'/>
+  <text x='1448' y='534' text-anchor='middle' class='t label' fill='#8D5108'>Action Slice</text>
+  <text x='1448' y='559' text-anchor='middle' class='mono'>H[:,Lᵥ:Lᵥ+Nₐ]</text>
+  <text x='1448' y='584' text-anchor='middle' class='tiny'>state registers are conditions</text>
+  <line x1='1448' y1='612' x2='1448' y2='639' class='line' stroke='#B56712' marker-end='url(#arrow-amber)'/>
+  <rect x='1350' y='647' width='196' height='111' rx='13' fill='#FFF3DF' stroke='#D9A75E'/>
+  <text x='1448' y='678' text-anchor='middle' class='t label' fill='#8D5108'>Action Decoder</text>
+  <text x='1448' y='704' text-anchor='middle' class='small'>hidden → action_dim</text>
+  <text x='1448' y='729' text-anchor='middle' class='mono'>[B,Nₐ,Dₐ]</text>
+  <text x='1448' y='749' text-anchor='middle' class='tiny'>→ action flow / noise</text>
+
+  <rect x='32' y='846' width='1536' height='162' rx='18' fill='#FFFFFF' stroke='#D8E0EC' filter='url(#shadow)'/>
+  <text x='56' y='880' class='t section'>E. Forward 外部：双目标监督与采样更新</text>
+  <rect x='70' y='904' width='315' height='72' rx='12' fill='#EAF0FF' stroke='#88A2EA'/>
+  <text x='227' y='932' text-anchor='middle' class='t label' fill='#24469F'>Video Objective</text>
+  <text x='227' y='959' text-anchor='middle' class='mono'>Lᵥ = MSE(v̂ᵥ, vᵥ*)</text>
+  <rect x='420' y='904' width='315' height='72' rx='12' fill='#FFF3DF' stroke='#D9A75E'/>
+  <text x='577' y='932' text-anchor='middle' class='t label' fill='#8D5108'>Action Objective</text>
+  <text x='577' y='959' text-anchor='middle' class='mono'>Lₐ = MSE(v̂ₐ, vₐ*)</text>
+  <rect x='770' y='904' width='260' height='72' rx='12' fill='#14213D'/>
+  <text x='900' y='932' text-anchor='middle' class='t white label'>Joint Training Loss</text>
+  <text x='900' y='959' text-anchor='middle' class='mono white'>L = λᵥLᵥ + λₐLₐ</text>
+  <rect x='1065' y='904' width='455' height='72' rx='12' fill='#E7F7F3' stroke='#72B7A9'/>
+  <text x='1292' y='932' text-anchor='middle' class='t label' fill='#126A5C'>Separate Scheduler Updates</text>
+  <text x='1292' y='959' text-anchor='middle' class='small'>video latent step + action latent step → next denoising iteration</text>
+  <line x1='385' y1='940' x2='412' y2='940' class='line' stroke='#3156C8' marker-end='url(#arrow-blue)'/>
+  <line x1='735' y1='940' x2='762' y2='940' class='line' stroke='#B56712' marker-end='url(#arrow-amber)'/>
+  <line x1='1030' y1='940' x2='1057' y2='940' class='line' stroke='#16806F' marker-end='url(#arrow-teal)'/>
+
+  <text x='1538' y='1022' text-anchor='end' class='tiny'>Blue: video · Amber: action · Teal: state/conditioning · Gray: text/control path</text>
+</svg>

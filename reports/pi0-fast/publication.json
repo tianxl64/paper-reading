@@ -1,0 +1,52 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "pi0-fast",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "index.html",
+  "source_html_sha256": "141f6c5189c0709db0467ce122ee273f9d2af4090d40371eab21c14f8f10ab9b",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "b28e7109949b504a4fc9842d8fa6d6dcf585cd78f8215dcc9f5fc38936fe342c",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 56,
+      "original_static_math": 0,
+      "added_static_math": 17
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 17,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "../../assets/media/2477ecbf210b42cce401aefb0ae31d8db9c192f49ee3edc6005ce4d6750a989c.webp",
+      "source_sha256": "2477ecbf210b42cce401aefb0ae31d8db9c192f49ee3edc6005ce4d6750a989c",
+      "sha256": "342ec73dc663d18cf9e334118e0f6599fc6f6a4849c3bdc744b21cd461ce78e2",
+      "bytes": 1096348,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "141f6c5189c0709db0467ce122ee273f9d2af4090d40371eab21c14f8f10ab9b",
+      "sha256": "b28e7109949b504a4fc9842d8fa6d6dcf585cd78f8215dcc9f5fc38936fe342c",
+      "bytes": 140798
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

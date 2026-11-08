@@ -1,0 +1,92 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "alpamayo-r1",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "alpamayo_r1_academic_deep_report.html",
+  "source_html_sha256": "e920694c96932c1722ef163eb3f7d23b9f98f49d3f540b06d598f7c8ae3ade07",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "9f5c046dfd2f87f2ca6c26d938d42325be6b719ad56a51b77beb03d66d005aea",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 87,
+      "original_static_math": 0,
+      "added_static_math": 0
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 0,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "../../assets/media/39d1301740b00ab02de23eb620734f789d73021605f781b64c4fe9e4d062f7a4.webp",
+      "source_sha256": "39d1301740b00ab02de23eb620734f789d73021605f781b64c4fe9e4d062f7a4",
+      "sha256": "47783e44aeb278996d6e308de526fe9bfb13611be9015707d10aa400b22926cc",
+      "bytes": 1084826,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/2c30c5626f2cc2a9251b2e82507402ce3dfa8831738a3af12aed452d8ae470cb.webp",
+      "source_sha256": "2c30c5626f2cc2a9251b2e82507402ce3dfa8831738a3af12aed452d8ae470cb",
+      "sha256": "563c2a3946a03e711d07c2c3a25ff774cf6614ea2c1c05f5940b0e2fe39f4a87",
+      "bytes": 1138032,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/c4cd2264a65b0557fc51d8badcd33428fe42ecd54d5d74b72bd5addee833db31.webp",
+      "source_sha256": "c4cd2264a65b0557fc51d8badcd33428fe42ecd54d5d74b72bd5addee833db31",
+      "sha256": "72e3263fe9e1fc35153cffdf1cbd72a1522c75f8dd7d56d2f0e82fe14981d255",
+      "bytes": 1101716,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/c9c866b89bcf7e04163b4d107652538c91ff7de18b3c8235bf5ac331ad6475a1.webp",
+      "source_sha256": "c9c866b89bcf7e04163b4d107652538c91ff7de18b3c8235bf5ac331ad6475a1",
+      "sha256": "24af5b063f59554c15e1bad5a4e89eda9b328c35159c99ab2ce0b70d9500ba3f",
+      "bytes": 1128420,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/7e521796498e634d4c071c311f126f883d96b22098e91c2966e8fbf8b5fe201f.webp",
+      "source_sha256": "7e521796498e634d4c071c311f126f883d96b22098e91c2966e8fbf8b5fe201f",
+      "sha256": "7ab37bf7cce90dc3e2c1cec6cfc09cbbfac953bc98a946eaa8ed92787bd4417e",
+      "bytes": 1270858,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/9b3edd6cb35e908626511d992ba8d418239732d20749df0fa80adfe0a3b8f5b3.webp",
+      "source_sha256": "9b3edd6cb35e908626511d992ba8d418239732d20749df0fa80adfe0a3b8f5b3",
+      "sha256": "cd24b32f758cb77f854552c88c083bb0f4f4b1ec45efe6fe63562af4bd7836d8",
+      "bytes": 1138582,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "e920694c96932c1722ef163eb3f7d23b9f98f49d3f540b06d598f7c8ae3ade07",
+      "sha256": "9f5c046dfd2f87f2ca6c26d938d42325be6b719ad56a51b77beb03d66d005aea",
+      "bytes": 53819
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

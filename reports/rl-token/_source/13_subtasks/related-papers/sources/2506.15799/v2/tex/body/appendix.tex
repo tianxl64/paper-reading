@@ -1,0 +1,591 @@
+
+\newcommand{\actmag}{b_{\cW}}
+
+
+
+\section*{Contributions}
+\textbf{Andrew Wagenmaker}: Project lead. Core algorithm development; primary paper writer; led the simulated online, offline-to-online, and ablation experiments; led the real-world multi-task diffusion policy experiments; supported $\pi_0$ experiments. \\
+\textbf{Mitsuhiko Nakamoto}: Led the $\pi_0$ experiments. \\
+\textbf{Yunchu Zhang}: Led the real-world single-task diffusion policy experiments and supported the simulated experiments. \\
+\textbf{Seohong Park}: Led the offline experiments and contributed to algorithm development. \\
+\textbf{Waleed Yagoub}: Supported the real-world single-task diffusion policy experiments. \\
+\textbf{Anusha Nagabandi}: Investigated the application of \algname to dexterous manipulation. \\
+\textbf{Abhishek Gupta}: Advised on the project and contributed to paper writing. \\
+\textbf{Sergey Levine}: Advised on the project and contributed to paper writing. 
+
+
+\iftoggle{arxiv2}{
+\section*{Limitations}
+
+
+Our experiments show that \algname provides an effective and highly efficient method for improving diffusion and flow policies using either online or offline experience. However, our approach does have a number of limitations. First, the exploration capabilities of \algname are inherently determined by the underlying diffusion policy, and while this seems to work well in practice, we do not have a guarantee that \emph{all} diffusion policies are steerable, nor that all such policies provide adequate exploration. A highly concentrated action distribution (e.g., a policy trained on very narrow data) might not provide enough ``options'' for our method to select from, limiting its ability to improve, and our approach does not currently offer a clear way to quantify in advance how much improvement is possible with a given diffusion policy. Studying this question both empirically and theoretically could help us characterize the steerability of diffusion policies. Our method also has similar limitations to any RL approach: it requires reward signals, online rollouts (for the online RL variant), and resets (if learning in the real world). While the efficiency of our approach alleviates some of the challenges associated with RL in the real world, it still introduces additional requirements beyond the standard imitation learning methods that can be used to train the base diffusion policy. Reducing these limitations, for example by automating rewards or further improving sample efficiency, is an important direction for future work. We hope that studying these open questions will lead to even more practical methods for robotic RL, and that \algname will provide a practical and useful tool for autonomous improvement in robotic learning.}{}
+
+
+\section{Additional Ablations of Diffusion Steering}\label{sec:app_ablations}
+
+
+\begin{figure}[H]
+\begin{minipage}{0.24\textwidth}
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+         \includegraphics[width=\textwidth]{./im/robomimic_denoise_steps.pdf}
+    \end{subfigure}
+    \caption{Sensitivity of \algname to number of $\pidp$ train denoising steps.}
+    \label{fig:ablation_denois_steps}
+\end{minipage}
+\hfill
+\begin{minipage}{0.24\textwidth}
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+         \includegraphics[width=\textwidth]{./im/robomimic_ddim_steps.pdf}
+    \end{subfigure}
+    \caption{Sensitivity of \algname to number of $\pidp$ inference denoising steps.}
+    \label{fig:ablation_ddim_steps}
+\end{minipage}
+\hfill
+\begin{minipage}{0.24\textwidth}
+\centering
+\begin{subfigure}[b]{\textwidth}
+        \centering
+         \includegraphics[width=\textwidth]{im/robomimic_sac_can.pdf}
+    \end{subfigure}
+    \caption{\algnamena improves on \algnamesac in online setting on \texttt{Robomimic Can}.}
+    \label{fig:dsrl_sac_na_can}
+\end{minipage}
+\hfill
+\begin{minipage}{0.24\textwidth}
+    \centering
+    \begin{subfigure}[b]{\textwidth}
+        \centering
+         \includegraphics[width=\textwidth]{./im/robomimic_dp_data_quality_rew.pdf}
+    \end{subfigure}
+    \caption{Sensitivity of \algname's solution quality to quality of data $\pidp$ trained on.}
+    \label{fig:ablation_data_quality_time}
+\end{minipage}
+\end{figure}
+
+In this section we expand on the results from \Cref{sec:understanding_ds}, providing several additional experiments that seek to understand when \algname is an effective approach.
+All experiments in this section are run on the \texttt{Robomimic Can} environment. Unless otherwise noted, each line corresponds to the average over 5 random seeds, and we use the hyperparameters outlined in \Cref{sec:online_exp_details} for \texttt{Can}. In all plots, dashed lines denote the performance of the base diffusion policy, $\pidp$ (averaged over 200 trials).
+
+
+
+
+
+\paragraph{Does the number of denoising steps $\pidp$ uses affect the performance of \algname?}
+Both diffusion and flow policies rely on an iterative denoising process, \eqref{eq:reverse_process}, to generate actions. An important hyperparameter in the denoising process is the number of steps that it uses, with typically more steps leading to higher quality generation at the expense of longer inference times. We can split the number of steps used in denoising into the value used in training (at what intervals to add the noise), and the number of steps taken at inference time. We test how the number of steps affects the behavior of \algname, scaling both the number of train and inference steps. In \Cref{fig:ablation_denois_steps}, we vary the number of steps we train on, while keeping the number of steps used at inference time fixed to 5, while in \Cref{fig:ablation_ddim_steps} we train a single policy with 100 denoising steps, and vary the number of inference steps used. We see that neither the number of train steps or inference steps has virtually any impact on the performance of \algname.
+
+
+
+\paragraph{Additional details on \Cref{fig:sac_ablation}}
+For the experiment of \Cref{fig:sac_ablation}, for \algnamena we use the hyperparameters given in \Cref{sec:online_exp_details} for \texttt{Robomimic Square}. For \algnamesac we swept over hyperparameters and included the results for best-performing ones, which were identical to those used for \algnamena except for using a hidden size of $128$. 
+In \Cref{fig:dsrl_sac_na_can} we also include results on \texttt{Robomimic Can}, comparing \algnamena to \algnamesac, where we see a similar trend as observed in \Cref{fig:sac_ablation}, albeit somewhat less pronounced.
+
+
+
+\paragraph{Additional details on \Cref{fig:pidp_size_ablation}}
+For the experiment of \Cref{fig:pidp_size_ablation}, we use the hyperparameters given in \Cref{sec:online_exp_details} for \texttt{Robomimic Can} (with the exception of $\pidp$'s layer size, which we vary). 
+
+
+
+\paragraph{Additional details on \Cref{fig:ablation_data_quality}.}
+
+
+To complement \Cref{fig:ablation_data_quality}, in \Cref{fig:ablation_data_quality_time}, we also plot the number of steps to success the steered policy requires.
+We see that the final steered policy \algname converges to for $\pidp$ trained on the \texttt{Worse} split is slightly less optimal in terms of time-to-success than the other cases. We conclude that the quality of $\pidp$ does play a role in how quickly \algname converges and the quality of the solution it converges to, yet find that \algname is surprisingly robust to variation in the performance of $\pidp$.
+
+We note as well that, compared to policies trained on only a single split of the data, the policy trained on all splits sees a more diverse set of behaviors, covering a larger number of possible solution paths. One may hypothesize that a policy could be more easily steered given the larger number of possible behaviors it has learned, but we do not find that to be the case here---training on all datasets does not lead to a performance improvement for \algname as compared to training on a narrower dataset.
+
+
+
+
+
+
+
+
+
+
+\section{Best Practices for \algname}
+We found the following design choices led to the best results for \algname. Several of these are consistent with current best practices for sample-efficient RL (e.g. \cite{ball2023efficient}), while some are particular to \algname:
+\begin{itemize}
+    \item \textbf{High UTD}: In general we used a UTD of at least 20. We found that this led to faster convergence and higher sample efficiency, without sacrificing performance. Higher UTD seems to be particular valuable when running the \algnamena variant of \algname.
+    \item \textbf{Layer-norm}: We found applying layer norm to all but the final layer for both the critic and actor networks also led to improved performance.
+    \item \textbf{Large policy and critic networks}: For all our experiments we instantiate our latent-noise actor and critics, $\piw$ and $\Qw$, as MLPs. We found that using larger MLPs led to better performance---in many experiments we used networks with layer size up to 2048.
+    \item \textbf{Action magnitude}: When transforming the MDP from $\cM$ to $\cMdp$, one design choice is how large a magnitude the actor can play in $\cW$. If $\pidp$ is trained by adding noise sampled from a standard Gaussian to the demonstration actions, as is typical, then only $\bw$ reasonably likely under a standard Gaussian would be ``in-distribution'' for $\pidp(\bs,\bw)$---$\pidp$ would have been unlikely to have denoised an example corresponding to $\bw$ outside this range during training, and therefore its behavior on such examples may be unreliable. To incorporate this, we simply constrain the actions to a rectangle of some width $\actmag$, i.e. in practice we set $\cW \leftarrow [-\actmag, \actmag]^d$. We found that choosing $\actmag$ in the range $[1,3]$ generally worked well for online RL and $[0.5,1.5]$ for offline RL. See below for the value of $\actmag$ used in each experiment.
+\end{itemize}
+
+
+
+
+
+
+
+
+\section{Additional Experimental Details}
+
+
+
+
+\subsection{Details of Online Experiments (\Cref{sec:exp_online})}\label{sec:online_exp_details}
+
+For all baselines, we use the implementations and hyperparameters given by \citet{ren2024diffusion} (please see Section E.3 of \cite{ren2024diffusion} for a detailed overview of baseline methods). As noted in the main text, for \texttt{Robomimic Lift} and \texttt{Can} and all \texttt{Gym} tasks, we utilize the diffusion policy checkpoints provided by \citet{ren2024diffusion} for $\pidp$ (in particular, we use the identical checkpoints as they utilize for their online finetuning experiments). For \texttt{Robomimic Square} and \texttt{Transport} we train new diffusion policies with a larger number of denoising steps than those provided by \citet{ren2024diffusion} (100 vs 20) which we found to increase the performance of $\pidp$ somewhat. To train these policies, we use the diffusion policy training code provided by \citet{ren2024diffusion}, and keep all hyperparameters fixed other than the number of denoising steps.
+For all methods we utilize DDIM sampling, and note the number of denoising steps used at inference time in the tables below. As suggested in \citet{ren2024diffusion}, during training, we experiment with injecting additional noise into the DDIM denoising process to help induce additional exploration. For each baseline method, we run variants with and without this additional noise injection, and include results for the best-performing one. 
+We utilize the default rewards for each task (in particular, for all \texttt{Robomimic} tasks the reward is a 0-1 success reward).
+
+We utilize \algnamena for all environments but \texttt{Robomimic Transport} where we use \algnamesac. For \algname, in all experiments we run 4 environments in parallel. We update the actor and critic after every (parallel) environment step, taking the number of gradient steps at each update as stated below (we take the same number of steps on both the actor and critic). For updating the latent-noise critic $\Qw$ in \algnamena, we denote the number of gradient steps per update as ``$\Qw$ update steps'' in the following. For \algnamesac we use the implementation of \sac given by \cite{raffin2021stable}, and for \algnamena we use an entropy penalty identical to that used for \sac, otherwise running \algnamena as stated in \Cref{alg:main}. For each environment, we first roll out $\pidp$ with $\bw \sim \cN(0,I)$ for some number of steps (denoted as ``Initial rollouts'' in the following) and place the data collected in the replay buffer, before starting the actor and critic online training updates. The policies given by \citet{ren2024diffusion} all utilize action chunking (``Action chunk size'' in the following). To handle RL with action chunking, we treat the entire chunk as a single action and ignore the observations from within the chunk, treating the entire chunk as a single step in the environment (however, the number of timesteps stated in all results gives the total number of timesteps in the original environment).
+
+In all plots, error bars denote 1 standard error.
+All experiments in this section were run on an NVIDIA A5000 GPU.
+
+
+
+
+
+\begin{table}[H]
+\caption{
+\footnotesize
+\textbf{Common \algname hyperparameters for online experiments.}
+}
+\vspace{5pt}
+\label{tab:dsrl_online_hyperparams}
+\begin{center}
+\scalebox{0.9}
+{
+\begin{tabular}{ll}
+    \toprule
+    \textbf{Hyperparameter} & \textbf{Value} \\
+    \midrule
+    Learning rate & $0.0003$ \\
+    Batch size & $256$ \\
+    Activation & Tanh \\
+    Target entropy & $0$ \\
+    Target update rate ($\tau$) & $0.005$ \\
+    Number of actor and critic layers & $3$ \\
+    Number of critics & $2$ \\
+    Number of environments & $4$ \\
+    \bottomrule
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+
+
+\begin{table}
+\caption{
+\footnotesize
+\textbf{Hyperparameters for \algname \texttt{Robomimic} experiments.}
+}
+\vspace{5pt}
+\begin{center}
+\scalebox{0.9}
+{
+\begin{tabular}{lllll}
+    \toprule
+    \textbf{Hyperparameter} & \texttt{Lift} & \texttt{Can} & \texttt{Square} & \texttt{Transport}  \\
+    \midrule
+    Action chunk size & $4$ & $4$ & $4$ & $8$  \\
+Hidden size & $2048$  & $2048$ & $2048$ & $128$  \\
+Gradient steps per update & $30$ & $20$ & $20$ & $20$  \\
+$\Qw$ update steps & $10$ & $10$ & $10$ & - \\
+Discount factor & $0.99$ & $0.99$ & $0.999$ & $0.99$  \\
+Action magnitude ($\actmag$) & $1.5$ & $1.5$ & $1.5$ & $1$  \\
+Initial steps & $24000$ & $24000$ & $32000$ & $320000$ \\
+$\pidp$ train denoising steps & $20$ & $20$ & $100$ & $100$ \\
+$\pidp$ inference denoising steps & $8$ & $8$ & $8$ & $100$ \\
+    \bottomrule
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+
+
+
+\begin{table}
+\caption{
+\footnotesize
+\textbf{Hyperparameters for \algname \texttt{OpenAI Gym} experiments.}
+}
+\vspace{5pt}
+\begin{center}
+\scalebox{0.9}
+{
+\begin{tabular}{llll}
+    \toprule
+    \textbf{Hyperparameter} &  \texttt{Hopper-v2} & \texttt{Walker2D-v2} & \texttt{HalfCheetah-v2} \\
+    \midrule
+Action chunk size  & $4$ & $4$ & $4$ \\
+Hidden size & $2048$ & $2048$ & $1024$ \\
+Gradient steps per update  & $20$ & $20$ & $20$ \\
+$\Qw$ update steps & $10$ & $10$ &  $10$ \\
+Discount factor  & $0.99$ & $0.99$ & $0.99$ \\
+Action magnitude ($\actmag$)  & $1.5$ & $2.5$ & $1.5$ \\
+Initial steps & $32000$ & $32000$ & $32000$ \\
+$\pidp$ train denoising steps  & $20$ & $20$ & $20$ \\
+$\pidp$ inference denoising steps & $5$ & $5$ &  $5$ \\
+    \bottomrule
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+
+
+
+
+
+\subsection{Details of Offline Experiments (\Cref{sec:exp_offline})}
+
+In the offline setting, we utilize the flow policy implementation given by \citet{park2025flow}, and train each flow policy for 1M steps. For each environment we run on the default task given in \texttt{OGBench} \cite{park2024ogbench}, and specify the dataset used in the task name given in \Cref{table:offline}. As noted in the main text, all baseline values are taken directly from \cite{park2025flow}. While \algname was run with the same number of gradient steps and same network sizes as all baseline methods, we note that we utilize 10 critics for \algname (with mean aggregation), while all baselines were run with only 2 critics each, and thus the total number of parameters \algname utilizes is larger than that used by the baselines.
+
+For hyperparameters, we mostly follow the original choices by \citet{park2025flow},
+and present the full list of hyperparameters used in our offline experiments in \Cref{table:offline_hyp}.
+Also, following \citet{park2025flow}, we individually tune the degree of conservatism (i.e., the action magnitude $\actmag$) for each task, and report the per-task hyperparameters in \Cref{table:offline_pertask_hyp}.
+In \Cref{table:offline}, ``$\pm$'' denotes 1 standard deviation. All experiments in this section were run on an NVIDIA A5000 GPU.
+
+
+\begin{table}
+\caption{
+\footnotesize
+\textbf{Common \algname hyperparameters for offline experiments.}
+}
+\vspace{5pt}
+\label{table:offline_hyp}
+\begin{center}
+\scalebox{0.9}
+{
+\begin{tabular}{ll}
+    \toprule
+    \textbf{Hyperparameter} & \textbf{Value} \\
+    \midrule
+    Learning rate & $0.0003$ \\
+    Batch size & $256$ \\
+    Activation & GELU \\
+    Target update rate ($\tau$) & $0.005$ \\
+    Hidden size & $512$ \\
+    Number of actor and critic layers & $4$ \\
+    Number of critics & $10$ \\
+    Flow steps & $10$ \\
+    Clipped double Q-learning & False \\
+    \bottomrule
+\end{tabular}
+}
+\end{center}
+\end{table} 
+
+\begin{table}[H]
+\caption{
+\footnotesize
+\textbf{Per-task \algname hyperparameters for offline experiments.}
+}
+\vspace{5pt}
+\label{table:offline_pertask_hyp}
+\begin{center}
+\scalebox{0.9}
+{
+\begin{tabular}{lll}
+    \toprule
+    \textbf{Task} & \textbf{Action Magnitude ($\actmag$)} & \textbf{Discount Factor} \\
+    \midrule
+    \texttt{antmaze-large-navigate-singletask} & $1.25$ & $0.99$ \\
+    \texttt{antmaze-giant-navigate-singletask} & $1.25$ & $0.995$ \\
+    \texttt{humanoidmaze-medium-navigate-singletask} & $0.5$ & $0.995$ \\
+    \texttt{humanoidmaze-large-navigate-singletask} & $0.75$ & $0.995$ \\
+    \texttt{antsoccer-arena-navigate-singletask} & $0.75$ & $0.995$ \\
+    \texttt{cube-single-play-singletask} & $0.5$ & $0.99$ \\
+    \texttt{cube-double-play-singletask} & $1.5$ & $0.99$ \\
+    \texttt{scene-play-singletask} & $0.75$ & $0.99$ \\
+    \texttt{puzzle-3x3-play-singletask} & $0.5$ & $0.99$ \\
+    \texttt{puzzle-4x4-play-singletask} & $0.5$ & $0.99$ \\
+    \bottomrule
+\end{tabular}
+}
+\end{center}
+\end{table} 
+
+
+
+\subsection{Details of Offline-to-Online Experiments (\Cref{sec:exp_offline_to_online})}
+For \algname, we utilize identical hyperparameters as are used for \texttt{Robomimic Can} and \texttt{Square} in \Cref{sec:exp_online}. For \rlpd and \textsc{Cal-Ql}, we plot the numbers given in \cite{ren2024diffusion}.
+
+
+
+
+
+
+
+\subsection{Details of Real-World Experiments (\Cref{sec:exp_widowx})}
+
+
+\subsubsection{Single-Task Diffusion Policy}
+In the Franka single-task experiments, for $\pidp$ we trained a diffusion policy using the CNN architecture proposed by \cite{chi2023diffusion} on a self-collected dataset. Please see \Cref{tab:serl_diffusion_params} for the hyperparameters used for $\pidp$. 
+For \algname, we begin by running $\pidp$ for 10 episodes sampling $\bw \sim \cN(0,I)$, and initialize the replay buffer with the data collected from these rollouts. For \rlpd and \rlpd with intervention, every batch is sampled with half taken from the 10 human demonstrations used to train $\pidp$, and half taken from additional data collected online, as is outlined in \cite{ball2023efficient}. 
+For \rlpd and \rlpd with intervention, we use the hyperparameters used by \citet{luo2024precise}, which were found to work well on a similar real-world robot policy learning task. For \algname, we use the hyperparameters given in \Cref{tab:dsrl_online_hyperparams} (with the exception of ``Number of environments'', which is 1 in the real-world setting) and \Cref{tab:serl_diffusion_params}. For both \algname and \rlpd we update the actor and critic at every environment step, for \algname taking the number of gradient steps given in \Cref{tab:serl_diffusion_params} per update.
+
+In the cube pick-and-place task, we define an episode as successful if the cube is dropped into the bowl. We utilize a 0-1 success reward for each task. See \Cref{fig:widowx_setup2} for additional visualizations of our setups.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{./im/franka_setup.png}
+    \caption{Single-task Franka setup.}
+    \label{fig:franka_setup}
+\end{figure}
+
+\begin{table}
+\caption{
+\footnotesize
+\textbf{Hyperparameters for $\pidp$ in Franka experiments.}
+}
+\label{tab:serl_diffusion_params}
+\vspace{5pt}
+\begin{center}
+\scalebox{0.9}
+{
+\begin{tabular}{ll}
+    \toprule
+    \textbf{Hyperparameter} & Value \\
+    \midrule
+Batch size &  $256$ \\
+Learning rate & $0.0003$ \\
+Training steps & $3500$ \\
+Warmup steps & $0$ \\
+\hline
+Action chunk size & $1$ \\
+Train denoising steps & $100$ \\
+Inference denoising steps & $8$ \\
+Image encoder & ResNet-18 \\
+Hidden size & $1024$ \\
+Number of Heads & $1$ \\
+Number of Layers & $3$ \\
+Feedforward dimension & $512$ \\
+    \bottomrule
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+
+\subsubsection{Multi-Task Diffusion Policy}
+In the WidowX experiments, for $\pidp$ we trained a diffusion policy using the DiT architecture proposed by \cite{dasari2024ingredients} on the Bridge v2 dataset. Please see \Cref{tab:dit_params} for the hyperparameters used for $\pidp$. 
+We trained $\pidp$ with image goal conditioning, and in deployment would condition it on a goal image of the desired final position. 
+
+For both \algname and \rlpd, we begin by running $\pidp$ for 20 episodes sampling $\bw \sim \cN(0,I)$, and initialize the replay buffer with the data collected from these rollouts. For \rlpd, every batch is sampled with half taken from the 20 initial rollouts of $\pidp$, and half taken from additional data collected online, as is outlined in \cite{ball2023efficient}. For \rlpd, we use the hyperparameters used by \citet{luo2024precise}, which were found to work well on a similar real-world robot policy learning task. For \algname, we use the hyperparameters given in \Cref{tab:dsrl_online_hyperparams} (with the exception of ``Number of environments'', which is 1 in the real-world setting) and \Cref{tab:widowx_dsrl_params}. As input features for both \algname and \rlpd, we provide the proprioceptive state, and also the image features learned by $\pidp$'s pretrained ResNet encoder.
+For both \algname and \rlpd we update the actor and critic every other environment step, for \algname taking the number of gradient steps given in \Cref{tab:widowx_dsrl_params} per update.
+
+For the pick-and-place task, we define an episode as successful if the mushroom is at least half on the cloth, and the WidowX has released the mushroom. For the drawer closing task we define an episode as successful if the drawer is successfully shut. For the block stacking task, we define an episode as successful if the yellow block is on the blue blocks and the WidowX has released the yellow block. We utilize a 0-1 success reward for each task. See \Cref{fig:widowx_setup2} for additional visualizations of our setups.
+
+For \algname training, we utilize an NVIDIA GeForce RTX 4090 GPU.
+
+
+\begin{table}
+\caption{
+\footnotesize
+\textbf{Hyperparameters for DiT $\pidp$ in WidowX experiments.}
+}
+\label{tab:dit_params}
+\vspace{5pt}
+\begin{center}
+\scalebox{0.9}
+{
+\begin{tabular}{ll}
+    \toprule
+    \textbf{Hyperparameter} & Value \\
+    \midrule
+Batch size &  $2048$ \\
+Learning rate & $0.0003$ \\
+Training steps & $100000$ \\
+LR scheduler & cosine \\
+Warmup steps & $2000$ \\
+\hline
+Action chunk size & $1$ \\
+Train denoising steps & $100$ \\
+Inference denoising steps & $8$ \\
+Image encoder & ResNet-34 \\
+Hidden size & $256$ \\
+Number of Heads & $1$ \\
+Number of Layers & $3$ \\
+Feedforward dimension & $512$ \\
+    \bottomrule
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+
+
+
+
+\begin{table}
+\caption{
+\footnotesize
+\textbf{Hyperparameters for \algname WidowX experiments.}
+}
+\label{tab:widowx_dsrl_params}
+\vspace{5pt}
+\begin{center}
+\scalebox{0.9}
+{
+\begin{tabular}{llll}
+    \toprule
+    \textbf{Hyperparameter} & \texttt{Pick-and-Place} & \texttt{Drawer Closing} & \texttt{Block Stacking}  \\
+    \midrule
+Hidden size & $1024$  & $2048$ & $1024$  \\
+Gradient steps per update & $30$ & $20$ & $20$   \\
+Discount factor & $0.97$ & $0.97$ & $0.97$  \\
+Action magnitude ($\actmag$) & $2$ & $2$ & $1.5$  \\
+    \bottomrule
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+
+
+
+
+
+
+\begin{figure}
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./im/widowx_mushroom_setup.jpg}
+        \caption{Pick-and-place task.}
+        \label{fig:mushroom}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./im/widowx_drawer_setup.jpg}
+        \caption{Drawer closing task.}
+        \label{fig:drawer}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./im/widowx_blocks_setup.jpg}
+        \caption{Block stacking task.}
+        \label{fig:third}
+    \end{subfigure}
+    \caption{Setups for multi-task WidowX diffusion policy experiments.}
+    \label{fig:widowx_setup2}
+\end{figure}
+
+
+
+
+
+\subsection{Details of $\pi_0$ Experiments (\Cref{sec:exp_generalist})}
+
+
+
+
+\begin{figure}[b]
+\centering
+\hspace{-2em}
+\begin{minipage}{0.55\textwidth}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[height=\textwidth]{./im/libero_scene.png}
+        \caption{\texttt{Libero}}
+        \label{fig:libero}
+    \end{subfigure}
+    % \hfill
+    \begin{subfigure}[b]{0.45\textwidth}
+        \centering
+        \includegraphics[height=\textwidth]{./im/aloha_scene.png}
+        \caption{\texttt{AlohaTransferCube}}
+        \label{fig:aloha}
+    \end{subfigure}
+    \caption{Simulation tasks for $\pi_0$.}
+    \label{fig:pi0_tasks}
+\end{minipage}
+\end{figure}
+
+
+\textbf{Tasks.} In the $\pi_0$ experiments, we study two simulation tasks: \texttt{Libero}~\cite{liu2023libero} and \texttt{AlohaTransferCube}~\cite{zhao2023learning}, as shown in Figure~\ref{fig:pi0_tasks}. The \texttt{Libero} benchmark consists of 130 tasks which are divided into separate suites---\texttt{Libero-\{Spatial, Object, Goal, 10, 90\}}. We study the task ``pick up the cream cheese and put it in the tray'' from the \texttt{Libero-90} suite as our target task for online fine-tuning. The \texttt{AlohaTransferCube} task requires the bimanual robots to pick up the cube with one hand and transfer it to the other. Both tasks use a sparse reward scheme: the agent receives –1 at every time step until it succeeds, at which point it receives 0.
+
+\textbf{Base policy.} We use the public weights from $\pi_0$ for both tasks. Specifically, we use the checkpoint at \texttt{s3://openpi-assets/checkpoints/pi0\_libero} for the \texttt{Libero} task, and \texttt{s3://openpi-assets/checkpoints/pi0\_aloha\_sim} for the \texttt{AlohaTransferCube} task. Both checkpoints were obtained by fine-tuning the $\pi_0$ flow-matching base policy, which was pre-trained on over 10k hours of robot data. The \texttt{Libero} checkpoint was fine-tuned for 30k steps on the \texttt{Libero-\{Spatial, Object, Goal, 10\}} suites, containing a total of 1,693 demonstrations on 40 tasks. Note that our target task is from the \texttt{Libero-90} suite, which is not included in the dataset. This allows us to study how to rapidly adapt the base policy to master a new, unseen task. The \texttt{Aloha} checkpoint was fine-tuned for 20k steps using 50 demonstrations on the same task.
+
+\textbf{Training details.} We use the \algnamesac variant of our method for these experiments. Since both tasks receive visual observations, we train the actor and critic with vision encoders composed of four convolutional layers. 
+The $\pi_0$ policy is trained in a noise and action space with a chunk size of 50, where each noise and action is 32-dimensional, resulting in a total dimensionality of 1,600. Naively training the actor $\piw(\bs)$ and critic $\Qw(\bs,\bw)$ is challenging due to this high dimensionality. 
+
+Here, we propose a simple yet effective approach to train \algnamesac on large action chunks. To avoid training the actor and critic on the whole noise space $\cW = (\mathbb{R}^d)^C = \bigl\{\, \bw = (w_1,\dots,w_C)\mid w_i \in \mathbb{R}^d\bigr\},$ where $C$ is the action chunk size and $d$ is the per-step noise dimension, we instead train a single-step actor $\piw_\text{single}(\bs)$ and critic $\Qw_\text{single}(\bs,\bw_\text{single})$ where $\cW_\text{single} = \mathbb{R}^d$. At inference time, we simply sample $w_\text{single} \sim \piw_\text{single}$ and repeat it across the action chunk axis $\bw = \{(w_1,\dots,w_C)\mid w_i = w_\text{single} \}$, and use it to query the $\pi_0$ policy. We find that this makes SAC training more efficient and stable, while the repeated-noise formulation remains expressive enough to steer $\pi_0$ to produce effective actions. This shows that the noise space of pre-trained $\pi_0$ policy is a well-structured latent space, highlighting another advantage of running RL in this latent-noise action space. We provide the hyperparameters in Table~\ref{table:pi0_hyp}.
+
+\paragraph{Real-world experiments.}
+For the real-world $\pi_0$ experiments, we utilize the pubic $\pi_0\text{-DROID}$ checkpoint at \texttt{s3://openpi-assets/checkpoints/pi0\_droid}. We adopt the same method to handle large action chunks as is described above, though note that this $\pi_0\text{-DROID}$ variant we used only has an action chunk of size 10. Please see \Cref{fig:pi0_tasks} for visualizations of our setup. We input the proprioceptive state, the final token’s last hidden feature from $\pi_0$’s VLM backbone (a 2,048-dimensional vector), and visual features into the noise policy. The visual features are extracted by training a shallow convolutional encoder on the concatenated images from the left, right, and wrist cameras, following the same procedure described above.
+For text commands to $\pi_0$, we use ``turn on the toaster'' and ``put the spoon on the plate''.
+
+We run $\pi_0$ inference on a remote policy server, but run \algname training locally on a NVIDIA GeForce RTX 3070 GPU with 8GB of VRAM. We note that this is a significantly smaller amount of compute than is typically required for $\pi_0$ finetuning---as stated in the $\pi_0$ repository, LoRA of $\pi_0$ requires at least 22.5GB of VRAM, and full finetuning requires 70GB.
+
+
+% \newpage
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./im/pi0_toaster_setup.jpg}
+        \caption{Toaster task.}
+        \label{fig:toaster_setup}
+    \end{subfigure}
+    \hspace{2em}
+    \begin{subfigure}[b]{0.3\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{./im/pi0_spoon_setup.jpg}
+        \caption{Spoon task.}
+        \label{fig:third}
+    \end{subfigure}
+    \caption{$\pi_0$ real-world task setups.}
+    \label{fig:pi0_setup}
+\end{figure}
+
+
+\begin{table}[t]
+\caption{
+\footnotesize
+\textbf{Hyperparameters for \algname \texttt{$\pi_0$} experiments.}
+}
+\vspace{5pt}
+\label{table:pi0_hyp}
+
+\begin{center}
+\scalebox{0.9}
+{
+\begin{tabular}{llll}
+    \toprule
+    \textbf{Hyperparameter} & \texttt{Libero} & \texttt{AlohaTransferCube} & Real-world \\
+    \midrule
+Batch size & $256$ & $256$ & $256$ \\
+Hidden size & $128$ & $128$ & $1024$ \\
+Number of layers & $3$ & $3$ & $3$ \\
+Actor learning rate  & $0.0001$ & $0.0001$ & $0.0001$ \\
+Critic learning rate & $0.0003$ & $0.0003$ & $0.0003$ \\
+Discount factor & $0.999$ & $0.999$ & $0.99$ \\
+Target entropy & $-d/2$ & $-d/2$ & 0 \\
+Target update rate ($\tau$) & $0.005$ & $0.005$ & $0.005$ \\
+Image observation size & $64 \times 64$ & $64 \times 64$ & $128 \times 128$  \\
+CNN features & $(32, 32, 32, 32)$ & $(32, 32, 32, 32)$ & $(32, 32, 32, 32)$  \\
+Gradient steps per update & $20$ & $20$ & $30$ \\
+Action magnitude ($\actmag$) & $1.0$ & $2.0$ & $2.5$ \\
+Action chunk size & $50$ & $50$ & $10$ \\
+Number of actions to execute & $20$ & $50$ & $10$  \\
+Number of critics & $10$ & $10$ & $2$ \\
+Flow steps & $10$ & $10$ & $10$ \\
+Clipped double Q-learning & False & False & False \\
+    \bottomrule
+\end{tabular}
+}
+\end{center}
+\end{table}
+
+
+
+
+
+
+
+
+

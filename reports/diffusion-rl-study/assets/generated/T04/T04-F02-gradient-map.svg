@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">Diffusion-RL 四类方法的 reward 与梯度路径</title>
+  <desc id="desc">展示 reward 如何通过 advantage log probability、weighted matching、guidance policy improvement 或 Q function 回到不同可训练参数。</desc>
+  <defs>
+    <marker id="a" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0,0 L12,6 L0,12 z" fill="#293943"/></marker>
+    <style>.t{font-family:Segoe UI,Microsoft YaHei,sans-serif;fill:#17202a}.h1{font-size:34px;font-weight:700}.h2{font-size:21px;font-weight:700}.b{font-size:16px}.s{font-size:13px;fill:#596873}.box{fill:#fff;stroke:#cbd5dc;stroke-width:2}.arr{stroke:#293943;stroke-width:3;fill:none;marker-end:url(#a)}.grad{stroke:#b13b3b}.data{stroke:#176b87}.frozen{stroke-dasharray:7 7}</style>
+  </defs>
+  <rect width="1600" height="900" fill="#f4f7f8"/>
+  <text x="70" y="60" class="t h1">同样使用 reward，梯度实际走四条完全不同的路</text>
+  <text x="70" y="94" class="t b s">蓝线是采样/数据流，红线是可微优化信号，虚线框表示冻结模块。</text>
+
+  <g transform="translate(55 145)">
+    <rect width="1490" height="145" rx="8" fill="#eaf5f7" stroke="#cbd5dc" stroke-width="2"/>
+    <text x="25" y="38" class="t h2">轨迹级 policy gradient · DDPO / Flow-GRPO</text>
+    <rect x="35" y="60" width="220" height="55" rx="5" class="box"/><text x="145" y="93" text-anchor="middle" class="t b">去噪 trajectory</text>
+    <rect x="330" y="60" width="190" height="55" rx="5" class="box"/><text x="425" y="93" text-anchor="middle" class="t b">终局 reward</text>
+    <rect x="595" y="60" width="205" height="55" rx="5" class="box"/><text x="697" y="93" text-anchor="middle" class="t b">advantage A</text>
+    <rect x="875" y="60" width="245" height="55" rx="5" class="box"/><text x="997" y="84" text-anchor="middle" class="t b">∇ log pθ(action|state)</text><text x="997" y="105" text-anchor="middle" class="t s">ratio / clipping 可选</text>
+    <rect x="1195" y="60" width="245" height="55" rx="5" class="box"/><text x="1317" y="84" text-anchor="middle" class="t b">更新 denoiser</text><text x="1317" y="105" text-anchor="middle" class="t s">velocity / score parameters</text>
+    <path d="M255 87 L330 87" class="arr data"/><path d="M520 87 L595 87" class="arr data"/><path d="M800 87 L875 87" class="arr grad"/><path d="M1120 87 L1195 87" class="arr grad"/>
+  </g>
+
+  <g transform="translate(55 320)">
+    <rect width="1490" height="145" rx="8" fill="#fff5e6" stroke="#cbd5dc" stroke-width="2"/>
+    <text x="25" y="38" class="t h2">前向 matching · AWM / DiffusionNFT</text>
+    <rect x="35" y="60" width="220" height="55" rx="5" class="box"/><text x="145" y="84" text-anchor="middle" class="t b">生成 clean x₀</text><text x="145" y="105" text-anchor="middle" class="t s">采样图通常 detach</text>
+    <rect x="330" y="60" width="190" height="55" rx="5" class="box"/><text x="425" y="93" text-anchor="middle" class="t b">reward / r</text>
+    <rect x="595" y="60" width="205" height="55" rx="5" class="box"/><text x="697" y="84" text-anchor="middle" class="t b">重新前向加噪</text><text x="697" y="105" text-anchor="middle" class="t s">x₀ → xₜ, target v</text>
+    <rect x="875" y="60" width="245" height="55" rx="5" class="box"/><text x="997" y="84" text-anchor="middle" class="t b">weighted MSE</text><text x="997" y="105" text-anchor="middle" class="t s">正向强化 / 负向躲避</text>
+    <rect x="1195" y="60" width="245" height="55" rx="5" class="box"/><text x="1317" y="84" text-anchor="middle" class="t b">更新 denoiser</text><text x="1317" y="105" text-anchor="middle" class="t s">不需要逐步 action logp</text>
+    <path d="M255 87 L330 87" class="arr data"/><path d="M520 87 L595 87" class="arr data"/><path d="M800 87 L875 87" class="arr grad"/><path d="M1120 87 L1195 87" class="arr grad"/>
+  </g>
+
+  <g transform="translate(55 495)">
+    <rect width="1490" height="145" rx="8" fill="#eef0fb" stroke="#cbd5dc" stroke-width="2"/>
+    <text x="25" y="38" class="t h2">Guidance policy improvement · CFGRL</text>
+    <rect x="35" y="60" width="220" height="55" rx="5" class="box frozen"/><text x="145" y="84" text-anchor="middle" class="t b">base / reference</text><text x="145" y="105" text-anchor="middle" class="t s">可冻结或缓慢更新</text>
+    <rect x="330" y="60" width="190" height="55" rx="5" class="box"/><text x="425" y="84" text-anchor="middle" class="t b">reward preference</text><text x="425" y="105" text-anchor="middle" class="t s">定义改进方向</text>
+    <rect x="595" y="60" width="205" height="55" rx="5" class="box"/><text x="697" y="84" text-anchor="middle" class="t b">improved policy</text><text x="697" y="105" text-anchor="middle" class="t s">π* / guidance operator</text>
+    <rect x="875" y="60" width="245" height="55" rx="5" class="box"/><text x="997" y="84" text-anchor="middle" class="t b">控制 guidance 强度</text><text x="997" y="105" text-anchor="middle" class="t s">收益与 KL 偏移的旋钮</text>
+    <rect x="1195" y="60" width="245" height="55" rx="5" class="box"/><text x="1317" y="84" text-anchor="middle" class="t b">采样方向改变</text><text x="1317" y="105" text-anchor="middle" class="t s">训练/推理边界依实现而定</text>
+    <path d="M255 87 L330 87" class="arr data"/><path d="M520 87 L595 87" class="arr grad"/><path d="M800 87 L875 87" class="arr grad"/><path d="M1120 87 L1195 87" class="arr data"/>
+  </g>
+
+  <g transform="translate(55 670)">
+    <rect width="1490" height="145" rx="8" fill="#edf7ef" stroke="#cbd5dc" stroke-width="2"/>
+    <text x="25" y="38" class="t h2">Value-based noise steering · DSRL / latent-space RL</text>
+    <rect x="35" y="60" width="220" height="55" rx="5" class="box frozen"/><text x="145" y="84" text-anchor="middle" class="t b">冻结 πdp(s,w)</text><text x="145" y="105" text-anchor="middle" class="t s">noise → environment action</text>
+    <rect x="330" y="60" width="190" height="55" rx="5" class="box"/><text x="425" y="84" text-anchor="middle" class="t b">TD critic Q(s,a)</text><text x="425" y="105" text-anchor="middle" class="t s">环境 reward</text>
+    <rect x="595" y="60" width="205" height="55" rx="5" class="box"/><text x="697" y="84" text-anchor="middle" class="t b">noise critic Q(s,w)</text><text x="697" y="105" text-anchor="middle" class="t s">拟合 Q(s,πdp(s,w))</text>
+    <rect x="875" y="60" width="245" height="55" rx="5" class="box"/><text x="997" y="84" text-anchor="middle" class="t b">max Q(s,πw(s))</text><text x="997" y="105" text-anchor="middle" class="t s">训练 state-conditioned noise actor</text>
+    <rect x="1195" y="60" width="245" height="55" rx="5" class="box"/><text x="1317" y="84" text-anchor="middle" class="t b">只更新 πw / critics</text><text x="1317" y="105" text-anchor="middle" class="t s">基座 diffusion policy 保持冻结</text>
+    <path d="M255 87 L330 87" class="arr data"/><path d="M520 87 L595 87" class="arr grad"/><path d="M800 87 L875 87" class="arr grad"/><path d="M1120 87 L1195 87" class="arr grad"/>
+  </g>
+  <text x="800" y="862" text-anchor="middle" class="t b">关键：reward 相同不代表算法相同；必须沿着红线检查真正的优化变量与数据分布。</text>
+</svg>

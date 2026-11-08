@@ -1,0 +1,138 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "vla-landscape",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "autonomous-driving-vla-landscape-report.html",
+  "source_html_sha256": "c56df2780db4ddf5c58e06d4cfe1ba1441845f3c14ad8e0296ca57327d329b15",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "b7b07f863cb3dfc5c4b6b73081d0508012d78b49e7f6565df25a4da90550d471",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 265,
+      "original_static_math": 0,
+      "added_static_math": 10
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 10,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "assets/vendor/mathjax/tex-chtml.js",
+      "source_sha256": "0a6ded5abbce13331658dd239f34382abd06492c74b71b61e8caa8112ec55fa5",
+      "sha256": "0a6ded5abbce13331658dd239f34382abd06492c74b71b61e8caa8112ec55fa5",
+      "bytes": 1160989
+    },
+    {
+      "path": "../../assets/media/88c37e56a0e46d798cbb7b5d11da7efde18cf5d3c789bc5991274d8baf37f17b.webp",
+      "source_sha256": "88c37e56a0e46d798cbb7b5d11da7efde18cf5d3c789bc5991274d8baf37f17b",
+      "sha256": "be3b7f8202340ed4c84ddba0a065046f47f885cd4509810de6bc2f9f4091dfdb",
+      "bytes": 1362308,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/b2687d357670ea69ada4bc9fb542680c15673dfea5686abc58f53ec56c4abd32.webp",
+      "source_sha256": "b2687d357670ea69ada4bc9fb542680c15673dfea5686abc58f53ec56c4abd32",
+      "sha256": "eb35c39dcec15db6a7b97236899ec30d4215fcca0733b7b0475465fffe599e2a",
+      "bytes": 1175716,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/83d51e9cc379f04e0fa4b28828db48b57d861f168a122e6b5c5d39e06f2dd3af.webp",
+      "source_sha256": "83d51e9cc379f04e0fa4b28828db48b57d861f168a122e6b5c5d39e06f2dd3af",
+      "sha256": "540fbdce42a1dc8ae71156303c3e7ceb36934e16e0949da4b0cd95b3c9f41d98",
+      "bytes": 1203494,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/193f6ff88af0fb56e59a83e60405cf974cc8653e8a4f515ad4fd2a1ca5d4c2f9.webp",
+      "source_sha256": "193f6ff88af0fb56e59a83e60405cf974cc8653e8a4f515ad4fd2a1ca5d4c2f9",
+      "sha256": "5cb1f725a13e6b26e7b06e0c26b09aa43163441fbec2cdde9ea2aa74794d43ae",
+      "bytes": 1229690,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/567ad8b63b812a4bb43d8146c40f5c479bbb58b1777278f1b12b8751442b1ec0.webp",
+      "source_sha256": "567ad8b63b812a4bb43d8146c40f5c479bbb58b1777278f1b12b8751442b1ec0",
+      "sha256": "83fd51f6d4453fd994ac8b7579802b0e8e9b19e55a8aa9e4747e28c6c32d746b",
+      "bytes": 1177568,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/41816e0b0db8722fa37592f27a8abe9eff7cd13bcaf165a3d2e6b604c8383927.webp",
+      "source_sha256": "41816e0b0db8722fa37592f27a8abe9eff7cd13bcaf165a3d2e6b604c8383927",
+      "sha256": "423df6f38e6ed8a20d84469528935a7e5261dc4ef8f1b8fbcda1616380d615d1",
+      "bytes": 1060134,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/7e5c415d782add33cae3e8e76b31f2f37dba7c4c4918127d1d2584a128085358.webp",
+      "source_sha256": "7e5c415d782add33cae3e8e76b31f2f37dba7c4c4918127d1d2584a128085358",
+      "sha256": "f370046431029ee0352d9c916ba55065550d7ff508860e3facb555d5746eaf64",
+      "bytes": 1173326,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/22c5e5787b47976cffd115130e5b311aea2ec94a96d156c53191a258f26fff33.webp",
+      "source_sha256": "22c5e5787b47976cffd115130e5b311aea2ec94a96d156c53191a258f26fff33",
+      "sha256": "f7c4dccba08856926f190bae82adb6f324c19dfd2e4dd193d027133ff2317eb8",
+      "bytes": 1043074,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/716d2992927b5fb3d16b3fde18ceaa1971e8472042b468e7012deab0d2ce370a.webp",
+      "source_sha256": "716d2992927b5fb3d16b3fde18ceaa1971e8472042b468e7012deab0d2ce370a",
+      "sha256": "d180564898c5cf63b9b629092742c6f8540ff894fd10fe204ef3e1b57381f3d5",
+      "bytes": 988180,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/29b1076299a94bdbf612029ddc6a72d03ba85572716bff5b6cdf6969e4ae3e44.webp",
+      "source_sha256": "29b1076299a94bdbf612029ddc6a72d03ba85572716bff5b6cdf6969e4ae3e44",
+      "sha256": "99617cfeac229cc6d392593dc3ec4f0b9e1ce2b0bae6621967e148439a674cdb",
+      "bytes": 1137524,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/6354b3770a5b490a2986b2ce1478223a1923a67ddf17d28b3fe1e6b659e25265.webp",
+      "source_sha256": "6354b3770a5b490a2986b2ce1478223a1923a67ddf17d28b3fe1e6b659e25265",
+      "sha256": "33188b1e73c5f97094a006238451d2bd4783a8f28e3e3dd7ca7d47a3756f7e7e",
+      "bytes": 1319400,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "c56df2780db4ddf5c58e06d4cfe1ba1441845f3c14ad8e0296ca57327d329b15",
+      "sha256": "b7b07f863cb3dfc5c4b6b73081d0508012d78b49e7f6565df25a4da90550d471",
+      "bytes": 770371
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

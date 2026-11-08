@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>S006 固定源码：sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/dreamer4/train_dynamics.py</title><style>body{max-width:100%;margin:1.2rem;font-family:system-ui,sans-serif}pre{overflow:auto;line-height:1.55}pre span{display:block}pre a{color:#667;text-decoration:none}:target{background:#fff3ba}</style><link href="../../../../../../../../../../../../favicon.ico" rel="icon"/></head><body><h1>S006 固定源码：sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/dreamer4/train_dynamics.py</h1><p>源码字节 SHA-256：<code>18cdc0893b77b131ec4d56765177b5b68a737fb215c6e8df57060b6b299e6a0e</code>。<a download="" href="train_dynamics.py">下载原始源码</a></p><pre><span id="L1"><a aria-label="第 1 行" href="#L1">   1</a> # train_dynamics.py</span>
+<span id="L2"><a aria-label="第 2 行" href="#L2">   2</a> import os</span>
+<span id="L3"><a aria-label="第 3 行" href="#L3">   3</a> import time</span>
+<span id="L4"><a aria-label="第 4 行" href="#L4">   4</a> import math</span>
+<span id="L5"><a aria-label="第 5 行" href="#L5">   5</a> import random</span>
+<span id="L6"><a aria-label="第 6 行" href="#L6">   6</a> import argparse</span>
+<span id="L7"><a aria-label="第 7 行" href="#L7">   7</a> from pathlib import Path</span>
+<span id="L8"><a aria-label="第 8 行" href="#L8">   8</a> from typing import Optional, Dict, Any</span>
+<span id="L9"><a aria-label="第 9 行" href="#L9">   9</a> </span>
+<span id="L10"><a aria-label="第 10 行" href="#L10">  10</a> import numpy as np</span>
+<span id="L11"><a aria-label="第 11 行" href="#L11">  11</a> import torch</span>
+<span id="L12"><a aria-label="第 12 行" href="#L12">  12</a> import torch.distributed as dist</span>
+<span id="L13"><a aria-label="第 13 行" href="#L13">  13</a> from torch.amp import autocast, GradScaler</span>
+<span id="L14"><a aria-label="第 14 行" href="#L14">  14</a> from torch.utils.data import DataLoader, DistributedSampler</span>
+<span id="L15"><a aria-label="第 15 行" href="#L15">  15</a> </span>
+<span id="L16"><a aria-label="第 16 行" href="#L16">  16</a> import wandb</span>
+<span id="L17"><a aria-label="第 17 行" href="#L17">  17</a> </span>
+<span id="L18"><a aria-label="第 18 行" href="#L18">  18</a> from task_set import TASK_SET</span>
+<span id="L19"><a aria-label="第 19 行" href="#L19">  19</a> from sharded_frame_dataset import ShardedFrameDataset</span>
+<span id="L20"><a aria-label="第 20 行" href="#L20">  20</a> </span>
+<span id="L21"><a aria-label="第 21 行" href="#L21">  21</a> from model import (</span>
+<span id="L22"><a aria-label="第 22 行" href="#L22">  22</a>     Encoder, Decoder, Tokenizer,</span>
+<span id="L23"><a aria-label="第 23 行" href="#L23">  23</a>     temporal_patchify, temporal_unpatchify,</span>
+<span id="L24"><a aria-label="第 24 行" href="#L24">  24</a>     pack_bottleneck_to_spatial,</span>
+<span id="L25"><a aria-label="第 25 行" href="#L25">  25</a>     unpack_spatial_to_bottleneck,</span>
+<span id="L26"><a aria-label="第 26 行" href="#L26">  26</a>     Dynamics,</span>
+<span id="L27"><a aria-label="第 27 行" href="#L27">  27</a> )</span>
+<span id="L28"><a aria-label="第 28 行" href="#L28">  28</a> </span>
+<span id="L29"><a aria-label="第 29 行" href="#L29">  29</a> torch.backends.cuda.matmul.allow_tf32 = True</span>
+<span id="L30"><a aria-label="第 30 行" href="#L30">  30</a> torch.backends.cudnn.allow_tf32 = True</span>
+<span id="L31"><a aria-label="第 31 行" href="#L31">  31</a> </span>
+<span id="L32"><a aria-label="第 32 行" href="#L32">  32</a> </span>
+<span id="L33"><a aria-label="第 33 行" href="#L33">  33</a> def get_dist_info():</span>
+<span id="L34"><a aria-label="第 34 行" href="#L34">  34</a>     rank = int(os.environ.get("RANK", "0"))</span>
+<span id="L35"><a aria-label="第 35 行" href="#L35">  35</a>     world_size = int(os.environ.get("WORLD_SIZE", "1"))</span>
+<span id="L36"><a aria-label="第 36 行" href="#L36">  36</a>     local_rank = int(os.environ.get("LOCAL_RANK", "0"))</span>
+<span id="L37"><a aria-label="第 37 行" href="#L37">  37</a>     return rank, world_size, local_rank</span>
+<span id="L38"><a aria-label="第 38 行" href="#L38">  38</a> </span>
+<span id="L39"><a aria-label="第 39 行" href="#L39">  39</a> </span>
+<span id="L40"><a aria-label="第 40 行" href="#L40">  40</a> def is_rank0() -&gt; bool:</span>
+<span id="L41"><a aria-label="第 41 行" href="#L41">  41</a>     return int(os.environ.get("RANK", "0")) == 0</span>
+<span id="L42"><a aria-label="第 42 行" href="#L42">  42</a> </span>
+<span id="L43"><a aria-label="第 43 行" href="#L43">  43</a> </span>
+<span id="L44"><a aria-label="第 44 行" href="#L44">  44</a> def seed_everything(seed: int):</span>
+<span id="L45"><a aria-label="第 45 行" href="#L45">  45</a>     s = int(seed) % (2**32)</span>
+<span id="L46"><a aria-label="第 46 行" href="#L46">  46</a>     random.seed(s)</span>
+<span id="L47"><a aria-label="第 47 行" href="#L47">  47</a>     np.random.seed(s)</span>
+<span id="L48"><a aria-label="第 48 行" href="#L48">  48</a>     torch.manual_seed(s)</span>
+<span id="L49"><a aria-label="第 49 行" href="#L49">  49</a>     torch.cuda.manual_seed_all(s)</span>
+<span id="L50"><a aria-label="第 50 行" href="#L50">  50</a> </span>
+<span id="L51"><a aria-label="第 51 行" href="#L51">  51</a> </span>
+<span id="L52"><a aria-label="第 52 行" href="#L52">  52</a> def worker_init_fn(worker_id: int):</span>
+<span id="L53"><a aria-label="第 53 行" href="#L53">  53</a>     info = torch.utils.data.get_worker_info()</span>
+<span id="L54"><a aria-label="第 54 行" href="#L54">  54</a>     seed_everything(info.seed)</span>
+<span id="L55"><a aria-label="第 55 行" href="#L55">  55</a> </span>
+<span id="L56"><a aria-label="第 56 行" href="#L56">  56</a> </span>
+<span id="L57"><a aria-label="第 57 行" href="#L57">  57</a> def init_distributed() -&gt; tuple[bool, int, int, int]:</span>
+<span id="L58"><a aria-label="第 58 行" href="#L58">  58</a>     rank, world_size, local_rank = get_dist_info()</span>
+<span id="L59"><a aria-label="第 59 行" href="#L59">  59</a>     ddp = world_size &gt; 1</span>
+<span id="L60"><a aria-label="第 60 行" href="#L60">  60</a>     if ddp:</span>
+<span id="L61"><a aria-label="第 61 行" href="#L61">  61</a>         dist.init_process_group(backend="nccl", init_method="env://")</span>
+<span id="L62"><a aria-label="第 62 行" href="#L62">  62</a>         torch.cuda.set_device(local_rank)</span>
+<span id="L63"><a aria-label="第 63 行" href="#L63">  63</a>     return ddp, rank, world_size, local_rank</span>
+<span id="L64"><a aria-label="第 64 行" href="#L64">  64</a> </span>
+<span id="L65"><a aria-label="第 65 行" href="#L65">  65</a> </span>
+<span id="L66"><a aria-label="第 66 行" href="#L66">  66</a> def save_ckpt(path: Path, *, step: int, epoch: int, dyn_model, opt, scaler, args: argparse.Namespace):</span>
+<span id="L67"><a aria-label="第 67 行" href="#L67">  67</a>     path.parent.mkdir(parents=True, exist_ok=True)</span>
+<span id="L68"><a aria-label="第 68 行" href="#L68">  68</a>     obj = {</span>
+<span id="L69"><a aria-label="第 69 行" href="#L69">  69</a>         "step": step,</span>
+<span id="L70"><a aria-label="第 70 行" href="#L70">  70</a>         "epoch": epoch,</span>
+<span id="L71"><a aria-label="第 71 行" href="#L71">  71</a>         "dynamics": (dyn_model.module.state_dict() if hasattr(dyn_model, "module") else dyn_model.state_dict()),</span>
+<span id="L72"><a aria-label="第 72 行" href="#L72">  72</a>         "opt": opt.state_dict(),</span>
+<span id="L73"><a aria-label="第 73 行" href="#L73">  73</a>         "scaler": scaler.state_dict() if scaler is not None else None,</span>
+<span id="L74"><a aria-label="第 74 行" href="#L74">  74</a>         "args": vars(args),</span>
+<span id="L75"><a aria-label="第 75 行" href="#L75">  75</a>         "scale_pos_embeds": args.scale_pos_embeds,</span>
+<span id="L76"><a aria-label="第 76 行" href="#L76">  76</a>     }</span>
+<span id="L77"><a aria-label="第 77 行" href="#L77">  77</a>     tmp = path.with_suffix(".tmp")</span>
+<span id="L78"><a aria-label="第 78 行" href="#L78">  78</a>     torch.save(obj, tmp)</span>
+<span id="L79"><a aria-label="第 79 行" href="#L79">  79</a>     tmp.replace(path)</span>
+<span id="L80"><a aria-label="第 80 行" href="#L80">  80</a> </span>
+<span id="L81"><a aria-label="第 81 行" href="#L81">  81</a> </span>
+<span id="L82"><a aria-label="第 82 行" href="#L82">  82</a> def load_ckpt(path: Path, *, dyn_model, opt, scaler) -&gt; tuple[int, int]:</span>
+<span id="L83"><a aria-label="第 83 行" href="#L83">  83</a>     ckpt = torch.load(path, map_location="cpu")</span>
+<span id="L84"><a aria-label="第 84 行" href="#L84">  84</a>     state = ckpt["dynamics"]</span>
+<span id="L85"><a aria-label="第 85 行" href="#L85">  85</a>     (dyn_model.module if hasattr(dyn_model, "module") else dyn_model).load_state_dict(state, strict=True)</span>
+<span id="L86"><a aria-label="第 86 行" href="#L86">  86</a>     opt.load_state_dict(ckpt["opt"])</span>
+<span id="L87"><a aria-label="第 87 行" href="#L87">  87</a>     if scaler is not None and ckpt.get("scaler") is not None:</span>
+<span id="L88"><a aria-label="第 88 行" href="#L88">  88</a>         scaler.load_state_dict(ckpt["scaler"])</span>
+<span id="L89"><a aria-label="第 89 行" href="#L89">  89</a>     return int(ckpt.get("step", 0)), int(ckpt.get("epoch", 0))</span>
+<span id="L90"><a aria-label="第 90 行" href="#L90">  90</a> </span>
+<span id="L91"><a aria-label="第 91 行" href="#L91">  91</a> </span>
+<span id="L92"><a aria-label="第 92 行" href="#L92">  92</a> @torch.no_grad()</span>
+<span id="L93"><a aria-label="第 93 行" href="#L93">  93</a> def load_frozen_tokenizer_from_pt_ckpt(</span>
+<span id="L94"><a aria-label="第 94 行" href="#L94">  94</a>     ckpt_path: str,</span>
+<span id="L95"><a aria-label="第 95 行" href="#L95">  95</a>     *,</span>
+<span id="L96"><a aria-label="第 96 行" href="#L96">  96</a>     device: torch.device,</span>
+<span id="L97"><a aria-label="第 97 行" href="#L97">  97</a>     override: Optional[Dict[str, Any]] = None,</span>
+<span id="L98"><a aria-label="第 98 行" href="#L98">  98</a> ) -&gt; tuple[Encoder, Decoder, Dict[str, Any]]:</span>
+<span id="L99"><a aria-label="第 99 行" href="#L99">  99</a>     ckpt = torch.load(ckpt_path, map_location="cpu")</span>
+<span id="L100"><a aria-label="第 100 行" href="#L100"> 100</a>     tok_args = dict(ckpt.get("args", {}))</span>
+<span id="L101"><a aria-label="第 101 行" href="#L101"> 101</a>     if override:</span>
+<span id="L102"><a aria-label="第 102 行" href="#L102"> 102</a>         tok_args.update(override)</span>
+<span id="L103"><a aria-label="第 103 行" href="#L103"> 103</a> </span>
+<span id="L104"><a aria-label="第 104 行" href="#L104"> 104</a>     # Required keys (fall back to defaults if missing)</span>
+<span id="L105"><a aria-label="第 105 行" href="#L105"> 105</a>     H = int(tok_args.get("H", 128))</span>
+<span id="L106"><a aria-label="第 106 行" href="#L106"> 106</a>     W = int(tok_args.get("W", 128))</span>
+<span id="L107"><a aria-label="第 107 行" href="#L107"> 107</a>     C = int(tok_args.get("C", 3))</span>
+<span id="L108"><a aria-label="第 108 行" href="#L108"> 108</a>     patch = int(tok_args.get("patch", 4))</span>
+<span id="L109"><a aria-label="第 109 行" href="#L109"> 109</a>     n_patches = (H // patch) * (W // patch)</span>
+<span id="L110"><a aria-label="第 110 行" href="#L110"> 110</a>     d_patch = patch * patch * C</span>
+<span id="L111"><a aria-label="第 111 行" href="#L111"> 111</a> </span>
+<span id="L112"><a aria-label="第 112 行" href="#L112"> 112</a>     enc = Encoder(</span>
+<span id="L113"><a aria-label="第 113 行" href="#L113"> 113</a>         patch_dim=d_patch,</span>
+<span id="L114"><a aria-label="第 114 行" href="#L114"> 114</a>         d_model=int(tok_args.get("d_model", 256)),</span>
+<span id="L115"><a aria-label="第 115 行" href="#L115"> 115</a>         n_latents=int(tok_args.get("n_latents", 16)),</span>
+<span id="L116"><a aria-label="第 116 行" href="#L116"> 116</a>         n_patches=n_patches,</span>
+<span id="L117"><a aria-label="第 117 行" href="#L117"> 117</a>         n_heads=int(tok_args.get("n_heads", 4)),</span>
+<span id="L118"><a aria-label="第 118 行" href="#L118"> 118</a>         depth=int(tok_args.get("depth", 8)),</span>
+<span id="L119"><a aria-label="第 119 行" href="#L119"> 119</a>         d_bottleneck=int(tok_args.get("d_bottleneck", 32)),</span>
+<span id="L120"><a aria-label="第 120 行" href="#L120"> 120</a>         dropout=0.0,</span>
+<span id="L121"><a aria-label="第 121 行" href="#L121"> 121</a>         mlp_ratio=float(tok_args.get("mlp_ratio", 4.0)),</span>
+<span id="L122"><a aria-label="第 122 行" href="#L122"> 122</a>         time_every=int(tok_args.get("time_every", 1)),</span>
+<span id="L123"><a aria-label="第 123 行" href="#L123"> 123</a>         latents_only_time=bool(tok_args.get("latents_only_time", True)),</span>
+<span id="L124"><a aria-label="第 124 行" href="#L124"> 124</a>         mae_p_min=0.0,</span>
+<span id="L125"><a aria-label="第 125 行" href="#L125"> 125</a>         mae_p_max=0.0,</span>
+<span id="L126"><a aria-label="第 126 行" href="#L126"> 126</a>         scale_pos_embeds=bool(tok_args.get("scale_pos_embeds", True)),</span>
+<span id="L127"><a aria-label="第 127 行" href="#L127"> 127</a>     )</span>
+<span id="L128"><a aria-label="第 128 行" href="#L128"> 128</a>     dec = Decoder(</span>
+<span id="L129"><a aria-label="第 129 行" href="#L129"> 129</a>         d_bottleneck=int(tok_args.get("d_bottleneck", 32)),</span>
+<span id="L130"><a aria-label="第 130 行" href="#L130"> 130</a>         d_model=int(tok_args.get("d_model", 256)),</span>
+<span id="L131"><a aria-label="第 131 行" href="#L131"> 131</a>         n_heads=int(tok_args.get("n_heads", 4)),</span>
+<span id="L132"><a aria-label="第 132 行" href="#L132"> 132</a>         depth=int(tok_args.get("depth", 8)),</span>
+<span id="L133"><a aria-label="第 133 行" href="#L133"> 133</a>         n_latents=int(tok_args.get("n_latents", 16)),</span>
+<span id="L134"><a aria-label="第 134 行" href="#L134"> 134</a>         n_patches=n_patches,</span>
+<span id="L135"><a aria-label="第 135 行" href="#L135"> 135</a>         d_patch=d_patch,</span>
+<span id="L136"><a aria-label="第 136 行" href="#L136"> 136</a>         dropout=0.0,</span>
+<span id="L137"><a aria-label="第 137 行" href="#L137"> 137</a>         mlp_ratio=float(tok_args.get("mlp_ratio", 4.0)),</span>
+<span id="L138"><a aria-label="第 138 行" href="#L138"> 138</a>         time_every=int(tok_args.get("time_every", 1)),</span>
+<span id="L139"><a aria-label="第 139 行" href="#L139"> 139</a>         latents_only_time=bool(tok_args.get("latents_only_time", True)),</span>
+<span id="L140"><a aria-label="第 140 行" href="#L140"> 140</a>         scale_pos_embeds=bool(tok_args.get("scale_pos_embeds", True)),</span>
+<span id="L141"><a aria-label="第 141 行" href="#L141"> 141</a>     )</span>
+<span id="L142"><a aria-label="第 142 行" href="#L142"> 142</a> </span>
+<span id="L143"><a aria-label="第 143 行" href="#L143"> 143</a>     tok = Tokenizer(enc, dec)</span>
+<span id="L144"><a aria-label="第 144 行" href="#L144"> 144</a>     tok.load_state_dict(ckpt["model"], strict=True)</span>
+<span id="L145"><a aria-label="第 145 行" href="#L145"> 145</a> </span>
+<span id="L146"><a aria-label="第 146 行" href="#L146"> 146</a>     tok = tok.to(device)</span>
+<span id="L147"><a aria-label="第 147 行" href="#L147"> 147</a>     tok.eval()</span>
+<span id="L148"><a aria-label="第 148 行" href="#L148"> 148</a>     for p in tok.parameters():</span>
+<span id="L149"><a aria-label="第 149 行" href="#L149"> 149</a>         p.requires_grad_(False)</span>
+<span id="L150"><a aria-label="第 150 行" href="#L150"> 150</a> </span>
+<span id="L151"><a aria-label="第 151 行" href="#L151"> 151</a>     return tok.encoder, tok.decoder, tok_args</span>
+<span id="L152"><a aria-label="第 152 行" href="#L152"> 152</a> </span>
+<span id="L153"><a aria-label="第 153 行" href="#L153"> 153</a> </span>
+<span id="L154"><a aria-label="第 154 行" href="#L154"> 154</a> def _emax_from_kmax(k_max: int) -&gt; int:</span>
+<span id="L155"><a aria-label="第 155 行" href="#L155"> 155</a>     emax = int(round(math.log2(k_max)))</span>
+<span id="L156"><a aria-label="第 156 行" href="#L156"> 156</a>     assert (1 &lt;&lt; emax) == k_max, "k_max must be power of two"</span>
+<span id="L157"><a aria-label="第 157 行" href="#L157"> 157</a>     return emax</span>
+<span id="L158"><a aria-label="第 158 行" href="#L158"> 158</a> </span>
+<span id="L159"><a aria-label="第 159 行" href="#L159"> 159</a> </span>
+<span id="L160"><a aria-label="第 160 行" href="#L160"> 160</a> def _sample_step_excluding_dmin(device: torch.device, B: int, T: int, k_max: int) -&gt; tuple[torch.Tensor, torch.Tensor]:</span>
+<span id="L161"><a aria-label="第 161 行" href="#L161"> 161</a>     emax = _emax_from_kmax(k_max)</span>
+<span id="L162"><a aria-label="第 162 行" href="#L162"> 162</a>     # step_idx in [0, emax) i.e. excludes emax (d_min)</span>
+<span id="L163"><a aria-label="第 163 行" href="#L163"> 163</a>     step_idx = torch.randint(low=0, high=max(1, emax), size=(B, T), device=device, dtype=torch.long)</span>
+<span id="L164"><a aria-label="第 164 行" href="#L164"> 164</a>     d = 1.0 / (1 &lt;&lt; step_idx).to(torch.float32)</span>
+<span id="L165"><a aria-label="第 165 行" href="#L165"> 165</a>     return d, step_idx</span>
+<span id="L166"><a aria-label="第 166 行" href="#L166"> 166</a> </span>
+<span id="L167"><a aria-label="第 167 行" href="#L167"> 167</a> </span>
+<span id="L168"><a aria-label="第 168 行" href="#L168"> 168</a> def _sample_tau_for_step(device: torch.device, B: int, T: int, k_max: int, step_idx: torch.Tensor) -&gt; tuple[torch.Tensor, torch.Tensor]:</span>
+<span id="L169"><a aria-label="第 169 行" href="#L169"> 169</a>     # K = 2^step_idx</span>
+<span id="L170"><a aria-label="第 170 行" href="#L170"> 170</a>     K = (1 &lt;&lt; step_idx).to(torch.long)  # (B,T)</span>
+<span id="L171"><a aria-label="第 171 行" href="#L171"> 171</a>     u = torch.rand((B, T), device=device, dtype=torch.float32)</span>
+<span id="L172"><a aria-label="第 172 行" href="#L172"> 172</a>     j_idx = torch.floor(u * K.to(torch.float32)).to(torch.long)  # (B,T) in [0,K)</span>
+<span id="L173"><a aria-label="第 173 行" href="#L173"> 173</a>     tau = j_idx.to(torch.float32) / K.to(torch.float32)          # (B,T)</span>
+<span id="L174"><a aria-label="第 174 行" href="#L174"> 174</a>     scale = torch.div(torch.tensor(k_max, device=device), K, rounding_mode="floor")  # (B,T)</span>
+<span id="L175"><a aria-label="第 175 行" href="#L175"> 175</a>     tau_idx = j_idx * scale                                      # (B,T) &lt;= k_max-1</span>
+<span id="L176"><a aria-label="第 176 行" href="#L176"> 176</a>     return tau, tau_idx</span>
+<span id="L177"><a aria-label="第 177 行" href="#L177"> 177</a> </span>
+<span id="L178"><a aria-label="第 178 行" href="#L178"> 178</a> </span>
+<span id="L179"><a aria-label="第 179 行" href="#L179"> 179</a> def dynamics_pretrain_loss(</span>
+<span id="L180"><a aria-label="第 180 行" href="#L180"> 180</a>     dynamics: torch.nn.Module,</span>
+<span id="L181"><a aria-label="第 181 行" href="#L181"> 181</a>     *,</span>
+<span id="L182"><a aria-label="第 182 行" href="#L182"> 182</a>     z1: torch.Tensor,                    # (B,T,Sz,Dz) packed clean targets</span>
+<span id="L183"><a aria-label="第 183 行" href="#L183"> 183</a>     actions: Optional[torch.Tensor],     # (B,T) or None</span>
+<span id="L184"><a aria-label="第 184 行" href="#L184"> 184</a>     act_mask: Optional[torch.Tensor],    # (A,) or None</span>
+<span id="L185"><a aria-label="第 185 行" href="#L185"> 185</a>     k_max: int,</span>
+<span id="L186"><a aria-label="第 186 行" href="#L186"> 186</a>     B_self: int,</span>
+<span id="L187"><a aria-label="第 187 行" href="#L187"> 187</a>     step: int,</span>
+<span id="L188"><a aria-label="第 188 行" href="#L188"> 188</a>     bootstrap_start: int,</span>
+<span id="L189"><a aria-label="第 189 行" href="#L189"> 189</a>     agent_tokens: Optional[torch.Tensor] = None,</span>
+<span id="L190"><a aria-label="第 190 行" href="#L190"> 190</a> ) -&gt; tuple[torch.Tensor, Dict[str, torch.Tensor]]:</span>
+<span id="L191"><a aria-label="第 191 行" href="#L191"> 191</a>     device = z1.device</span>
+<span id="L192"><a aria-label="第 192 行" href="#L192"> 192</a>     B, T = z1.shape[:2]</span>
+<span id="L193"><a aria-label="第 193 行" href="#L193"> 193</a>     assert 0 &lt;= B_self &lt; B</span>
+<span id="L194"><a aria-label="第 194 行" href="#L194"> 194</a>     B_emp = B - B_self</span>
+<span id="L195"><a aria-label="第 195 行" href="#L195"> 195</a>     emax = _emax_from_kmax(k_max)</span>
+<span id="L196"><a aria-label="第 196 行" href="#L196"> 196</a> </span>
+<span id="L197"><a aria-label="第 197 行" href="#L197"> 197</a>     # action mask slices</span>
+<span id="L198"><a aria-label="第 198 行" href="#L198"> 198</a>     act_mask_full = act_mask</span>
+<span id="L199"><a aria-label="第 199 行" href="#L199"> 199</a>     act_mask_self = None if act_mask_full is None else act_mask_full[B_emp:]</span>
+<span id="L200"><a aria-label="第 200 行" href="#L200"> 200</a> </span>
+<span id="L201"><a aria-label="第 201 行" href="#L201"> 201</a>     # step idx: empirical rows are finest (d_min), self rows sample coarser</span>
+<span id="L202"><a aria-label="第 202 行" href="#L202"> 202</a>     step_idx_emp = torch.full((B_emp, T), emax, device=device, dtype=torch.long)</span>
+<span id="L203"><a aria-label="第 203 行" href="#L203"> 203</a>     if B_self &gt; 0:</span>
+<span id="L204"><a aria-label="第 204 行" href="#L204"> 204</a>         d_self, step_idx_self = _sample_step_excluding_dmin(device, B_self, T, k_max)</span>
+<span id="L205"><a aria-label="第 205 行" href="#L205"> 205</a>         step_idx_full = torch.cat([step_idx_emp, step_idx_self], dim=0)</span>
+<span id="L206"><a aria-label="第 206 行" href="#L206"> 206</a>     else:</span>
+<span id="L207"><a aria-label="第 207 行" href="#L207"> 207</a>         d_self = torch.zeros((0, T), device=device, dtype=torch.float32)</span>
+<span id="L208"><a aria-label="第 208 行" href="#L208"> 208</a>         step_idx_self = torch.zeros((0, T), device=device, dtype=torch.long)</span>
+<span id="L209"><a aria-label="第 209 行" href="#L209"> 209</a>         step_idx_full = step_idx_emp</span>
+<span id="L210"><a aria-label="第 210 行" href="#L210"> 210</a> </span>
+<span id="L211"><a aria-label="第 211 行" href="#L211"> 211</a>     # sigma/tau per row/time</span>
+<span id="L212"><a aria-label="第 212 行" href="#L212"> 212</a>     sigma_full, sigma_idx_full = _sample_tau_for_step(device, B, T, k_max, step_idx_full)</span>
+<span id="L213"><a aria-label="第 213 行" href="#L213"> 213</a>     sigma_emp = sigma_full[:B_emp]</span>
+<span id="L214"><a aria-label="第 214 行" href="#L214"> 214</a>     sigma_self = sigma_full[B_emp:]</span>
+<span id="L215"><a aria-label="第 215 行" href="#L215"> 215</a>     sigma_idx_self = sigma_idx_full[B_emp:]</span>
+<span id="L216"><a aria-label="第 216 行" href="#L216"> 216</a> </span>
+<span id="L217"><a aria-label="第 217 行" href="#L217"> 217</a>     # Corrupt inputs</span>
+<span id="L218"><a aria-label="第 218 行" href="#L218"> 218</a>     z0_full = torch.randn_like(z1)</span>
+<span id="L219"><a aria-label="第 219 行" href="#L219"> 219</a>     z_tilde_full = (1.0 - sigma_full)[..., None, None] * z0_full + sigma_full[..., None, None] * z1</span>
+<span id="L220"><a aria-label="第 220 行" href="#L220"> 220</a>     z_tilde_self = z_tilde_full[B_emp:]</span>
+<span id="L221"><a aria-label="第 221 行" href="#L221"> 221</a> </span>
+<span id="L222"><a aria-label="第 222 行" href="#L222"> 222</a>     # Weights</span>
+<span id="L223"><a aria-label="第 223 行" href="#L223"> 223</a>     w_emp = 0.9 * sigma_emp + 0.1</span>
+<span id="L224"><a aria-label="第 224 行" href="#L224"> 224</a>     w_self = 0.9 * sigma_self + 0.1</span>
+<span id="L225"><a aria-label="第 225 行" href="#L225"> 225</a> </span>
+<span id="L226"><a aria-label="第 226 行" href="#L226"> 226</a>     # Main forward</span>
+<span id="L227"><a aria-label="第 227 行" href="#L227"> 227</a>     z1_hat_full, _ = dynamics(actions, step_idx_full, sigma_idx_full, z_tilde_full, act_mask=act_mask_full, agent_tokens=agent_tokens)</span>
+<span id="L228"><a aria-label="第 228 行" href="#L228"> 228</a>     z1_hat_emp = z1_hat_full[:B_emp]</span>
+<span id="L229"><a aria-label="第 229 行" href="#L229"> 229</a>     z1_hat_self = z1_hat_full[B_emp:]</span>
+<span id="L230"><a aria-label="第 230 行" href="#L230"> 230</a> </span>
+<span id="L231"><a aria-label="第 231 行" href="#L231"> 231</a>     flow_per = (z1_hat_emp.float() - z1[:B_emp].float()).pow(2).mean(dim=(2, 3))  # (B_emp,T)</span>
+<span id="L232"><a aria-label="第 232 行" href="#L232"> 232</a>     loss_emp = (flow_per * w_emp).mean()</span>
+<span id="L233"><a aria-label="第 233 行" href="#L233"> 233</a> </span>
+<span id="L234"><a aria-label="第 234 行" href="#L234"> 234</a>     boot_mse = torch.zeros((), device=device, dtype=torch.float32)</span>
+<span id="L235"><a aria-label="第 235 行" href="#L235"> 235</a>     loss_self = torch.zeros((), device=device, dtype=torch.float32)</span>
+<span id="L236"><a aria-label="第 236 行" href="#L236"> 236</a> </span>
+<span id="L237"><a aria-label="第 237 行" href="#L237"> 237</a>     do_boot = (B_self &gt; 0) and (step &gt;= bootstrap_start)</span>
+<span id="L238"><a aria-label="第 238 行" href="#L238"> 238</a>     if do_boot:</span>
+<span id="L239"><a aria-label="第 239 行" href="#L239"> 239</a>         d_half = d_self / 2.0</span>
+<span id="L240"><a aria-label="第 240 行" href="#L240"> 240</a>         step_idx_half = step_idx_self + 1</span>
+<span id="L241"><a aria-label="第 241 行" href="#L241"> 241</a>         sigma_plus = sigma_self + d_half</span>
+<span id="L242"><a aria-label="第 242 行" href="#L242"> 242</a>         sigma_idx_plus = sigma_idx_self + (torch.tensor(k_max, device=device, dtype=torch.float32) * d_half).to(torch.long)</span>
+<span id="L243"><a aria-label="第 243 行" href="#L243"> 243</a> </span>
+<span id="L244"><a aria-label="第 244 行" href="#L244"> 244</a>         z1_hat_half1, _ = dynamics(actions[B_emp:] if actions is not None else None, step_idx_half, sigma_idx_self, z_tilde_self, act_mask=act_mask_self, agent_tokens=agent_tokens[B_emp:] if agent_tokens is not None else None)</span>
+<span id="L245"><a aria-label="第 245 行" href="#L245"> 245</a>         b_prime = (z1_hat_half1.float() - z_tilde_self.float()) / (1.0 - sigma_self).clamp_min(1e-6)[..., None, None]</span>
+<span id="L246"><a aria-label="第 246 行" href="#L246"> 246</a>         z_prime = z_tilde_self.float() + b_prime * d_half[..., None, None]</span>
+<span id="L247"><a aria-label="第 247 行" href="#L247"> 247</a> </span>
+<span id="L248"><a aria-label="第 248 行" href="#L248"> 248</a>         z1_hat_half2, _ = dynamics(actions[B_emp:] if actions is not None else None, step_idx_half, sigma_idx_plus, z_prime.to(z_tilde_self.dtype), act_mask=act_mask_self, agent_tokens=agent_tokens[B_emp:] if agent_tokens is not None else None)</span>
+<span id="L249"><a aria-label="第 249 行" href="#L249"> 249</a>         b_doubleprime = (z1_hat_half2.float() - z_prime.float()) / (1.0 - sigma_plus).clamp_min(1e-6)[..., None, None]</span>
+<span id="L250"><a aria-label="第 250 行" href="#L250"> 250</a> </span>
+<span id="L251"><a aria-label="第 251 行" href="#L251"> 251</a>         vhat_sigma = (z1_hat_self.float() - z_tilde_self.float()) / (1.0 - sigma_self).clamp_min(1e-6)[..., None, None]</span>
+<span id="L252"><a aria-label="第 252 行" href="#L252"> 252</a>         vbar_target = ((b_prime + b_doubleprime) / 2.0).detach()</span>
+<span id="L253"><a aria-label="第 253 行" href="#L253"> 253</a> </span>
+<span id="L254"><a aria-label="第 254 行" href="#L254"> 254</a>         boot_per = (1.0 - sigma_self).pow(2) * (vhat_sigma - vbar_target).pow(2).mean(dim=(2, 3))  # (B_self,T)</span>
+<span id="L255"><a aria-label="第 255 行" href="#L255"> 255</a>         loss_self = (boot_per * w_self).mean()</span>
+<span id="L256"><a aria-label="第 256 行" href="#L256"> 256</a>         boot_mse = boot_per.mean()</span>
+<span id="L257"><a aria-label="第 257 行" href="#L257"> 257</a> </span>
+<span id="L258"><a aria-label="第 258 行" href="#L258"> 258</a>     # Combine losses</span>
+<span id="L259"><a aria-label="第 259 行" href="#L259"> 259</a>     loss = ((loss_emp * (B - B_self)) + (loss_self * B_self)) / B</span>
+<span id="L260"><a aria-label="第 260 行" href="#L260"> 260</a> </span>
+<span id="L261"><a aria-label="第 261 行" href="#L261"> 261</a>     aux = {</span>
+<span id="L262"><a aria-label="第 262 行" href="#L262"> 262</a>         "flow_mse": flow_per.mean().detach(),</span>
+<span id="L263"><a aria-label="第 263 行" href="#L263"> 263</a>         "bootstrap_mse": boot_mse.detach(),</span>
+<span id="L264"><a aria-label="第 264 行" href="#L264"> 264</a>         "loss_emp": loss_emp.detach(),</span>
+<span id="L265"><a aria-label="第 265 行" href="#L265"> 265</a>         "loss_self": loss_self.detach(),</span>
+<span id="L266"><a aria-label="第 266 行" href="#L266"> 266</a>         "sigma_mean": sigma_full.mean().detach(),</span>
+<span id="L267"><a aria-label="第 267 行" href="#L267"> 267</a>     }</span>
+<span id="L268"><a aria-label="第 268 行" href="#L268"> 268</a>     return loss, aux</span>
+<span id="L269"><a aria-label="第 269 行" href="#L269"> 269</a> </span>
+<span id="L270"><a aria-label="第 270 行" href="#L270"> 270</a> </span>
+<span id="L271"><a aria-label="第 271 行" href="#L271"> 271</a> def _is_pow2(n: int) -&gt; bool:</span>
+<span id="L272"><a aria-label="第 272 行" href="#L272"> 272</a>     return (n &gt; 0) and ((n &amp; (n - 1)) == 0)</span>
+<span id="L273"><a aria-label="第 273 行" href="#L273"> 273</a> </span>
+<span id="L274"><a aria-label="第 274 行" href="#L274"> 274</a> </span>
+<span id="L275"><a aria-label="第 275 行" href="#L275"> 275</a> def make_tau_schedule(*, k_max: int, schedule: str, d: Optional[float] = None) -&gt; Dict[str, Any]:</span>
+<span id="L276"><a aria-label="第 276 行" href="#L276"> 276</a>     """</span>
+<span id="L277"><a aria-label="第 277 行" href="#L277"> 277</a>     Returns a schedule dict:</span>
+<span id="L278"><a aria-label="第 278 行" href="#L278"> 278</a>       K = number of integration steps (also grid size)</span>
+<span id="L279"><a aria-label="第 279 行" href="#L279"> 279</a>       e = log2(K)  (step_idx)</span>
+<span id="L280"><a aria-label="第 280 行" href="#L280"> 280</a>       scale = k_max // K</span>
+<span id="L281"><a aria-label="第 281 行" href="#L281"> 281</a>       tau_idx[i] = discrete signal index at step i</span>
+<span id="L282"><a aria-label="第 282 行" href="#L282"> 282</a>       tau[i] = i/K</span>
+<span id="L283"><a aria-label="第 283 行" href="#L283"> 283</a>       dt = 1/K</span>
+<span id="L284"><a aria-label="第 284 行" href="#L284"> 284</a>     """</span>
+<span id="L285"><a aria-label="第 285 行" href="#L285"> 285</a>     assert _is_pow2(k_max), "k_max must be power of two"</span>
+<span id="L286"><a aria-label="第 286 行" href="#L286"> 286</a>     if schedule == "finest":</span>
+<span id="L287"><a aria-label="第 287 行" href="#L287"> 287</a>         K = k_max</span>
+<span id="L288"><a aria-label="第 288 行" href="#L288"> 288</a>     elif schedule == "shortcut":</span>
+<span id="L289"><a aria-label="第 289 行" href="#L289"> 289</a>         assert d is not None, "shortcut schedule requires --eval_d"</span>
+<span id="L290"><a aria-label="第 290 行" href="#L290"> 290</a>         inv = int(round(1.0 / float(d)))</span>
+<span id="L291"><a aria-label="第 291 行" href="#L291"> 291</a>         assert _is_pow2(inv), "eval_d must be 1/(power of two)"</span>
+<span id="L292"><a aria-label="第 292 行" href="#L292"> 292</a>         assert inv &lt;= k_max, "eval_d must be &gt;= 1/k_max"</span>
+<span id="L293"><a aria-label="第 293 行" href="#L293"> 293</a>         assert (k_max % inv) == 0, "k_max must be divisible by 1/eval_d"</span>
+<span id="L294"><a aria-label="第 294 行" href="#L294"> 294</a>         K = inv</span>
+<span id="L295"><a aria-label="第 295 行" href="#L295"> 295</a>     else:</span>
+<span id="L296"><a aria-label="第 296 行" href="#L296"> 296</a>         raise ValueError(f"unknown schedule: {schedule}")</span>
+<span id="L297"><a aria-label="第 297 行" href="#L297"> 297</a> </span>
+<span id="L298"><a aria-label="第 298 行" href="#L298"> 298</a>     e = int(round(math.log2(K)))</span>
+<span id="L299"><a aria-label="第 299 行" href="#L299"> 299</a>     scale = k_max // K</span>
+<span id="L300"><a aria-label="第 300 行" href="#L300"> 300</a>     tau = [i / K for i in range(K)] + [1.0]</span>
+<span id="L301"><a aria-label="第 301 行" href="#L301"> 301</a>     tau_idx = [i * scale for i in range(K)] + [k_max]  # allow final clean index</span>
+<span id="L302"><a aria-label="第 302 行" href="#L302"> 302</a>     return dict(K=K, e=e, scale=scale, tau=tau, tau_idx=tau_idx, dt=1.0 / K, schedule=schedule, d=1.0 / K)</span>
+<span id="L303"><a aria-label="第 303 行" href="#L303"> 303</a> </span>
+<span id="L304"><a aria-label="第 304 行" href="#L304"> 304</a> </span>
+<span id="L305"><a aria-label="第 305 行" href="#L305"> 305</a> @torch.no_grad()</span>
+<span id="L306"><a aria-label="第 306 行" href="#L306"> 306</a> def sample_one_timestep_packed(</span>
+<span id="L307"><a aria-label="第 307 行" href="#L307"> 307</a>     dyn: Dynamics,</span>
+<span id="L308"><a aria-label="第 308 行" href="#L308"> 308</a>     *,</span>
+<span id="L309"><a aria-label="第 309 行" href="#L309"> 309</a>     past_packed: torch.Tensor,          # (B,t,n_spatial,d_spatial)</span>
+<span id="L310"><a aria-label="第 310 行" href="#L310"> 310</a>     k_max: int,</span>
+<span id="L311"><a aria-label="第 311 行" href="#L311"> 311</a>     sched: Dict[str, Any],</span>
+<span id="L312"><a aria-label="第 312 行" href="#L312"> 312</a>     actions: Optional[torch.Tensor] = None,     # (B,T,A) aligned to frames or None</span>
+<span id="L313"><a aria-label="第 313 行" href="#L313"> 313</a>     act_mask: Optional[torch.Tensor] = None,    # (B,T,A) or (A,) or None</span>
+<span id="L314"><a aria-label="第 314 行" href="#L314"> 314</a> ) -&gt; torch.Tensor:</span>
+<span id="L315"><a aria-label="第 315 行" href="#L315"> 315</a>     device = past_packed.device</span>
+<span id="L316"><a aria-label="第 316 行" href="#L316"> 316</a>     dtype = past_packed.dtype</span>
+<span id="L317"><a aria-label="第 317 行" href="#L317"> 317</a>     B, t = past_packed.shape[:2]</span>
+<span id="L318"><a aria-label="第 318 行" href="#L318"> 318</a>     n_spatial, d_spatial = past_packed.shape[2], past_packed.shape[3]</span>
+<span id="L319"><a aria-label="第 319 行" href="#L319"> 319</a> </span>
+<span id="L320"><a aria-label="第 320 行" href="#L320"> 320</a>     K = int(sched["K"])</span>
+<span id="L321"><a aria-label="第 321 行" href="#L321"> 321</a>     e = int(sched["e"])</span>
+<span id="L322"><a aria-label="第 322 行" href="#L322"> 322</a>     tau = sched["tau"]</span>
+<span id="L323"><a aria-label="第 323 行" href="#L323"> 323</a>     tau_idx = sched["tau_idx"]</span>
+<span id="L324"><a aria-label="第 324 行" href="#L324"> 324</a>     dt = float(sched["dt"])</span>
+<span id="L325"><a aria-label="第 325 行" href="#L325"> 325</a> </span>
+<span id="L326"><a aria-label="第 326 行" href="#L326"> 326</a>     # start from noise at tau=0</span>
+<span id="L327"><a aria-label="第 327 行" href="#L327"> 327</a>     z = torch.randn((B, 1, n_spatial, d_spatial), device=device, dtype=dtype)</span>
+<span id="L328"><a aria-label="第 328 行" href="#L328"> 328</a> </span>
+<span id="L329"><a aria-label="第 329 行" href="#L329"> 329</a>     emax = int(round(math.log2(k_max)))</span>
+<span id="L330"><a aria-label="第 330 行" href="#L330"> 330</a> </span>
+<span id="L331"><a aria-label="第 331 行" href="#L331"> 331</a>     step_idxs_full = torch.full((B, t + 1), emax, device=device, dtype=torch.long)</span>
+<span id="L332"><a aria-label="第 332 行" href="#L332"> 332</a>     step_idxs_full[:, -1] = e  # only the sampled timestep uses the shortcut step</span>
+<span id="L333"><a aria-label="第 333 行" href="#L333"> 333</a> </span>
+<span id="L334"><a aria-label="第 334 行" href="#L334"> 334</a>     signal_idxs_full = torch.full((B, t + 1), k_max - 1, device=device, dtype=torch.long)</span>
+<span id="L335"><a aria-label="第 335 行" href="#L335"> 335</a> </span>
+<span id="L336"><a aria-label="第 336 行" href="#L336"> 336</a>     # broadcast (A,) -&gt; (B,T,A) if needed (only if actions are present)</span>
+<span id="L337"><a aria-label="第 337 行" href="#L337"> 337</a>     if act_mask is not None and act_mask.dim() == 1:</span>
+<span id="L338"><a aria-label="第 338 行" href="#L338"> 338</a>         act_mask = act_mask.view(1, 1, -1)</span>
+<span id="L339"><a aria-label="第 339 行" href="#L339"> 339</a> </span>
+<span id="L340"><a aria-label="第 340 行" href="#L340"> 340</a>     for i in range(K):</span>
+<span id="L341"><a aria-label="第 341 行" href="#L341"> 341</a>         tau_i = float(tau[i])</span>
+<span id="L342"><a aria-label="第 342 行" href="#L342"> 342</a>         sig_i = int(tau_idx[i])</span>
+<span id="L343"><a aria-label="第 343 行" href="#L343"> 343</a> </span>
+<span id="L344"><a aria-label="第 344 行" href="#L344"> 344</a>         signal_idxs_full[:, -1] = sig_i</span>
+<span id="L345"><a aria-label="第 345 行" href="#L345"> 345</a>         packed_seq = torch.cat([past_packed, z], dim=1)  # (B,t+1,...)</span>
+<span id="L346"><a aria-label="第 346 行" href="#L346"> 346</a> </span>
+<span id="L347"><a aria-label="第 347 行" href="#L347"> 347</a>         actions_in = None if actions is None else actions[:, : t + 1]</span>
+<span id="L348"><a aria-label="第 348 行" href="#L348"> 348</a>         actmask_in = None if act_mask is None else act_mask[:, : t + 1]</span>
+<span id="L349"><a aria-label="第 349 行" href="#L349"> 349</a> </span>
+<span id="L350"><a aria-label="第 350 行" href="#L350"> 350</a>         x1_hat_full, _ = dyn(</span>
+<span id="L351"><a aria-label="第 351 行" href="#L351"> 351</a>             actions_in,</span>
+<span id="L352"><a aria-label="第 352 行" href="#L352"> 352</a>             step_idxs_full,</span>
+<span id="L353"><a aria-label="第 353 行" href="#L353"> 353</a>             signal_idxs_full,</span>
+<span id="L354"><a aria-label="第 354 行" href="#L354"> 354</a>             packed_seq,</span>
+<span id="L355"><a aria-label="第 355 行" href="#L355"> 355</a>             act_mask=actmask_in,</span>
+<span id="L356"><a aria-label="第 356 行" href="#L356"> 356</a>             agent_tokens=None,</span>
+<span id="L357"><a aria-label="第 357 行" href="#L357"> 357</a>         )</span>
+<span id="L358"><a aria-label="第 358 行" href="#L358"> 358</a>         x1_hat = x1_hat_full[:, -1:, :, :]  # (B,1,n_spatial,d_spatial)</span>
+<span id="L359"><a aria-label="第 359 行" href="#L359"> 359</a> </span>
+<span id="L360"><a aria-label="第 360 行" href="#L360"> 360</a>         denom = max(1e-4, 1.0 - tau_i)</span>
+<span id="L361"><a aria-label="第 361 行" href="#L361"> 361</a>         b = (x1_hat.float() - z.float()) / denom</span>
+<span id="L362"><a aria-label="第 362 行" href="#L362"> 362</a>         z = (z.float() + b * dt).to(dtype)</span>
+<span id="L363"><a aria-label="第 363 行" href="#L363"> 363</a> </span>
+<span id="L364"><a aria-label="第 364 行" href="#L364"> 364</a>     return z[:, 0]  # (B,n_spatial,d_spatial)</span>
+<span id="L365"><a aria-label="第 365 行" href="#L365"> 365</a> </span>
+<span id="L366"><a aria-label="第 366 行" href="#L366"> 366</a> </span>
+<span id="L367"><a aria-label="第 367 行" href="#L367"> 367</a> @torch.no_grad()</span>
+<span id="L368"><a aria-label="第 368 行" href="#L368"> 368</a> def sample_autoregressive_packed_sequence(</span>
+<span id="L369"><a aria-label="第 369 行" href="#L369"> 369</a>     dyn: Dynamics,</span>
+<span id="L370"><a aria-label="第 370 行" href="#L370"> 370</a>     *,</span>
+<span id="L371"><a aria-label="第 371 行" href="#L371"> 371</a>     z_gt_packed: torch.Tensor,                  # (B,T,n_spatial,d_spatial)</span>
+<span id="L372"><a aria-label="第 372 行" href="#L372"> 372</a>     ctx_length: int,</span>
+<span id="L373"><a aria-label="第 373 行" href="#L373"> 373</a>     horizon: int,</span>
+<span id="L374"><a aria-label="第 374 行" href="#L374"> 374</a>     k_max: int,</span>
+<span id="L375"><a aria-label="第 375 行" href="#L375"> 375</a>     sched: Dict[str, Any],</span>
+<span id="L376"><a aria-label="第 376 行" href="#L376"> 376</a>     actions: Optional[torch.Tensor] = None,     # (B,T,A) or None</span>
+<span id="L377"><a aria-label="第 377 行" href="#L377"> 377</a>     act_mask: Optional[torch.Tensor] = None,    # (B,T,A) or (A,) or None</span>
+<span id="L378"><a aria-label="第 378 行" href="#L378"> 378</a> ) -&gt; torch.Tensor:</span>
+<span id="L379"><a aria-label="第 379 行" href="#L379"> 379</a>     B, T = z_gt_packed.shape[:2]</span>
+<span id="L380"><a aria-label="第 380 行" href="#L380"> 380</a>     L = min(T, ctx_length + horizon)</span>
+<span id="L381"><a aria-label="第 381 行" href="#L381"> 381</a>     ctx_length = min(ctx_length, L - 1)</span>
+<span id="L382"><a aria-label="第 382 行" href="#L382"> 382</a>     horizon = min(horizon, L - ctx_length)</span>
+<span id="L383"><a aria-label="第 383 行" href="#L383"> 383</a> </span>
+<span id="L384"><a aria-label="第 384 行" href="#L384"> 384</a>     outs = [z_gt_packed[:, t] for t in range(ctx_length)]</span>
+<span id="L385"><a aria-label="第 385 行" href="#L385"> 385</a> </span>
+<span id="L386"><a aria-label="第 386 行" href="#L386"> 386</a>     for t in range(ctx_length, ctx_length + horizon):</span>
+<span id="L387"><a aria-label="第 387 行" href="#L387"> 387</a>         past = torch.stack(outs, dim=1)  # (B,t,...)</span>
+<span id="L388"><a aria-label="第 388 行" href="#L388"> 388</a>         z_next = sample_one_timestep_packed(</span>
+<span id="L389"><a aria-label="第 389 行" href="#L389"> 389</a>             dyn,</span>
+<span id="L390"><a aria-label="第 390 行" href="#L390"> 390</a>             past_packed=past,</span>
+<span id="L391"><a aria-label="第 391 行" href="#L391"> 391</a>             k_max=k_max,</span>
+<span id="L392"><a aria-label="第 392 行" href="#L392"> 392</a>             sched=sched,</span>
+<span id="L393"><a aria-label="第 393 行" href="#L393"> 393</a>             actions=actions,</span>
+<span id="L394"><a aria-label="第 394 行" href="#L394"> 394</a>             act_mask=act_mask,</span>
+<span id="L395"><a aria-label="第 395 行" href="#L395"> 395</a>         )</span>
+<span id="L396"><a aria-label="第 396 行" href="#L396"> 396</a>         outs.append(z_next)</span>
+<span id="L397"><a aria-label="第 397 行" href="#L397"> 397</a> </span>
+<span id="L398"><a aria-label="第 398 行" href="#L398"> 398</a>     return torch.stack(outs, dim=1)</span>
+<span id="L399"><a aria-label="第 399 行" href="#L399"> 399</a> </span>
+<span id="L400"><a aria-label="第 400 行" href="#L400"> 400</a> </span>
+<span id="L401"><a aria-label="第 401 行" href="#L401"> 401</a> @torch.no_grad()</span>
+<span id="L402"><a aria-label="第 402 行" href="#L402"> 402</a> def decode_packed_to_frames(</span>
+<span id="L403"><a aria-label="第 403 行" href="#L403"> 403</a>     decoder: Decoder,</span>
+<span id="L404"><a aria-label="第 404 行" href="#L404"> 404</a>     *,</span>
+<span id="L405"><a aria-label="第 405 行" href="#L405"> 405</a>     z_packed: torch.Tensor,     # (B,T',n_spatial,d_spatial)</span>
+<span id="L406"><a aria-label="第 406 行" href="#L406"> 406</a>     H: int, W: int, C: int, patch: int,</span>
+<span id="L407"><a aria-label="第 407 行" href="#L407"> 407</a>     packing_factor: int,</span>
+<span id="L408"><a aria-label="第 408 行" href="#L408"> 408</a> ) -&gt; torch.Tensor:</span>
+<span id="L409"><a aria-label="第 409 行" href="#L409"> 409</a>     z_btLd = unpack_spatial_to_bottleneck(z_packed, k=packing_factor)  # (B,T',L,D_b)</span>
+<span id="L410"><a aria-label="第 410 行" href="#L410"> 410</a>     patches_btnd = decoder(z_btLd)                                     # (B,T',Np,Dp) in [0,1]</span>
+<span id="L411"><a aria-label="第 411 行" href="#L411"> 411</a>     frames = temporal_unpatchify(patches_btnd, H, W, C, patch)         # (B,T',C,H,W) in [0,1]</span>
+<span id="L412"><a aria-label="第 412 行" href="#L412"> 412</a>     return frames.clamp(0, 1)</span>
+<span id="L413"><a aria-label="第 413 行" href="#L413"> 413</a> </span>
+<span id="L414"><a aria-label="第 414 行" href="#L414"> 414</a> </span>
+<span id="L415"><a aria-label="第 415 行" href="#L415"> 415</a> @torch.no_grad()</span>
+<span id="L416"><a aria-label="第 416 行" href="#L416"> 416</a> def log_dynamics_eval_wandb(</span>
+<span id="L417"><a aria-label="第 417 行" href="#L417"> 417</a>     *,</span>
+<span id="L418"><a aria-label="第 418 行" href="#L418"> 418</a>     gt: torch.Tensor,          # (B,T,C,H,W) float [0,1]</span>
+<span id="L419"><a aria-label="第 419 行" href="#L419"> 419</a>     pred: torch.Tensor,        # (B,T,C,H,W) float [0,1]</span>
+<span id="L420"><a aria-label="第 420 行" href="#L420"> 420</a>     ctx_length: int,</span>
+<span id="L421"><a aria-label="第 421 行" href="#L421"> 421</a>     step: int,</span>
+<span id="L422"><a aria-label="第 422 行" href="#L422"> 422</a>     tag: str,</span>
+<span id="L423"><a aria-label="第 423 行" href="#L423"> 423</a>     max_items: int = 4,</span>
+<span id="L424"><a aria-label="第 424 行" href="#L424"> 424</a>     gap_px: int = 16,</span>
+<span id="L425"><a aria-label="第 425 行" href="#L425"> 425</a> ):</span>
+<span id="L426"><a aria-label="第 426 行" href="#L426"> 426</a>     B, T, C, H, W = gt.shape</span>
+<span id="L427"><a aria-label="第 427 行" href="#L427"> 427</a>     Bv = min(B, max_items)</span>
+<span id="L428"><a aria-label="第 428 行" href="#L428"> 428</a> </span>
+<span id="L429"><a aria-label="第 429 行" href="#L429"> 429</a>     def tile_time(x: torch.Tensor) -&gt; torch.Tensor:</span>
+<span id="L430"><a aria-label="第 430 行" href="#L430"> 430</a>         x = x[:Bv]</span>
+<span id="L431"><a aria-label="第 431 行" href="#L431"> 431</a>         B_, T_, C_, H_, W_ = x.shape</span>
+<span id="L432"><a aria-label="第 432 行" href="#L432"> 432</a>         ctx = int(max(0, min(ctx_length, T_)))</span>
+<span id="L433"><a aria-label="第 433 行" href="#L433"> 433</a> </span>
+<span id="L434"><a aria-label="第 434 行" href="#L434"> 434</a>         y = x.permute(0, 2, 3, 1, 4).contiguous().view(B_, C_, H_, T_ * W_)</span>
+<span id="L435"><a aria-label="第 435 行" href="#L435"> 435</a> </span>
+<span id="L436"><a aria-label="第 436 行" href="#L436"> 436</a>         if gap_px &gt; 0 and 0 &lt; ctx &lt; T_:</span>
+<span id="L437"><a aria-label="第 437 行" href="#L437"> 437</a>             split = ctx * W_</span>
+<span id="L438"><a aria-label="第 438 行" href="#L438"> 438</a>             left = y[..., :split]</span>
+<span id="L439"><a aria-label="第 439 行" href="#L439"> 439</a>             right = y[..., split:]</span>
+<span id="L440"><a aria-label="第 440 行" href="#L440"> 440</a>             gap = torch.zeros((B_, C_, H_, gap_px), device=y.device, dtype=y.dtype)</span>
+<span id="L441"><a aria-label="第 441 行" href="#L441"> 441</a>             y = torch.cat([left, gap, right], dim=-1)</span>
+<span id="L442"><a aria-label="第 442 行" href="#L442"> 442</a>         return y</span>
+<span id="L443"><a aria-label="第 443 行" href="#L443"> 443</a> </span>
+<span id="L444"><a aria-label="第 444 行" href="#L444"> 444</a>     gt_t = tile_time(gt)</span>
+<span id="L445"><a aria-label="第 445 行" href="#L445"> 445</a>     pr_t = tile_time(pred)</span>
+<span id="L446"><a aria-label="第 446 行" href="#L446"> 446</a> </span>
+<span id="L447"><a aria-label="第 447 行" href="#L447"> 447</a>     # Stack rows: GT / Pred</span>
+<span id="L448"><a aria-label="第 448 行" href="#L448"> 448</a>     panel = torch.cat([gt_t, pr_t], dim=2)   # (Bv,C,2H,TW+gap)</span>
+<span id="L449"><a aria-label="第 449 行" href="#L449"> 449</a>     big = torch.cat([panel[i] for i in range(Bv)], dim=1)  # (C,Bv*2H,TW+gap)</span>
+<span id="L450"><a aria-label="第 450 行" href="#L450"> 450</a> </span>
+<span id="L451"><a aria-label="第 451 行" href="#L451"> 451</a>     big = (big.clamp(0, 1) * 255.0).to(torch.uint8)</span>
+<span id="L452"><a aria-label="第 452 行" href="#L452"> 452</a>     big_hwc = big.permute(1, 2, 0).cpu().numpy()</span>
+<span id="L453"><a aria-label="第 453 行" href="#L453"> 453</a> </span>
+<span id="L454"><a aria-label="第 454 行" href="#L454"> 454</a>     wandb.log(</span>
+<span id="L455"><a aria-label="第 455 行" href="#L455"> 455</a>         {f"{tag}/viz": wandb.Image(big_hwc, caption=f"rows=GT/Pred | ctx={ctx_length} | T={T}")},</span>
+<span id="L456"><a aria-label="第 456 行" href="#L456"> 456</a>         step=step,</span>
+<span id="L457"><a aria-label="第 457 行" href="#L457"> 457</a>     )</span>
+<span id="L458"><a aria-label="第 458 行" href="#L458"> 458</a> </span>
+<span id="L459"><a aria-label="第 459 行" href="#L459"> 459</a> </span>
+<span id="L460"><a aria-label="第 460 行" href="#L460"> 460</a> @torch.no_grad()</span>
+<span id="L461"><a aria-label="第 461 行" href="#L461"> 461</a> def run_dynamics_eval(</span>
+<span id="L462"><a aria-label="第 462 行" href="#L462"> 462</a>     *,</span>
+<span id="L463"><a aria-label="第 463 行" href="#L463"> 463</a>     encoder: Encoder,</span>
+<span id="L464"><a aria-label="第 464 行" href="#L464"> 464</a>     decoder: Decoder,</span>
+<span id="L465"><a aria-label="第 465 行" href="#L465"> 465</a>     dyn: Dynamics,</span>
+<span id="L466"><a aria-label="第 466 行" href="#L466"> 466</a>     frames: torch.Tensor,            # (B,T,C,H,W) float [0,1]</span>
+<span id="L467"><a aria-label="第 467 行" href="#L467"> 467</a>     actions: Optional[torch.Tensor],    # (B,T,A) or None</span>
+<span id="L468"><a aria-label="第 468 行" href="#L468"> 468</a>     act_mask: Optional[torch.Tensor], # (A,) or None</span>
+<span id="L469"><a aria-label="第 469 行" href="#L469"> 469</a>     H: int, W: int, C: int, patch: int,</span>
+<span id="L470"><a aria-label="第 470 行" href="#L470"> 470</a>     packing_factor: int,</span>
+<span id="L471"><a aria-label="第 471 行" href="#L471"> 471</a>     k_max: int,</span>
+<span id="L472"><a aria-label="第 472 行" href="#L472"> 472</a>     ctx_length: int,</span>
+<span id="L473"><a aria-label="第 473 行" href="#L473"> 473</a>     horizon: int,</span>
+<span id="L474"><a aria-label="第 474 行" href="#L474"> 474</a>     sched: Dict[str, Any],</span>
+<span id="L475"><a aria-label="第 475 行" href="#L475"> 475</a>     max_items: int,</span>
+<span id="L476"><a aria-label="第 476 行" href="#L476"> 476</a>     step: int,</span>
+<span id="L477"><a aria-label="第 477 行" href="#L477"> 477</a> ):</span>
+<span id="L478"><a aria-label="第 478 行" href="#L478"> 478</a>     dyn_was_training = dyn.training</span>
+<span id="L479"><a aria-label="第 479 行" href="#L479"> 479</a>     dyn.eval()</span>
+<span id="L480"><a aria-label="第 480 行" href="#L480"> 480</a> </span>
+<span id="L481"><a aria-label="第 481 行" href="#L481"> 481</a>     B, T = frames.shape[:2]</span>
+<span id="L482"><a aria-label="第 482 行" href="#L482"> 482</a>     T_eval = min(T, ctx_length + horizon)</span>
+<span id="L483"><a aria-label="第 483 行" href="#L483"> 483</a>     ctx_length = min(ctx_length, T_eval - 1)</span>
+<span id="L484"><a aria-label="第 484 行" href="#L484"> 484</a>     horizon = min(horizon, T_eval - ctx_length)</span>
+<span id="L485"><a aria-label="第 485 行" href="#L485"> 485</a> </span>
+<span id="L486"><a aria-label="第 486 行" href="#L486"> 486</a>     frames_eval = frames[:, :T_eval]</span>
+<span id="L487"><a aria-label="第 487 行" href="#L487"> 487</a> </span>
+<span id="L488"><a aria-label="第 488 行" href="#L488"> 488</a>     patches = temporal_patchify(frames_eval, patch)</span>
+<span id="L489"><a aria-label="第 489 行" href="#L489"> 489</a>     z_btLd, _ = encoder(patches)  # (B,T_eval,L,D_b)</span>
+<span id="L490"><a aria-label="第 490 行" href="#L490"> 490</a>     assert z_btLd.shape[2] % packing_factor == 0</span>
+<span id="L491"><a aria-label="第 491 行" href="#L491"> 491</a>     n_spatial = z_btLd.shape[2] // packing_factor</span>
+<span id="L492"><a aria-label="第 492 行" href="#L492"> 492</a>     z_gt_packed = pack_bottleneck_to_spatial(z_btLd, n_spatial=n_spatial, k=packing_factor)  # (B,T_eval,Sz,Dz)</span>
+<span id="L493"><a aria-label="第 493 行" href="#L493"> 493</a> </span>
+<span id="L494"><a aria-label="第 494 行" href="#L494"> 494</a>     actions_eval = None if actions is None else actions[:, :T_eval]</span>
+<span id="L495"><a aria-label="第 495 行" href="#L495"> 495</a>     act_mask_eval = None if act_mask is None else act_mask[:, :T_eval] if act_mask.dim() == 3 else act_mask</span>
+<span id="L496"><a aria-label="第 496 行" href="#L496"> 496</a> </span>
+<span id="L497"><a aria-label="第 497 行" href="#L497"> 497</a>     z_pred_packed = sample_autoregressive_packed_sequence(</span>
+<span id="L498"><a aria-label="第 498 行" href="#L498"> 498</a>         dyn,</span>
+<span id="L499"><a aria-label="第 499 行" href="#L499"> 499</a>         z_gt_packed=z_gt_packed,</span>
+<span id="L500"><a aria-label="第 500 行" href="#L500"> 500</a>         ctx_length=ctx_length,</span>
+<span id="L501"><a aria-label="第 501 行" href="#L501"> 501</a>         horizon=horizon,</span>
+<span id="L502"><a aria-label="第 502 行" href="#L502"> 502</a>         k_max=k_max,</span>
+<span id="L503"><a aria-label="第 503 行" href="#L503"> 503</a>         sched=sched,</span>
+<span id="L504"><a aria-label="第 504 行" href="#L504"> 504</a>         actions=actions_eval,</span>
+<span id="L505"><a aria-label="第 505 行" href="#L505"> 505</a>         act_mask=act_mask_eval,</span>
+<span id="L506"><a aria-label="第 506 行" href="#L506"> 506</a>     )</span>
+<span id="L507"><a aria-label="第 507 行" href="#L507"> 507</a> </span>
+<span id="L508"><a aria-label="第 508 行" href="#L508"> 508</a>     pred_frames = decode_packed_to_frames(</span>
+<span id="L509"><a aria-label="第 509 行" href="#L509"> 509</a>         decoder,</span>
+<span id="L510"><a aria-label="第 510 行" href="#L510"> 510</a>         z_packed=z_pred_packed,</span>
+<span id="L511"><a aria-label="第 511 行" href="#L511"> 511</a>         H=H, W=W, C=C, patch=patch,</span>
+<span id="L512"><a aria-label="第 512 行" href="#L512"> 512</a>         packing_factor=packing_factor,</span>
+<span id="L513"><a aria-label="第 513 行" href="#L513"> 513</a>     )</span>
+<span id="L514"><a aria-label="第 514 行" href="#L514"> 514</a> </span>
+<span id="L515"><a aria-label="第 515 行" href="#L515"> 515</a>     # floor baseline: repeat last context frame over horizon</span>
+<span id="L516"><a aria-label="第 516 行" href="#L516"> 516</a>     floor = frames_eval.clone()</span>
+<span id="L517"><a aria-label="第 517 行" href="#L517"> 517</a>     if horizon &gt; 0:</span>
+<span id="L518"><a aria-label="第 518 行" href="#L518"> 518</a>         floor[:, ctx_length:ctx_length + horizon] = frames_eval[:, ctx_length - 1:ctx_length].expand(-1, horizon, -1, -1, -1)</span>
+<span id="L519"><a aria-label="第 519 行" href="#L519"> 519</a> </span>
+<span id="L520"><a aria-label="第 520 行" href="#L520"> 520</a>     # metric on horizon only</span>
+<span id="L521"><a aria-label="第 521 行" href="#L521"> 521</a>     gt_h    = frames_eval[:, ctx_length:ctx_length + horizon]         # (B,Hz,C,H,W)</span>
+<span id="L522"><a aria-label="第 522 行" href="#L522"> 522</a>     pred_h  = pred_frames[:, ctx_length:ctx_length + horizon]</span>
+<span id="L523"><a aria-label="第 523 行" href="#L523"> 523</a>     floor_h = floor[:, ctx_length:ctx_length + horizon]</span>
+<span id="L524"><a aria-label="第 524 行" href="#L524"> 524</a> </span>
+<span id="L525"><a aria-label="第 525 行" href="#L525"> 525</a>     mse_pred  = (pred_h.float()  - gt_h.float()).pow(2).mean()</span>
+<span id="L526"><a aria-label="第 526 行" href="#L526"> 526</a>     mse_floor = (floor_h.float() - gt_h.float()).pow(2).mean()</span>
+<span id="L527"><a aria-label="第 527 行" href="#L527"> 527</a> </span>
+<span id="L528"><a aria-label="第 528 行" href="#L528"> 528</a>     psnr_pred  = 10.0 * torch.log10(1.0 / mse_pred.clamp_min(1e-12))</span>
+<span id="L529"><a aria-label="第 529 行" href="#L529"> 529</a>     psnr_floor = 10.0 * torch.log10(1.0 / mse_floor.clamp_min(1e-12))</span>
+<span id="L530"><a aria-label="第 530 行" href="#L530"> 530</a> </span>
+<span id="L531"><a aria-label="第 531 行" href="#L531"> 531</a>     mse_ratio = mse_pred / mse_floor.clamp_min(1e-12)     # &lt;1 is better</span>
+<span id="L532"><a aria-label="第 532 行" href="#L532"> 532</a>     psnr_gain = psnr_pred - psnr_floor                    # &gt;0 is better</span>
+<span id="L533"><a aria-label="第 533 行" href="#L533"> 533</a> </span>
+<span id="L534"><a aria-label="第 534 行" href="#L534"> 534</a>     # per-timestep horizon MSE: log first/mid/last</span>
+<span id="L535"><a aria-label="第 535 行" href="#L535"> 535</a>     # per_t: (Hz,)</span>
+<span id="L536"><a aria-label="第 536 行" href="#L536"> 536</a>     per_t_pred  = (pred_h.float()  - gt_h.float()).pow(2).mean(dim=(0,2,3,4))</span>
+<span id="L537"><a aria-label="第 537 行" href="#L537"> 537</a>     per_t_floor = (floor_h.float() - gt_h.float()).pow(2).mean(dim=(0,2,3,4))</span>
+<span id="L538"><a aria-label="第 538 行" href="#L538"> 538</a> </span>
+<span id="L539"><a aria-label="第 539 行" href="#L539"> 539</a>     if horizon &gt; 0:</span>
+<span id="L540"><a aria-label="第 540 行" href="#L540"> 540</a>         i0 = 0</span>
+<span id="L541"><a aria-label="第 541 行" href="#L541"> 541</a>         im = (horizon - 1) // 2</span>
+<span id="L542"><a aria-label="第 542 行" href="#L542"> 542</a>         i1 = horizon - 1</span>
+<span id="L543"><a aria-label="第 543 行" href="#L543"> 543</a> </span>
+<span id="L544"><a aria-label="第 544 行" href="#L544"> 544</a>         wandb.log(</span>
+<span id="L545"><a aria-label="第 545 行" href="#L545"> 545</a>             {</span>
+<span id="L546"><a aria-label="第 546 行" href="#L546"> 546</a>                 "eval/mse_pred": float(mse_pred.item()),</span>
+<span id="L547"><a aria-label="第 547 行" href="#L547"> 547</a>                 "eval/mse_floor": float(mse_floor.item()),</span>
+<span id="L548"><a aria-label="第 548 行" href="#L548"> 548</a>                 "eval/mse_ratio_pred_over_floor": float(mse_ratio.item()),</span>
+<span id="L549"><a aria-label="第 549 行" href="#L549"> 549</a> </span>
+<span id="L550"><a aria-label="第 550 行" href="#L550"> 550</a>                 "eval/psnr_pred": float(psnr_pred.item()),</span>
+<span id="L551"><a aria-label="第 551 行" href="#L551"> 551</a>                 "eval/psnr_floor": float(psnr_floor.item()),</span>
+<span id="L552"><a aria-label="第 552 行" href="#L552"> 552</a>                 "eval/psnr_gain_over_floor_db": float(psnr_gain.item()),</span>
+<span id="L553"><a aria-label="第 553 行" href="#L553"> 553</a> </span>
+<span id="L554"><a aria-label="第 554 行" href="#L554"> 554</a>                 # 1-indexed step labels in the horizon</span>
+<span id="L555"><a aria-label="第 555 行" href="#L555"> 555</a>                 "eval/mse_pred_t1": float(per_t_pred[i0].item()),</span>
+<span id="L556"><a aria-label="第 556 行" href="#L556"> 556</a>                 "eval/mse_pred_tmid": float(per_t_pred[im].item()),</span>
+<span id="L557"><a aria-label="第 557 行" href="#L557"> 557</a>                 "eval/mse_pred_tend": float(per_t_pred[i1].item()),</span>
+<span id="L558"><a aria-label="第 558 行" href="#L558"> 558</a> </span>
+<span id="L559"><a aria-label="第 559 行" href="#L559"> 559</a>                 "eval/mse_floor_t1": float(per_t_floor[i0].item()),</span>
+<span id="L560"><a aria-label="第 560 行" href="#L560"> 560</a>                 "eval/mse_floor_tmid": float(per_t_floor[im].item()),</span>
+<span id="L561"><a aria-label="第 561 行" href="#L561"> 561</a>                 "eval/mse_floor_tend": float(per_t_floor[i1].item()),</span>
+<span id="L562"><a aria-label="第 562 行" href="#L562"> 562</a>             },</span>
+<span id="L563"><a aria-label="第 563 行" href="#L563"> 563</a>             step=step,</span>
+<span id="L564"><a aria-label="第 564 行" href="#L564"> 564</a>         )</span>
+<span id="L565"><a aria-label="第 565 行" href="#L565"> 565</a> </span>
+<span id="L566"><a aria-label="第 566 行" href="#L566"> 566</a>     log_dynamics_eval_wandb(</span>
+<span id="L567"><a aria-label="第 567 行" href="#L567"> 567</a>         gt=frames_eval,</span>
+<span id="L568"><a aria-label="第 568 行" href="#L568"> 568</a>         pred=pred_frames,</span>
+<span id="L569"><a aria-label="第 569 行" href="#L569"> 569</a>         ctx_length=ctx_length,</span>
+<span id="L570"><a aria-label="第 570 行" href="#L570"> 570</a>         step=step,</span>
+<span id="L571"><a aria-label="第 571 行" href="#L571"> 571</a>         tag="eval",</span>
+<span id="L572"><a aria-label="第 572 行" href="#L572"> 572</a>         max_items=max_items,</span>
+<span id="L573"><a aria-label="第 573 行" href="#L573"> 573</a>     )</span>
+<span id="L574"><a aria-label="第 574 行" href="#L574"> 574</a> </span>
+<span id="L575"><a aria-label="第 575 行" href="#L575"> 575</a>     if dyn_was_training:</span>
+<span id="L576"><a aria-label="第 576 行" href="#L576"> 576</a>         dyn.train()</span>
+<span id="L577"><a aria-label="第 577 行" href="#L577"> 577</a> </span>
+<span id="L578"><a aria-label="第 578 行" href="#L578"> 578</a> </span>
+<span id="L579"><a aria-label="第 579 行" href="#L579"> 579</a> def train(args):</span>
+<span id="L580"><a aria-label="第 580 行" href="#L580"> 580</a>     ddp, rank, world_size, local_rank = init_distributed()</span>
+<span id="L581"><a aria-label="第 581 行" href="#L581"> 581</a>     device = torch.device(f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu")</span>
+<span id="L582"><a aria-label="第 582 行" href="#L582"> 582</a> </span>
+<span id="L583"><a aria-label="第 583 行" href="#L583"> 583</a>     seed_everything(args.seed + rank)</span>
+<span id="L584"><a aria-label="第 584 行" href="#L584"> 584</a> </span>
+<span id="L585"><a aria-label="第 585 行" href="#L585"> 585</a>     # Dataset and DataLoader</span>
+<span id="L586"><a aria-label="第 586 行" href="#L586"> 586</a>     if args.use_actions:</span>
+<span id="L587"><a aria-label="第 587 行" href="#L587"> 587</a>         from wm_dataset import WMDataset, collate_batch</span>
+<span id="L588"><a aria-label="第 588 行" href="#L588"> 588</a>         dataset = WMDataset(</span>
+<span id="L589"><a aria-label="第 589 行" href="#L589"> 589</a>             data_dir=args.data_dirs,</span>
+<span id="L590"><a aria-label="第 590 行" href="#L590"> 590</a>             frames_dir=args.frame_dirs,</span>
+<span id="L591"><a aria-label="第 591 行" href="#L591"> 591</a>             seq_len=args.seq_len,</span>
+<span id="L592"><a aria-label="第 592 行" href="#L592"> 592</a>             img_size=128,</span>
+<span id="L593"><a aria-label="第 593 行" href="#L593"> 593</a>             action_dim=16,</span>
+<span id="L594"><a aria-label="第 594 行" href="#L594"> 594</a>             tasks_json=args.tasks_json,</span>
+<span id="L595"><a aria-label="第 595 行" href="#L595"> 595</a>             tasks=TASK_SET,</span>
+<span id="L596"><a aria-label="第 596 行" href="#L596"> 596</a>             verbose=is_rank0(),</span>
+<span id="L597"><a aria-label="第 597 行" href="#L597"> 597</a>         )</span>
+<span id="L598"><a aria-label="第 598 行" href="#L598"> 598</a>         sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True) if ddp else None</span>
+<span id="L599"><a aria-label="第 599 行" href="#L599"> 599</a>         loader = DataLoader(</span>
+<span id="L600"><a aria-label="第 600 行" href="#L600"> 600</a>             dataset,</span>
+<span id="L601"><a aria-label="第 601 行" href="#L601"> 601</a>             batch_size=args.batch_size,</span>
+<span id="L602"><a aria-label="第 602 行" href="#L602"> 602</a>             sampler=sampler,</span>
+<span id="L603"><a aria-label="第 603 行" href="#L603"> 603</a>             shuffle=(sampler is None),</span>
+<span id="L604"><a aria-label="第 604 行" href="#L604"> 604</a>             num_workers=args.num_workers,</span>
+<span id="L605"><a aria-label="第 605 行" href="#L605"> 605</a>             pin_memory=True,</span>
+<span id="L606"><a aria-label="第 606 行" href="#L606"> 606</a>             drop_last=True,</span>
+<span id="L607"><a aria-label="第 607 行" href="#L607"> 607</a>             persistent_workers=(args.num_workers &gt; 0),</span>
+<span id="L608"><a aria-label="第 608 行" href="#L608"> 608</a>             worker_init_fn=worker_init_fn,</span>
+<span id="L609"><a aria-label="第 609 行" href="#L609"> 609</a>             collate_fn=collate_batch,</span>
+<span id="L610"><a aria-label="第 610 行" href="#L610"> 610</a>         )</span>
+<span id="L611"><a aria-label="第 611 行" href="#L611"> 611</a>     else:</span>
+<span id="L612"><a aria-label="第 612 行" href="#L612"> 612</a>         dataset = ShardedFrameDataset(</span>
+<span id="L613"><a aria-label="第 613 行" href="#L613"> 613</a>             outdirs=args.frame_dirs,</span>
+<span id="L614"><a aria-label="第 614 行" href="#L614"> 614</a>             tasks=TASK_SET,</span>
+<span id="L615"><a aria-label="第 615 行" href="#L615"> 615</a>             seq_len=args.seq_len,</span>
+<span id="L616"><a aria-label="第 616 行" href="#L616"> 616</a>         )</span>
+<span id="L617"><a aria-label="第 617 行" href="#L617"> 617</a>         sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True) if ddp else None</span>
+<span id="L618"><a aria-label="第 618 行" href="#L618"> 618</a>         loader = DataLoader(</span>
+<span id="L619"><a aria-label="第 619 行" href="#L619"> 619</a>             dataset,</span>
+<span id="L620"><a aria-label="第 620 行" href="#L620"> 620</a>             batch_size=args.batch_size,</span>
+<span id="L621"><a aria-label="第 621 行" href="#L621"> 621</a>             sampler=sampler,</span>
+<span id="L622"><a aria-label="第 622 行" href="#L622"> 622</a>             shuffle=(sampler is None),</span>
+<span id="L623"><a aria-label="第 623 行" href="#L623"> 623</a>             num_workers=args.num_workers,</span>
+<span id="L624"><a aria-label="第 624 行" href="#L624"> 624</a>             pin_memory=True,</span>
+<span id="L625"><a aria-label="第 625 行" href="#L625"> 625</a>             drop_last=True,</span>
+<span id="L626"><a aria-label="第 626 行" href="#L626"> 626</a>             persistent_workers=(args.num_workers &gt; 0),</span>
+<span id="L627"><a aria-label="第 627 行" href="#L627"> 627</a>             worker_init_fn=worker_init_fn,</span>
+<span id="L628"><a aria-label="第 628 行" href="#L628"> 628</a>         )</span>
+<span id="L629"><a aria-label="第 629 行" href="#L629"> 629</a> </span>
+<span id="L630"><a aria-label="第 630 行" href="#L630"> 630</a>     # Load frozen tokenizer</span>
+<span id="L631"><a aria-label="第 631 行" href="#L631"> 631</a>     tok_override = {}</span>
+<span id="L632"><a aria-label="第 632 行" href="#L632"> 632</a>     if args.H is not None: tok_override["H"] = args.H</span>
+<span id="L633"><a aria-label="第 633 行" href="#L633"> 633</a>     if args.W is not None: tok_override["W"] = args.W</span>
+<span id="L634"><a aria-label="第 634 行" href="#L634"> 634</a>     if args.C is not None: tok_override["C"] = args.C</span>
+<span id="L635"><a aria-label="第 635 行" href="#L635"> 635</a>     if args.patch is not None: tok_override["patch"] = args.patch</span>
+<span id="L636"><a aria-label="第 636 行" href="#L636"> 636</a> </span>
+<span id="L637"><a aria-label="第 637 行" href="#L637"> 637</a>     encoder, decoder, tok_args = load_frozen_tokenizer_from_pt_ckpt(</span>
+<span id="L638"><a aria-label="第 638 行" href="#L638"> 638</a>         args.tokenizer_ckpt, device=device, override=tok_override</span>
+<span id="L639"><a aria-label="第 639 行" href="#L639"> 639</a>     )</span>
+<span id="L640"><a aria-label="第 640 行" href="#L640"> 640</a> </span>
+<span id="L641"><a aria-label="第 641 行" href="#L641"> 641</a>     H = int(tok_args.get("H", 128))</span>
+<span id="L642"><a aria-label="第 642 行" href="#L642"> 642</a>     W = int(tok_args.get("W", 128))</span>
+<span id="L643"><a aria-label="第 643 行" href="#L643"> 643</a>     C = int(tok_args.get("C", 3))</span>
+<span id="L644"><a aria-label="第 644 行" href="#L644"> 644</a>     patch = int(tok_args.get("patch", 4))</span>
+<span id="L645"><a aria-label="第 645 行" href="#L645"> 645</a>     n_latents = int(tok_args.get("n_latents", 16))</span>
+<span id="L646"><a aria-label="第 646 行" href="#L646"> 646</a>     d_bottleneck = int(tok_args.get("d_bottleneck", 32))</span>
+<span id="L647"><a aria-label="第 647 行" href="#L647"> 647</a> </span>
+<span id="L648"><a aria-label="第 648 行" href="#L648"> 648</a>     assert H % patch == 0 and W % patch == 0</span>
+<span id="L649"><a aria-label="第 649 行" href="#L649"> 649</a>     assert n_latents % args.packing_factor == 0</span>
+<span id="L650"><a aria-label="第 650 行" href="#L650"> 650</a>     n_spatial = n_latents // args.packing_factor</span>
+<span id="L651"><a aria-label="第 651 行" href="#L651"> 651</a>     d_spatial = d_bottleneck * args.packing_factor</span>
+<span id="L652"><a aria-label="第 652 行" href="#L652"> 652</a> </span>
+<span id="L653"><a aria-label="第 653 行" href="#L653"> 653</a>     # Build dynamics model</span>
+<span id="L654"><a aria-label="第 654 行" href="#L654"> 654</a>     dyn = Dynamics(</span>
+<span id="L655"><a aria-label="第 655 行" href="#L655"> 655</a>         d_model=args.d_model_dyn,</span>
+<span id="L656"><a aria-label="第 656 行" href="#L656"> 656</a>         d_bottleneck=d_bottleneck,</span>
+<span id="L657"><a aria-label="第 657 行" href="#L657"> 657</a>         d_spatial=d_spatial,</span>
+<span id="L658"><a aria-label="第 658 行" href="#L658"> 658</a>         n_spatial=n_spatial,</span>
+<span id="L659"><a aria-label="第 659 行" href="#L659"> 659</a>         n_register=args.n_register,</span>
+<span id="L660"><a aria-label="第 660 行" href="#L660"> 660</a>         n_agent=args.n_agent,</span>
+<span id="L661"><a aria-label="第 661 行" href="#L661"> 661</a>         n_heads=args.n_heads,</span>
+<span id="L662"><a aria-label="第 662 行" href="#L662"> 662</a>         depth=args.dyn_depth,</span>
+<span id="L663"><a aria-label="第 663 行" href="#L663"> 663</a>         k_max=args.k_max,</span>
+<span id="L664"><a aria-label="第 664 行" href="#L664"> 664</a>         dropout=args.dropout,</span>
+<span id="L665"><a aria-label="第 665 行" href="#L665"> 665</a>         mlp_ratio=args.mlp_ratio,</span>
+<span id="L666"><a aria-label="第 666 行" href="#L666"> 666</a>         time_every=args.time_every,</span>
+<span id="L667"><a aria-label="第 667 行" href="#L667"> 667</a>         space_mode=args.space_mode,</span>
+<span id="L668"><a aria-label="第 668 行" href="#L668"> 668</a>         scale_pos_embeds=args.scale_pos_embeds,</span>
+<span id="L669"><a aria-label="第 669 行" href="#L669"> 669</a>     ).to(device)</span>
+<span id="L670"><a aria-label="第 670 行" href="#L670"> 670</a> </span>
+<span id="L671"><a aria-label="第 671 行" href="#L671"> 671</a>     if is_rank0():</span>
+<span id="L672"><a aria-label="第 672 行" href="#L672"> 672</a>         print(dyn)</span>
+<span id="L673"><a aria-label="第 673 行" href="#L673"> 673</a>         param_count = sum(p.numel() for p in dyn.parameters() if p.requires_grad)</span>
+<span id="L674"><a aria-label="第 674 行" href="#L674"> 674</a>         print(f"Learnable parameters (dynamics): {param_count:,}")</span>
+<span id="L675"><a aria-label="第 675 行" href="#L675"> 675</a>         print(f"[tokenizer] H={H} W={W} C={C} patch={patch} n_lat={n_latents} d_b={d_bottleneck} packing={args.packing_factor}")</span>
+<span id="L676"><a aria-label="第 676 行" href="#L676"> 676</a> </span>
+<span id="L677"><a aria-label="第 677 行" href="#L677"> 677</a>     if args.compile:</span>
+<span id="L678"><a aria-label="第 678 行" href="#L678"> 678</a>         dyn = torch.compile(dyn)</span>
+<span id="L679"><a aria-label="第 679 行" href="#L679"> 679</a> </span>
+<span id="L680"><a aria-label="第 680 行" href="#L680"> 680</a>     if ddp:</span>
+<span id="L681"><a aria-label="第 681 行" href="#L681"> 681</a>         dyn = torch.nn.parallel.DistributedDataParallel(</span>
+<span id="L682"><a aria-label="第 682 行" href="#L682"> 682</a>             dyn, device_ids=[local_rank], output_device=local_rank, broadcast_buffers=False</span>
+<span id="L683"><a aria-label="第 683 行" href="#L683"> 683</a>         )</span>
+<span id="L684"><a aria-label="第 684 行" href="#L684"> 684</a> </span>
+<span id="L685"><a aria-label="第 685 行" href="#L685"> 685</a>     # Optimizer and scaler</span>
+<span id="L686"><a aria-label="第 686 行" href="#L686"> 686</a>     opt = torch.optim.AdamW(</span>
+<span id="L687"><a aria-label="第 687 行" href="#L687"> 687</a>         dyn.parameters(), lr=args.lr, weight_decay=args.weight_decay, betas=(0.9, 0.999)</span>
+<span id="L688"><a aria-label="第 688 行" href="#L688"> 688</a>     )</span>
+<span id="L689"><a aria-label="第 689 行" href="#L689"> 689</a>     use_amp = torch.cuda.is_available()</span>
+<span id="L690"><a aria-label="第 690 行" href="#L690"> 690</a>     scaler = GradScaler(device="cuda", enabled=use_amp)</span>
+<span id="L691"><a aria-label="第 691 行" href="#L691"> 691</a> </span>
+<span id="L692"><a aria-label="第 692 行" href="#L692"> 692</a>     # Initialize wandb</span>
+<span id="L693"><a aria-label="第 693 行" href="#L693"> 693</a>     if is_rank0():</span>
+<span id="L694"><a aria-label="第 694 行" href="#L694"> 694</a>         wandb.init(</span>
+<span id="L695"><a aria-label="第 695 行" href="#L695"> 695</a>             project=args.wandb_project,</span>
+<span id="L696"><a aria-label="第 696 行" href="#L696"> 696</a>             name=args.wandb_run_name,</span>
+<span id="L697"><a aria-label="第 697 行" href="#L697"> 697</a>             entity=args.wandb_entity,</span>
+<span id="L698"><a aria-label="第 698 行" href="#L698"> 698</a>             mode="online",</span>
+<span id="L699"><a aria-label="第 699 行" href="#L699"> 699</a>             config=vars(args),</span>
+<span id="L700"><a aria-label="第 700 行" href="#L700"> 700</a>         )</span>
+<span id="L701"><a aria-label="第 701 行" href="#L701"> 701</a> </span>
+<span id="L702"><a aria-label="第 702 行" href="#L702"> 702</a>     # Resume from checkpoint</span>
+<span id="L703"><a aria-label="第 703 行" href="#L703"> 703</a>     step = 0</span>
+<span id="L704"><a aria-label="第 704 行" href="#L704"> 704</a>     start_epoch = 0</span>
+<span id="L705"><a aria-label="第 705 行" href="#L705"> 705</a>     ckpt_dir = Path(args.ckpt_dir)</span>
+<span id="L706"><a aria-label="第 706 行" href="#L706"> 706</a>     if args.resume is not None:</span>
+<span id="L707"><a aria-label="第 707 行" href="#L707"> 707</a>         step, start_epoch = load_ckpt(Path(args.resume), dyn_model=dyn, opt=opt, scaler=scaler)</span>
+<span id="L708"><a aria-label="第 708 行" href="#L708"> 708</a>         if is_rank0():</span>
+<span id="L709"><a aria-label="第 709 行" href="#L709"> 709</a>             print(f"[rank0] Resumed from {args.resume} (step={step}, epoch={start_epoch})")</span>
+<span id="L710"><a aria-label="第 710 行" href="#L710"> 710</a> </span>
+<span id="L711"><a aria-label="第 711 行" href="#L711"> 711</a>     # Training loop</span>
+<span id="L712"><a aria-label="第 712 行" href="#L712"> 712</a>     dyn.train()</span>
+<span id="L713"><a aria-label="第 713 行" href="#L713"> 713</a>     t0 = time.time()</span>
+<span id="L714"><a aria-label="第 714 行" href="#L714"> 714</a>     grad_accum = max(1, int(args.grad_accum))</span>
+<span id="L715"><a aria-label="第 715 行" href="#L715"> 715</a> </span>
+<span id="L716"><a aria-label="第 716 行" href="#L716"> 716</a>     while step &lt; args.max_steps:</span>
+<span id="L717"><a aria-label="第 717 行" href="#L717"> 717</a>         for epoch in range(start_epoch, 10_000_000):</span>
+<span id="L718"><a aria-label="第 718 行" href="#L718"> 718</a>             if sampler is not None:</span>
+<span id="L719"><a aria-label="第 719 行" href="#L719"> 719</a>                 sampler.set_epoch(epoch)</span>
+<span id="L720"><a aria-label="第 720 行" href="#L720"> 720</a> </span>
+<span id="L721"><a aria-label="第 721 行" href="#L721"> 721</a>             for batch in loader:</span>
+<span id="L722"><a aria-label="第 722 行" href="#L722"> 722</a>                 if step &gt;= args.max_steps:</span>
+<span id="L723"><a aria-label="第 723 行" href="#L723"> 723</a>                     break</span>
+<span id="L724"><a aria-label="第 724 行" href="#L724"> 724</a> </span>
+<span id="L725"><a aria-label="第 725 行" href="#L725"> 725</a>                 if args.use_actions:</span>
+<span id="L726"><a aria-label="第 726 行" href="#L726"> 726</a>                     obs_u8 = batch["obs"].to(device, non_blocking=True)          # (B,T+1,3,H,W) uint8</span>
+<span id="L727"><a aria-label="第 727 行" href="#L727"> 727</a>                     act    = batch["act"].to(device, non_blocking=True)          # (B,T,16) float</span>
+<span id="L728"><a aria-label="第 728 行" href="#L728"> 728</a>                     mask   = batch["act_mask"].to(device, non_blocking=True)     # (B,T,16) float (optional but good)</span>
+<span id="L729"><a aria-label="第 729 行" href="#L729"> 729</a> </span>
+<span id="L730"><a aria-label="第 730 行" href="#L730"> 730</a>                     act = act.clamp(-1, 1) * mask</span>
+<span id="L731"><a aria-label="第 731 行" href="#L731"> 731</a> </span>
+<span id="L732"><a aria-label="第 732 行" href="#L732"> 732</a>                     # Keep obs[0..T-1], align action[t] as action that produced obs[t]</span>
+<span id="L733"><a aria-label="第 733 行" href="#L733"> 733</a>                     frames = obs_u8[:, :-1].float() / 255.0                      # (B,T,3,H,W)</span>
+<span id="L734"><a aria-label="第 734 行" href="#L734"> 734</a>                     actions = torch.zeros_like(act)</span>
+<span id="L735"><a aria-label="第 735 行" href="#L735"> 735</a>                     actions[:, 1:] = act[:, :-1]</span>
+<span id="L736"><a aria-label="第 736 行" href="#L736"> 736</a>                     act_mask = torch.zeros_like(mask)</span>
+<span id="L737"><a aria-label="第 737 行" href="#L737"> 737</a>                     act_mask[:, 1:] = mask[:, :-1]</span>
+<span id="L738"><a aria-label="第 738 行" href="#L738"> 738</a>                 else:</span>
+<span id="L739"><a aria-label="第 739 行" href="#L739"> 739</a>                     frames = batch.to(device, non_blocking=True)                 # (B,T,3,H,W)</span>
+<span id="L740"><a aria-label="第 740 行" href="#L740"> 740</a>                     actions = None</span>
+<span id="L741"><a aria-label="第 741 行" href="#L741"> 741</a>                     act_mask = None</span>
+<span id="L742"><a aria-label="第 742 行" href="#L742"> 742</a> </span>
+<span id="L743"><a aria-label="第 743 行" href="#L743"> 743</a>                 # Safeguard: convert to [0, 1] if dataset returns uint8</span>
+<span id="L744"><a aria-label="第 744 行" href="#L744"> 744</a>                 if frames.dtype == torch.uint8:</span>
+<span id="L745"><a aria-label="第 745 行" href="#L745"> 745</a>                     frames = frames.float() / 255.0</span>
+<span id="L746"><a aria-label="第 746 行" href="#L746"> 746</a> </span>
+<span id="L747"><a aria-label="第 747 行" href="#L747"> 747</a>                 # Frozen encoder -&gt; packed spatial tokens z1</span>
+<span id="L748"><a aria-label="第 748 行" href="#L748"> 748</a>                 with torch.no_grad():</span>
+<span id="L749"><a aria-label="第 749 行" href="#L749"> 749</a>                     patches = temporal_patchify(frames, patch)  # (B,T,Np,Dp)</span>
+<span id="L750"><a aria-label="第 750 行" href="#L750"> 750</a>                     z_btLd, _ = encoder(patches)                # (B,T,n_latents,d_b)</span>
+<span id="L751"><a aria-label="第 751 行" href="#L751"> 751</a>                     z1 = pack_bottleneck_to_spatial(z_btLd, n_spatial=n_spatial, k=args.packing_factor)  # (B,T,Sz,Dz)</span>
+<span id="L752"><a aria-label="第 752 行" href="#L752"> 752</a> </span>
+<span id="L753"><a aria-label="第 753 行" href="#L753"> 753</a>                 if actions is not None:</span>
+<span id="L754"><a aria-label="第 754 行" href="#L754"> 754</a>                     actions = actions.to(device, non_blocking=True)</span>
+<span id="L755"><a aria-label="第 755 行" href="#L755"> 755</a> </span>
+<span id="L756"><a aria-label="第 756 行" href="#L756"> 756</a>                 B = z1.shape[0]</span>
+<span id="L757"><a aria-label="第 757 行" href="#L757"> 757</a>                 B_self = int(round(args.self_fraction * B))</span>
+<span id="L758"><a aria-label="第 758 行" href="#L758"> 758</a>                 B_self = max(0, min(B - 1, B_self))</span>
+<span id="L759"><a aria-label="第 759 行" href="#L759"> 759</a> </span>
+<span id="L760"><a aria-label="第 760 行" href="#L760"> 760</a>                 with autocast(device_type="cuda", enabled=use_amp):</span>
+<span id="L761"><a aria-label="第 761 行" href="#L761"> 761</a>                     loss, aux = dynamics_pretrain_loss(</span>
+<span id="L762"><a aria-label="第 762 行" href="#L762"> 762</a>                         dyn.module if hasattr(dyn, "module") else dyn,</span>
+<span id="L763"><a aria-label="第 763 行" href="#L763"> 763</a>                         z1=z1,</span>
+<span id="L764"><a aria-label="第 764 行" href="#L764"> 764</a>                         actions=actions,</span>
+<span id="L765"><a aria-label="第 765 行" href="#L765"> 765</a>                         act_mask=act_mask,</span>
+<span id="L766"><a aria-label="第 766 行" href="#L766"> 766</a>                         k_max=args.k_max,</span>
+<span id="L767"><a aria-label="第 767 行" href="#L767"> 767</a>                         B_self=B_self,</span>
+<span id="L768"><a aria-label="第 768 行" href="#L768"> 768</a>                         step=step,</span>
+<span id="L769"><a aria-label="第 769 行" href="#L769"> 769</a>                         bootstrap_start=args.bootstrap_start,</span>
+<span id="L770"><a aria-label="第 770 行" href="#L770"> 770</a>                         agent_tokens=None,</span>
+<span id="L771"><a aria-label="第 771 行" href="#L771"> 771</a>                     )</span>
+<span id="L772"><a aria-label="第 772 行" href="#L772"> 772</a> </span>
+<span id="L773"><a aria-label="第 773 行" href="#L773"> 773</a>                 if not torch.isfinite(loss):</span>
+<span id="L774"><a aria-label="第 774 行" href="#L774"> 774</a>                     raise RuntimeError(f"Non-finite loss at step {step}: loss={loss}")</span>
+<span id="L775"><a aria-label="第 775 行" href="#L775"> 775</a> </span>
+<span id="L776"><a aria-label="第 776 行" href="#L776"> 776</a>                 loss_to_backprop = loss / grad_accum</span>
+<span id="L777"><a aria-label="第 777 行" href="#L777"> 777</a>                 scaler.scale(loss_to_backprop).backward()</span>
+<span id="L778"><a aria-label="第 778 行" href="#L778"> 778</a> </span>
+<span id="L779"><a aria-label="第 779 行" href="#L779"> 779</a>                 do_step = ((step + 1) % grad_accum == 0)</span>
+<span id="L780"><a aria-label="第 780 行" href="#L780"> 780</a>                 if do_step:</span>
+<span id="L781"><a aria-label="第 781 行" href="#L781"> 781</a>                     if args.grad_clip &gt; 0:</span>
+<span id="L782"><a aria-label="第 782 行" href="#L782"> 782</a>                         scaler.unscale_(opt)</span>
+<span id="L783"><a aria-label="第 783 行" href="#L783"> 783</a>                         torch.nn.utils.clip_grad_norm_(</span>
+<span id="L784"><a aria-label="第 784 行" href="#L784"> 784</a>                             (dyn.module if hasattr(dyn, "module") else dyn).parameters(),</span>
+<span id="L785"><a aria-label="第 785 行" href="#L785"> 785</a>                             max_norm=args.grad_clip,</span>
+<span id="L786"><a aria-label="第 786 行" href="#L786"> 786</a>                         )</span>
+<span id="L787"><a aria-label="第 787 行" href="#L787"> 787</a> </span>
+<span id="L788"><a aria-label="第 788 行" href="#L788"> 788</a>                     if use_amp:</span>
+<span id="L789"><a aria-label="第 789 行" href="#L789"> 789</a>                         scaler.step(opt)</span>
+<span id="L790"><a aria-label="第 790 行" href="#L790"> 790</a>                         scaler.update()</span>
+<span id="L791"><a aria-label="第 791 行" href="#L791"> 791</a>                     else:</span>
+<span id="L792"><a aria-label="第 792 行" href="#L792"> 792</a>                         opt.step()</span>
+<span id="L793"><a aria-label="第 793 行" href="#L793"> 793</a>                     opt.zero_grad(set_to_none=True)</span>
+<span id="L794"><a aria-label="第 794 行" href="#L794"> 794</a> </span>
+<span id="L795"><a aria-label="第 795 行" href="#L795"> 795</a>                 # Evaluation / visualization</span>
+<span id="L796"><a aria-label="第 796 行" href="#L796"> 796</a>                 if is_rank0() and args.eval_every &gt; 0 and (step % args.eval_every == 0):</span>
+<span id="L797"><a aria-label="第 797 行" href="#L797"> 797</a> </span>
+<span id="L798"><a aria-label="第 798 行" href="#L798"> 798</a>                     # Evaluate on a small slice of the current batch</span>
+<span id="L799"><a aria-label="第 799 行" href="#L799"> 799</a>                     B_eval = min(frames.shape[0], args.eval_batch_size)</span>
+<span id="L800"><a aria-label="第 800 行" href="#L800"> 800</a>                     frames_eval = frames[:B_eval]</span>
+<span id="L801"><a aria-label="第 801 行" href="#L801"> 801</a> </span>
+<span id="L802"><a aria-label="第 802 行" href="#L802"> 802</a>                     if args.use_actions:</span>
+<span id="L803"><a aria-label="第 803 行" href="#L803"> 803</a>                         actions_eval = actions[:B_eval]</span>
+<span id="L804"><a aria-label="第 804 行" href="#L804"> 804</a>                         act_mask_eval = act_mask[:B_eval]</span>
+<span id="L805"><a aria-label="第 805 行" href="#L805"> 805</a>                     else:</span>
+<span id="L806"><a aria-label="第 806 行" href="#L806"> 806</a>                         actions_eval = None</span>
+<span id="L807"><a aria-label="第 807 行" href="#L807"> 807</a>                         act_mask_eval = None</span>
+<span id="L808"><a aria-label="第 808 行" href="#L808"> 808</a> </span>
+<span id="L809"><a aria-label="第 809 行" href="#L809"> 809</a>                     sched = make_tau_schedule(k_max=args.k_max, schedule=args.eval_schedule, d=args.eval_d)</span>
+<span id="L810"><a aria-label="第 810 行" href="#L810"> 810</a> </span>
+<span id="L811"><a aria-label="第 811 行" href="#L811"> 811</a>                     run_dynamics_eval(</span>
+<span id="L812"><a aria-label="第 812 行" href="#L812"> 812</a>                         encoder=encoder,</span>
+<span id="L813"><a aria-label="第 813 行" href="#L813"> 813</a>                         decoder=decoder,</span>
+<span id="L814"><a aria-label="第 814 行" href="#L814"> 814</a>                         dyn=(dyn.module if hasattr(dyn, "module") else dyn),</span>
+<span id="L815"><a aria-label="第 815 行" href="#L815"> 815</a>                         frames=frames_eval,</span>
+<span id="L816"><a aria-label="第 816 行" href="#L816"> 816</a>                         actions=actions_eval,</span>
+<span id="L817"><a aria-label="第 817 行" href="#L817"> 817</a>                         act_mask=act_mask_eval,</span>
+<span id="L818"><a aria-label="第 818 行" href="#L818"> 818</a>                         H=H, W=W, C=C, patch=patch,</span>
+<span id="L819"><a aria-label="第 819 行" href="#L819"> 819</a>                         packing_factor=args.packing_factor,</span>
+<span id="L820"><a aria-label="第 820 行" href="#L820"> 820</a>                         k_max=args.k_max,</span>
+<span id="L821"><a aria-label="第 821 行" href="#L821"> 821</a>                         ctx_length=args.eval_ctx,</span>
+<span id="L822"><a aria-label="第 822 行" href="#L822"> 822</a>                         horizon=args.eval_horizon,</span>
+<span id="L823"><a aria-label="第 823 行" href="#L823"> 823</a>                         sched=sched,</span>
+<span id="L824"><a aria-label="第 824 行" href="#L824"> 824</a>                         max_items=args.eval_max_items,</span>
+<span id="L825"><a aria-label="第 825 行" href="#L825"> 825</a>                         step=step,</span>
+<span id="L826"><a aria-label="第 826 行" href="#L826"> 826</a>                     )</span>
+<span id="L827"><a aria-label="第 827 行" href="#L827"> 827</a> </span>
+<span id="L828"><a aria-label="第 828 行" href="#L828"> 828</a>                 # Logging</span>
+<span id="L829"><a aria-label="第 829 行" href="#L829"> 829</a>                 if is_rank0() and (step % args.log_every == 0):</span>
+<span id="L830"><a aria-label="第 830 行" href="#L830"> 830</a>                     </span>
+<span id="L831"><a aria-label="第 831 行" href="#L831"> 831</a>                     # Action shuffle loss ratio</span>
+<span id="L832"><a aria-label="第 832 行" href="#L832"> 832</a>                     if actions is not None:</span>
+<span id="L833"><a aria-label="第 833 行" href="#L833"> 833</a>                         with torch.no_grad():</span>
+<span id="L834"><a aria-label="第 834 行" href="#L834"> 834</a>                             loss_real, _ = dynamics_pretrain_loss(</span>
+<span id="L835"><a aria-label="第 835 行" href="#L835"> 835</a>                                 dyn.module if hasattr(dyn, "module") else dyn,</span>
+<span id="L836"><a aria-label="第 836 行" href="#L836"> 836</a>                                 z1=z1,</span>
+<span id="L837"><a aria-label="第 837 行" href="#L837"> 837</a>                                 actions=actions,</span>
+<span id="L838"><a aria-label="第 838 行" href="#L838"> 838</a>                                 act_mask=act_mask,</span>
+<span id="L839"><a aria-label="第 839 行" href="#L839"> 839</a>                                 k_max=args.k_max,</span>
+<span id="L840"><a aria-label="第 840 行" href="#L840"> 840</a>                                 B_self=B_self,</span>
+<span id="L841"><a aria-label="第 841 行" href="#L841"> 841</a>                                 step=step,</span>
+<span id="L842"><a aria-label="第 842 行" href="#L842"> 842</a>                                 bootstrap_start=args.bootstrap_start,</span>
+<span id="L843"><a aria-label="第 843 行" href="#L843"> 843</a>                                 agent_tokens=None,</span>
+<span id="L844"><a aria-label="第 844 行" href="#L844"> 844</a>                             )</span>
+<span id="L845"><a aria-label="第 845 行" href="#L845"> 845</a>                             perm = torch.randperm(actions.shape[0], device=actions.device)</span>
+<span id="L846"><a aria-label="第 846 行" href="#L846"> 846</a>                             loss_shuffled, _ = dynamics_pretrain_loss(</span>
+<span id="L847"><a aria-label="第 847 行" href="#L847"> 847</a>                                 dyn.module if hasattr(dyn, "module") else dyn,</span>
+<span id="L848"><a aria-label="第 848 行" href="#L848"> 848</a>                                 z1=z1,</span>
+<span id="L849"><a aria-label="第 849 行" href="#L849"> 849</a>                                 actions=actions[perm],</span>
+<span id="L850"><a aria-label="第 850 行" href="#L850"> 850</a>                                 act_mask=act_mask,</span>
+<span id="L851"><a aria-label="第 851 行" href="#L851"> 851</a>                                 k_max=args.k_max,</span>
+<span id="L852"><a aria-label="第 852 行" href="#L852"> 852</a>                                 B_self=B_self,</span>
+<span id="L853"><a aria-label="第 853 行" href="#L853"> 853</a>                                 step=step,</span>
+<span id="L854"><a aria-label="第 854 行" href="#L854"> 854</a>                                 bootstrap_start=args.bootstrap_start,</span>
+<span id="L855"><a aria-label="第 855 行" href="#L855"> 855</a>                                 agent_tokens=None,</span>
+<span id="L856"><a aria-label="第 856 行" href="#L856"> 856</a>                             )</span>
+<span id="L857"><a aria-label="第 857 行" href="#L857"> 857</a>                         action_shuffle_loss_ratio = loss_shuffled / loss</span>
+<span id="L858"><a aria-label="第 858 行" href="#L858"> 858</a>                     else:</span>
+<span id="L859"><a aria-label="第 859 行" href="#L859"> 859</a>                         action_shuffle_loss_ratio = torch.tensor(0., device=device)</span>
+<span id="L860"><a aria-label="第 860 行" href="#L860"> 860</a> </span>
+<span id="L861"><a aria-label="第 861 行" href="#L861"> 861</a>                     # Log to wandb</span>
+<span id="L862"><a aria-label="第 862 行" href="#L862"> 862</a>                     wandb.log(</span>
+<span id="L863"><a aria-label="第 863 行" href="#L863"> 863</a>                         {</span>
+<span id="L864"><a aria-label="第 864 行" href="#L864"> 864</a>                             "loss/total": float(loss.item()),</span>
+<span id="L865"><a aria-label="第 865 行" href="#L865"> 865</a>                             "loss/flow_mse": float(aux["flow_mse"].item()),</span>
+<span id="L866"><a aria-label="第 866 行" href="#L866"> 866</a>                             "loss/bootstrap_mse": float(aux["bootstrap_mse"].item()),</span>
+<span id="L867"><a aria-label="第 867 行" href="#L867"> 867</a>                             "loss/loss_emp": float(aux["loss_emp"].item()),</span>
+<span id="L868"><a aria-label="第 868 行" href="#L868"> 868</a>                             "loss/loss_self": float(aux["loss_self"].item()),</span>
+<span id="L869"><a aria-label="第 869 行" href="#L869"> 869</a>                             "stats/action_shuffle_loss_ratio": float(action_shuffle_loss_ratio.item()),</span>
+<span id="L870"><a aria-label="第 870 行" href="#L870"> 870</a>                             "stats/sigma_mean": float(aux["sigma_mean"].item()),</span>
+<span id="L871"><a aria-label="第 871 行" href="#L871"> 871</a>                             "stats/B_self": float(B_self),</span>
+<span id="L872"><a aria-label="第 872 行" href="#L872"> 872</a>                             "lr": float(opt.param_groups[0]["lr"]),</span>
+<span id="L873"><a aria-label="第 873 行" href="#L873"> 873</a>                             "time/hrs": (time.time() - t0) / 3600.0,</span>
+<span id="L874"><a aria-label="第 874 行" href="#L874"> 874</a>                         },</span>
+<span id="L875"><a aria-label="第 875 行" href="#L875"> 875</a>                         step=step,</span>
+<span id="L876"><a aria-label="第 876 行" href="#L876"> 876</a>                     )</span>
+<span id="L877"><a aria-label="第 877 行" href="#L877"> 877</a> </span>
+<span id="L878"><a aria-label="第 878 行" href="#L878"> 878</a>                     # Log to console</span>
+<span id="L879"><a aria-label="第 879 行" href="#L879"> 879</a>                     print(</span>
+<span id="L880"><a aria-label="第 880 行" href="#L880"> 880</a>                         f"step {step:07d} | loss={loss.item():.6f} "</span>
+<span id="L881"><a aria-label="第 881 行" href="#L881"> 881</a>                         f"| flow_mse={aux['flow_mse'].item():.6f} "</span>
+<span id="L882"><a aria-label="第 882 行" href="#L882"> 882</a>                         f"| boot_mse={aux['bootstrap_mse'].item():.6f} "</span>
+<span id="L883"><a aria-label="第 883 行" href="#L883"> 883</a>                         f"| sigma={aux['sigma_mean'].item():.3f} | B_self={B_self}"</span>
+<span id="L884"><a aria-label="第 884 行" href="#L884"> 884</a>                     )</span>
+<span id="L885"><a aria-label="第 885 行" href="#L885"> 885</a> </span>
+<span id="L886"><a aria-label="第 886 行" href="#L886"> 886</a>                 # Checkpointing</span>
+<span id="L887"><a aria-label="第 887 行" href="#L887"> 887</a>                 if is_rank0() and args.save_every &gt; 0 and (step % args.save_every == 0) and do_step:</span>
+<span id="L888"><a aria-label="第 888 行" href="#L888"> 888</a>                     ckpt_path = ckpt_dir / f"step_{step:07d}.pt"</span>
+<span id="L889"><a aria-label="第 889 行" href="#L889"> 889</a>                     save_ckpt(ckpt_path, step=step, epoch=epoch, dyn_model=dyn, opt=opt, scaler=scaler, args=args)</span>
+<span id="L890"><a aria-label="第 890 行" href="#L890"> 890</a>                     latest = ckpt_dir / "latest.pt"</span>
+<span id="L891"><a aria-label="第 891 行" href="#L891"> 891</a>                     save_ckpt(latest, step=step, epoch=epoch, dyn_model=dyn, opt=opt, scaler=scaler, args=args)</span>
+<span id="L892"><a aria-label="第 892 行" href="#L892"> 892</a> </span>
+<span id="L893"><a aria-label="第 893 行" href="#L893"> 893</a>                 step += 1</span>
+<span id="L894"><a aria-label="第 894 行" href="#L894"> 894</a> </span>
+<span id="L895"><a aria-label="第 895 行" href="#L895"> 895</a>             start_epoch = epoch + 1</span>
+<span id="L896"><a aria-label="第 896 行" href="#L896"> 896</a> </span>
+<span id="L897"><a aria-label="第 897 行" href="#L897"> 897</a>     if ddp:</span>
+<span id="L898"><a aria-label="第 898 行" href="#L898"> 898</a>         dist.barrier()</span>
+<span id="L899"><a aria-label="第 899 行" href="#L899"> 899</a>         dist.destroy_process_group()</span>
+<span id="L900"><a aria-label="第 900 行" href="#L900"> 900</a> </span>
+<span id="L901"><a aria-label="第 901 行" href="#L901"> 901</a> </span>
+<span id="L902"><a aria-label="第 902 行" href="#L902"> 902</a> if __name__ == "__main__":</span>
+<span id="L903"><a aria-label="第 903 行" href="#L903"> 903</a>     p = argparse.ArgumentParser()</span>
+<span id="L904"><a aria-label="第 904 行" href="#L904"> 904</a> </span>
+<span id="L905"><a aria-label="第 905 行" href="#L905"> 905</a>     # data (if using multiple datasets, make sure they align in order)</span>
+<span id="L906"><a aria-label="第 906 行" href="#L906"> 906</a>     p.add_argument("--data_dirs", type=str, nargs="+", default=[   # paths to raw data</span>
+<span id="L907"><a aria-label="第 907 行" href="#L907"> 907</a>         "/&lt;path&gt;/expert",</span>
+<span id="L908"><a aria-label="第 908 行" href="#L908"> 908</a>         "/&lt;path&gt;/mixed-small",</span>
+<span id="L909"><a aria-label="第 909 行" href="#L909"> 909</a>         "/&lt;path&gt;/mixed-large",</span>
+<span id="L910"><a aria-label="第 910 行" href="#L910"> 910</a>     ])</span>
+<span id="L911"><a aria-label="第 911 行" href="#L911"> 911</a>     p.add_argument("--frame_dirs", type=str, nargs="+", default=[  # paths to preprocessed frames</span>
+<span id="L912"><a aria-label="第 912 行" href="#L912"> 912</a>         "/&lt;path&gt;/expert-shards",</span>
+<span id="L913"><a aria-label="第 913 行" href="#L913"> 913</a>         "/&lt;path&gt;/mixed-small-shards",</span>
+<span id="L914"><a aria-label="第 914 行" href="#L914"> 914</a>         "/&lt;path&gt;/mixed-large-shards",</span>
+<span id="L915"><a aria-label="第 915 行" href="#L915"> 915</a>     ])</span>
+<span id="L916"><a aria-label="第 916 行" href="#L916"> 916</a>     p.add_argument("--tasks_json", type=str, default="../tasks.json")  # task metadata</span>
+<span id="L917"><a aria-label="第 917 行" href="#L917"> 917</a>     p.add_argument("--seq_len", type=int, default=32)</span>
+<span id="L918"><a aria-label="第 918 行" href="#L918"> 918</a>     p.add_argument("--num_workers", type=int, default=8)</span>
+<span id="L919"><a aria-label="第 919 行" href="#L919"> 919</a>     p.add_argument("--batch_size", type=int, default=24)</span>
+<span id="L920"><a aria-label="第 920 行" href="#L920"> 920</a> </span>
+<span id="L921"><a aria-label="第 921 行" href="#L921"> 921</a>     # tokenizer restore</span>
+<span id="L922"><a aria-label="第 922 行" href="#L922"> 922</a>     p.add_argument("--tokenizer_ckpt", type=str, default="./logs/tokenizer_ckpts/latest.pt")</span>
+<span id="L923"><a aria-label="第 923 行" href="#L923"> 923</a>     p.add_argument("--H", type=int, default=None)</span>
+<span id="L924"><a aria-label="第 924 行" href="#L924"> 924</a>     p.add_argument("--W", type=int, default=None)</span>
+<span id="L925"><a aria-label="第 925 行" href="#L925"> 925</a>     p.add_argument("--C", type=int, default=None)</span>
+<span id="L926"><a aria-label="第 926 行" href="#L926"> 926</a>     p.add_argument("--patch", type=int, default=None)</span>
+<span id="L927"><a aria-label="第 927 行" href="#L927"> 927</a> </span>
+<span id="L928"><a aria-label="第 928 行" href="#L928"> 928</a>     # Better performance without scale_pos_embeds (set to False)</span>
+<span id="L929"><a aria-label="第 929 行" href="#L929"> 929</a>     # Set to True by default for backwards compatibility. Details here: https://github.com/nicklashansen/dreamer4/pull/4</span>
+<span id="L930"><a aria-label="第 930 行" href="#L930"> 930</a>     p.add_argument("--scale_pos_embeds", action="store_true")</span>
+<span id="L931"><a aria-label="第 931 行" href="#L931"> 931</a> </span>
+<span id="L932"><a aria-label="第 932 行" href="#L932"> 932</a>     # dynamics arch</span>
+<span id="L933"><a aria-label="第 933 行" href="#L933"> 933</a>     p.add_argument("--d_model_dyn", type=int, default=512)</span>
+<span id="L934"><a aria-label="第 934 行" href="#L934"> 934</a>     p.add_argument("--dyn_depth", type=int, default=8)</span>
+<span id="L935"><a aria-label="第 935 行" href="#L935"> 935</a>     p.add_argument("--n_heads", type=int, default=4)</span>
+<span id="L936"><a aria-label="第 936 行" href="#L936"> 936</a>     p.add_argument("--dropout", type=float, default=0.0)</span>
+<span id="L937"><a aria-label="第 937 行" href="#L937"> 937</a>     p.add_argument("--mlp_ratio", type=float, default=4.0)</span>
+<span id="L938"><a aria-label="第 938 行" href="#L938"> 938</a>     p.add_argument("--time_every", type=int, default=1)</span>
+<span id="L939"><a aria-label="第 939 行" href="#L939"> 939</a> </span>
+<span id="L940"><a aria-label="第 940 行" href="#L940"> 940</a>     p.add_argument("--packing_factor", type=int, default=2)</span>
+<span id="L941"><a aria-label="第 941 行" href="#L941"> 941</a>     p.add_argument("--n_register", type=int, default=4)</span>
+<span id="L942"><a aria-label="第 942 行" href="#L942"> 942</a>     p.add_argument("--n_agent", type=int, default=1)</span>
+<span id="L943"><a aria-label="第 943 行" href="#L943"> 943</a>     p.add_argument("--space_mode", type=str, default="wm_agent_isolated", choices=["wm_agent_isolated", "wm_agent"])</span>
+<span id="L944"><a aria-label="第 944 行" href="#L944"> 944</a> </span>
+<span id="L945"><a aria-label="第 945 行" href="#L945"> 945</a>     # shortcut / schedule</span>
+<span id="L946"><a aria-label="第 946 行" href="#L946"> 946</a>     p.add_argument("--k_max", type=int, default=8)</span>
+<span id="L947"><a aria-label="第 947 行" href="#L947"> 947</a>     p.add_argument("--bootstrap_start", type=int, default=5_000)</span>
+<span id="L948"><a aria-label="第 948 行" href="#L948"> 948</a>     p.add_argument("--self_fraction", type=float, default=0.25)</span>
+<span id="L949"><a aria-label="第 949 行" href="#L949"> 949</a> </span>
+<span id="L950"><a aria-label="第 950 行" href="#L950"> 950</a>     # actions</span>
+<span id="L951"><a aria-label="第 951 行" href="#L951"> 951</a>     p.add_argument("--use_actions", action="store_true")</span>
+<span id="L952"><a aria-label="第 952 行" href="#L952"> 952</a> </span>
+<span id="L953"><a aria-label="第 953 行" href="#L953"> 953</a>     # optim</span>
+<span id="L954"><a aria-label="第 954 行" href="#L954"> 954</a>     p.add_argument("--lr", type=float, default=1e-4)</span>
+<span id="L955"><a aria-label="第 955 行" href="#L955"> 955</a>     p.add_argument("--weight_decay", type=float, default=1e-2)</span>
+<span id="L956"><a aria-label="第 956 行" href="#L956"> 956</a>     p.add_argument("--max_steps", type=int, default=10_000_000)</span>
+<span id="L957"><a aria-label="第 957 行" href="#L957"> 957</a>     p.add_argument("--grad_accum", type=int, default=1)</span>
+<span id="L958"><a aria-label="第 958 行" href="#L958"> 958</a>     p.add_argument("--grad_clip", type=float, default=1.0)</span>
+<span id="L959"><a aria-label="第 959 行" href="#L959"> 959</a> </span>
+<span id="L960"><a aria-label="第 960 行" href="#L960"> 960</a>     # eval / viz</span>
+<span id="L961"><a aria-label="第 961 行" href="#L961"> 961</a>     p.add_argument("--eval_every", type=int, default=1_000)</span>
+<span id="L962"><a aria-label="第 962 行" href="#L962"> 962</a>     p.add_argument("--eval_batch_size", type=int, default=4)</span>
+<span id="L963"><a aria-label="第 963 行" href="#L963"> 963</a>     p.add_argument("--eval_max_items", type=int, default=4)</span>
+<span id="L964"><a aria-label="第 964 行" href="#L964"> 964</a>     p.add_argument("--eval_ctx", type=int, default=8)</span>
+<span id="L965"><a aria-label="第 965 行" href="#L965"> 965</a>     p.add_argument("--eval_horizon", type=int, default=16)</span>
+<span id="L966"><a aria-label="第 966 行" href="#L966"> 966</a>     p.add_argument("--eval_schedule", type=str, default="shortcut", choices=["finest", "shortcut"])</span>
+<span id="L967"><a aria-label="第 967 行" href="#L967"> 967</a>     p.add_argument("--eval_d", type=float, default=0.25)</span>
+<span id="L968"><a aria-label="第 968 行" href="#L968"> 968</a> </span>
+<span id="L969"><a aria-label="第 969 行" href="#L969"> 969</a>     # logging</span>
+<span id="L970"><a aria-label="第 970 行" href="#L970"> 970</a>     p.add_argument("--log_every", type=int, default=200)</span>
+<span id="L971"><a aria-label="第 971 行" href="#L971"> 971</a> </span>
+<span id="L972"><a aria-label="第 972 行" href="#L972"> 972</a>     # wandb</span>
+<span id="L973"><a aria-label="第 973 行" href="#L973"> 973</a>     p.add_argument("--wandb_project", type=str, default="dreamer4-dynamics")</span>
+<span id="L974"><a aria-label="第 974 行" href="#L974"> 974</a>     p.add_argument("--wandb_run_name", type=str, default="default")</span>
+<span id="L975"><a aria-label="第 975 行" href="#L975"> 975</a>     p.add_argument("--wandb_entity", type=str, default=None)</span>
+<span id="L976"><a aria-label="第 976 行" href="#L976"> 976</a> </span>
+<span id="L977"><a aria-label="第 977 行" href="#L977"> 977</a>     # ckpt</span>
+<span id="L978"><a aria-label="第 978 行" href="#L978"> 978</a>     p.add_argument("--ckpt_dir", type=str, default="./logs/dynamics_ckpts")</span>
+<span id="L979"><a aria-label="第 979 行" href="#L979"> 979</a>     p.add_argument("--save_every", type=int, default=10_000)</span>
+<span id="L980"><a aria-label="第 980 行" href="#L980"> 980</a>     p.add_argument("--resume", type=str, default=None)</span>
+<span id="L981"><a aria-label="第 981 行" href="#L981"> 981</a> </span>
+<span id="L982"><a aria-label="第 982 行" href="#L982"> 982</a>     # misc</span>
+<span id="L983"><a aria-label="第 983 行" href="#L983"> 983</a>     p.add_argument("--seed", type=int, default=0)</span>
+<span id="L984"><a aria-label="第 984 行" href="#L984"> 984</a>     p.add_argument("--compile", action="store_true")</span>
+<span id="L985"><a aria-label="第 985 行" href="#L985"> 985</a> </span>
+<span id="L986"><a aria-label="第 986 行" href="#L986"> 986</a>     train(p.parse_args())</span></pre></body></html>

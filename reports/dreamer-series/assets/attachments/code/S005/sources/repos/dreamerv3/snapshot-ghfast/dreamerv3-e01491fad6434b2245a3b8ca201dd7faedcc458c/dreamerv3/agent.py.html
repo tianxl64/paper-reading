@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>S005 固定源码：sources/repos/dreamerv3/snapshot-ghfast/dreamerv3-e01491fad6434b2245a3b8ca201dd7faedcc458c/dreamerv3/agent.py</title><style>body{max-width:100%;margin:1.2rem;font-family:system-ui,sans-serif}pre{overflow:auto;line-height:1.55}pre span{display:block}pre a{color:#667;text-decoration:none}:target{background:#fff3ba}</style><link href="../../../../../../../../../../../../favicon.ico" rel="icon"/></head><body><h1>S005 固定源码：sources/repos/dreamerv3/snapshot-ghfast/dreamerv3-e01491fad6434b2245a3b8ca201dd7faedcc458c/dreamerv3/agent.py</h1><p>源码字节 SHA-256：<code>adce8e4274bc098c218bf9a20fd3327545f0ad7d850b5fe328597382e91b5269</code>。<a download="" href="agent.py">下载原始源码</a></p><pre><span id="L1"><a aria-label="第 1 行" href="#L1">   1</a> import re</span>
+<span id="L2"><a aria-label="第 2 行" href="#L2">   2</a> </span>
+<span id="L3"><a aria-label="第 3 行" href="#L3">   3</a> import chex</span>
+<span id="L4"><a aria-label="第 4 行" href="#L4">   4</a> import elements</span>
+<span id="L5"><a aria-label="第 5 行" href="#L5">   5</a> import embodied.jax</span>
+<span id="L6"><a aria-label="第 6 行" href="#L6">   6</a> import embodied.jax.nets as nn</span>
+<span id="L7"><a aria-label="第 7 行" href="#L7">   7</a> import jax</span>
+<span id="L8"><a aria-label="第 8 行" href="#L8">   8</a> import jax.numpy as jnp</span>
+<span id="L9"><a aria-label="第 9 行" href="#L9">   9</a> import ninjax as nj</span>
+<span id="L10"><a aria-label="第 10 行" href="#L10">  10</a> import numpy as np</span>
+<span id="L11"><a aria-label="第 11 行" href="#L11">  11</a> import optax</span>
+<span id="L12"><a aria-label="第 12 行" href="#L12">  12</a> </span>
+<span id="L13"><a aria-label="第 13 行" href="#L13">  13</a> from . import rssm</span>
+<span id="L14"><a aria-label="第 14 行" href="#L14">  14</a> </span>
+<span id="L15"><a aria-label="第 15 行" href="#L15">  15</a> f32 = jnp.float32</span>
+<span id="L16"><a aria-label="第 16 行" href="#L16">  16</a> i32 = jnp.int32</span>
+<span id="L17"><a aria-label="第 17 行" href="#L17">  17</a> sg = lambda xs, skip=False: xs if skip else jax.lax.stop_gradient(xs)</span>
+<span id="L18"><a aria-label="第 18 行" href="#L18">  18</a> sample = lambda xs: jax.tree.map(lambda x: x.sample(nj.seed()), xs)</span>
+<span id="L19"><a aria-label="第 19 行" href="#L19">  19</a> prefix = lambda xs, p: {f'{p}/{k}': v for k, v in xs.items()}</span>
+<span id="L20"><a aria-label="第 20 行" href="#L20">  20</a> concat = lambda xs, a: jax.tree.map(lambda *x: jnp.concatenate(x, a), *xs)</span>
+<span id="L21"><a aria-label="第 21 行" href="#L21">  21</a> isimage = lambda s: s.dtype == np.uint8 and len(s.shape) == 3</span>
+<span id="L22"><a aria-label="第 22 行" href="#L22">  22</a> </span>
+<span id="L23"><a aria-label="第 23 行" href="#L23">  23</a> </span>
+<span id="L24"><a aria-label="第 24 行" href="#L24">  24</a> class Agent(embodied.jax.Agent):</span>
+<span id="L25"><a aria-label="第 25 行" href="#L25">  25</a> </span>
+<span id="L26"><a aria-label="第 26 行" href="#L26">  26</a>   banner = [</span>
+<span id="L27"><a aria-label="第 27 行" href="#L27">  27</a>       r"---  ___                           __   ______ ---",</span>
+<span id="L28"><a aria-label="第 28 行" href="#L28">  28</a>       r"--- |   \ _ _ ___ __ _ _ __  ___ _ \ \ / /__ / ---",</span>
+<span id="L29"><a aria-label="第 29 行" href="#L29">  29</a>       r"--- | |) | '_/ -_) _` | '  \/ -_) '/\ V / |_ \ ---",</span>
+<span id="L30"><a aria-label="第 30 行" href="#L30">  30</a>       r"--- |___/|_| \___\__,_|_|_|_\___|_|  \_/ |___/ ---",</span>
+<span id="L31"><a aria-label="第 31 行" href="#L31">  31</a>   ]</span>
+<span id="L32"><a aria-label="第 32 行" href="#L32">  32</a> </span>
+<span id="L33"><a aria-label="第 33 行" href="#L33">  33</a>   def __init__(self, obs_space, act_space, config):</span>
+<span id="L34"><a aria-label="第 34 行" href="#L34">  34</a>     self.obs_space = obs_space</span>
+<span id="L35"><a aria-label="第 35 行" href="#L35">  35</a>     self.act_space = act_space</span>
+<span id="L36"><a aria-label="第 36 行" href="#L36">  36</a>     self.config = config</span>
+<span id="L37"><a aria-label="第 37 行" href="#L37">  37</a> </span>
+<span id="L38"><a aria-label="第 38 行" href="#L38">  38</a>     exclude = ('is_first', 'is_last', 'is_terminal', 'reward')</span>
+<span id="L39"><a aria-label="第 39 行" href="#L39">  39</a>     enc_space = {k: v for k, v in obs_space.items() if k not in exclude}</span>
+<span id="L40"><a aria-label="第 40 行" href="#L40">  40</a>     dec_space = {k: v for k, v in obs_space.items() if k not in exclude}</span>
+<span id="L41"><a aria-label="第 41 行" href="#L41">  41</a>     self.enc = {</span>
+<span id="L42"><a aria-label="第 42 行" href="#L42">  42</a>         'simple': rssm.Encoder,</span>
+<span id="L43"><a aria-label="第 43 行" href="#L43">  43</a>     }[config.enc.typ](enc_space, **config.enc[config.enc.typ], name='enc')</span>
+<span id="L44"><a aria-label="第 44 行" href="#L44">  44</a>     self.dyn = {</span>
+<span id="L45"><a aria-label="第 45 行" href="#L45">  45</a>         'rssm': rssm.RSSM,</span>
+<span id="L46"><a aria-label="第 46 行" href="#L46">  46</a>     }[config.dyn.typ](act_space, **config.dyn[config.dyn.typ], name='dyn')</span>
+<span id="L47"><a aria-label="第 47 行" href="#L47">  47</a>     self.dec = {</span>
+<span id="L48"><a aria-label="第 48 行" href="#L48">  48</a>         'simple': rssm.Decoder,</span>
+<span id="L49"><a aria-label="第 49 行" href="#L49">  49</a>     }[config.dec.typ](dec_space, **config.dec[config.dec.typ], name='dec')</span>
+<span id="L50"><a aria-label="第 50 行" href="#L50">  50</a> </span>
+<span id="L51"><a aria-label="第 51 行" href="#L51">  51</a>     self.feat2tensor = lambda x: jnp.concatenate([</span>
+<span id="L52"><a aria-label="第 52 行" href="#L52">  52</a>         nn.cast(x['deter']),</span>
+<span id="L53"><a aria-label="第 53 行" href="#L53">  53</a>         nn.cast(x['stoch'].reshape((*x['stoch'].shape[:-2], -1)))], -1)</span>
+<span id="L54"><a aria-label="第 54 行" href="#L54">  54</a> </span>
+<span id="L55"><a aria-label="第 55 行" href="#L55">  55</a>     scalar = elements.Space(np.float32, ())</span>
+<span id="L56"><a aria-label="第 56 行" href="#L56">  56</a>     binary = elements.Space(bool, (), 0, 2)</span>
+<span id="L57"><a aria-label="第 57 行" href="#L57">  57</a>     self.rew = embodied.jax.MLPHead(scalar, **config.rewhead, name='rew')</span>
+<span id="L58"><a aria-label="第 58 行" href="#L58">  58</a>     self.con = embodied.jax.MLPHead(binary, **config.conhead, name='con')</span>
+<span id="L59"><a aria-label="第 59 行" href="#L59">  59</a> </span>
+<span id="L60"><a aria-label="第 60 行" href="#L60">  60</a>     d1, d2 = config.policy_dist_disc, config.policy_dist_cont</span>
+<span id="L61"><a aria-label="第 61 行" href="#L61">  61</a>     outs = {k: d1 if v.discrete else d2 for k, v in act_space.items()}</span>
+<span id="L62"><a aria-label="第 62 行" href="#L62">  62</a>     self.pol = embodied.jax.MLPHead(</span>
+<span id="L63"><a aria-label="第 63 行" href="#L63">  63</a>         act_space, outs, **config.policy, name='pol')</span>
+<span id="L64"><a aria-label="第 64 行" href="#L64">  64</a> </span>
+<span id="L65"><a aria-label="第 65 行" href="#L65">  65</a>     self.val = embodied.jax.MLPHead(scalar, **config.value, name='val')</span>
+<span id="L66"><a aria-label="第 66 行" href="#L66">  66</a>     self.slowval = embodied.jax.SlowModel(</span>
+<span id="L67"><a aria-label="第 67 行" href="#L67">  67</a>         embodied.jax.MLPHead(scalar, **config.value, name='slowval'),</span>
+<span id="L68"><a aria-label="第 68 行" href="#L68">  68</a>         source=self.val, **config.slowvalue)</span>
+<span id="L69"><a aria-label="第 69 行" href="#L69">  69</a> </span>
+<span id="L70"><a aria-label="第 70 行" href="#L70">  70</a>     self.retnorm = embodied.jax.Normalize(**config.retnorm, name='retnorm')</span>
+<span id="L71"><a aria-label="第 71 行" href="#L71">  71</a>     self.valnorm = embodied.jax.Normalize(**config.valnorm, name='valnorm')</span>
+<span id="L72"><a aria-label="第 72 行" href="#L72">  72</a>     self.advnorm = embodied.jax.Normalize(**config.advnorm, name='advnorm')</span>
+<span id="L73"><a aria-label="第 73 行" href="#L73">  73</a> </span>
+<span id="L74"><a aria-label="第 74 行" href="#L74">  74</a>     self.modules = [</span>
+<span id="L75"><a aria-label="第 75 行" href="#L75">  75</a>         self.dyn, self.enc, self.dec, self.rew, self.con, self.pol, self.val]</span>
+<span id="L76"><a aria-label="第 76 行" href="#L76">  76</a>     self.opt = embodied.jax.Optimizer(</span>
+<span id="L77"><a aria-label="第 77 行" href="#L77">  77</a>         self.modules, self._make_opt(**config.opt), summary_depth=1,</span>
+<span id="L78"><a aria-label="第 78 行" href="#L78">  78</a>         name='opt')</span>
+<span id="L79"><a aria-label="第 79 行" href="#L79">  79</a> </span>
+<span id="L80"><a aria-label="第 80 行" href="#L80">  80</a>     scales = self.config.loss_scales.copy()</span>
+<span id="L81"><a aria-label="第 81 行" href="#L81">  81</a>     rec = scales.pop('rec')</span>
+<span id="L82"><a aria-label="第 82 行" href="#L82">  82</a>     scales.update({k: rec for k in dec_space})</span>
+<span id="L83"><a aria-label="第 83 行" href="#L83">  83</a>     self.scales = scales</span>
+<span id="L84"><a aria-label="第 84 行" href="#L84">  84</a> </span>
+<span id="L85"><a aria-label="第 85 行" href="#L85">  85</a>   @property</span>
+<span id="L86"><a aria-label="第 86 行" href="#L86">  86</a>   def policy_keys(self):</span>
+<span id="L87"><a aria-label="第 87 行" href="#L87">  87</a>     return '^(enc|dyn|dec|pol)/'</span>
+<span id="L88"><a aria-label="第 88 行" href="#L88">  88</a> </span>
+<span id="L89"><a aria-label="第 89 行" href="#L89">  89</a>   @property</span>
+<span id="L90"><a aria-label="第 90 行" href="#L90">  90</a>   def ext_space(self):</span>
+<span id="L91"><a aria-label="第 91 行" href="#L91">  91</a>     spaces = {}</span>
+<span id="L92"><a aria-label="第 92 行" href="#L92">  92</a>     spaces['consec'] = elements.Space(np.int32)</span>
+<span id="L93"><a aria-label="第 93 行" href="#L93">  93</a>     spaces['stepid'] = elements.Space(np.uint8, 20)</span>
+<span id="L94"><a aria-label="第 94 行" href="#L94">  94</a>     if self.config.replay_context:</span>
+<span id="L95"><a aria-label="第 95 行" href="#L95">  95</a>       spaces.update(elements.tree.flatdict(dict(</span>
+<span id="L96"><a aria-label="第 96 行" href="#L96">  96</a>           enc=self.enc.entry_space,</span>
+<span id="L97"><a aria-label="第 97 行" href="#L97">  97</a>           dyn=self.dyn.entry_space,</span>
+<span id="L98"><a aria-label="第 98 行" href="#L98">  98</a>           dec=self.dec.entry_space)))</span>
+<span id="L99"><a aria-label="第 99 行" href="#L99">  99</a>     return spaces</span>
+<span id="L100"><a aria-label="第 100 行" href="#L100"> 100</a> </span>
+<span id="L101"><a aria-label="第 101 行" href="#L101"> 101</a>   def init_policy(self, batch_size):</span>
+<span id="L102"><a aria-label="第 102 行" href="#L102"> 102</a>     zeros = lambda x: jnp.zeros((batch_size, *x.shape), x.dtype)</span>
+<span id="L103"><a aria-label="第 103 行" href="#L103"> 103</a>     return (</span>
+<span id="L104"><a aria-label="第 104 行" href="#L104"> 104</a>         self.enc.initial(batch_size),</span>
+<span id="L105"><a aria-label="第 105 行" href="#L105"> 105</a>         self.dyn.initial(batch_size),</span>
+<span id="L106"><a aria-label="第 106 行" href="#L106"> 106</a>         self.dec.initial(batch_size),</span>
+<span id="L107"><a aria-label="第 107 行" href="#L107"> 107</a>         jax.tree.map(zeros, self.act_space))</span>
+<span id="L108"><a aria-label="第 108 行" href="#L108"> 108</a> </span>
+<span id="L109"><a aria-label="第 109 行" href="#L109"> 109</a>   def init_train(self, batch_size):</span>
+<span id="L110"><a aria-label="第 110 行" href="#L110"> 110</a>     return self.init_policy(batch_size)</span>
+<span id="L111"><a aria-label="第 111 行" href="#L111"> 111</a> </span>
+<span id="L112"><a aria-label="第 112 行" href="#L112"> 112</a>   def init_report(self, batch_size):</span>
+<span id="L113"><a aria-label="第 113 行" href="#L113"> 113</a>     return self.init_policy(batch_size)</span>
+<span id="L114"><a aria-label="第 114 行" href="#L114"> 114</a> </span>
+<span id="L115"><a aria-label="第 115 行" href="#L115"> 115</a>   def policy(self, carry, obs, mode='train'):</span>
+<span id="L116"><a aria-label="第 116 行" href="#L116"> 116</a>     (enc_carry, dyn_carry, dec_carry, prevact) = carry</span>
+<span id="L117"><a aria-label="第 117 行" href="#L117"> 117</a>     kw = dict(training=False, single=True)</span>
+<span id="L118"><a aria-label="第 118 行" href="#L118"> 118</a>     reset = obs['is_first']</span>
+<span id="L119"><a aria-label="第 119 行" href="#L119"> 119</a>     enc_carry, enc_entry, tokens = self.enc(enc_carry, obs, reset, **kw)</span>
+<span id="L120"><a aria-label="第 120 行" href="#L120"> 120</a>     dyn_carry, dyn_entry, feat = self.dyn.observe(</span>
+<span id="L121"><a aria-label="第 121 行" href="#L121"> 121</a>         dyn_carry, tokens, prevact, reset, **kw)</span>
+<span id="L122"><a aria-label="第 122 行" href="#L122"> 122</a>     dec_entry = {}</span>
+<span id="L123"><a aria-label="第 123 行" href="#L123"> 123</a>     if dec_carry:</span>
+<span id="L124"><a aria-label="第 124 行" href="#L124"> 124</a>       dec_carry, dec_entry, recons = self.dec(dec_carry, feat, reset, **kw)</span>
+<span id="L125"><a aria-label="第 125 行" href="#L125"> 125</a>     policy = self.pol(self.feat2tensor(feat), bdims=1)</span>
+<span id="L126"><a aria-label="第 126 行" href="#L126"> 126</a>     act = sample(policy)</span>
+<span id="L127"><a aria-label="第 127 行" href="#L127"> 127</a>     out = {}</span>
+<span id="L128"><a aria-label="第 128 行" href="#L128"> 128</a>     out['finite'] = elements.tree.flatdict(jax.tree.map(</span>
+<span id="L129"><a aria-label="第 129 行" href="#L129"> 129</a>         lambda x: jnp.isfinite(x).all(range(1, x.ndim)),</span>
+<span id="L130"><a aria-label="第 130 行" href="#L130"> 130</a>         dict(obs=obs, carry=carry, tokens=tokens, feat=feat, act=act)))</span>
+<span id="L131"><a aria-label="第 131 行" href="#L131"> 131</a>     carry = (enc_carry, dyn_carry, dec_carry, act)</span>
+<span id="L132"><a aria-label="第 132 行" href="#L132"> 132</a>     if self.config.replay_context:</span>
+<span id="L133"><a aria-label="第 133 行" href="#L133"> 133</a>       out.update(elements.tree.flatdict(dict(</span>
+<span id="L134"><a aria-label="第 134 行" href="#L134"> 134</a>           enc=enc_entry, dyn=dyn_entry, dec=dec_entry)))</span>
+<span id="L135"><a aria-label="第 135 行" href="#L135"> 135</a>     return carry, act, out</span>
+<span id="L136"><a aria-label="第 136 行" href="#L136"> 136</a> </span>
+<span id="L137"><a aria-label="第 137 行" href="#L137"> 137</a>   def train(self, carry, data):</span>
+<span id="L138"><a aria-label="第 138 行" href="#L138"> 138</a>     carry, obs, prevact, stepid = self._apply_replay_context(carry, data)</span>
+<span id="L139"><a aria-label="第 139 行" href="#L139"> 139</a>     metrics, (carry, entries, outs, mets) = self.opt(</span>
+<span id="L140"><a aria-label="第 140 行" href="#L140"> 140</a>         self.loss, carry, obs, prevact, training=True, has_aux=True)</span>
+<span id="L141"><a aria-label="第 141 行" href="#L141"> 141</a>     metrics.update(mets)</span>
+<span id="L142"><a aria-label="第 142 行" href="#L142"> 142</a>     self.slowval.update()</span>
+<span id="L143"><a aria-label="第 143 行" href="#L143"> 143</a>     outs = {}</span>
+<span id="L144"><a aria-label="第 144 行" href="#L144"> 144</a>     if self.config.replay_context:</span>
+<span id="L145"><a aria-label="第 145 行" href="#L145"> 145</a>       updates = elements.tree.flatdict(dict(</span>
+<span id="L146"><a aria-label="第 146 行" href="#L146"> 146</a>           stepid=stepid, enc=entries[0], dyn=entries[1], dec=entries[2]))</span>
+<span id="L147"><a aria-label="第 147 行" href="#L147"> 147</a>       B, T = obs['is_first'].shape</span>
+<span id="L148"><a aria-label="第 148 行" href="#L148"> 148</a>       assert all(x.shape[:2] == (B, T) for x in updates.values()), (</span>
+<span id="L149"><a aria-label="第 149 行" href="#L149"> 149</a>           (B, T), {k: v.shape for k, v in updates.items()})</span>
+<span id="L150"><a aria-label="第 150 行" href="#L150"> 150</a>       outs['replay'] = updates</span>
+<span id="L151"><a aria-label="第 151 行" href="#L151"> 151</a>     # if self.config.replay.fracs.priority &gt; 0:</span>
+<span id="L152"><a aria-label="第 152 行" href="#L152"> 152</a>     #   outs['replay']['priority'] = losses['model']</span>
+<span id="L153"><a aria-label="第 153 行" href="#L153"> 153</a>     carry = (*carry, {k: data[k][:, -1] for k in self.act_space})</span>
+<span id="L154"><a aria-label="第 154 行" href="#L154"> 154</a>     return carry, outs, metrics</span>
+<span id="L155"><a aria-label="第 155 行" href="#L155"> 155</a> </span>
+<span id="L156"><a aria-label="第 156 行" href="#L156"> 156</a>   def loss(self, carry, obs, prevact, training):</span>
+<span id="L157"><a aria-label="第 157 行" href="#L157"> 157</a>     enc_carry, dyn_carry, dec_carry = carry</span>
+<span id="L158"><a aria-label="第 158 行" href="#L158"> 158</a>     reset = obs['is_first']</span>
+<span id="L159"><a aria-label="第 159 行" href="#L159"> 159</a>     B, T = reset.shape</span>
+<span id="L160"><a aria-label="第 160 行" href="#L160"> 160</a>     losses = {}</span>
+<span id="L161"><a aria-label="第 161 行" href="#L161"> 161</a>     metrics = {}</span>
+<span id="L162"><a aria-label="第 162 行" href="#L162"> 162</a> </span>
+<span id="L163"><a aria-label="第 163 行" href="#L163"> 163</a>     # World model</span>
+<span id="L164"><a aria-label="第 164 行" href="#L164"> 164</a>     enc_carry, enc_entries, tokens = self.enc(</span>
+<span id="L165"><a aria-label="第 165 行" href="#L165"> 165</a>         enc_carry, obs, reset, training)</span>
+<span id="L166"><a aria-label="第 166 行" href="#L166"> 166</a>     dyn_carry, dyn_entries, los, repfeat, mets = self.dyn.loss(</span>
+<span id="L167"><a aria-label="第 167 行" href="#L167"> 167</a>         dyn_carry, tokens, prevact, reset, training)</span>
+<span id="L168"><a aria-label="第 168 行" href="#L168"> 168</a>     losses.update(los)</span>
+<span id="L169"><a aria-label="第 169 行" href="#L169"> 169</a>     metrics.update(mets)</span>
+<span id="L170"><a aria-label="第 170 行" href="#L170"> 170</a>     dec_carry, dec_entries, recons = self.dec(</span>
+<span id="L171"><a aria-label="第 171 行" href="#L171"> 171</a>         dec_carry, repfeat, reset, training)</span>
+<span id="L172"><a aria-label="第 172 行" href="#L172"> 172</a>     inp = sg(self.feat2tensor(repfeat), skip=self.config.reward_grad)</span>
+<span id="L173"><a aria-label="第 173 行" href="#L173"> 173</a>     losses['rew'] = self.rew(inp, 2).loss(obs['reward'])</span>
+<span id="L174"><a aria-label="第 174 行" href="#L174"> 174</a>     con = f32(~obs['is_terminal'])</span>
+<span id="L175"><a aria-label="第 175 行" href="#L175"> 175</a>     if self.config.contdisc:</span>
+<span id="L176"><a aria-label="第 176 行" href="#L176"> 176</a>       con *= 1 - 1 / self.config.horizon</span>
+<span id="L177"><a aria-label="第 177 行" href="#L177"> 177</a>     losses['con'] = self.con(self.feat2tensor(repfeat), 2).loss(con)</span>
+<span id="L178"><a aria-label="第 178 行" href="#L178"> 178</a>     for key, recon in recons.items():</span>
+<span id="L179"><a aria-label="第 179 行" href="#L179"> 179</a>       space, value = self.obs_space[key], obs[key]</span>
+<span id="L180"><a aria-label="第 180 行" href="#L180"> 180</a>       assert value.dtype == space.dtype, (key, space, value.dtype)</span>
+<span id="L181"><a aria-label="第 181 行" href="#L181"> 181</a>       target = f32(value) / 255 if isimage(space) else value</span>
+<span id="L182"><a aria-label="第 182 行" href="#L182"> 182</a>       losses[key] = recon.loss(sg(target))</span>
+<span id="L183"><a aria-label="第 183 行" href="#L183"> 183</a> </span>
+<span id="L184"><a aria-label="第 184 行" href="#L184"> 184</a>     B, T = reset.shape</span>
+<span id="L185"><a aria-label="第 185 行" href="#L185"> 185</a>     shapes = {k: v.shape for k, v in losses.items()}</span>
+<span id="L186"><a aria-label="第 186 行" href="#L186"> 186</a>     assert all(x == (B, T) for x in shapes.values()), ((B, T), shapes)</span>
+<span id="L187"><a aria-label="第 187 行" href="#L187"> 187</a> </span>
+<span id="L188"><a aria-label="第 188 行" href="#L188"> 188</a>     # Imagination</span>
+<span id="L189"><a aria-label="第 189 行" href="#L189"> 189</a>     K = min(self.config.imag_last or T, T)</span>
+<span id="L190"><a aria-label="第 190 行" href="#L190"> 190</a>     H = self.config.imag_length</span>
+<span id="L191"><a aria-label="第 191 行" href="#L191"> 191</a>     starts = self.dyn.starts(dyn_entries, dyn_carry, K)</span>
+<span id="L192"><a aria-label="第 192 行" href="#L192"> 192</a>     policyfn = lambda feat: sample(self.pol(self.feat2tensor(feat), 1))</span>
+<span id="L193"><a aria-label="第 193 行" href="#L193"> 193</a>     _, imgfeat, imgprevact = self.dyn.imagine(starts, policyfn, H, training)</span>
+<span id="L194"><a aria-label="第 194 行" href="#L194"> 194</a>     first = jax.tree.map(</span>
+<span id="L195"><a aria-label="第 195 行" href="#L195"> 195</a>         lambda x: x[:, -K:].reshape((B * K, 1, *x.shape[2:])), repfeat)</span>
+<span id="L196"><a aria-label="第 196 行" href="#L196"> 196</a>     imgfeat = concat([sg(first, skip=self.config.ac_grads), sg(imgfeat)], 1)</span>
+<span id="L197"><a aria-label="第 197 行" href="#L197"> 197</a>     lastact = policyfn(jax.tree.map(lambda x: x[:, -1], imgfeat))</span>
+<span id="L198"><a aria-label="第 198 行" href="#L198"> 198</a>     lastact = jax.tree.map(lambda x: x[:, None], lastact)</span>
+<span id="L199"><a aria-label="第 199 行" href="#L199"> 199</a>     imgact = concat([imgprevact, lastact], 1)</span>
+<span id="L200"><a aria-label="第 200 行" href="#L200"> 200</a>     assert all(x.shape[:2] == (B * K, H + 1) for x in jax.tree.leaves(imgfeat))</span>
+<span id="L201"><a aria-label="第 201 行" href="#L201"> 201</a>     assert all(x.shape[:2] == (B * K, H + 1) for x in jax.tree.leaves(imgact))</span>
+<span id="L202"><a aria-label="第 202 行" href="#L202"> 202</a>     inp = self.feat2tensor(imgfeat)</span>
+<span id="L203"><a aria-label="第 203 行" href="#L203"> 203</a>     los, imgloss_out, mets = imag_loss(</span>
+<span id="L204"><a aria-label="第 204 行" href="#L204"> 204</a>         imgact,</span>
+<span id="L205"><a aria-label="第 205 行" href="#L205"> 205</a>         self.rew(inp, 2).pred(),</span>
+<span id="L206"><a aria-label="第 206 行" href="#L206"> 206</a>         self.con(inp, 2).prob(1),</span>
+<span id="L207"><a aria-label="第 207 行" href="#L207"> 207</a>         self.pol(inp, 2),</span>
+<span id="L208"><a aria-label="第 208 行" href="#L208"> 208</a>         self.val(inp, 2),</span>
+<span id="L209"><a aria-label="第 209 行" href="#L209"> 209</a>         self.slowval(inp, 2),</span>
+<span id="L210"><a aria-label="第 210 行" href="#L210"> 210</a>         self.retnorm, self.valnorm, self.advnorm,</span>
+<span id="L211"><a aria-label="第 211 行" href="#L211"> 211</a>         update=training,</span>
+<span id="L212"><a aria-label="第 212 行" href="#L212"> 212</a>         contdisc=self.config.contdisc,</span>
+<span id="L213"><a aria-label="第 213 行" href="#L213"> 213</a>         horizon=self.config.horizon,</span>
+<span id="L214"><a aria-label="第 214 行" href="#L214"> 214</a>         **self.config.imag_loss)</span>
+<span id="L215"><a aria-label="第 215 行" href="#L215"> 215</a>     losses.update({k: v.mean(1).reshape((B, K)) for k, v in los.items()})</span>
+<span id="L216"><a aria-label="第 216 行" href="#L216"> 216</a>     metrics.update(mets)</span>
+<span id="L217"><a aria-label="第 217 行" href="#L217"> 217</a> </span>
+<span id="L218"><a aria-label="第 218 行" href="#L218"> 218</a>     # Replay</span>
+<span id="L219"><a aria-label="第 219 行" href="#L219"> 219</a>     if self.config.repval_loss:</span>
+<span id="L220"><a aria-label="第 220 行" href="#L220"> 220</a>       feat = sg(repfeat, skip=self.config.repval_grad)</span>
+<span id="L221"><a aria-label="第 221 行" href="#L221"> 221</a>       last, term, rew = [obs[k] for k in ('is_last', 'is_terminal', 'reward')]</span>
+<span id="L222"><a aria-label="第 222 行" href="#L222"> 222</a>       boot = imgloss_out['ret'][:, 0].reshape(B, K)</span>
+<span id="L223"><a aria-label="第 223 行" href="#L223"> 223</a>       feat, last, term, rew, boot = jax.tree.map(</span>
+<span id="L224"><a aria-label="第 224 行" href="#L224"> 224</a>           lambda x: x[:, -K:], (feat, last, term, rew, boot))</span>
+<span id="L225"><a aria-label="第 225 行" href="#L225"> 225</a>       inp = self.feat2tensor(feat)</span>
+<span id="L226"><a aria-label="第 226 行" href="#L226"> 226</a>       los, reploss_out, mets = repl_loss(</span>
+<span id="L227"><a aria-label="第 227 行" href="#L227"> 227</a>           last, term, rew, boot,</span>
+<span id="L228"><a aria-label="第 228 行" href="#L228"> 228</a>           self.val(inp, 2),</span>
+<span id="L229"><a aria-label="第 229 行" href="#L229"> 229</a>           self.slowval(inp, 2),</span>
+<span id="L230"><a aria-label="第 230 行" href="#L230"> 230</a>           self.valnorm,</span>
+<span id="L231"><a aria-label="第 231 行" href="#L231"> 231</a>           update=training,</span>
+<span id="L232"><a aria-label="第 232 行" href="#L232"> 232</a>           horizon=self.config.horizon,</span>
+<span id="L233"><a aria-label="第 233 行" href="#L233"> 233</a>           **self.config.repl_loss)</span>
+<span id="L234"><a aria-label="第 234 行" href="#L234"> 234</a>       losses.update(los)</span>
+<span id="L235"><a aria-label="第 235 行" href="#L235"> 235</a>       metrics.update(prefix(mets, 'reploss'))</span>
+<span id="L236"><a aria-label="第 236 行" href="#L236"> 236</a> </span>
+<span id="L237"><a aria-label="第 237 行" href="#L237"> 237</a>     assert set(losses.keys()) == set(self.scales.keys()), (</span>
+<span id="L238"><a aria-label="第 238 行" href="#L238"> 238</a>         sorted(losses.keys()), sorted(self.scales.keys()))</span>
+<span id="L239"><a aria-label="第 239 行" href="#L239"> 239</a>     metrics.update({f'loss/{k}': v.mean() for k, v in losses.items()})</span>
+<span id="L240"><a aria-label="第 240 行" href="#L240"> 240</a>     loss = sum([v.mean() * self.scales[k] for k, v in losses.items()])</span>
+<span id="L241"><a aria-label="第 241 行" href="#L241"> 241</a> </span>
+<span id="L242"><a aria-label="第 242 行" href="#L242"> 242</a>     carry = (enc_carry, dyn_carry, dec_carry)</span>
+<span id="L243"><a aria-label="第 243 行" href="#L243"> 243</a>     entries = (enc_entries, dyn_entries, dec_entries)</span>
+<span id="L244"><a aria-label="第 244 行" href="#L244"> 244</a>     outs = {'tokens': tokens, 'repfeat': repfeat, 'losses': losses}</span>
+<span id="L245"><a aria-label="第 245 行" href="#L245"> 245</a>     return loss, (carry, entries, outs, metrics)</span>
+<span id="L246"><a aria-label="第 246 行" href="#L246"> 246</a> </span>
+<span id="L247"><a aria-label="第 247 行" href="#L247"> 247</a>   def report(self, carry, data):</span>
+<span id="L248"><a aria-label="第 248 行" href="#L248"> 248</a>     if not self.config.report:</span>
+<span id="L249"><a aria-label="第 249 行" href="#L249"> 249</a>       return carry, {}</span>
+<span id="L250"><a aria-label="第 250 行" href="#L250"> 250</a> </span>
+<span id="L251"><a aria-label="第 251 行" href="#L251"> 251</a>     carry, obs, prevact, _ = self._apply_replay_context(carry, data)</span>
+<span id="L252"><a aria-label="第 252 行" href="#L252"> 252</a>     (enc_carry, dyn_carry, dec_carry) = carry</span>
+<span id="L253"><a aria-label="第 253 行" href="#L253"> 253</a>     B, T = obs['is_first'].shape</span>
+<span id="L254"><a aria-label="第 254 行" href="#L254"> 254</a>     RB = min(6, B)</span>
+<span id="L255"><a aria-label="第 255 行" href="#L255"> 255</a>     metrics = {}</span>
+<span id="L256"><a aria-label="第 256 行" href="#L256"> 256</a> </span>
+<span id="L257"><a aria-label="第 257 行" href="#L257"> 257</a>     # Train metrics</span>
+<span id="L258"><a aria-label="第 258 行" href="#L258"> 258</a>     _, (new_carry, entries, outs, mets) = self.loss(</span>
+<span id="L259"><a aria-label="第 259 行" href="#L259"> 259</a>         carry, obs, prevact, training=False)</span>
+<span id="L260"><a aria-label="第 260 行" href="#L260"> 260</a>     mets.update(mets)</span>
+<span id="L261"><a aria-label="第 261 行" href="#L261"> 261</a> </span>
+<span id="L262"><a aria-label="第 262 行" href="#L262"> 262</a>     # Grad norms</span>
+<span id="L263"><a aria-label="第 263 行" href="#L263"> 263</a>     if self.config.report_gradnorms:</span>
+<span id="L264"><a aria-label="第 264 行" href="#L264"> 264</a>       for key in self.scales:</span>
+<span id="L265"><a aria-label="第 265 行" href="#L265"> 265</a>         try:</span>
+<span id="L266"><a aria-label="第 266 行" href="#L266"> 266</a>           lossfn = lambda data, carry: self.loss(</span>
+<span id="L267"><a aria-label="第 267 行" href="#L267"> 267</a>               carry, obs, prevact, training=False)[1][2]['losses'][key].mean()</span>
+<span id="L268"><a aria-label="第 268 行" href="#L268"> 268</a>           grad = nj.grad(lossfn, self.modules)(data, carry)[-1]</span>
+<span id="L269"><a aria-label="第 269 行" href="#L269"> 269</a>           metrics[f'gradnorm/{key}'] = optax.global_norm(grad)</span>
+<span id="L270"><a aria-label="第 270 行" href="#L270"> 270</a>         except KeyError:</span>
+<span id="L271"><a aria-label="第 271 行" href="#L271"> 271</a>           print(f'Skipping gradnorm summary for missing loss: {key}')</span>
+<span id="L272"><a aria-label="第 272 行" href="#L272"> 272</a> </span>
+<span id="L273"><a aria-label="第 273 行" href="#L273"> 273</a>     # Open loop</span>
+<span id="L274"><a aria-label="第 274 行" href="#L274"> 274</a>     firsthalf = lambda xs: jax.tree.map(lambda x: x[:RB, :T // 2], xs)</span>
+<span id="L275"><a aria-label="第 275 行" href="#L275"> 275</a>     secondhalf = lambda xs: jax.tree.map(lambda x: x[:RB, T // 2:], xs)</span>
+<span id="L276"><a aria-label="第 276 行" href="#L276"> 276</a>     dyn_carry = jax.tree.map(lambda x: x[:RB], dyn_carry)</span>
+<span id="L277"><a aria-label="第 277 行" href="#L277"> 277</a>     dec_carry = jax.tree.map(lambda x: x[:RB], dec_carry)</span>
+<span id="L278"><a aria-label="第 278 行" href="#L278"> 278</a>     dyn_carry, _, obsfeat = self.dyn.observe(</span>
+<span id="L279"><a aria-label="第 279 行" href="#L279"> 279</a>         dyn_carry, firsthalf(outs['tokens']), firsthalf(prevact),</span>
+<span id="L280"><a aria-label="第 280 行" href="#L280"> 280</a>         firsthalf(obs['is_first']), training=False)</span>
+<span id="L281"><a aria-label="第 281 行" href="#L281"> 281</a>     _, imgfeat, _ = self.dyn.imagine(</span>
+<span id="L282"><a aria-label="第 282 行" href="#L282"> 282</a>         dyn_carry, secondhalf(prevact), length=T - T // 2, training=False)</span>
+<span id="L283"><a aria-label="第 283 行" href="#L283"> 283</a>     dec_carry, _, obsrecons = self.dec(</span>
+<span id="L284"><a aria-label="第 284 行" href="#L284"> 284</a>         dec_carry, obsfeat, firsthalf(obs['is_first']), training=False)</span>
+<span id="L285"><a aria-label="第 285 行" href="#L285"> 285</a>     dec_carry, _, imgrecons = self.dec(</span>
+<span id="L286"><a aria-label="第 286 行" href="#L286"> 286</a>         dec_carry, imgfeat, jnp.zeros_like(secondhalf(obs['is_first'])),</span>
+<span id="L287"><a aria-label="第 287 行" href="#L287"> 287</a>         training=False)</span>
+<span id="L288"><a aria-label="第 288 行" href="#L288"> 288</a> </span>
+<span id="L289"><a aria-label="第 289 行" href="#L289"> 289</a>     # Video preds</span>
+<span id="L290"><a aria-label="第 290 行" href="#L290"> 290</a>     for key in self.dec.imgkeys:</span>
+<span id="L291"><a aria-label="第 291 行" href="#L291"> 291</a>       assert obs[key].dtype == jnp.uint8</span>
+<span id="L292"><a aria-label="第 292 行" href="#L292"> 292</a>       true = obs[key][:RB]</span>
+<span id="L293"><a aria-label="第 293 行" href="#L293"> 293</a>       pred = jnp.concatenate([obsrecons[key].pred(), imgrecons[key].pred()], 1)</span>
+<span id="L294"><a aria-label="第 294 行" href="#L294"> 294</a>       pred = jnp.clip(pred * 255, 0, 255).astype(jnp.uint8)</span>
+<span id="L295"><a aria-label="第 295 行" href="#L295"> 295</a>       error = ((i32(pred) - i32(true) + 255) / 2).astype(np.uint8)</span>
+<span id="L296"><a aria-label="第 296 行" href="#L296"> 296</a>       video = jnp.concatenate([true, pred, error], 2)</span>
+<span id="L297"><a aria-label="第 297 行" href="#L297"> 297</a> </span>
+<span id="L298"><a aria-label="第 298 行" href="#L298"> 298</a>       video = jnp.pad(video, [[0, 0], [0, 0], [2, 2], [2, 2], [0, 0]])</span>
+<span id="L299"><a aria-label="第 299 行" href="#L299"> 299</a>       mask = jnp.zeros(video.shape, bool).at[:, :, 2:-2, 2:-2, :].set(True)</span>
+<span id="L300"><a aria-label="第 300 行" href="#L300"> 300</a>       border = jnp.full((T, 3), jnp.array([0, 255, 0]), jnp.uint8)</span>
+<span id="L301"><a aria-label="第 301 行" href="#L301"> 301</a>       border = border.at[T // 2:].set(jnp.array([255, 0, 0], jnp.uint8))</span>
+<span id="L302"><a aria-label="第 302 行" href="#L302"> 302</a>       video = jnp.where(mask, video, border[None, :, None, None, :])</span>
+<span id="L303"><a aria-label="第 303 行" href="#L303"> 303</a>       video = jnp.concatenate([video, 0 * video[:, :10]], 1)</span>
+<span id="L304"><a aria-label="第 304 行" href="#L304"> 304</a> </span>
+<span id="L305"><a aria-label="第 305 行" href="#L305"> 305</a>       B, T, H, W, C = video.shape</span>
+<span id="L306"><a aria-label="第 306 行" href="#L306"> 306</a>       grid = video.transpose((1, 2, 0, 3, 4)).reshape((T, H, B * W, C))</span>
+<span id="L307"><a aria-label="第 307 行" href="#L307"> 307</a>       metrics[f'openloop/{key}'] = grid</span>
+<span id="L308"><a aria-label="第 308 行" href="#L308"> 308</a> </span>
+<span id="L309"><a aria-label="第 309 行" href="#L309"> 309</a>     carry = (*new_carry, {k: data[k][:, -1] for k in self.act_space})</span>
+<span id="L310"><a aria-label="第 310 行" href="#L310"> 310</a>     return carry, metrics</span>
+<span id="L311"><a aria-label="第 311 行" href="#L311"> 311</a> </span>
+<span id="L312"><a aria-label="第 312 行" href="#L312"> 312</a>   def _apply_replay_context(self, carry, data):</span>
+<span id="L313"><a aria-label="第 313 行" href="#L313"> 313</a>     (enc_carry, dyn_carry, dec_carry, prevact) = carry</span>
+<span id="L314"><a aria-label="第 314 行" href="#L314"> 314</a>     carry = (enc_carry, dyn_carry, dec_carry)</span>
+<span id="L315"><a aria-label="第 315 行" href="#L315"> 315</a>     stepid = data['stepid']</span>
+<span id="L316"><a aria-label="第 316 行" href="#L316"> 316</a>     obs = {k: data[k] for k in self.obs_space}</span>
+<span id="L317"><a aria-label="第 317 行" href="#L317"> 317</a>     prepend = lambda x, y: jnp.concatenate([x[:, None], y[:, :-1]], 1)</span>
+<span id="L318"><a aria-label="第 318 行" href="#L318"> 318</a>     prevact = {k: prepend(prevact[k], data[k]) for k in self.act_space}</span>
+<span id="L319"><a aria-label="第 319 行" href="#L319"> 319</a>     if not self.config.replay_context:</span>
+<span id="L320"><a aria-label="第 320 行" href="#L320"> 320</a>       return carry, obs, prevact, stepid</span>
+<span id="L321"><a aria-label="第 321 行" href="#L321"> 321</a> </span>
+<span id="L322"><a aria-label="第 322 行" href="#L322"> 322</a>     K = self.config.replay_context</span>
+<span id="L323"><a aria-label="第 323 行" href="#L323"> 323</a>     nested = elements.tree.nestdict(data)</span>
+<span id="L324"><a aria-label="第 324 行" href="#L324"> 324</a>     entries = [nested.get(k, {}) for k in ('enc', 'dyn', 'dec')]</span>
+<span id="L325"><a aria-label="第 325 行" href="#L325"> 325</a>     lhs = lambda xs: jax.tree.map(lambda x: x[:, :K], xs)</span>
+<span id="L326"><a aria-label="第 326 行" href="#L326"> 326</a>     rhs = lambda xs: jax.tree.map(lambda x: x[:, K:], xs)</span>
+<span id="L327"><a aria-label="第 327 行" href="#L327"> 327</a>     rep_carry = (</span>
+<span id="L328"><a aria-label="第 328 行" href="#L328"> 328</a>         self.enc.truncate(lhs(entries[0]), enc_carry),</span>
+<span id="L329"><a aria-label="第 329 行" href="#L329"> 329</a>         self.dyn.truncate(lhs(entries[1]), dyn_carry),</span>
+<span id="L330"><a aria-label="第 330 行" href="#L330"> 330</a>         self.dec.truncate(lhs(entries[2]), dec_carry))</span>
+<span id="L331"><a aria-label="第 331 行" href="#L331"> 331</a>     rep_obs = {k: rhs(data[k]) for k in self.obs_space}</span>
+<span id="L332"><a aria-label="第 332 行" href="#L332"> 332</a>     rep_prevact = {k: data[k][:, K - 1: -1] for k in self.act_space}</span>
+<span id="L333"><a aria-label="第 333 行" href="#L333"> 333</a>     rep_stepid = rhs(stepid)</span>
+<span id="L334"><a aria-label="第 334 行" href="#L334"> 334</a> </span>
+<span id="L335"><a aria-label="第 335 行" href="#L335"> 335</a>     first_chunk = (data['consec'][:, 0] == 0)</span>
+<span id="L336"><a aria-label="第 336 行" href="#L336"> 336</a>     carry, obs, prevact, stepid = jax.tree.map(</span>
+<span id="L337"><a aria-label="第 337 行" href="#L337"> 337</a>         lambda normal, replay: nn.where(first_chunk, replay, normal),</span>
+<span id="L338"><a aria-label="第 338 行" href="#L338"> 338</a>         (carry, rhs(obs), rhs(prevact), rhs(stepid)),</span>
+<span id="L339"><a aria-label="第 339 行" href="#L339"> 339</a>         (rep_carry, rep_obs, rep_prevact, rep_stepid))</span>
+<span id="L340"><a aria-label="第 340 行" href="#L340"> 340</a>     return carry, obs, prevact, stepid</span>
+<span id="L341"><a aria-label="第 341 行" href="#L341"> 341</a> </span>
+<span id="L342"><a aria-label="第 342 行" href="#L342"> 342</a>   def _make_opt(</span>
+<span id="L343"><a aria-label="第 343 行" href="#L343"> 343</a>       self,</span>
+<span id="L344"><a aria-label="第 344 行" href="#L344"> 344</a>       lr: float = 4e-5,</span>
+<span id="L345"><a aria-label="第 345 行" href="#L345"> 345</a>       agc: float = 0.3,</span>
+<span id="L346"><a aria-label="第 346 行" href="#L346"> 346</a>       eps: float = 1e-20,</span>
+<span id="L347"><a aria-label="第 347 行" href="#L347"> 347</a>       beta1: float = 0.9,</span>
+<span id="L348"><a aria-label="第 348 行" href="#L348"> 348</a>       beta2: float = 0.999,</span>
+<span id="L349"><a aria-label="第 349 行" href="#L349"> 349</a>       momentum: bool = True,</span>
+<span id="L350"><a aria-label="第 350 行" href="#L350"> 350</a>       nesterov: bool = False,</span>
+<span id="L351"><a aria-label="第 351 行" href="#L351"> 351</a>       wd: float = 0.0,</span>
+<span id="L352"><a aria-label="第 352 行" href="#L352"> 352</a>       wdregex: str = r'/kernel$',</span>
+<span id="L353"><a aria-label="第 353 行" href="#L353"> 353</a>       schedule: str = 'const',</span>
+<span id="L354"><a aria-label="第 354 行" href="#L354"> 354</a>       warmup: int = 1000,</span>
+<span id="L355"><a aria-label="第 355 行" href="#L355"> 355</a>       anneal: int = 0,</span>
+<span id="L356"><a aria-label="第 356 行" href="#L356"> 356</a>   ):</span>
+<span id="L357"><a aria-label="第 357 行" href="#L357"> 357</a>     chain = []</span>
+<span id="L358"><a aria-label="第 358 行" href="#L358"> 358</a>     chain.append(embodied.jax.opt.clip_by_agc(agc))</span>
+<span id="L359"><a aria-label="第 359 行" href="#L359"> 359</a>     chain.append(embodied.jax.opt.scale_by_rms(beta2, eps))</span>
+<span id="L360"><a aria-label="第 360 行" href="#L360"> 360</a>     chain.append(embodied.jax.opt.scale_by_momentum(beta1, nesterov))</span>
+<span id="L361"><a aria-label="第 361 行" href="#L361"> 361</a>     if wd:</span>
+<span id="L362"><a aria-label="第 362 行" href="#L362"> 362</a>       assert not wdregex[0].isnumeric(), wdregex</span>
+<span id="L363"><a aria-label="第 363 行" href="#L363"> 363</a>       pattern = re.compile(wdregex)</span>
+<span id="L364"><a aria-label="第 364 行" href="#L364"> 364</a>       wdmask = lambda params: {k: bool(pattern.search(k)) for k in params}</span>
+<span id="L365"><a aria-label="第 365 行" href="#L365"> 365</a>       chain.append(optax.add_decayed_weights(wd, wdmask))</span>
+<span id="L366"><a aria-label="第 366 行" href="#L366"> 366</a>     assert anneal &gt; 0 or schedule == 'const'</span>
+<span id="L367"><a aria-label="第 367 行" href="#L367"> 367</a>     if schedule == 'const':</span>
+<span id="L368"><a aria-label="第 368 行" href="#L368"> 368</a>       sched = optax.constant_schedule(lr)</span>
+<span id="L369"><a aria-label="第 369 行" href="#L369"> 369</a>     elif schedule == 'linear':</span>
+<span id="L370"><a aria-label="第 370 行" href="#L370"> 370</a>       sched = optax.linear_schedule(lr, 0.1 * lr, anneal - warmup)</span>
+<span id="L371"><a aria-label="第 371 行" href="#L371"> 371</a>     elif schedule == 'cosine':</span>
+<span id="L372"><a aria-label="第 372 行" href="#L372"> 372</a>       sched = optax.cosine_decay_schedule(lr, anneal - warmup, 0.1 * lr)</span>
+<span id="L373"><a aria-label="第 373 行" href="#L373"> 373</a>     else:</span>
+<span id="L374"><a aria-label="第 374 行" href="#L374"> 374</a>       raise NotImplementedError(schedule)</span>
+<span id="L375"><a aria-label="第 375 行" href="#L375"> 375</a>     if warmup:</span>
+<span id="L376"><a aria-label="第 376 行" href="#L376"> 376</a>       ramp = optax.linear_schedule(0.0, lr, warmup)</span>
+<span id="L377"><a aria-label="第 377 行" href="#L377"> 377</a>       sched = optax.join_schedules([ramp, sched], [warmup])</span>
+<span id="L378"><a aria-label="第 378 行" href="#L378"> 378</a>     chain.append(optax.scale_by_learning_rate(sched))</span>
+<span id="L379"><a aria-label="第 379 行" href="#L379"> 379</a>     return optax.chain(*chain)</span>
+<span id="L380"><a aria-label="第 380 行" href="#L380"> 380</a> </span>
+<span id="L381"><a aria-label="第 381 行" href="#L381"> 381</a> </span>
+<span id="L382"><a aria-label="第 382 行" href="#L382"> 382</a> def imag_loss(</span>
+<span id="L383"><a aria-label="第 383 行" href="#L383"> 383</a>     act, rew, con,</span>
+<span id="L384"><a aria-label="第 384 行" href="#L384"> 384</a>     policy, value, slowvalue,</span>
+<span id="L385"><a aria-label="第 385 行" href="#L385"> 385</a>     retnorm, valnorm, advnorm,</span>
+<span id="L386"><a aria-label="第 386 行" href="#L386"> 386</a>     update,</span>
+<span id="L387"><a aria-label="第 387 行" href="#L387"> 387</a>     contdisc=True,</span>
+<span id="L388"><a aria-label="第 388 行" href="#L388"> 388</a>     slowtar=True,</span>
+<span id="L389"><a aria-label="第 389 行" href="#L389"> 389</a>     horizon=333,</span>
+<span id="L390"><a aria-label="第 390 行" href="#L390"> 390</a>     lam=0.95,</span>
+<span id="L391"><a aria-label="第 391 行" href="#L391"> 391</a>     actent=3e-4,</span>
+<span id="L392"><a aria-label="第 392 行" href="#L392"> 392</a>     slowreg=1.0,</span>
+<span id="L393"><a aria-label="第 393 行" href="#L393"> 393</a> ):</span>
+<span id="L394"><a aria-label="第 394 行" href="#L394"> 394</a>   losses = {}</span>
+<span id="L395"><a aria-label="第 395 行" href="#L395"> 395</a>   metrics = {}</span>
+<span id="L396"><a aria-label="第 396 行" href="#L396"> 396</a> </span>
+<span id="L397"><a aria-label="第 397 行" href="#L397"> 397</a>   voffset, vscale = valnorm.stats()</span>
+<span id="L398"><a aria-label="第 398 行" href="#L398"> 398</a>   val = value.pred() * vscale + voffset</span>
+<span id="L399"><a aria-label="第 399 行" href="#L399"> 399</a>   slowval = slowvalue.pred() * vscale + voffset</span>
+<span id="L400"><a aria-label="第 400 行" href="#L400"> 400</a>   tarval = slowval if slowtar else val</span>
+<span id="L401"><a aria-label="第 401 行" href="#L401"> 401</a>   disc = 1 if contdisc else 1 - 1 / horizon</span>
+<span id="L402"><a aria-label="第 402 行" href="#L402"> 402</a>   weight = jnp.cumprod(disc * con, 1) / disc</span>
+<span id="L403"><a aria-label="第 403 行" href="#L403"> 403</a>   last = jnp.zeros_like(con)</span>
+<span id="L404"><a aria-label="第 404 行" href="#L404"> 404</a>   term = 1 - con</span>
+<span id="L405"><a aria-label="第 405 行" href="#L405"> 405</a>   ret = lambda_return(last, term, rew, tarval, tarval, disc, lam)</span>
+<span id="L406"><a aria-label="第 406 行" href="#L406"> 406</a> </span>
+<span id="L407"><a aria-label="第 407 行" href="#L407"> 407</a>   roffset, rscale = retnorm(ret, update)</span>
+<span id="L408"><a aria-label="第 408 行" href="#L408"> 408</a>   adv = (ret - tarval[:, :-1]) / rscale</span>
+<span id="L409"><a aria-label="第 409 行" href="#L409"> 409</a>   aoffset, ascale = advnorm(adv, update)</span>
+<span id="L410"><a aria-label="第 410 行" href="#L410"> 410</a>   adv_normed = (adv - aoffset) / ascale</span>
+<span id="L411"><a aria-label="第 411 行" href="#L411"> 411</a>   logpi = sum([v.logp(sg(act[k]))[:, :-1] for k, v in policy.items()])</span>
+<span id="L412"><a aria-label="第 412 行" href="#L412"> 412</a>   ents = {k: v.entropy()[:, :-1] for k, v in policy.items()}</span>
+<span id="L413"><a aria-label="第 413 行" href="#L413"> 413</a>   policy_loss = sg(weight[:, :-1]) * -(</span>
+<span id="L414"><a aria-label="第 414 行" href="#L414"> 414</a>       logpi * sg(adv_normed) + actent * sum(ents.values()))</span>
+<span id="L415"><a aria-label="第 415 行" href="#L415"> 415</a>   losses['policy'] = policy_loss</span>
+<span id="L416"><a aria-label="第 416 行" href="#L416"> 416</a> </span>
+<span id="L417"><a aria-label="第 417 行" href="#L417"> 417</a>   voffset, vscale = valnorm(ret, update)</span>
+<span id="L418"><a aria-label="第 418 行" href="#L418"> 418</a>   tar_normed = (ret - voffset) / vscale</span>
+<span id="L419"><a aria-label="第 419 行" href="#L419"> 419</a>   tar_padded = jnp.concatenate([tar_normed, 0 * tar_normed[:, -1:]], 1)</span>
+<span id="L420"><a aria-label="第 420 行" href="#L420"> 420</a>   losses['value'] = sg(weight[:, :-1]) * (</span>
+<span id="L421"><a aria-label="第 421 行" href="#L421"> 421</a>       value.loss(sg(tar_padded)) +</span>
+<span id="L422"><a aria-label="第 422 行" href="#L422"> 422</a>       slowreg * value.loss(sg(slowvalue.pred())))[:, :-1]</span>
+<span id="L423"><a aria-label="第 423 行" href="#L423"> 423</a> </span>
+<span id="L424"><a aria-label="第 424 行" href="#L424"> 424</a>   ret_normed = (ret - roffset) / rscale</span>
+<span id="L425"><a aria-label="第 425 行" href="#L425"> 425</a>   metrics['adv'] = adv.mean()</span>
+<span id="L426"><a aria-label="第 426 行" href="#L426"> 426</a>   metrics['adv_std'] = adv.std()</span>
+<span id="L427"><a aria-label="第 427 行" href="#L427"> 427</a>   metrics['adv_mag'] = jnp.abs(adv).mean()</span>
+<span id="L428"><a aria-label="第 428 行" href="#L428"> 428</a>   metrics['rew'] = rew.mean()</span>
+<span id="L429"><a aria-label="第 429 行" href="#L429"> 429</a>   metrics['con'] = con.mean()</span>
+<span id="L430"><a aria-label="第 430 行" href="#L430"> 430</a>   metrics['ret'] = ret_normed.mean()</span>
+<span id="L431"><a aria-label="第 431 行" href="#L431"> 431</a>   metrics['val'] = val.mean()</span>
+<span id="L432"><a aria-label="第 432 行" href="#L432"> 432</a>   metrics['tar'] = tar_normed.mean()</span>
+<span id="L433"><a aria-label="第 433 行" href="#L433"> 433</a>   metrics['weight'] = weight.mean()</span>
+<span id="L434"><a aria-label="第 434 行" href="#L434"> 434</a>   metrics['slowval'] = slowval.mean()</span>
+<span id="L435"><a aria-label="第 435 行" href="#L435"> 435</a>   metrics['ret_min'] = ret_normed.min()</span>
+<span id="L436"><a aria-label="第 436 行" href="#L436"> 436</a>   metrics['ret_max'] = ret_normed.max()</span>
+<span id="L437"><a aria-label="第 437 行" href="#L437"> 437</a>   metrics['ret_rate'] = (jnp.abs(ret_normed) &gt;= 1.0).mean()</span>
+<span id="L438"><a aria-label="第 438 行" href="#L438"> 438</a>   for k in act:</span>
+<span id="L439"><a aria-label="第 439 行" href="#L439"> 439</a>     metrics[f'ent/{k}'] = ents[k].mean()</span>
+<span id="L440"><a aria-label="第 440 行" href="#L440"> 440</a>     if hasattr(policy[k], 'minent'):</span>
+<span id="L441"><a aria-label="第 441 行" href="#L441"> 441</a>       lo, hi = policy[k].minent, policy[k].maxent</span>
+<span id="L442"><a aria-label="第 442 行" href="#L442"> 442</a>       metrics[f'rand/{k}'] = (ents[k].mean() - lo) / (hi - lo)</span>
+<span id="L443"><a aria-label="第 443 行" href="#L443"> 443</a> </span>
+<span id="L444"><a aria-label="第 444 行" href="#L444"> 444</a>   outs = {}</span>
+<span id="L445"><a aria-label="第 445 行" href="#L445"> 445</a>   outs['ret'] = ret</span>
+<span id="L446"><a aria-label="第 446 行" href="#L446"> 446</a>   return losses, outs, metrics</span>
+<span id="L447"><a aria-label="第 447 行" href="#L447"> 447</a> </span>
+<span id="L448"><a aria-label="第 448 行" href="#L448"> 448</a> </span>
+<span id="L449"><a aria-label="第 449 行" href="#L449"> 449</a> def repl_loss(</span>
+<span id="L450"><a aria-label="第 450 行" href="#L450"> 450</a>     last, term, rew, boot,</span>
+<span id="L451"><a aria-label="第 451 行" href="#L451"> 451</a>     value, slowvalue, valnorm,</span>
+<span id="L452"><a aria-label="第 452 行" href="#L452"> 452</a>     update=True,</span>
+<span id="L453"><a aria-label="第 453 行" href="#L453"> 453</a>     slowreg=1.0,</span>
+<span id="L454"><a aria-label="第 454 行" href="#L454"> 454</a>     slowtar=True,</span>
+<span id="L455"><a aria-label="第 455 行" href="#L455"> 455</a>     horizon=333,</span>
+<span id="L456"><a aria-label="第 456 行" href="#L456"> 456</a>     lam=0.95,</span>
+<span id="L457"><a aria-label="第 457 行" href="#L457"> 457</a> ):</span>
+<span id="L458"><a aria-label="第 458 行" href="#L458"> 458</a>   losses = {}</span>
+<span id="L459"><a aria-label="第 459 行" href="#L459"> 459</a> </span>
+<span id="L460"><a aria-label="第 460 行" href="#L460"> 460</a>   voffset, vscale = valnorm.stats()</span>
+<span id="L461"><a aria-label="第 461 行" href="#L461"> 461</a>   val = value.pred() * vscale + voffset</span>
+<span id="L462"><a aria-label="第 462 行" href="#L462"> 462</a>   slowval = slowvalue.pred() * vscale + voffset</span>
+<span id="L463"><a aria-label="第 463 行" href="#L463"> 463</a>   tarval = slowval if slowtar else val</span>
+<span id="L464"><a aria-label="第 464 行" href="#L464"> 464</a>   disc = 1 - 1 / horizon</span>
+<span id="L465"><a aria-label="第 465 行" href="#L465"> 465</a>   weight = f32(~last)</span>
+<span id="L466"><a aria-label="第 466 行" href="#L466"> 466</a>   ret = lambda_return(last, term, rew, tarval, boot, disc, lam)</span>
+<span id="L467"><a aria-label="第 467 行" href="#L467"> 467</a> </span>
+<span id="L468"><a aria-label="第 468 行" href="#L468"> 468</a>   voffset, vscale = valnorm(ret, update)</span>
+<span id="L469"><a aria-label="第 469 行" href="#L469"> 469</a>   ret_normed = (ret - voffset) / vscale</span>
+<span id="L470"><a aria-label="第 470 行" href="#L470"> 470</a>   ret_padded = jnp.concatenate([ret_normed, 0 * ret_normed[:, -1:]], 1)</span>
+<span id="L471"><a aria-label="第 471 行" href="#L471"> 471</a>   losses['repval'] = weight[:, :-1] * (</span>
+<span id="L472"><a aria-label="第 472 行" href="#L472"> 472</a>       value.loss(sg(ret_padded)) +</span>
+<span id="L473"><a aria-label="第 473 行" href="#L473"> 473</a>       slowreg * value.loss(sg(slowvalue.pred())))[:, :-1]</span>
+<span id="L474"><a aria-label="第 474 行" href="#L474"> 474</a> </span>
+<span id="L475"><a aria-label="第 475 行" href="#L475"> 475</a>   outs = {}</span>
+<span id="L476"><a aria-label="第 476 行" href="#L476"> 476</a>   outs['ret'] = ret</span>
+<span id="L477"><a aria-label="第 477 行" href="#L477"> 477</a>   metrics = {}</span>
+<span id="L478"><a aria-label="第 478 行" href="#L478"> 478</a> </span>
+<span id="L479"><a aria-label="第 479 行" href="#L479"> 479</a>   return losses, outs, metrics</span>
+<span id="L480"><a aria-label="第 480 行" href="#L480"> 480</a> </span>
+<span id="L481"><a aria-label="第 481 行" href="#L481"> 481</a> </span>
+<span id="L482"><a aria-label="第 482 行" href="#L482"> 482</a> def lambda_return(last, term, rew, val, boot, disc, lam):</span>
+<span id="L483"><a aria-label="第 483 行" href="#L483"> 483</a>   chex.assert_equal_shape((last, term, rew, val, boot))</span>
+<span id="L484"><a aria-label="第 484 行" href="#L484"> 484</a>   rets = [boot[:, -1]]</span>
+<span id="L485"><a aria-label="第 485 行" href="#L485"> 485</a>   live = (1 - f32(term))[:, 1:] * disc</span>
+<span id="L486"><a aria-label="第 486 行" href="#L486"> 486</a>   cont = (1 - f32(last))[:, 1:] * lam</span>
+<span id="L487"><a aria-label="第 487 行" href="#L487"> 487</a>   interm = rew[:, 1:] + (1 - cont) * live * boot[:, 1:]</span>
+<span id="L488"><a aria-label="第 488 行" href="#L488"> 488</a>   for t in reversed(range(live.shape[1])):</span>
+<span id="L489"><a aria-label="第 489 行" href="#L489"> 489</a>     rets.append(interm[:, t] + live[:, t] * cont[:, t] * rets[-1])</span>
+<span id="L490"><a aria-label="第 490 行" href="#L490"> 490</a>   return jnp.stack(list(reversed(rets))[:-1], 1)</span></pre></body></html>

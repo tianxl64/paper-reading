@@ -1,0 +1,203 @@
+
+
+
+
+
+
+
+
+
+
+
+
+\section{Additional Baselines}
+\label{appendix:more_results}
+
+\subsection{Comparison with DPPO}
+\label{appendix:compare_dppo}
+
+\subsubsection{Setup}
+
+DPPO \citep{dppo}, a concurrent work, successfully fine-tunes diffusion policies using PPO, achieving state-of-the-art performance. Key tricks include fine-tuning only the last few denoising steps and fine-tuning DDIM sampling. We conducted preliminary experiments comparing our approach with DPPO \textbf{on their tasks}. Even if DPPO is carefully tuned on their tasks, we are still able to beat it. 
+
+Specifically, we applied Policy Decorator (our approach) to the \textbf{two most challenging robotic manipulation tasks in their paper}: Square and Transport. We used the Diffusion Policy checkpoints provided by the DPPO paper as our base policies.
+
+\subsubsection{Results}
+
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/Transport_dppo_early_termination.pdf}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/Square_dppo_early_termination.pdf}
+    \end{subfigure}
+    \caption{Policy Decorator (ours) vs. DPPO on two most challenging robotic
+manipulation tasks in the DPPO paper: Square and Transport.}
+    \label{fig:transport_and_square}
+\end{figure}
+
+As shown in Fig. \ref{fig:transport_and_square}, our approach outperforms DPPO on these two challenging tasks, especially on the Transport task. According to Figure 5 in the DPPO paper, DPPO requires approximately 16 million steps to converge to 80\%+ success rate on the Transport task. In contrast, our Policy Decorator achieves this performance in only 4 million steps, demonstrating a \textbf{nearly 4x improvement in sample efficiency}.
+
+\textbf{Implementation details:} We noticed that DPPO uses a fixed episode length without early termination upon success signals. Empirically, this setup may negatively impact the sample efficiency of RL algorithms, as transitions after task completion contribute minimally to learning. We therefore implement early task termination upon success signals in our experiments, which offers a more practical setup. Results using DDPO's original setup are presented in Fig. \ref{fig:transport_and_square_no_early_termination}.
+
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/Transport_dppo.pdf}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/Square_dppo.pdf}
+    \end{subfigure}
+    \caption{Similar to Fig. \ref{fig:transport_and_square}, but without early termination upon success signals.}
+    \label{fig:transport_and_square_no_early_termination}
+\end{figure}
+
+
+
+
+
+
+
+
+\subsubsection{Summary}
+
+\textbf{These experiments demonstrate that our method outperforms DPPO on challenging robotic manipulation tasks.} It is crucial to note that our approach is model-agnostic, whereas DPPO is restricted to a specific case of Diffusion Policy (where all predicted actions are executed in the environment, which is not the typical implementation of Diffusion Policy).
+
+
+
+
+
+
+\section{Additional Ablation Studies}
+\label{appendix:more_ablation}
+
+This section includes additional ablation studies results about base policies, low-performing checkpoints, and PPO. In detail, Section \ref{appendix:results_on_additional_base_policy} discusses Policy Decorator also works with other types of base policies (e.g., MLP, RNN, and CNN); Section \ref{appendix:other_ckpt} demonstrates that Policy Decorator stays effective in improving low-performing BeT checkpoints; Section \ref{appendix:ppo} indicates that Policy Decorator is compatible with PPO as backbone RL algorithm.
+
+
+\subsection{Additional Base Policies}
+\label{appendix:results_on_additional_base_policy}
+
+
+To demonstrate Policy Decorator's versatility across different base policy architectures, we conduct experiments using simpler models such as MLP, BC-RNN \citep{robomimic2021}, and CNN. Fig. \ref{fig:more_base_policy} shows that Policy Decorator significantly improves the performance of MLP, BC-RNN, and CNN policies through online interactions.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\linewidth]{figures/more_base_policies.pdf}
+    \caption{Policy Decorator with more base policies (MLP, BC-RNN, CNN) on TurnFaucet task.}
+    \label{fig:more_base_policy}
+\end{figure}
+
+
+
+
+
+
+\subsection{Using Other Checkpoints of Base Policies}
+\label{appendix:other_ckpt}
+
+As we claim that Policy Decorator is model-agnostic and is versatile to all types of base policies, it is necessary to demonstrate that it not only improves well-trained base policy but also improves low-performing checkpoints of base policy. Fig. \ref{fig:low-performance-bet} shows that the Policy Decorator achieves a substantial improvement in the low-performance BeT checkpoint.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{figures/low_performing.pdf}
+    \caption{Policy Decorator with a low-performance BeT checkpoint. }
+    \label{fig:low-performance-bet}
+    \vspace{-0.2cm}
+\end{figure}
+
+
+\subsection{Change Backbone RL Algorithm to PPO}
+\label{appendix:ppo}
+
+
+While our experiments utilize SAC as the backbone RL algorithm due to its sample efficiency, Policy Decorator is also compatible with various RL algorithms. In this experiment, we replace SAC with PPO \citep{ppo} across our method, the RL fine-tuning baseline, and the residual RL baseline. As demonstrated in Fig. \ref{fig:ppo}, Policy Decorator with PPO successfully improves the base policy's performance and significantly outperforms all baseline methods.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{figures/ppo.pdf}
+    \caption{Use PPO as the backbone RL algorithm in our method, RL fine-tuning, and Residual RL.}
+    \label{fig:ppo}
+\end{figure}
+
+
+\subsection{Additional Baseline (GAIL + MLP)}
+
+As mentioned in \cite{dpi}, simple architectures like MLP cannot capture the multi-modality of data. To further demonstrate this point, we have now implemented and tested a GAIL + MLP baseline. The results in Fig. \ref{fig:gail} show that this baseline achieves 0\% success rate on StackCube and about 20\% success rate on TurnFaucet after 3M environment interactions. These results are expected given that the demonstrations were collected task and motion planning (for StackCube) and model predictive control (for TurnFaucet) - resulting in naturally multi-modal distributions. These results suggest that simple MLPs may be insufficient for capturing multi-modal distributions and highlight the need for large policy models for effectively utilizing multi-modal demonstrations.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/StackCube_gail.pdf}
+        \label{fig:sub1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.4\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{figures/TurnFaucet_gail.pdf}
+        \label{fig:sub2}
+    \end{subfigure}
+    \caption{Comparison of GAIL + MLP and Policy Decorator.}
+    \label{fig:gail}
+\end{figure}
+
+Additionally, in offline imitation learning scenarios, MLP also performs significantly worse than large policy models, as shown in the table below:
+
+\begin{table}[h!]
+\centering
+\caption{Performance comparison across tasks (StackCube and TurnFaucet).}
+\label{tab:performance_comparison}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Model} & \textbf{StackCube} & \textbf{TurnFaucet} \\ 
+\midrule
+MLP & 0\% & 10\% \\ 
+Behavior Transformer & 71\% & 41\% \\ 
+Diffusion Policy & 99\% & 55\% \\ 
+\bottomrule
+\end{tabular}
+\end{table}
+
+These results together demonstrate that simple MLPs are insufficient for capturing multi-modal distributions and highlight the need for large policy models to effectively utilize multi-modal demonstrations.
+
+
+
+\section{Important Design Choices}
+\label{appendix:design_choices}
+
+This section presents ablation results on a few key design choices, including the inputs for the residual policy and the inputs for the critic.
+
+
+\subsection{Input of Residual Policy}
+\label{appendix:input_of_actor}
+The residual policy can receive input in the form of either observation alone or both observation and action from the base policy. Our experiments indicate that using only observation typically produces better results, as illustrated in Fig. \ref{fig:input_of_actor}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{figures/StackCube_actor_input.pdf}
+    \caption{Different variants of input of residual policy.}
+    \label{fig:input_of_actor}
+\end{figure}
+
+\subsection{Input of Critic}
+\label{appendix:input_of_critic}
+In SAC, the critic $Q(s, a)$ takes an action as input, and there are several design choices regarding this action: we can use 1) the sum of the base action and residual action; 2) the concatenation of both; or 3) the residual action alone. Based on our experiments shown in Fig. \ref{fig:input_of_critic}, using the sum of both actions yields the best performance. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\linewidth]{figures/StackCube_critic_input.pdf}
+    \caption{Different variants of input of critic.}
+    \label{fig:input_of_critic}
+\end{figure}
+
+
+
+

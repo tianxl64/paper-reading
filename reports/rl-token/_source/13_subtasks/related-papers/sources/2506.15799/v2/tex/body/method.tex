@@ -1,0 +1,152 @@
+%!TEX root = ../main.tex
+
+
+
+
+\iftoggle{arxiv2}{}{\vspace{-0.5em}}
+\section{Preliminaries}\label{sec:prelim}
+\iftoggle{arxiv2}{}{\vspace{-0.5em}}
+
+
+\iftoggle{arxiv}{\paragraph{Markov decision processes.}}{\textbf{Markov decision processes.}}
+A Markov Decision Process (MDP) is denoted by a tuple \mbox{$\cM = (\cS, \cA, P, p_0, r, \gamma)$},
+where $\cS$ is a set of states, $\cA$ a set of actions (which we assume to be a subset of $\R^d$), $P : \cS \times \cA \rightarrow \triangle_{\cS}$ a transition kernel, $p_0 \in \triangle_{\cS}$ the initial state distribution, $r : \cS \times \cA \rightarrow \R$ a reward function, and $\gamma \in [0,1]$ the discount factor.
+An episode begins by drawing state $\bs_0 \sim p_0$, and proceeds with, at state $\bs$, the agent choosing action $\ba$, receiving reward $r(\bs,\ba)$, and transitioning to $\bs' \sim P(\cdot \mid \bs, \ba)$.
+A policy $\pi : \cS \rightarrow \triangle_{\cA}$ denotes a mapping from states to actions. 
+The $Q$-function for policy $\pi$, $Q^\pi(\bs,\ba)$, denotes the expected discounted return of policy $\pi$ from taking action $\ba$ in state $\bs$, $Q^\pi(\bs,\ba) := \Exp^{\pi}[\sum_{t \ge 0} \gamma^t r(\bs_t, \ba_t) \mid \bs_0 = \bs, \ba_0 = \ba]$. The typical objective in RL is to find a policy that achieves maximum expected discounted return.
+
+
+
+
+\iftoggle{arxiv}{\paragraph{Diffusion models and flow matching.}}{\textbf{Diffusion models and flow matching.}}
+Diffusion models are generative models that aim to transform an easy-to-sample-from distribution into a more complex goal distribution $q(\bx_0)$ \cite{sohl2015deep,ho2020denoising}. While various instantiations exist, denoising diffusion \cite{ho2020denoising,song2020denoising} has emerged as perhaps the most popular. Denoising diffusion models this transformation process with a distribution $p_\theta(\bx_0)$ parameterized as
+$p_{\theta}(\bx_0) = \int p_\theta(\bx_{0:T}) \rmd \bx_{1:T}$, for $p_\theta(\bx_{0:T}) = p_{\theta}(\bx_T) \cdot \prod_{t=1}^T p_{\theta}^{(t)}(\bx_{t-1} \mid \bx_t)$, and typically takes $p_{\theta}^{(t)}(\bx_{t-1} \mid \bx_t)$ to be a normal distribution.
+The \emph{forward diffusion process} adds noise to samples $\bx_0 \sim q(\bx_0)$, and trains a network $\epsnet$ to denoise these samples.
+The \emph{reverse diffusion process}---the denoising or sampling process---begins by sampling $\bx_T \sim \cN(0,I)$, and then applies the update\loose
+\begin{align}\label{eq:reverse_process}
+\bx_{t-1} = \alpha_t (\bx_t- \beta_t \epsnet(\bx_t)) + \sigma_t \beps_t, \quad \beps_t \sim \cN(0,I),
+\end{align}
+for $\alpha_t, \beta_t,$ and $\sigma_t$ some coefficients. This ultimately produces a ``denoised'' sample $\bx_0$ distributed approximately as $q(\bx_0)$. %}
+The reverse diffusion process can be run with both $\sigma_t > 0$ (typically referred to as DDPM sampling \cite{ho2020denoising}) or $\sigma_t = 0$ (DDIM sampling \cite{song2020denoising}). Notably, DDIM sampling makes the reverse process \emph{deterministic} given the initial noise sample $\bx_T$ and, furthermore, can often lead to more efficient generation by reducing the number of required denoising steps \cite{song2020denoising}, a property especially useful in real-world robotic deployment where it is critical that actions are generated at a high enough control frequency \cite{chi2023diffusion}. 
+\iftoggle{arxiv}{With DDIM sampling, we can therefore think of the reverse process as simply a function that maps a ``latent'' $\bx_T$ to some point in the support of $q(\bx_0)$.}{}
+
+Beyond denoising diffusion, \emph{flow matching} is a similar generative modeling technique---also based on an iterative denoising procedure---that has demonstrated impressive results across a range of domains \cite{lipman2022flow,liu2022flow,albergo2022building,black2024pi_0,park2025flow}. While a full discussion of flow matching is beyond the scope of this work (see e.g. \cite{lipman2024flow}) we highlight that, similar to denoising diffusion, flow matching operates by first sampling noise from some tractable distribution, and then processes this noise through a (by construction) deterministic process to produce a sample from a goal distribution.
+
+\iftoggle{arxiv}{\paragraph{Behavioral cloning with diffusion and flow policies.}}{\textbf{Behavioral cloning with diffusion and flow policies.}}
+BC aims to learn a policy that models the state-conditional distribution of actions from a dataset of demonstrations $\frakD = \{ (\bs^i, \ba^i) \}_{i=1}^N$. This is simply a generative modeling problem and diffusion models or flow matching can be applied directly, with $\bx_0 \leftarrow \ba^i$ and the BC policy, $\pidp$, the entire denoising process, \eqref{eq:reverse_process}.
+As noted, for fixed input noise $\bx_T \leftarrow \bw$, a DDIM or flow-based policy is a deterministic process. Given this, for a diffusion policy $\pidp$ utilizing DDIM sampling or a flow-based policy, we define $\pidpw : \cS  \times \cW \rightarrow \cA$ the deterministic output of the denoising process at state $\bs$ when input noise $\bw$ initializes the denoising process, and denote by $\cW := \R^d$ the latent-noise space.
+% }
+
+
+
+
+
+\iftoggle{arxiv}{\paragraph{Problem setting.}}{\textbf{Problem setting.}}
+In this work we assume we are given a pretrained diffusion policy $\pidp$, and our goal is to adapt its behavior to maximize some reward $r$ in environment $\cM$, the standard objective of RL. 
+While we do not make explicit assumptions on the behavior of $\pidp$, for our approach to be effective $\pidp$ must be ``steerable'' in a sense that will become clear (please see \Cref{sec:understanding_ds} for further discussion of when $\pidp$ is steerable).
+We consider both the online setting---where the learner can interact with $\cM$---as well as the offline setting---where the learner is given a dataset of transitions from $\cM$.
+We assume we may select any $\bs \in \cS$ and $\bw \in \cW$ and observe $\pidpw(\bs,\bw)$, but do not assume any other access to $\pidpw$ (for example, its weights or intermediate steps in its denoising process).\loose
+
+
+
+
+
+
+\iftoggle{arxiv2}{}{\vspace{-0.5em}}
+\section{Diffusion Steering via Reinforcement Learning}
+\iftoggle{arxiv2}{}{\vspace{-0.5em}}
+
+
+
+In typical operation of a diffusion policy, $\bw$ is sampled from a standard Gaussian, $\bw \sim \cN(0,I)$, and processed through $\pidpw$ to produce an output action. $\pidpw$ is trained so that the resulting action distribution, $\ba \sim \pidpw(\bs,\bw)$ for $\bw \sim \cN(0,I)$, matches the action distribution of the demonstration data at $\bs$. At deployment, this only holds true, however, if $\bw \sim \cN(0,I)$---if $\bw$ is chosen some other way, $\pidp$ will not necessarily produce actions that match the distribution of the demonstrator.
+This suggests a straightforward way to modify the behavior of $\pidp$ is to  modify the distribution of $\bw$, and instead of $\bw \sim \cN(0,I)$, choose $\bw$ so that the resulting action $\ba \leftarrow \pidpw(\bs,\bw)$ leads to a desired result (see \Cref{fig:noise_aliasing_illustration}). 
+This observation forms the backbone of our proposed approach, \emph{diffusion steering}: rather than modifying the weights of the diffusion policy or postprocessing its output, diffusion steering simply ``steers'' the diffusion policy to produce desired actions by altering its input noise distribution.\loose
+
+
+\iftoggle{arxiv2}{}{\vspace{-0.5em}}
+\subsection{Diffusion Steering as Latent-Noise Space Policy Optimization}
+\iftoggle{arxiv2}{}{\vspace{-0.5em}}
+While selecting $\bw$ may give us some control over the output of $\pidp$, it remains to determine \emph{which} $\bw$ we should choose. To answer this, we propose reinterpreting the role of $\pidpw$ from a \emph{policy} to an \emph{action space transformation}.
+At any state $\bs$, we can produce an action $\ba \in \cA$ by selecting $\bw \in \cW$ and setting $\ba \leftarrow \pidpw(\bs,\bw)$. 
+We can think of this mapping as transforming the action space of $\cM$ from the original action space $\cA$ to the latent-noise space $\cW$. In particular, defining
+\begin{align*}
+\Pdp(\cdot \mid \bs,\bw) := P(\cdot \mid \bs, \pidpw(\bs,\bw)) \quad \text{and} \quad \rdp(\bs,\bw) := r(\bs, \pidpw(\bs,\bw)),
+\end{align*}
+we see that $\cMdp := (\cS, \cW, \Pdp, p_0, \rdp, \gamma)$ forms a transformed version of our original MDP, which we refer to as the \emph{latent-action MDP}. 
+Notably, we can treat interaction with $\cMdp$ just as we would treat interaction with $\cM$, completely black-boxing the contribution of $\pidpw$---we now take actions in $\cW$, and filter them through $\pidpw$ to obtain some action in $\cA$ which we play in $\cM$, but this filtering process is completely encapsulated in the transformed environment. Given this, we may consider $\pidpw$ simply part of the environment, and choosing $\bw$ reduces to a standard policy optimization problem over $\cMdp$, allowing us to apply virtually \emph{any} RL algorithm to learn a latent-noise space policy. 
+We refer to this procedure---adapting the behavior of $\pidp$ by running RL over its latent-noise space---as \textbf{D}iffusion \textbf{S}teering via \textbf{R}einforcement \textbf{L}earning (\algname). 
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+\vspace{-1em}
+\centering
+\includegraphics[width=0.38\textwidth]{./im/noise_aliasing3.pdf}
+\caption{By selecting which point in the latent-noise space to denoise, we can steer the action produced by $\pidp$ to a desired mode. At the same time, different points in the latent-noise space may in some cases be denoised to the same point in the original action space, allowing one to infer the behavior of noise actions $\bw_2$ and $\bw_3$ at $\bs$ given only observation $(\bs,\ba')$, forming the basis of our noise aliasing approach (\Cref{sec:noise_aliasing}).}
+\label{fig:noise_aliasing_illustration}
+\vspace{-0.5em}
+\end{wrapfigure}
+
+
+\iftoggle{arxiv}{\paragraph{Computational efficiency of \algname.}}{\textbf{Computational efficiency of \algname.}}
+Typical policy optimization procedures require back-propagating through a policy to compute a gradient direction in which to update the parameters. Such methods are challenging to apply to diffusion policies, however, as the diffusion policy generates actions via multi-step denoising \eqref{eq:reverse_process}, and back-propagation through this entire process is computationally intensive and numerically unstable \cite{ren2024diffusion,mark2024policy,park2025flow}. 
+\algname avoids this issue entirely by lifting policy optimization from the diffusion policy itself to a secondary policy operating in the diffusion policy's latent-noise space. 
+This latent-space policy can be parameterized in whatever form is most convenient, and only requires forward passes of the diffusion policy's denoising process to optimize.
+This also allows \algname to circumvent the need to optimize large diffusion policies common in modern applications, yielding further computational improvements over standard finetuning procedures, and reduces the model access required by \algname to only choosing $\bw \in \cW$ and computing $\ba \leftarrow \pidpw(\bs,\bw)$, rather than requiring access to the weights of $\pidpw$ or intermediate steps within the denoising process. Such weak access could enable, for example, adaptation of proprietary models where the base weights are not publicly available, or adaptation over API access.\loose
+% }
+
+
+
+
+
+
+
+
+
+
+
+
+\iftoggle{arxiv2}{}{\vspace{-0.5em}}
+\subsection{Efficient \algname with Noise Aliasing}\label{sec:noise_aliasing}
+\iftoggle{arxiv2}{}{\vspace{-0.5em}}
+
+
+
+While in principle \algname can be instantiated with virtually any RL algorithm, in this section we introduce an approach which makes particular use of the diffusion policy's structure to increase sample efficiency.
+Our approach builds off standard actor-critic algorithms \cite{silver2014deterministic,lillicrap2015continuous,haarnoja2018soft} which, in our setting, would require fitting a critic, $Q : \cS \times \cW \rightarrow \R$, that quantifies the value of latent-noise actions, and an actor, $\pi : \cS \rightarrow \triangle_{\cW}$, which maps states to high value latent-noise actions. 
+Such an approach can be applied in online learning---where we generate latent-noise actions $\bw$ ourself---but fails to apply in standard offline learning settings, where we are given a dataset of transitions $(\bs,\ba,r,\bs')$ labeled with actions in the \emph{original} action space, rather than the latent-noise action space, as the above actor-critic procedure requires. 
+A standard application of an actor-critic algorithm does not, furthermore, fully exploit the structure of the diffusion policy. There may exist $\bw' \neq \bw$ such that $\pidpw(\bs,\bw) \approx \pidpw(\bs,\bw')$---indeed, we would expect a diffusion policy to exhibit this behavior in settings where the demonstrator has a relatively narrow action distribution, causing many $\bw$ to map to the same $\ba$. As we assume sampling access to $\pidpw$, we can in principle infer that $\pidpw(\bs,\bw) \approx \pidpw(\bs,\bw')$, which could allow us, for example, to determine the behavior of $\cMdp$ when taking action $\bw'$ without ever actually taking action $\bw'$, as illustrated in \Cref{fig:noise_aliasing_illustration}. Exploiting this aliasing behavior promises to reduce the amount of exploration over the latent-noise space required to learn in $\cMdp$, yet standard actor-critic algorithms fail to take advantage of this. To address these issues, we propose an instantiation of \algname, \emph{noise-aliased \algname}, which we state in \Cref{alg:main}.
+
+
+\begin{figure}[H]
+\vspace{-1.5em}
+    \centering
+    \begin{minipage}{\linewidth}
+    \begin{algorithm}[H]
+      \caption{Noise-Aliased Diffusion Steering via Reinforcement Learning (\algnamena)}
+      \begin{algorithmic}[1]
+        \State \textbf{input}: pretrained diffusion policy $\pidpw$, offline data $\frakD_{\mathrm{off}}$ and/or online environment $\cM$
+        \State Initialize replay buffer $\frakB \leftarrow \frakD_{\mathrm{off}}$, $\cA$-critic $\Qa$, latent-noise critic $\Qw$, latent-noise actor $\piw$
+        \For{$t = 1,\ldots, T$}
+          \State Update $\Qa$: $\textstyle \min_{\Qa} \Exp_{(\bs,\ba,r,\bs') \sim \frakB, \ba' \sim \pidpw(\bs',\piw(\bs'))} \big [ ( \Qa(\bs,\ba) - r - \gamma \Qabar(\bs', \ba'))^2 \big ]$
+     \State Update $\Qw$: $\min_{\Qw} \Exp_{\bs \sim \frakB, \bw \sim \cN(0,I)}[(\Qw(\bs, \bw) - \Qa(\bs,\pidpw(\bs,\bw)))^2]$
+     \State Update $\piw$: $\max_{\piw} \Exp_{\bs \sim \frakB} \big [ \Qw(\bs,\piw(\bs)) \big ]$
+        \If{access to online environment $\cM$}
+          \State Sample latent-noise action $\bw_t \sim \piw(\bs_t)$ and compute $\ba_t \leftarrow \pidpw(\bs_t, \bw_t)$
+          \State Play $\ba_t$ in $\cM$, observe $r_t$ and next state $\bs_{t+1}$, and add $(\bs_t, \ba_t, r_t, \bs_{t+1})$ to $\frakB$
+        \EndIf
+        \EndFor
+      \end{algorithmic}
+    \label{alg:main}
+\end{algorithm}
+\vspace{-2.5em}
+\end{minipage}
+\end{figure}
+
+
+\algnamena maintains two critics, $\Qa : \cS \times \cA \rightarrow \R$ and $\Qw : \cS \times \cW \rightarrow \R$. 
+$\Qa$ is trained via temporal-difference learning on the original action space, and is therefore able to incorporate standard offline data with $\cA$-actions. $\Qw$ operates on the latent-noise action space and distills $\Qa$ by sampling $\bw \sim \cN(0,I)$ and generating the corresponding $\cA$-action, $\ba \leftarrow \pidpw(\bs,\bw)$. This allows $\Qw$ to internalize the dynamics information encoded within $\Qa$ and, furthermore, map the value of latent-noise actions that have never been taken to the value of corresponding $\cA$-actions that have been taken, fully exploiting the aliasing nature of $\pidpw$.\loose
+
+
+
+We remark that, in the purely offline setting, if $\pidp$ is trained on the same offline dataset $\frakD_{\mathrm{off}}$ as \algnamena, then \algnamena naturally handles conservatism. When using standard diffusion policy training, by construction $\pidpw$ will only output in-distribution actions, which implies that any $\bw$ will be mapped by $\pidpw$ to an in-distribution action. Since \algnamena only queries $\Qa$ on actions in $\frakD_{\mathrm{off}}$ and actions produced by $\pidpw$, it therefore naturally avoids querying the value of unseen actions, and achieves this while allowing $\piw$ to be optimized in an unrestricted manner over the latent-noise action space. 
+Notably, this enables conservative policy optimization without explicitly enforcing a conservatism penalty, as is typically done in offline RL \cite{kumar2020conservative,kostrikov2021offline,jin2021pessimism,xie2021bellman}. 
+

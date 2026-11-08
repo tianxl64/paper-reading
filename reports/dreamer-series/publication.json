@@ -1,485 +1,1380 @@
 {
-  "schema": "paper-reading-publication.v1",
-  "published_at": "2026-11-02T09:32:44.208523+00:00",
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
   "slug": "dreamer-series",
-  "source_relative_html": "11_html/report.html",
-  "source_html_sha256": "4f9c0c5539c7c85796e45934fd119a1dd6963c9fe330e58e4c4fa5084e17796c",
-  "upstream_stage": "delivery_complete",
-  "upstream_content_revision": "r2-v4-semantic-rebind",
-  "public_html_sha256": "5f10e87c15e4d444d18bb4cb4754a891cf1d28224da536b4c0b29ed04f139c5e",
-  "content_preservation": {
-    "main_text": true,
-    "headings": true,
-    "formula_html": true,
-    "caption_html_text": true,
-    "link_labels": true,
-    "inline_scripts": true,
-    "pre_blocks": true
-  },
-  "summary": {
-    "title": "Dreamer 系列论文—代码联合精读 · R22候选读本",
-    "main_chars": 190501,
-    "headings": 470,
-    "figure_images": 22,
-    "image_nodes": 22,
-    "katex_nodes": 44,
-    "mathml_nodes": 0,
-    "article_selectors": [
-      "main#",
-      "article#r22-article"
-    ],
-    "scripts": [
-      {
-        "src": null,
-        "inline_bytes": 9556
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "11_html/report-final-r6.html",
+  "source_html_sha256": "c5017309107adbf825eec917ab41de5e19f6a93a7c4861863d730c0386f92f7f",
+  "selection_reason": "final r6 receipt overrides stale summary flags",
+  "public_html_sha256": "b8c2a4044ef6c366c3a58c9b57de92e6f2107d0456eb63cf7d69ee742336f1a5",
+  "content_preservation": [
+    {
+      "document": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/models/rssm.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
       },
-      {
-        "src": "assets/reader-r22/toc.js",
-        "inline_bytes": 0
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/tools/overshooting.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
       },
-      {
-        "src": "assets/reader-r22/viewer.js",
-        "inline_bytes": 0
-      }
-    ],
-    "stylesheets": [
-      "assets/vendor/katex/katex.min.css",
-      "assets/reader-r22/reader.css"
-    ],
-    "viewers": [
-      "div#r22-viewer"
-    ]
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/control/mpc_agent.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/training/utility.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/models/rssm.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/training/utility.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/control/temporal_difference.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/scripts/train.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S004/sources/repos/dreamerv2/snapshot/dreamerv2-07d906e9c4322c6fc2cd6ed23e247ccd6b7c8c41/dreamerv2/agent.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S004/sources/repos/dreamerv2/snapshot/dreamerv2-07d906e9c4322c6fc2cd6ed23e247ccd6b7c8c41/dreamerv2/common/nets.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S004/sources/repos/dreamerv2/snapshot/dreamerv2-07d906e9c4322c6fc2cd6ed23e247ccd6b7c8c41/dreamerv2/common/other.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S005/sources/repos/dreamerv3/snapshot-ghfast/dreamerv3-e01491fad6434b2245a3b8ca201dd7faedcc458c/dreamerv3/rssm.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S005/sources/repos/dreamerv3/snapshot-ghfast/dreamerv3-e01491fad6434b2245a3b8ca201dd7faedcc458c/dreamerv3/agent.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S006/sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/README.md.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S006/sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/dreamer4/model.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "assets/attachments/code/S006/sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/dreamer4/train_dynamics.py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 1,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 488,
+      "original_static_math": 54,
+      "added_static_math": 0
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 0,
+    "documents": 17
   },
   "resources": [
     {
+      "path": "../../assets/fonts/0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308.woff2",
+      "source_sha256": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308",
+      "sha256": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308",
+      "bytes": 28076
+    },
+    {
+      "path": "../../assets/fonts/30da91e84c893f875e252689faebdc590b2871145e8adc7f9a9d4dbd8ce0b251.woff",
+      "source_sha256": "30da91e84c893f875e252689faebdc590b2871145e8adc7f9a9d4dbd8ce0b251",
+      "sha256": "30da91e84c893f875e252689faebdc590b2871145e8adc7f9a9d4dbd8ce0b251",
+      "bytes": 33516
+    },
+    {
+      "path": "../../assets/fonts/68534840bcfdd2bffb6f0e8deb48684dd01e7f04ea2813267577afb906de1d13.ttf",
+      "source_sha256": "68534840bcfdd2bffb6f0e8deb48684dd01e7f04ea2813267577afb906de1d13",
+      "sha256": "68534840bcfdd2bffb6f0e8deb48684dd01e7f04ea2813267577afb906de1d13",
+      "bytes": 63632
+    },
+    {
+      "path": "../../assets/fonts/de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c.woff2",
+      "source_sha256": "de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c",
+      "sha256": "de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c",
+      "bytes": 6912
+    },
+    {
+      "path": "../../assets/fonts/1ae6bd7475590e97e7f145a89e09ccde322f7a6bc0b91607b1c8b8ee28290fed.woff",
+      "source_sha256": "1ae6bd7475590e97e7f145a89e09ccde322f7a6bc0b91607b1c8b8ee28290fed",
+      "sha256": "1ae6bd7475590e97e7f145a89e09ccde322f7a6bc0b91607b1c8b8ee28290fed",
+      "bytes": 7716
+    },
+    {
+      "path": "../../assets/fonts/07d8e303ce4fc12b4bb54f1004170dd190a1f3db45d400fe68060df3e0897268.ttf",
+      "source_sha256": "07d8e303ce4fc12b4bb54f1004170dd190a1f3db45d400fe68060df3e0897268",
+      "sha256": "07d8e303ce4fc12b4bb54f1004170dd190a1f3db45d400fe68060df3e0897268",
+      "bytes": 12368
+    },
+    {
+      "path": "../../assets/fonts/5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b.woff2",
+      "source_sha256": "5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b",
+      "sha256": "5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b",
+      "bytes": 6908
+    },
+    {
+      "path": "../../assets/fonts/3398dd02302557a793f2863f88e02d96ce10df2abffa07c8e9fa90775116e65c.woff",
+      "source_sha256": "3398dd02302557a793f2863f88e02d96ce10df2abffa07c8e9fa90775116e65c",
+      "sha256": "3398dd02302557a793f2863f88e02d96ce10df2abffa07c8e9fa90775116e65c",
+      "bytes": 7656
+    },
+    {
+      "path": "../../assets/fonts/ed0b74372feefcbb9c0666b2e210da37b7e49fa7fbbf3eeb11db5f693dacfbb7.ttf",
+      "source_sha256": "ed0b74372feefcbb9c0666b2e210da37b7e49fa7fbbf3eeb11db5f693dacfbb7",
+      "sha256": "ed0b74372feefcbb9c0666b2e210da37b7e49fa7fbbf3eeb11db5f693dacfbb7",
+      "bytes": 12344
+    },
+    {
+      "path": "../../assets/fonts/74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f.woff2",
+      "source_sha256": "74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f",
+      "sha256": "74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f",
+      "bytes": 11348
+    },
+    {
+      "path": "../../assets/fonts/9be7ceb88004ab8ad124082246fbfcca4091e36385d4ec6ed1df67375dad50fb.woff",
+      "source_sha256": "9be7ceb88004ab8ad124082246fbfcca4091e36385d4ec6ed1df67375dad50fb",
+      "sha256": "9be7ceb88004ab8ad124082246fbfcca4091e36385d4ec6ed1df67375dad50fb",
+      "bytes": 13296
+    },
+    {
+      "path": "../../assets/fonts/9163df9c7122432e6495b4229fa9071cf9ae86a758ae5efc4924ec2e1a6dbce1.ttf",
+      "source_sha256": "9163df9c7122432e6495b4229fa9071cf9ae86a758ae5efc4924ec2e1a6dbce1",
+      "sha256": "9163df9c7122432e6495b4229fa9071cf9ae86a758ae5efc4924ec2e1a6dbce1",
+      "bytes": 19584
+    },
+    {
+      "path": "../../assets/fonts/51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc.woff2",
+      "source_sha256": "51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc",
+      "sha256": "51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc",
+      "bytes": 11316
+    },
+    {
+      "path": "../../assets/fonts/5e28753be717dac97f559f49bc10be9cf3c124ddcabda6659d11cb68febc6463.woff",
+      "source_sha256": "5e28753be717dac97f559f49bc10be9cf3c124ddcabda6659d11cb68febc6463",
+      "sha256": "5e28753be717dac97f559f49bc10be9cf3c124ddcabda6659d11cb68febc6463",
+      "bytes": 13208
+    },
+    {
+      "path": "../../assets/fonts/1e6f9579e90e2cac37f8f60a597c436e075c114385652b7cbeb0dec0421291b3.ttf",
+      "source_sha256": "1e6f9579e90e2cac37f8f60a597c436e075c114385652b7cbeb0dec0421291b3",
+      "sha256": "1e6f9579e90e2cac37f8f60a597c436e075c114385652b7cbeb0dec0421291b3",
+      "bytes": 19572
+    },
+    {
+      "path": "../../assets/fonts/0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021.woff2",
+      "source_sha256": "0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021",
+      "sha256": "0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021",
+      "bytes": 25324
+    },
+    {
+      "path": "../../assets/fonts/c76c5d696297d51b9cb1639c7da4334f0e7dec81b42b11213b5e25ef671bb822.woff",
+      "source_sha256": "c76c5d696297d51b9cb1639c7da4334f0e7dec81b42b11213b5e25ef671bb822",
+      "sha256": "c76c5d696297d51b9cb1639c7da4334f0e7dec81b42b11213b5e25ef671bb822",
+      "bytes": 29912
+    },
+    {
+      "path": "../../assets/fonts/138ac28d1663b3037e9c5f52371fa5c63d8324f4a38d22cd573e6ea3a3fd0cf8.ttf",
+      "source_sha256": "138ac28d1663b3037e9c5f52371fa5c63d8324f4a38d22cd573e6ea3a3fd0cf8",
+      "sha256": "138ac28d1663b3037e9c5f52371fa5c63d8324f4a38d22cd573e6ea3a3fd0cf8",
+      "bytes": 51336
+    },
+    {
+      "path": "../../assets/fonts/99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b.woff2",
+      "source_sha256": "99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b",
+      "sha256": "99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b",
+      "bytes": 16780
+    },
+    {
+      "path": "../../assets/fonts/a6f7ec0d846ac7ad975adb8959c37ed49b94acbc4ae436db9ce9e20287e4a64c.woff",
+      "source_sha256": "a6f7ec0d846ac7ad975adb8959c37ed49b94acbc4ae436db9ce9e20287e4a64c",
+      "sha256": "a6f7ec0d846ac7ad975adb8959c37ed49b94acbc4ae436db9ce9e20287e4a64c",
+      "bytes": 19412
+    },
+    {
+      "path": "../../assets/fonts/70ee1f64a20f2048c21940ef46d0144fd215baa953ca69afd1e31e98544f708f.ttf",
+      "source_sha256": "70ee1f64a20f2048c21940ef46d0144fd215baa953ca69afd1e31e98544f708f",
+      "sha256": "70ee1f64a20f2048c21940ef46d0144fd215baa953ca69afd1e31e98544f708f",
+      "bytes": 32968
+    },
+    {
+      "path": "../../assets/fonts/97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267.woff2",
+      "source_sha256": "97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267",
+      "sha256": "97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267",
+      "bytes": 16988
+    },
+    {
+      "path": "../../assets/fonts/f1d6ef86f3b11a528bd5185199bd2443ecb2b0dead96d88674b5a2c12be24bdf.woff",
+      "source_sha256": "f1d6ef86f3b11a528bd5185199bd2443ecb2b0dead96d88674b5a2c12be24bdf",
+      "sha256": "f1d6ef86f3b11a528bd5185199bd2443ecb2b0dead96d88674b5a2c12be24bdf",
+      "bytes": 19676
+    },
+    {
+      "path": "../../assets/fonts/0d85ae7cc30f23790a7f1a58c4a112fdca8aae769b6ba11429af1d98b1b6cb3a.ttf",
+      "source_sha256": "0d85ae7cc30f23790a7f1a58c4a112fdca8aae769b6ba11429af1d98b1b6cb3a",
+      "sha256": "0d85ae7cc30f23790a7f1a58c4a112fdca8aae769b6ba11429af1d98b1b6cb3a",
+      "bytes": 33580
+    },
+    {
+      "path": "../../assets/fonts/c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866.woff2",
+      "source_sha256": "c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866",
+      "sha256": "c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866",
+      "bytes": 26272
+    },
+    {
+      "path": "../../assets/fonts/c6368d87e8a1a3a5d337623d83d8dc4b868f242a9ad476237d6f8d1e0f168cdc.woff",
+      "source_sha256": "c6368d87e8a1a3a5d337623d83d8dc4b868f242a9ad476237d6f8d1e0f168cdc",
+      "sha256": "c6368d87e8a1a3a5d337623d83d8dc4b868f242a9ad476237d6f8d1e0f168cdc",
+      "bytes": 30772
+    },
+    {
+      "path": "../../assets/fonts/d0332f52868370fd83ae7fa46470f90c8f2eab2fcf12bc4f88080b340c95a830.ttf",
+      "source_sha256": "d0332f52868370fd83ae7fa46470f90c8f2eab2fcf12bc4f88080b340c95a830",
+      "sha256": "d0332f52868370fd83ae7fa46470f90c8f2eab2fcf12bc4f88080b340c95a830",
+      "bytes": 53580
+    },
+    {
+      "path": "../../assets/fonts/dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1.woff2",
+      "source_sha256": "dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1",
+      "sha256": "dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1",
+      "bytes": 16400
+    },
+    {
+      "path": "../../assets/fonts/850c0af5c2238497febaf5e461d880bf458c341f42f4f330f1b1ab5698b1998e.woff",
+      "source_sha256": "850c0af5c2238497febaf5e461d880bf458c341f42f4f330f1b1ab5698b1998e",
+      "sha256": "850c0af5c2238497febaf5e461d880bf458c341f42f4f330f1b1ab5698b1998e",
+      "bytes": 18668
+    },
+    {
+      "path": "../../assets/fonts/f9377ab0271cda59af24bcffbd46a4d0c8a3572ffafdbb38de2ad5ea7b0d5ee5.ttf",
+      "source_sha256": "f9377ab0271cda59af24bcffbd46a4d0c8a3572ffafdbb38de2ad5ea7b0d5ee5",
+      "sha256": "f9377ab0271cda59af24bcffbd46a4d0c8a3572ffafdbb38de2ad5ea7b0d5ee5",
+      "bytes": 31196
+    },
+    {
+      "path": "../../assets/fonts/7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264.woff2",
+      "source_sha256": "7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264",
+      "sha256": "7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264",
+      "bytes": 16440
+    },
+    {
+      "path": "../../assets/fonts/8a8d244581371912b8f3f5a23e2437cb2a59cd9bcaebb0346e722c05737a2571.woff",
+      "source_sha256": "8a8d244581371912b8f3f5a23e2437cb2a59cd9bcaebb0346e722c05737a2571",
+      "sha256": "8a8d244581371912b8f3f5a23e2437cb2a59cd9bcaebb0346e722c05737a2571",
+      "bytes": 18748
+    },
+    {
+      "path": "../../assets/fonts/08ce98e51b04d58945a301e639e02b6998af29fdfd61a7b8afdd07bbfc479d4a.ttf",
+      "source_sha256": "08ce98e51b04d58945a301e639e02b6998af29fdfd61a7b8afdd07bbfc479d4a",
+      "sha256": "08ce98e51b04d58945a301e639e02b6998af29fdfd61a7b8afdd07bbfc479d4a",
+      "bytes": 31308
+    },
+    {
+      "path": "../../assets/fonts/e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62.woff2",
+      "source_sha256": "e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62",
+      "sha256": "e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62",
+      "bytes": 12216
+    },
+    {
+      "path": "../../assets/fonts/ece03cfd83e22c212cdef66feb8442d25a083beb988db3f1883f3f9738d750ba.woff",
+      "source_sha256": "ece03cfd83e22c212cdef66feb8442d25a083beb988db3f1883f3f9738d750ba",
+      "sha256": "ece03cfd83e22c212cdef66feb8442d25a083beb988db3f1883f3f9738d750ba",
+      "bytes": 14408
+    },
+    {
+      "path": "../../assets/fonts/1ece03f79f95277d57dc7f6b435a74e1379b0d46104a8530286b60ff49369ea0.ttf",
+      "source_sha256": "1ece03f79f95277d57dc7f6b435a74e1379b0d46104a8530286b60ff49369ea0",
+      "sha256": "1ece03f79f95277d57dc7f6b435a74e1379b0d46104a8530286b60ff49369ea0",
+      "bytes": 24504
+    },
+    {
+      "path": "../../assets/fonts/00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a.woff2",
+      "source_sha256": "00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a",
+      "sha256": "00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a",
+      "bytes": 12028
+    },
+    {
+      "path": "../../assets/fonts/91ee67500cc0129aa0ace3ac5c61ff1692102f0f31d02b69347fba35dcb75bf2.woff",
+      "source_sha256": "91ee67500cc0129aa0ace3ac5c61ff1692102f0f31d02b69347fba35dcb75bf2",
+      "sha256": "91ee67500cc0129aa0ace3ac5c61ff1692102f0f31d02b69347fba35dcb75bf2",
+      "bytes": 14112
+    },
+    {
+      "path": "../../assets/fonts/3931dd81faed86ba021bb2bbdc36f5bed9a38d6b4f4077aca59b265aa1b02083.ttf",
+      "source_sha256": "3931dd81faed86ba021bb2bbdc36f5bed9a38d6b4f4077aca59b265aa1b02083",
+      "sha256": "3931dd81faed86ba021bb2bbdc36f5bed9a38d6b4f4077aca59b265aa1b02083",
+      "bytes": 22364
+    },
+    {
+      "path": "../../assets/fonts/68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342.woff2",
+      "source_sha256": "68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342",
+      "sha256": "68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342",
+      "bytes": 10344
+    },
+    {
+      "path": "../../assets/fonts/11e4dc8a6471ff6d6ee561d53d10fde8f7489e798257ff449c5d37c197435605.woff",
+      "source_sha256": "11e4dc8a6471ff6d6ee561d53d10fde8f7489e798257ff449c5d37c197435605",
+      "sha256": "11e4dc8a6471ff6d6ee561d53d10fde8f7489e798257ff449c5d37c197435605",
+      "bytes": 12316
+    },
+    {
+      "path": "../../assets/fonts/f36ea897e19f4a2e571d1e900e4e3710e438deb05a842486045ba0a3e616a4ad.ttf",
+      "source_sha256": "f36ea897e19f4a2e571d1e900e4e3710e438deb05a842486045ba0a3e616a4ad",
+      "sha256": "f36ea897e19f4a2e571d1e900e4e3710e438deb05a842486045ba0a3e616a4ad",
+      "bytes": 19436
+    },
+    {
+      "path": "../../assets/fonts/036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b.woff2",
+      "source_sha256": "036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b",
+      "sha256": "036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b",
+      "bytes": 9644
+    },
+    {
+      "path": "../../assets/fonts/d96cdf2b3bdd4d64a8fd5f74a4c467f123a8a73931cd435889f08ffaf9bf947a.woff",
+      "source_sha256": "d96cdf2b3bdd4d64a8fd5f74a4c467f123a8a73931cd435889f08ffaf9bf947a",
+      "sha256": "d96cdf2b3bdd4d64a8fd5f74a4c467f123a8a73931cd435889f08ffaf9bf947a",
+      "bytes": 10588
+    },
+    {
+      "path": "../../assets/fonts/1c67f068fea8bb09bf099c088b1cf64bd27516a6e07f4684344873564bb66a67.ttf",
+      "source_sha256": "1c67f068fea8bb09bf099c088b1cf64bd27516a6e07f4684344873564bb66a67",
+      "sha256": "1c67f068fea8bb09bf099c088b1cf64bd27516a6e07f4684344873564bb66a67",
+      "bytes": 16648
+    },
+    {
+      "path": "../../assets/fonts/6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe.woff2",
+      "source_sha256": "6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe",
+      "sha256": "6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe",
+      "bytes": 5468
+    },
+    {
+      "path": "../../assets/fonts/c943cc986384f59e86bea5fd7dc50a9c4dfe567a7c05eb40d6790720dead97c9.woff",
+      "source_sha256": "c943cc986384f59e86bea5fd7dc50a9c4dfe567a7c05eb40d6790720dead97c9",
+      "sha256": "c943cc986384f59e86bea5fd7dc50a9c4dfe567a7c05eb40d6790720dead97c9",
+      "bytes": 6496
+    },
+    {
+      "path": "../../assets/fonts/95b6d2f1a50173bfedb8c63e1d1c99b10427d0a4df4201cb44513b226951a22b.ttf",
+      "source_sha256": "95b6d2f1a50173bfedb8c63e1d1c99b10427d0a4df4201cb44513b226951a22b",
+      "sha256": "95b6d2f1a50173bfedb8c63e1d1c99b10427d0a4df4201cb44513b226951a22b",
+      "bytes": 12228
+    },
+    {
+      "path": "../../assets/fonts/d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd.woff2",
+      "source_sha256": "d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd",
+      "sha256": "d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd",
+      "bytes": 5208
+    },
+    {
+      "path": "../../assets/fonts/2014c523c3210bcc166648c4d4cc57f05b747df07a24277bf71c51e67dc79e3d.woff",
+      "source_sha256": "2014c523c3210bcc166648c4d4cc57f05b747df07a24277bf71c51e67dc79e3d",
+      "sha256": "2014c523c3210bcc166648c4d4cc57f05b747df07a24277bf71c51e67dc79e3d",
+      "bytes": 6188
+    },
+    {
+      "path": "../../assets/fonts/a6b2099fb555c60e3a0db3a08842ebf1d732c6eb4e4bf44913613bed4fc4e39b.ttf",
+      "source_sha256": "a6b2099fb555c60e3a0db3a08842ebf1d732c6eb4e4bf44913613bed4fc4e39b",
+      "sha256": "a6b2099fb555c60e3a0db3a08842ebf1d732c6eb4e4bf44913613bed4fc4e39b",
+      "bytes": 11508
+    },
+    {
+      "path": "../../assets/fonts/73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995.woff2",
+      "source_sha256": "73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995",
+      "sha256": "73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995",
+      "bytes": 3624
+    },
+    {
+      "path": "../../assets/fonts/6ab6b62e9b62dae2c00dd90f791bd10950be0ecc3490d7d6045f51c2e8fe0949.woff",
+      "source_sha256": "6ab6b62e9b62dae2c00dd90f791bd10950be0ecc3490d7d6045f51c2e8fe0949",
+      "sha256": "6ab6b62e9b62dae2c00dd90f791bd10950be0ecc3490d7d6045f51c2e8fe0949",
+      "bytes": 4420
+    },
+    {
+      "path": "../../assets/fonts/500e04d54f0d51666332c9d2089aa803be22aa878eca539e59fa53c6e522b082.ttf",
+      "source_sha256": "500e04d54f0d51666332c9d2089aa803be22aa878eca539e59fa53c6e522b082",
+      "sha256": "500e04d54f0d51666332c9d2089aa803be22aa878eca539e59fa53c6e522b082",
+      "bytes": 7588
+    },
+    {
+      "path": "../../assets/fonts/a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0.woff2",
+      "source_sha256": "a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0",
+      "sha256": "a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0",
+      "bytes": 4928
+    },
+    {
+      "path": "../../assets/fonts/99f9c6750b489c9462bf04900bd3f939df9b829339daaaaa99ef5495cdddea58.woff",
+      "source_sha256": "99f9c6750b489c9462bf04900bd3f939df9b829339daaaaa99ef5495cdddea58",
+      "sha256": "99f9c6750b489c9462bf04900bd3f939df9b829339daaaaa99ef5495cdddea58",
+      "bytes": 5980
+    },
+    {
+      "path": "../../assets/fonts/c647367d1dd4e162468717d020e1fc0f1dc5c26ebfdffbe55261713bf88c5877.ttf",
+      "source_sha256": "c647367d1dd4e162468717d020e1fc0f1dc5c26ebfdffbe55261713bf88c5877",
+      "sha256": "c647367d1dd4e162468717d020e1fc0f1dc5c26ebfdffbe55261713bf88c5877",
+      "bytes": 10364
+    },
+    {
+      "path": "../../assets/fonts/71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b.woff2",
+      "source_sha256": "71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b",
+      "sha256": "71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b",
+      "bytes": 13568
+    },
+    {
+      "path": "../../assets/fonts/e14fed02b1aba7ce9f5afd5844b5d0321b22351febc720e0de8b8723527609f7.woff",
+      "source_sha256": "e14fed02b1aba7ce9f5afd5844b5d0321b22351febc720e0de8b8723527609f7",
+      "sha256": "e14fed02b1aba7ce9f5afd5844b5d0321b22351febc720e0de8b8723527609f7",
+      "bytes": 16028
+    },
+    {
+      "path": "../../assets/fonts/f01f3e87d9c6a61c0c081ceb577abd864eb00a612f7ac1620dd6915fad2ef5aa.ttf",
+      "source_sha256": "f01f3e87d9c6a61c0c081ceb577abd864eb00a612f7ac1620dd6915fad2ef5aa",
+      "sha256": "f01f3e87d9c6a61c0c081ceb577abd864eb00a612f7ac1620dd6915fad2ef5aa",
+      "bytes": 27556
+    },
+    {
       "path": "assets/vendor/katex/katex.min.css",
-      "bytes": 23335,
-      "sha256": "717bc9ae7853b61f0f76455dddf0ecd4f527a783f42de2ac24684899c1c46258"
+      "source_sha256": "717bc9ae7853b61f0f76455dddf0ecd4f527a783f42de2ac24684899c1c46258",
+      "sha256": "14c985e9f8990c3840d6336586695b4bee67c08be83eea7f71c5267ca2c08f4d",
+      "bytes": 27424
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_AMS-Regular.woff2",
-      "bytes": 28076,
-      "sha256": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308"
+      "path": "assets/reader-full/reader.css",
+      "source_sha256": "c2e223390cbec2d72e366c5056ab223862c2f5dd91a1626b0b750d34725fa844",
+      "sha256": "c2e223390cbec2d72e366c5056ab223862c2f5dd91a1626b0b750d34725fa844",
+      "bytes": 9983
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_AMS-Regular.woff",
-      "bytes": 33516,
-      "sha256": "30da91e84c893f875e252689faebdc590b2871145e8adc7f9a9d4dbd8ce0b251"
+      "path": "../../assets/media/3fecf9bb6da10bc04158cd5da1d51ac4a5c72ca094c76f975546c6b3db126fdc.webp",
+      "source_sha256": "3fecf9bb6da10bc04158cd5da1d51ac4a5c72ca094c76f975546c6b3db126fdc",
+      "sha256": "82b98454d856aa42125966503b0d497c89f4a662d89ae715d09b3ddecfd30499",
+      "bytes": 1163318,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_AMS-Regular.ttf",
-      "bytes": 63632,
-      "sha256": "68534840bcfdd2bffb6f0e8deb48684dd01e7f04ea2813267577afb906de1d13"
+      "path": "../../assets/media/b49128dede8d385532d900fe3347bc7b3fbe6a426a4a8e28c9d0abc82b80f5c5.webp",
+      "source_sha256": "b49128dede8d385532d900fe3347bc7b3fbe6a426a4a8e28c9d0abc82b80f5c5",
+      "sha256": "cef7606c61d3cbdde7f2ff09b81fb130ec6dd2c170a19fd42ac04e06324323c9",
+      "bytes": 1141624,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Caligraphic-Bold.woff2",
-      "bytes": 6912,
-      "sha256": "de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c"
+      "path": "assets/original/95ff1c52fbc6-main.tex",
+      "source_sha256": "95ff1c52fbc67313076ae0c589da7bcda59bf47599f1e1b8323e488d39ebee7b",
+      "sha256": "95ff1c52fbc67313076ae0c589da7bcda59bf47599f1e1b8323e488d39ebee7b",
+      "bytes": 73017
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Caligraphic-Bold.woff",
-      "bytes": 7716,
-      "sha256": "1ae6bd7475590e97e7f145a89e09ccde322f7a6bc0b91607b1c8b8ee28290fed"
+      "path": "../../assets/media/cf143a9f5e37488e710d88ea3ef2b6d6372411050dce6481b798a801679f6970.webp",
+      "source_sha256": "cf143a9f5e37488e710d88ea3ef2b6d6372411050dce6481b798a801679f6970",
+      "sha256": "588a1accfd749d2ae5f8e68861f4310f5c8b6fc05659556a0d0eaa3de2c85cc9",
+      "bytes": 161540,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Caligraphic-Bold.ttf",
-      "bytes": 12368,
-      "sha256": "07d8e303ce4fc12b4bb54f1004170dd190a1f3db45d400fe68060df3e0897268"
+      "path": "../../assets/media/3b529bb1f4c55f1f1268467ecc7b8a31f850d0531c58e03b161fb23cd1754fe3.webp",
+      "source_sha256": "3b529bb1f4c55f1f1268467ecc7b8a31f850d0531c58e03b161fb23cd1754fe3",
+      "sha256": "83f37d78065206a93c677e10f87b59e5118552bdf675e2245b6f92fa56f85eb5",
+      "bytes": 189766,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Caligraphic-Regular.woff2",
-      "bytes": 6908,
-      "sha256": "5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b"
+      "path": "../../assets/media/cd0e124efca90cb799402986875362a8503915180cba562503af56ce9fd39592.webp",
+      "source_sha256": "cd0e124efca90cb799402986875362a8503915180cba562503af56ce9fd39592",
+      "sha256": "a340d36de5f15d69edd119d452e9da11aeb0c356e3da5d86486252c8ba902f7c",
+      "bytes": 968440,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Caligraphic-Regular.woff",
-      "bytes": 7656,
-      "sha256": "3398dd02302557a793f2863f88e02d96ce10df2abffa07c8e9fa90775116e65c"
+      "path": "../../assets/media/1d43c8d0a30b71f3c9ffed3776d8760a14303e0b71e32f30a769b1a4e1fd0e49.webp",
+      "source_sha256": "1d43c8d0a30b71f3c9ffed3776d8760a14303e0b71e32f30a769b1a4e1fd0e49",
+      "sha256": "5cdb08f927f6aff58e4bd5a53e3fba8723f0ab9c0b40733493a658889ff9f7ed",
+      "bytes": 870272,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Caligraphic-Regular.ttf",
-      "bytes": 12344,
-      "sha256": "ed0b74372feefcbb9c0666b2e210da37b7e49fa7fbbf3eeb11db5f693dacfbb7"
+      "path": "assets/original/7462f36a40a5-rssm.py",
+      "source_sha256": "7462f36a40a504ec912435bd6c5a78fd6878308826888341a20c602291b12712",
+      "sha256": "7462f36a40a504ec912435bd6c5a78fd6878308826888341a20c602291b12712",
+      "bytes": 4850
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Fraktur-Bold.woff2",
-      "bytes": 11348,
-      "sha256": "74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f"
+      "path": "assets/original/74c589aa1bfd-planning.py",
+      "source_sha256": "74c589aa1bfd2fccd7ad0dd5fa871c08d2b0d44795990c4345a6c6712ae556fd",
+      "sha256": "74c589aa1bfd2fccd7ad0dd5fa871c08d2b0d44795990c4345a6c6712ae556fd",
+      "bytes": 2676
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Fraktur-Bold.woff",
-      "bytes": 13296,
-      "sha256": "9be7ceb88004ab8ad124082246fbfcca4091e36385d4ec6ed1df67375dad50fb"
+      "path": "assets/original/642141916ed2-mpc_agent.py",
+      "source_sha256": "642141916ed2a5931d587fd340f4e73b3f1ef356db6b44a9ef28e06e4ab463e4",
+      "sha256": "642141916ed2a5931d587fd340f4e73b3f1ef356db6b44a9ef28e06e4ab463e4",
+      "bytes": 3579
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Fraktur-Bold.ttf",
-      "bytes": 19584,
-      "sha256": "9163df9c7122432e6495b4229fa9071cf9ae86a758ae5efc4924ec2e1a6dbce1"
+      "path": "assets/original/a98af57c64c9-configs.py",
+      "source_sha256": "a98af57c64c9f6f1d8d3b3a29caec922938e6daf552cbf944f6007465e985807",
+      "sha256": "a98af57c64c9f6f1d8d3b3a29caec922938e6daf552cbf944f6007465e985807",
+      "bytes": 11140
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Fraktur-Regular.woff2",
-      "bytes": 11316,
-      "sha256": "51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc"
+      "path": "../../assets/media/694eecb11e358b6949b995bd2f8c096080b8b00ee7ad584856f250fce55bd55e.webp",
+      "source_sha256": "694eecb11e358b6949b995bd2f8c096080b8b00ee7ad584856f250fce55bd55e",
+      "sha256": "87562c99ecdb73ddfb8cef15a388a1745d386f6a5c475e9905a89c7d7238361e",
+      "bytes": 987806,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Fraktur-Regular.woff",
-      "bytes": 13208,
-      "sha256": "5e28753be717dac97f559f49bc10be9cf3c124ddcabda6659d11cb68febc6463"
+      "path": "../../assets/media/b30938a0b78640fc4edd98479ee0d248a87e6da917ef16263aa747eafdb6e350.webp",
+      "source_sha256": "b30938a0b78640fc4edd98479ee0d248a87e6da917ef16263aa747eafdb6e350",
+      "sha256": "3339f10d6ca2ab4006a401707efe939d0f92b62ae5527cc0fb97f0068492bc9d",
+      "bytes": 117642,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Fraktur-Regular.ttf",
-      "bytes": 19572,
-      "sha256": "1e6f9579e90e2cac37f8f60a597c436e075c114385652b7cbeb0dec0421291b3"
+      "path": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/models/rssm.py",
+      "source_sha256": "7462f36a40a504ec912435bd6c5a78fd6878308826888341a20c602291b12712",
+      "sha256": "7462f36a40a504ec912435bd6c5a78fd6878308826888341a20c602291b12712",
+      "bytes": 4850
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-Bold.woff2",
-      "bytes": 25324,
-      "sha256": "0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021"
+      "path": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/models/rssm.py.html",
+      "source_sha256": "0cf366429c604ff791ab6fbf221160f8b84a19de8975926b7491f8221d157d45",
+      "sha256": "05aad77584e8547898ed46c65240211a7231930259ea152a758b632d607fd2b2",
+      "bytes": 15626
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-Bold.woff",
-      "bytes": 29912,
-      "sha256": "c76c5d696297d51b9cb1639c7da4334f0e7dec81b42b11213b5e25ef671bb822"
+      "path": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/tools/overshooting.py",
+      "source_sha256": "c87beb84bc4304a26af833f4e39b692c1b37e632bce63f1ec6405dfa2a5b1358",
+      "sha256": "c87beb84bc4304a26af833f4e39b692c1b37e632bce63f1ec6405dfa2a5b1358",
+      "bytes": 6074
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-Bold.ttf",
-      "bytes": 51336,
-      "sha256": "138ac28d1663b3037e9c5f52371fa5c63d8324f4a38d22cd573e6ea3a3fd0cf8"
+      "path": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/tools/overshooting.py.html",
+      "source_sha256": "ac85aa67e8e35b3eca13ee48b786add7d20de9c2389d3b03b1d36cb6a3bdd0d8",
+      "sha256": "63c494b1280617d2400f4271b592ca42798c100b54564c518e339651e4f9cf53",
+      "bytes": 19494
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-BoldItalic.woff2",
-      "bytes": 16780,
-      "sha256": "99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b"
+      "path": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/control/mpc_agent.py",
+      "source_sha256": "642141916ed2a5931d587fd340f4e73b3f1ef356db6b44a9ef28e06e4ab463e4",
+      "sha256": "642141916ed2a5931d587fd340f4e73b3f1ef356db6b44a9ef28e06e4ab463e4",
+      "bytes": 3579
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-BoldItalic.woff",
-      "bytes": 19412,
-      "sha256": "a6f7ec0d846ac7ad975adb8959c37ed49b94acbc4ae436db9ce9e20287e4a64c"
+      "path": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/control/mpc_agent.py.html",
+      "source_sha256": "83e8b4827e2f92707b312db9ce6c7d94de69329fba69ba87446fc80333b51980",
+      "sha256": "93399f965fe77e1a21727049bd2a7f4a9d7de89b18f1fa792f806563be7ec51c",
+      "bytes": 10673
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-BoldItalic.ttf",
-      "bytes": 32968,
-      "sha256": "70ee1f64a20f2048c21940ef46d0144fd215baa953ca69afd1e31e98544f708f"
+      "path": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/training/utility.py",
+      "source_sha256": "885d3d29ccc3b15cc71a7a32da5ff952313b37d76e6804cd96e7bc969f467f15",
+      "sha256": "885d3d29ccc3b15cc71a7a32da5ff952313b37d76e6804cd96e7bc969f467f15",
+      "bytes": 12238
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-Italic.woff2",
-      "bytes": 16988,
-      "sha256": "97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267"
+      "path": "assets/attachments/code/S002/sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/training/utility.py.html",
+      "source_sha256": "96457a8e1bff35b91e51fe20c80ab39e17066a666a4139b169f5bfd709ad1996",
+      "sha256": "1b9fb3937a6ce5eef02bb476d8c8477f6b9e50d3e972ac4ea975d8ff079b9c25",
+      "bytes": 37916
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-Italic.woff",
-      "bytes": 19676,
-      "sha256": "f1d6ef86f3b11a528bd5185199bd2443ecb2b0dead96d88674b5a2c12be24bdf"
+      "path": "../../assets/media/0507141be706a36c26e0c1bcd14ce9cfeb9fb0554ae598d9e5754e12fa2865cc.webp",
+      "source_sha256": "0507141be706a36c26e0c1bcd14ce9cfeb9fb0554ae598d9e5754e12fa2865cc",
+      "sha256": "beb7fc4e5d0744aeea30e64c2c9156083e84b44b3e4c806a8aa685220b09a5a2",
+      "bytes": 124948,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-Italic.ttf",
-      "bytes": 33580,
-      "sha256": "0d85ae7cc30f23790a7f1a58c4a112fdca8aae769b6ba11429af1d98b1b6cb3a"
+      "path": "assets/original/c87beb84bc43-overshooting.py",
+      "source_sha256": "c87beb84bc4304a26af833f4e39b692c1b37e632bce63f1ec6405dfa2a5b1358",
+      "sha256": "c87beb84bc4304a26af833f4e39b692c1b37e632bce63f1ec6405dfa2a5b1358",
+      "bytes": 6074
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-Regular.woff2",
-      "bytes": 26272,
-      "sha256": "c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866"
+      "path": "assets/original/885d3d29ccc3-utility.py",
+      "source_sha256": "885d3d29ccc3b15cc71a7a32da5ff952313b37d76e6804cd96e7bc969f467f15",
+      "sha256": "885d3d29ccc3b15cc71a7a32da5ff952313b37d76e6804cd96e7bc969f467f15",
+      "bytes": 12238
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-Regular.woff",
-      "bytes": 30772,
-      "sha256": "c6368d87e8a1a3a5d337623d83d8dc4b868f242a9ad476237d6f8d1e0f168cdc"
+      "path": "../../assets/media/e43e0bdbbf1b8195d45cbe5328704f02dca32c4d625c10dabeec6ff0afb609c1.webp",
+      "source_sha256": "e43e0bdbbf1b8195d45cbe5328704f02dca32c4d625c10dabeec6ff0afb609c1",
+      "sha256": "c4699b0fdf5c08d85a48b0b76a7338fdea1cfbdb881c906d13e91faa02794473",
+      "bytes": 983688,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Main-Regular.ttf",
-      "bytes": 53580,
-      "sha256": "d0332f52868370fd83ae7fa46470f90c8f2eab2fcf12bc4f88080b340c95a830"
+      "path": "assets/original/46668df69420-utility.py",
+      "source_sha256": "46668df6942013d81a69ff5d73280fb32d4eaa1fb344e3a482441986ff29ea23",
+      "sha256": "46668df6942013d81a69ff5d73280fb32d4eaa1fb344e3a482441986ff29ea23",
+      "bytes": 21416
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Math-BoldItalic.woff2",
-      "bytes": 16400,
-      "sha256": "dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1"
+      "path": "assets/original/3b37a963b7cc-rssm.py",
+      "source_sha256": "3b37a963b7cca2c3bae0ba37c9a9f579d12cac8cd2af590234d17cb5a518c9ee",
+      "sha256": "3b37a963b7cca2c3bae0ba37c9a9f579d12cac8cd2af590234d17cb5a518c9ee",
+      "bytes": 4107
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Math-BoldItalic.woff",
-      "bytes": 18668,
-      "sha256": "850c0af5c2238497febaf5e461d880bf458c341f42f4f330f1b1ab5698b1998e"
+      "path": "assets/original/19e55d4972ec-temporal_difference.py",
+      "source_sha256": "19e55d4972ec63f9879debf360386d82efe2828f2406ef94493f5769550fac06",
+      "sha256": "19e55d4972ec63f9879debf360386d82efe2828f2406ef94493f5769550fac06",
+      "bytes": 3485
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Math-BoldItalic.ttf",
-      "bytes": 31196,
-      "sha256": "f9377ab0271cda59af24bcffbd46a4d0c8a3572ffafdbb38de2ad5ea7b0d5ee5"
+      "path": "../../assets/media/b9335a3a6ffe12883714c5587222d01ffda5489cf040e95b1b8bdb2299173977.webp",
+      "source_sha256": "b9335a3a6ffe12883714c5587222d01ffda5489cf040e95b1b8bdb2299173977",
+      "sha256": "696c33b3f8f4ada5521f48edbb57122bf0073052cb24c2763a1dd4ffa67d4ff7",
+      "bytes": 1008704,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Math-Italic.woff2",
-      "bytes": 16440,
-      "sha256": "7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264"
+      "path": "../../assets/media/c0bbb9c2e5fcbb5d5d9804bf6e7f4119be3edbe4d037d17ac638e5d01ea2dfac.webp",
+      "source_sha256": "c0bbb9c2e5fcbb5d5d9804bf6e7f4119be3edbe4d037d17ac638e5d01ea2dfac",
+      "sha256": "b35e62c3dee82094631fdc292ef58cdfa0ef986b407d7587c61098c103a0b910",
+      "bytes": 127616,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Math-Italic.woff",
-      "bytes": 18748,
-      "sha256": "8a8d244581371912b8f3f5a23e2437cb2a59cd9bcaebb0346e722c05737a2571"
+      "path": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/models/rssm.py",
+      "source_sha256": "3b37a963b7cca2c3bae0ba37c9a9f579d12cac8cd2af590234d17cb5a518c9ee",
+      "sha256": "3b37a963b7cca2c3bae0ba37c9a9f579d12cac8cd2af590234d17cb5a518c9ee",
+      "bytes": 4107
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Math-Italic.ttf",
-      "bytes": 31308,
-      "sha256": "08ce98e51b04d58945a301e639e02b6998af29fdfd61a7b8afdd07bbfc479d4a"
+      "path": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/models/rssm.py.html",
+      "source_sha256": "68a66e83093675d32cb65f16f5e85f5540971085fba187771a319655a8502847",
+      "sha256": "6576bce19def35821df6f86d041e24ad6c5a2cd00cc17a9553ca61fea97448d5",
+      "bytes": 13427
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_SansSerif-Bold.woff2",
-      "bytes": 12216,
-      "sha256": "e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62"
+      "path": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/training/utility.py",
+      "source_sha256": "46668df6942013d81a69ff5d73280fb32d4eaa1fb344e3a482441986ff29ea23",
+      "sha256": "46668df6942013d81a69ff5d73280fb32d4eaa1fb344e3a482441986ff29ea23",
+      "bytes": 21416
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_SansSerif-Bold.woff",
-      "bytes": 14408,
-      "sha256": "ece03cfd83e22c212cdef66feb8442d25a083beb988db3f1883f3f9738d750ba"
+      "path": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/training/utility.py.html",
+      "source_sha256": "a98366ce5e219d40080f3cf07eb720d3fcdd49d99993185a4a0447cbac283eb8",
+      "sha256": "dded32a4e0a2c86537fcaf8a93d975a4261911ad23a9d80b4fd9ae0c8b02781b",
+      "bytes": 62960
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_SansSerif-Bold.ttf",
-      "bytes": 24504,
-      "sha256": "1ece03f79f95277d57dc7f6b435a74e1379b0d46104a8530286b60ff49369ea0"
+      "path": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/control/temporal_difference.py",
+      "source_sha256": "19e55d4972ec63f9879debf360386d82efe2828f2406ef94493f5769550fac06",
+      "sha256": "19e55d4972ec63f9879debf360386d82efe2828f2406ef94493f5769550fac06",
+      "bytes": 3485
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_SansSerif-Italic.woff2",
-      "bytes": 12028,
-      "sha256": "00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a"
+      "path": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/control/temporal_difference.py.html",
+      "source_sha256": "2faf6672ff73f970bf2c208fc9aa4f45044ae8b033af8c9da4d7c2e7de12c66f",
+      "sha256": "a26a3305ce62a8fb7e4bf95ee74637378053f18fad7804ae058c9bb17f7c44cd",
+      "bytes": 10972
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_SansSerif-Italic.woff",
-      "bytes": 14112,
-      "sha256": "91ee67500cc0129aa0ace3ac5c61ff1692102f0f31d02b69347fba35dcb75bf2"
+      "path": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/scripts/train.py",
+      "source_sha256": "1c6954ee78af386b99dad93bd5bb28c4a793a57b0022552e469307248df8b656",
+      "sha256": "1c6954ee78af386b99dad93bd5bb28c4a793a57b0022552e469307248df8b656",
+      "bytes": 3099
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_SansSerif-Italic.ttf",
-      "bytes": 22364,
-      "sha256": "3931dd81faed86ba021bb2bbdc36f5bed9a38d6b4f4077aca59b265aa1b02083"
+      "path": "assets/attachments/code/S003/sources/repos/dreamerv1/snapshot/dreamer-53e79b0fb8e384e55f6b34169e511cd9d95f844b/dreamer/scripts/train.py.html",
+      "source_sha256": "36d4d3dfd2ab2cb91276fdbbc438c32a886f19dbe15a347415f2bed20390f94e",
+      "sha256": "87edf9a32889a7f1a5509da300fce4e5d7c3c2912e84702fa69cf2ffb899981f",
+      "bytes": 9981
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_SansSerif-Regular.woff2",
-      "bytes": 10344,
-      "sha256": "68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342"
+      "path": "../../assets/media/eac91839824caaa63d903798e41943006d05445fe292ed2602bd91c40778ba88.webp",
+      "source_sha256": "eac91839824caaa63d903798e41943006d05445fe292ed2602bd91c40778ba88",
+      "sha256": "9755a81cd80d46c76bcd6c209e3ee5bd13c89f6dd9c790c00ace0e4d6aff053e",
+      "bytes": 99588,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_SansSerif-Regular.woff",
-      "bytes": 12316,
-      "sha256": "11e4dc8a6471ff6d6ee561d53d10fde8f7489e798257ff449c5d37c197435605"
+      "path": "../../assets/media/f0af5037f030af320d97aa985704ca2f430a2a4842c3d47b45d73145743186af.webp",
+      "source_sha256": "f0af5037f030af320d97aa985704ca2f430a2a4842c3d47b45d73145743186af",
+      "sha256": "ca7c0fe8776036f7146f1e80d2b7571cf732c930d25d3069672da072d71b9b83",
+      "bytes": 1080312,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_SansSerif-Regular.ttf",
-      "bytes": 19436,
-      "sha256": "f36ea897e19f4a2e571d1e900e4e3710e438deb05a842486045ba0a3e616a4ad"
+      "path": "../../assets/media/96605ff3ebdb5493ef2a9daa1ee93b6ae65302e1ed78f806506276b2d66a57e2.webp",
+      "source_sha256": "96605ff3ebdb5493ef2a9daa1ee93b6ae65302e1ed78f806506276b2d66a57e2",
+      "sha256": "e21b909abd5098b52fbc479f3633ec91398c45204592738b0636c63d71275d2c",
+      "bytes": 1181894,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Script-Regular.woff2",
-      "bytes": 9644,
-      "sha256": "036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b"
+      "path": "assets/original/1c6954ee78af-train.py",
+      "source_sha256": "1c6954ee78af386b99dad93bd5bb28c4a793a57b0022552e469307248df8b656",
+      "sha256": "1c6954ee78af386b99dad93bd5bb28c4a793a57b0022552e469307248df8b656",
+      "bytes": 3099
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Script-Regular.woff",
-      "bytes": 10588,
-      "sha256": "d96cdf2b3bdd4d64a8fd5f74a4c467f123a8a73931cd435889f08ffaf9bf947a"
+      "path": "../../assets/media/c4921353f0c66c2dd21cb2da07b4bf47ea45c2d3d9c690c6c82eef745e5e9fb0.webp",
+      "source_sha256": "c4921353f0c66c2dd21cb2da07b4bf47ea45c2d3d9c690c6c82eef745e5e9fb0",
+      "sha256": "556d9f6045f26bcc72cae2849bccc3e23ace54a17b2ff2852141a6817e508b09",
+      "bytes": 1157098,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Script-Regular.ttf",
-      "bytes": 16648,
-      "sha256": "1c67f068fea8bb09bf099c088b1cf64bd27516a6e07f4684344873564bb66a67"
+      "path": "assets/original/02c160c322ef-agent.py",
+      "source_sha256": "02c160c322ef270c76051743f329f71b5d01139f6760f52401545d3d12394181",
+      "sha256": "02c160c322ef270c76051743f329f71b5d01139f6760f52401545d3d12394181",
+      "bytes": 13833
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size1-Regular.woff2",
-      "bytes": 5468,
-      "sha256": "6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe"
+      "path": "assets/original/0e6be9c33793-dists.py",
+      "source_sha256": "0e6be9c33793cbe39a7afa6fc40a3aca9e1754ca93353f99f082c1da88b61f17",
+      "sha256": "0e6be9c33793cbe39a7afa6fc40a3aca9e1754ca93353f99f082c1da88b61f17",
+      "bytes": 3216
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size1-Regular.woff",
-      "bytes": 6496,
-      "sha256": "c943cc986384f59e86bea5fd7dc50a9c4dfe567a7c05eb40d6790720dead97c9"
+      "path": "assets/original/c66e6fcde10d-nets.py",
+      "source_sha256": "c66e6fcde10d92fdfc9c4e815fa9260abeddc2784fe38575211441e667d79d3c",
+      "sha256": "c66e6fcde10d92fdfc9c4e815fa9260abeddc2784fe38575211441e667d79d3c",
+      "bytes": 15219
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size1-Regular.ttf",
-      "bytes": 12228,
-      "sha256": "95b6d2f1a50173bfedb8c63e1d1c99b10427d0a4df4201cb44513b226951a22b"
+      "path": "../../assets/media/27bd80a9b2db10986eed055a7d0514651f7702b15766aa3b1d88d96219e91886.webp",
+      "source_sha256": "27bd80a9b2db10986eed055a7d0514651f7702b15766aa3b1d88d96219e91886",
+      "sha256": "d95d1f530bed600aeb8676ce460426df9c151b63aad72907cba8ee44e41e4134",
+      "bytes": 1154298,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size2-Regular.woff2",
-      "bytes": 5208,
-      "sha256": "d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd"
+      "path": "../../assets/media/4cd79443f799b638891ae1beb4ca1f0a6efe1ffabe3f26f47f0377d5327a90b9.webp",
+      "source_sha256": "4cd79443f799b638891ae1beb4ca1f0a6efe1ffabe3f26f47f0377d5327a90b9",
+      "sha256": "b59928e1ebf11372c08444f41106dcd5c8ad51d825c50407fba3aba6f24d2024",
+      "bytes": 86766,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size2-Regular.woff",
-      "bytes": 6188,
-      "sha256": "2014c523c3210bcc166648c4d4cc57f05b747df07a24277bf71c51e67dc79e3d"
+      "path": "assets/attachments/code/S004/sources/repos/dreamerv2/snapshot/dreamerv2-07d906e9c4322c6fc2cd6ed23e247ccd6b7c8c41/dreamerv2/agent.py",
+      "source_sha256": "02c160c322ef270c76051743f329f71b5d01139f6760f52401545d3d12394181",
+      "sha256": "02c160c322ef270c76051743f329f71b5d01139f6760f52401545d3d12394181",
+      "bytes": 13833
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size2-Regular.ttf",
-      "bytes": 11508,
-      "sha256": "a6b2099fb555c60e3a0db3a08842ebf1d732c6eb4e4bf44913613bed4fc4e39b"
+      "path": "assets/attachments/code/S004/sources/repos/dreamerv2/snapshot/dreamerv2-07d906e9c4322c6fc2cd6ed23e247ccd6b7c8c41/dreamerv2/agent.py.html",
+      "source_sha256": "17e616703c5cb4c2be15ff1b29665056fbed04049f10e11e560a34037154a752",
+      "sha256": "8573776d703cd037bb46b596aba7e281faf1d1db0854891a760071048b5d993b",
+      "bytes": 38778
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size3-Regular.woff2",
-      "bytes": 3624,
-      "sha256": "73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995"
+      "path": "assets/attachments/code/S004/sources/repos/dreamerv2/snapshot/dreamerv2-07d906e9c4322c6fc2cd6ed23e247ccd6b7c8c41/dreamerv2/common/nets.py",
+      "source_sha256": "c66e6fcde10d92fdfc9c4e815fa9260abeddc2784fe38575211441e667d79d3c",
+      "sha256": "c66e6fcde10d92fdfc9c4e815fa9260abeddc2784fe38575211441e667d79d3c",
+      "bytes": 15219
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size3-Regular.woff",
-      "bytes": 4420,
-      "sha256": "6ab6b62e9b62dae2c00dd90f791bd10950be0ecc3490d7d6045f51c2e8fe0949"
+      "path": "assets/attachments/code/S004/sources/repos/dreamerv2/snapshot/dreamerv2-07d906e9c4322c6fc2cd6ed23e247ccd6b7c8c41/dreamerv2/common/nets.py.html",
+      "source_sha256": "c3c924efbde8ea3e0075232fe37614deeb038861e6b78a78a35dc43e36bb38bf",
+      "sha256": "73573e73a6b1057601048b8723d0e25c1fbbc8a96a4d7ca1781c2ef6794f9270",
+      "bytes": 46304
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size3-Regular.ttf",
-      "bytes": 7588,
-      "sha256": "500e04d54f0d51666332c9d2089aa803be22aa878eca539e59fa53c6e522b082"
+      "path": "assets/attachments/code/S004/sources/repos/dreamerv2/snapshot/dreamerv2-07d906e9c4322c6fc2cd6ed23e247ccd6b7c8c41/dreamerv2/common/other.py",
+      "source_sha256": "fbd9475e736fe73a97c7c9c9bafcc79655e6d63de9654a3a166762e9f4084567",
+      "sha256": "fbd9475e736fe73a97c7c9c9bafcc79655e6d63de9654a3a166762e9f4084567",
+      "bytes": 6241
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size4-Regular.woff2",
-      "bytes": 4928,
-      "sha256": "a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0"
+      "path": "assets/attachments/code/S004/sources/repos/dreamerv2/snapshot/dreamerv2-07d906e9c4322c6fc2cd6ed23e247ccd6b7c8c41/dreamerv2/common/other.py.html",
+      "source_sha256": "bc238623c21b8d268ceb90b868bd570ae718b5b30717df576f5adaa35d78547d",
+      "sha256": "064b7a770571767493fb44d5b2a66aa4b3a33d85ade33e1f4c1fdd987356b795",
+      "bytes": 21558
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size4-Regular.woff",
-      "bytes": 5980,
-      "sha256": "99f9c6750b489c9462bf04900bd3f939df9b829339daaaaa99ef5495cdddea58"
+      "path": "../../assets/media/f71d96ff7ba5d0b85c4490c92bf5c2af32acf28e049432280c026349bbabafd3.webp",
+      "source_sha256": "f71d96ff7ba5d0b85c4490c92bf5c2af32acf28e049432280c026349bbabafd3",
+      "sha256": "b233f1639dd861373a28752b65f0836d0c3c1f8614b65860033f10c2f0275678",
+      "bytes": 108968,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Size4-Regular.ttf",
-      "bytes": 10364,
-      "sha256": "c647367d1dd4e162468717d020e1fc0f1dc5c26ebfdffbe55261713bf88c5877"
+      "path": "assets/original/fbd9475e736f-other.py",
+      "source_sha256": "fbd9475e736fe73a97c7c9c9bafcc79655e6d63de9654a3a166762e9f4084567",
+      "sha256": "fbd9475e736fe73a97c7c9c9bafcc79655e6d63de9654a3a166762e9f4084567",
+      "bytes": 6241
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Typewriter-Regular.woff2",
-      "bytes": 13568,
-      "sha256": "71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b"
+      "path": "../../assets/media/46de5c48820c3830939917bdad99e4ec27c39acd7032efc1fa3bb763a34d063f.webp",
+      "source_sha256": "46de5c48820c3830939917bdad99e4ec27c39acd7032efc1fa3bb763a34d063f",
+      "sha256": "e3971a62e47b35430f34b60eac6f08ffc0d90fd30f148153cfccb09ba7de23f5",
+      "bytes": 1259210,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Typewriter-Regular.woff",
-      "bytes": 16028,
-      "sha256": "e14fed02b1aba7ce9f5afd5844b5d0321b22351febc720e0de8b8723527609f7"
+      "path": "../../assets/media/0c94406686c6ce9b8452937fca046a307a60247b25ac426b2bfa00d07cfdfb2b.webp",
+      "source_sha256": "0c94406686c6ce9b8452937fca046a307a60247b25ac426b2bfa00d07cfdfb2b",
+      "sha256": "894c30591684ab0d84d790407947b9a053bd2faa00f11cabf222decfa98b87c0",
+      "bytes": 1082900,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/vendor/katex/fonts/KaTeX_Typewriter-Regular.ttf",
-      "bytes": 27556,
-      "sha256": "f01f3e87d9c6a61c0c081ceb577abd864eb00a612f7ac1620dd6915fad2ef5aa"
+      "path": "assets/original/adce8e4274bc-agent.py",
+      "source_sha256": "adce8e4274bc098c218bf9a20fd3327545f0ad7d850b5fe328597382e91b5269",
+      "sha256": "adce8e4274bc098c218bf9a20fd3327545f0ad7d850b5fe328597382e91b5269",
+      "bytes": 18262
     },
     {
-      "path": "assets/reader-r22/reader.css",
-      "bytes": 8287,
-      "sha256": "c8c80c514318fab00a71e4b50a194ceb04f0afd53839ed017d05256361b947ad"
+      "path": "assets/original/d6d50166914e-rssm.py",
+      "source_sha256": "d6d50166914e94fb8bd17a5d5dbda9d42cdd37b85819bb1e9fff3a64d4ad2eb6",
+      "sha256": "d6d50166914e94fb8bd17a5d5dbda9d42cdd37b85819bb1e9fff3a64d4ad2eb6",
+      "bytes": 13639
     },
     {
-      "path": "assets/reader-r22/formal/F01-evolution-r24.png",
-      "bytes": 1782413,
-      "sha256": "0c44fa759a65e3617c61fc0fa653c301bfea61f2ea53d63b8ee5ba44222850fe"
+      "path": "../../assets/media/6723f34fc5bd880f558cda934dce91d7413eff6c3903bf94903a9bf485ea7eda.webp",
+      "source_sha256": "6723f34fc5bd880f558cda934dce91d7413eff6c3903bf94903a9bf485ea7eda",
+      "sha256": "4c3c9c4d823c635e3799d8836c076290649b6f71b4d439c637bba31b9ebfd61f",
+      "bytes": 1137552,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/reader-r22/formal/F02-world-models-r25.png",
-      "bytes": 1671218,
-      "sha256": "69893f730c4e1111c2df4dc4e128cf23a8ebeb49401af8abdbd24a904da0c99c"
+      "path": "../../assets/media/594dc2568ef54bb712ac3631b3da5d6683ae13d17874c534db62bffce5ec1ba2.webp",
+      "source_sha256": "594dc2568ef54bb712ac3631b3da5d6683ae13d17874c534db62bffce5ec1ba2",
+      "sha256": "c338b665a7ebd2b4191a39f097035470c80cdc0e39447a481c2bfc1bc581be18",
+      "bytes": 111064,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/reader-r22/formal/F03-planet-r27.png",
-      "bytes": 1574120,
-      "sha256": "9a3341bd5783c33bb90045a979bf8a09747996e893989b8bcbc359aef20947b6"
+      "path": "assets/attachments/code/S005/sources/repos/dreamerv3/snapshot-ghfast/dreamerv3-e01491fad6434b2245a3b8ca201dd7faedcc458c/dreamerv3/rssm.py",
+      "source_sha256": "d6d50166914e94fb8bd17a5d5dbda9d42cdd37b85819bb1e9fff3a64d4ad2eb6",
+      "sha256": "d6d50166914e94fb8bd17a5d5dbda9d42cdd37b85819bb1e9fff3a64d4ad2eb6",
+      "bytes": 13639
     },
     {
-      "path": "assets/reader-r22/formal/F04-dreamer-v1-r28.png",
-      "bytes": 1517573,
-      "sha256": "b4c01bba4f764fa3b8d52646133978f18dcaabee179db68c9cb30b677928d59a"
+      "path": "assets/attachments/code/S005/sources/repos/dreamerv3/snapshot-ghfast/dreamerv3-e01491fad6434b2245a3b8ca201dd7faedcc458c/dreamerv3/rssm.py.html",
+      "source_sha256": "ea9a7f98f6ad8a02f55eb785a84b0eb6b792ebc60b57ebe59c05f595a6d7e66c",
+      "sha256": "fe07672b4f28150af0035664e1a9a31e0c7615ff341099e2acc968d7273a55c3",
+      "bytes": 40456
     },
     {
-      "path": "assets/reader-r22/formal/F05-dreamer-v2-r28.png",
-      "bytes": 1627151,
-      "sha256": "cbb4028cd412d017c88f3e590fee8d6d0481344b0174086ab766f84467627f76"
+      "path": "assets/attachments/code/S005/sources/repos/dreamerv3/snapshot-ghfast/dreamerv3-e01491fad6434b2245a3b8ca201dd7faedcc458c/dreamerv3/agent.py",
+      "source_sha256": "adce8e4274bc098c218bf9a20fd3327545f0ad7d850b5fe328597382e91b5269",
+      "sha256": "adce8e4274bc098c218bf9a20fd3327545f0ad7d850b5fe328597382e91b5269",
+      "bytes": 18262
     },
     {
-      "path": "assets/reader-r22/formal/F06-dreamer-v3-r28.png",
-      "bytes": 1668018,
-      "sha256": "5a0837a473207fa08f675a570c7633ec7acea420e865b50d3dc94ec21a0359b5"
+      "path": "assets/attachments/code/S005/sources/repos/dreamerv3/snapshot-ghfast/dreamerv3-e01491fad6434b2245a3b8ca201dd7faedcc458c/dreamerv3/agent.py.html",
+      "source_sha256": "0242ec489afdfbbe046fe9e99d3773f9a89ea38476f6027cdbffa82ece67466d",
+      "sha256": "8312ef090260712169f1456b7eb1e78dbd1958d2d718d84ea97e95493db68001",
+      "bytes": 54609
     },
     {
-      "path": "assets/reader-r22/formal/F07-dreamer4-r30.png",
-      "bytes": 1444688,
-      "sha256": "2a39c4fa3c2cc29d9c3f4db9c91e561ee2f3c429fc50f5c2d90b8bb09b96bacb"
+      "path": "../../assets/media/aac462c0366cb7f50978c0cacfd95d981b7c24ea45026ff6eef9af6ab6dd77a6.webp",
+      "source_sha256": "aac462c0366cb7f50978c0cacfd95d981b7c24ea45026ff6eef9af6ab6dd77a6",
+      "sha256": "a4d40a86d42919a360786a01488e0dfb714119cd8c5bd6d4ecdf18368fa971fe",
+      "bytes": 110656,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/reader-r22/formal/F08-online-offline-r30.png",
-      "bytes": 1720060,
-      "sha256": "c501ea27fb070cca02c83a2ce81cf26b28a5cf1ee13cb0a851cce3d362cc843e"
+      "path": "../../assets/media/2121bf3546b82bb03b294cc015b43d0c12ce9600812836cded73f56571794fb6.webp",
+      "source_sha256": "2121bf3546b82bb03b294cc015b43d0c12ce9600812836cded73f56571794fb6",
+      "sha256": "014f48df3ef38581c63119edc19596e3522afe65d5880f46c3487cda6887e28a",
+      "bytes": 1388110,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/reader-r22/formal/F09-paper-code-crosswalk-r30.png",
-      "bytes": 1847944,
-      "sha256": "d337aef6325f7d9211ff6a2a3c8b310a4a7cf14f34bf92b8ebed0a0b80815d37"
+      "path": "../../assets/media/b1692e5943b10d6898b7f5d2e24b4687364bdcf3a718874571e02c83f1875fba.webp",
+      "source_sha256": "b1692e5943b10d6898b7f5d2e24b4687364bdcf3a718874571e02c83f1875fba",
+      "sha256": "1ef7452cf359946381390bda77c26af239de8ed7122fabb4417c9d3c7691ac77",
+      "bytes": 1106450,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/reader-r22/formal/F10-experiment-boundaries-r30.png",
-      "bytes": 1372997,
-      "sha256": "84f2fe51678893482bcd85bfad9f9b4e8737d82c774f897338411aa0c272fd4b"
+      "path": "assets/original/01a14d7246b7-main.tex",
+      "source_sha256": "01a14d7246b7d9e8f53c86b1d4a45a7083103042637cab3899d653c10020e034",
+      "sha256": "01a14d7246b7d9e8f53c86b1d4a45a7083103042637cab3899d653c10020e034",
+      "bytes": 52401
     },
     {
-      "path": "assets/reader-r22/original-paper/S001-page-003.png",
-      "bytes": 273665,
-      "sha256": "cf143a9f5e37488e710d88ea3ef2b6d6372411050dce6481b798a801679f6970"
+      "path": "assets/original/cd7ddc1fab32-agent.tex",
+      "source_sha256": "cd7ddc1fab32489fddd7cfe7e5269be4958e0665f8095fe76286e99fb78291cc",
+      "sha256": "cd7ddc1fab32489fddd7cfe7e5269be4958e0665f8095fe76286e99fb78291cc",
+      "bytes": 979
     },
     {
-      "path": "assets/reader-r22/original-paper/S001-page-006.png",
-      "bytes": 342259,
-      "sha256": "3b529bb1f4c55f1f1268467ecc7b8a31f850d0531c58e03b161fb23cd1754fe3"
+      "path": "../../assets/media/8895717a43dacf48035f55110ec5697fbf5c732121345e0834a2de92f61e280e.webp",
+      "source_sha256": "8895717a43dacf48035f55110ec5697fbf5c732121345e0834a2de92f61e280e",
+      "sha256": "0c7953fc9fbcfd04d5386e4838d42cf57325a73e77bb0d63697ea3058986a36a",
+      "bytes": 1145838,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/reader-r22/original-paper/S002-page-004.png",
-      "bytes": 275778,
-      "sha256": "b30938a0b78640fc4edd98479ee0d248a87e6da917ef16263aa747eafdb6e350"
+      "path": "../../assets/media/d5da8ab4737f1e69c71e8caa84953f30b7c326a8e86eafe39616a25a48035310.webp",
+      "source_sha256": "d5da8ab4737f1e69c71e8caa84953f30b7c326a8e86eafe39616a25a48035310",
+      "sha256": "cef7be472b1f25c2c577916d3aa7ce5cbeb9ebfb7be4c0acf45fd28ff0d57529",
+      "bytes": 1268370,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/reader-r22/original-paper/S002-page-014.png",
-      "bytes": 184093,
-      "sha256": "0507141be706a36c26e0c1bcd14ce9cfeb9fb0554ae598d9e5754e12fa2865cc"
+      "path": "../../assets/media/e8ce691587f6239f31c5339066c463cfce0297c34cf7bac1ad42645e851a3cd3.webp",
+      "source_sha256": "e8ce691587f6239f31c5339066c463cfce0297c34cf7bac1ad42645e851a3cd3",
+      "sha256": "c95cd04425f046dd8fd563c1a333ec63c38c73032ae8f36bbaa8347693102d7c",
+      "bytes": 100174,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/reader-r22/original-paper/S003-page-003.png",
-      "bytes": 219701,
-      "sha256": "c0bbb9c2e5fcbb5d5d9804bf6e7f4119be3edbe4d037d17ac638e5d01ea2dfac"
+      "path": "assets/attachments/code/S006/sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/README.md.html",
+      "source_sha256": "c65e187f4454ff48a2c9548063af531fc044ad6a09c8c9a63c9353216b9a1ada",
+      "sha256": "152dcbeca79d017b57e6ee2ba195978abc43a8fb089216e9e3186342767c6015",
+      "bytes": 26236
     },
     {
-      "path": "assets/reader-r22/original-paper/S003-page-004.png",
-      "bytes": 220384,
-      "sha256": "eac91839824caaa63d903798e41943006d05445fe292ed2602bd91c40778ba88"
+      "path": "assets/attachments/code/S006/sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/dreamer4/model.py",
+      "source_sha256": "162a85557bbd9f3e67c8e24c66db11ff9abb283ec05b96cb0fedcf9beaa87b2c",
+      "sha256": "162a85557bbd9f3e67c8e24c66db11ff9abb283ec05b96cb0fedcf9beaa87b2c",
+      "bytes": 26976
     },
     {
-      "path": "assets/reader-r22/original-paper/S004-page-003.png",
-      "bytes": 201914,
-      "sha256": "4cd79443f799b638891ae1beb4ca1f0a6efe1ffabe3f26f47f0377d5327a90b9"
+      "path": "assets/attachments/code/S006/sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/dreamer4/model.py.html",
+      "source_sha256": "6fda7c08b603d06573afff85ba113db7455f3d53d7cbd914aa19a275b9074b32",
+      "sha256": "bb6dcff516ded3906b51c781931ccc8635aa9fac11bbd24698b3a5b0bc25a48a",
+      "bytes": 81476
     },
     {
-      "path": "assets/reader-r22/original-paper/S004-page-008.png",
-      "bytes": 255709,
-      "sha256": "f71d96ff7ba5d0b85c4490c92bf5c2af32acf28e049432280c026349bbabafd3"
+      "path": "assets/attachments/code/S006/sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/dreamer4/train_dynamics.py",
+      "source_sha256": "18cdc0893b77b131ec4d56765177b5b68a737fb215c6e8df57060b6b299e6a0e",
+      "sha256": "18cdc0893b77b131ec4d56765177b5b68a737fb215c6e8df57060b6b299e6a0e",
+      "bytes": 37061
     },
     {
-      "path": "assets/reader-r22/original-paper/S005-page-003.png",
-      "bytes": 217748,
-      "sha256": "594dc2568ef54bb712ac3631b3da5d6683ae13d17874c534db62bffce5ec1ba2"
+      "path": "assets/attachments/code/S006/sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/dreamer4/train_dynamics.py.html",
+      "source_sha256": "6659233f6b06ab275f61a4f5b8ad9f7c8e7ef43c6bc1c04982e6c8851a5fdeb5",
+      "sha256": "0e4058c5dbc4ffbba188a99c1e408bc46d6142062f46abdcb0b0b53a775a74e3",
+      "bytes": 109756
     },
     {
-      "path": "assets/reader-r22/original-paper/S005-page-009.png",
-      "bytes": 245989,
-      "sha256": "aac462c0366cb7f50978c0cacfd95d981b7c24ea45026ff6eef9af6ab6dd77a6"
+      "path": "../../assets/media/40002b3511e14392f64ac407e127a115cb4aaff3737ce5f99ec09433aece0436.webp",
+      "source_sha256": "40002b3511e14392f64ac407e127a115cb4aaff3737ce5f99ec09433aece0436",
+      "sha256": "a822ec0de6c14adacf046b5907c8cb084d6663f4c324a456c1d5c86345b174a6",
+      "bytes": 74316,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/reader-r22/original-paper/S006-page-004.png",
-      "bytes": 229455,
-      "sha256": "e8ce691587f6239f31c5339066c463cfce0297c34cf7bac1ad42645e851a3cd3"
+      "path": "assets/original/162a85557bbd-model.py",
+      "source_sha256": "162a85557bbd9f3e67c8e24c66db11ff9abb283ec05b96cb0fedcf9beaa87b2c",
+      "sha256": "162a85557bbd9f3e67c8e24c66db11ff9abb283ec05b96cb0fedcf9beaa87b2c",
+      "bytes": 26976
     },
     {
-      "path": "assets/reader-r22/original-paper/S006-page-009.png",
-      "bytes": 205746,
-      "sha256": "40002b3511e14392f64ac407e127a115cb4aaff3737ce5f99ec09433aece0436"
+      "path": "assets/original/18cdc0893b77-train_dynamics.py",
+      "source_sha256": "18cdc0893b77b131ec4d56765177b5b68a737fb215c6e8df57060b6b299e6a0e",
+      "sha256": "18cdc0893b77b131ec4d56765177b5b68a737fb215c6e8df57060b6b299e6a0e",
+      "bytes": 37061
     },
     {
-      "path": "assets/reader-r22/toc.js",
-      "bytes": 5954,
-      "sha256": "5434c08037b7be0b7b71486b90392afee2233df7b85836ffe89810080b965615"
+      "path": "../../assets/media/26dc10b348e7e00e490aca6d8109ac703ce3563e26c65ae5e712dec8b6cfdc08.webp",
+      "source_sha256": "26dc10b348e7e00e490aca6d8109ac703ce3563e26c65ae5e712dec8b6cfdc08",
+      "sha256": "e402d1c7dcbcf15a0c6905894f74c5c07a4353c0518a0b632ae4ffd68b99e509",
+      "bytes": 1210196,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
     },
     {
-      "path": "assets/reader-r22/viewer.js",
-      "bytes": 6955,
-      "sha256": "9ae847093e4b5b570165f0a30061dbf8bb6e81d4fcfb9fd528f73b5e4d859818"
+      "path": "../../assets/media/550f1f5f809ae1d9c7f537f3cb5f1e5d960450048e3e96e4ec510aecee9ac031.webp",
+      "source_sha256": "550f1f5f809ae1d9c7f537f3cb5f1e5d960450048e3e96e4ec510aecee9ac031",
+      "sha256": "d1c4005c063b39c55eae2fa694720c86d501e915b2f6f89484c350e430289198",
+      "bytes": 1242804,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/c397ee56daa174b1ec09c6dd108e7163eb921d1f441fced9abf7cb5ceea7b3dc.webp",
+      "source_sha256": "c397ee56daa174b1ec09c6dd108e7163eb921d1f441fced9abf7cb5ceea7b3dc",
+      "sha256": "a8a6bb59b6c260e338f7d0dd71530cdeb330ee53eb86d7b7a54055451158bfe1",
+      "bytes": 1267672,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/9cea5f56e31be37fb35217d97d6535b06a6986179c359e04920a40617a594097.webp",
+      "source_sha256": "9cea5f56e31be37fb35217d97d6535b06a6986179c359e04920a40617a594097",
+      "sha256": "757e4da522bcd6693406a24806bbbb6e1336ed774dceb88473286d5006224182",
+      "bytes": 1388804,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/5009cb6db997ff6a4ee7173e1805df1bee3a8c0817b8444e13fa714b9351f3f1.webp",
+      "source_sha256": "5009cb6db997ff6a4ee7173e1805df1bee3a8c0817b8444e13fa714b9351f3f1",
+      "sha256": "2c0b8718c43b88b06f98d26d01f1a39ae10c49a04932c7b66f31ee38218c0dab",
+      "bytes": 122576,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/a52907acdb1cd2b18432bbac636d947dce6416d49bf86048bee008f79ed43e50.webp",
+      "source_sha256": "a52907acdb1cd2b18432bbac636d947dce6416d49bf86048bee008f79ed43e50",
+      "sha256": "acd4810e98c39cc314e6c8d0a04bce00128863e9ada53ddd7c8df7c325e27324",
+      "bytes": 82780,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/2d77db8d3d764f335e64e49714e918e678a5b4113b59e0dbd9acff0887432280.webp",
+      "source_sha256": "2d77db8d3d764f335e64e49714e918e678a5b4113b59e0dbd9acff0887432280",
+      "sha256": "cfd550d76d42f33904df16f55ed1fb303f4492f22890543f263d0fb69f5fcca5",
+      "bytes": 123998,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/a48ccd5170fc398a95a70737684afc0a60d7cd76ba24ee1a102547bc3eddf5a1.webp",
+      "source_sha256": "a48ccd5170fc398a95a70737684afc0a60d7cd76ba24ee1a102547bc3eddf5a1",
+      "sha256": "46ce7e4a950b217eee16d98c6a4714922aa4a31d3b990a8f6727d1f357c47b2c",
+      "bytes": 44932,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/940c1a0e38919e7329bb3f0c0c7ec8dee3c7a750000d69ac41f5ab0ca71ef903.webp",
+      "source_sha256": "940c1a0e38919e7329bb3f0c0c7ec8dee3c7a750000d69ac41f5ab0ca71ef903",
+      "sha256": "0c488d8813f4b9ad96f15a661a742e654253cb53741b373b84ee4ec6b12aa46a",
+      "bytes": 120524,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/4705b6d0cca8483163e2d14d39b480d781ba6fc2c44292947f002afa65f70f33.webp",
+      "source_sha256": "4705b6d0cca8483163e2d14d39b480d781ba6fc2c44292947f002afa65f70f33",
+      "sha256": "4611cac414cdecd7798907814bcd089caaf5843596ac7931f35188a425aede43",
+      "bytes": 105728,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/a87c2f627856693f01c56a155f087361b919db44ef19118af13f0bccfd1f456a.webp",
+      "source_sha256": "a87c2f627856693f01c56a155f087361b919db44ef19118af13f0bccfd1f456a",
+      "sha256": "d067acde5b37dad17d98997b2ca76e60810e7263d5054e13c062a1a82d5187dc",
+      "bytes": 106738,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/43aa0d888272a52d3b7bb6997d8965f07c4fb368f719a9cc1eccee19e9413268.webp",
+      "source_sha256": "43aa0d888272a52d3b7bb6997d8965f07c4fb368f719a9cc1eccee19e9413268",
+      "sha256": "23c2aca950d56f3c42bbe0faa31aed9669e93384fd166097bee6122c0d56fa0d",
+      "bytes": 113016,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/3525b161978b7ec64cf38fd8441b915a9c4df49850e608c94b934af16a7ac587.webp",
+      "source_sha256": "3525b161978b7ec64cf38fd8441b915a9c4df49850e608c94b934af16a7ac587",
+      "sha256": "4dfdec389c1a4ceec07c4081e1723e4f1c74c7404b0f535ec9cd751df5453342",
+      "bytes": 137492,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/f95c94adb7cd0d2c30411dfe5c7c23bedc7a957746ab1b0f0851f9dc0d0dee1e.webp",
+      "source_sha256": "f95c94adb7cd0d2c30411dfe5c7c23bedc7a957746ab1b0f0851f9dc0d0dee1e",
+      "sha256": "87ec38c1db7d8c89864b9018497dd636a093785065660a03c2f0e4316a659da3",
+      "bytes": 230516,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/00ec2fe23826263d6cd2750f50347cf189e58881c1f9f0da59ce37142f3a8e60.webp",
+      "source_sha256": "00ec2fe23826263d6cd2750f50347cf189e58881c1f9f0da59ce37142f3a8e60",
+      "sha256": "3477b8c9fb70a8f658e3a5dfcbe611221d49dc812e5b198fd1c682a20603b58a",
+      "bytes": 87364,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/7c1a5f8eedef0c52ac834d353a6f4458097b8a3c4a6e65af89b8facd65145b42.webp",
+      "source_sha256": "7c1a5f8eedef0c52ac834d353a6f4458097b8a3c4a6e65af89b8facd65145b42",
+      "sha256": "4fb768fa26c9d2ca0bf353a2abfe1b69a124ae04dbe150670f879b1411120664",
+      "bytes": 93968,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/de5fd5f0fab3de5fe020e95765c86e7f96e157c74557c75b4e6a2662df6c239e.webp",
+      "source_sha256": "de5fd5f0fab3de5fe020e95765c86e7f96e157c74557c75b4e6a2662df6c239e",
+      "sha256": "3c5096e3e5536467cf683ded6886e348c4e3b90937a6f0d784b6e51d457942c6",
+      "bytes": 82616,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/13743fc45139d0b39bd7ce1283133c842abf4ecb2fbb1378220039cfb0915938.webp",
+      "source_sha256": "13743fc45139d0b39bd7ce1283133c842abf4ecb2fbb1378220039cfb0915938",
+      "sha256": "5e7758d4b34495bb421bb114b854b005376de2fb0d8c1feb76a57d3bcadb4601",
+      "bytes": 97440,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/a46fad6158f34534d400799e1131e08a578403b5143f7bc1d84e090c3f119de0.webp",
+      "source_sha256": "a46fad6158f34534d400799e1131e08a578403b5143f7bc1d84e090c3f119de0",
+      "sha256": "e8598c7dd9ae88025c92f31f8d02e2901d8202486bfda2f2c84f88c592a5f0e1",
+      "bytes": 178686,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/951696cd073f79cb1ac5a281c6408953902d7507d79a0897a5a8c50222f5efc5.webp",
+      "source_sha256": "951696cd073f79cb1ac5a281c6408953902d7507d79a0897a5a8c50222f5efc5",
+      "sha256": "a0d44a8c5e41b33fa43938a8578257efd3e470f92bb6ed5d366368e2a8a62b4e",
+      "bytes": 86386,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "assets/reader-full/toc.js",
+      "source_sha256": "752c2c8c4846659c0262f78b70464c8ca60f70f38c695d77fa10326dd1cb7895",
+      "sha256": "752c2c8c4846659c0262f78b70464c8ca60f70f38c695d77fa10326dd1cb7895",
+      "bytes": 10258
+    },
+    {
+      "path": "assets/reader-full/viewer.js",
+      "source_sha256": "9ae847093e4b5b570165f0a30061dbf8bb6e81d4fcfb9fd528f73b5e4d859818",
+      "sha256": "9ae847093e4b5b570165f0a30061dbf8bb6e81d4fcfb9fd528f73b5e4d859818",
+      "bytes": 6955
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "c5017309107adbf825eec917ab41de5e19f6a93a7c4861863d730c0386f92f7f",
+      "sha256": "b8c2a4044ef6c366c3a58c9b57de92e6f2107d0456eb63cf7d69ee742336f1a5",
+      "bytes": 1600594
     }
-  ]
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
 }

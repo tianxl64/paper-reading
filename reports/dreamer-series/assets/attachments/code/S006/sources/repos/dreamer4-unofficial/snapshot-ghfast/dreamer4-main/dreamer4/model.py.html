@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>S006 固定源码：sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/dreamer4/model.py</title><style>body{max-width:100%;margin:1.2rem;font-family:system-ui,sans-serif}pre{overflow:auto;line-height:1.55}pre span{display:block}pre a{color:#667;text-decoration:none}:target{background:#fff3ba}</style><link href="../../../../../../../../../../../../favicon.ico" rel="icon"/></head><body><h1>S006 固定源码：sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/dreamer4/model.py</h1><p>源码字节 SHA-256：<code>162a85557bbd9f3e67c8e24c66db11ff9abb283ec05b96cb0fedcf9beaa87b2c</code>。<a download="" href="model.py">下载原始源码</a></p><pre><span id="L1"><a aria-label="第 1 行" href="#L1">   1</a> # model.py</span>
+<span id="L2"><a aria-label="第 2 行" href="#L2">   2</a> import math</span>
+<span id="L3"><a aria-label="第 3 行" href="#L3">   3</a> from dataclasses import dataclass</span>
+<span id="L4"><a aria-label="第 4 行" href="#L4">   4</a> from enum import IntEnum</span>
+<span id="L5"><a aria-label="第 5 行" href="#L5">   5</a> from typing import Optional, Tuple, Dict</span>
+<span id="L6"><a aria-label="第 6 行" href="#L6">   6</a> </span>
+<span id="L7"><a aria-label="第 7 行" href="#L7">   7</a> import torch</span>
+<span id="L8"><a aria-label="第 8 行" href="#L8">   8</a> import torch.nn as nn</span>
+<span id="L9"><a aria-label="第 9 行" href="#L9">   9</a> import torch.nn.functional as F</span>
+<span id="L10"><a aria-label="第 10 行" href="#L10">  10</a> </span>
+<span id="L11"><a aria-label="第 11 行" href="#L11">  11</a> </span>
+<span id="L12"><a aria-label="第 12 行" href="#L12">  12</a> class Modality(IntEnum):</span>
+<span id="L13"><a aria-label="第 13 行" href="#L13">  13</a>     LATENT = -1</span>
+<span id="L14"><a aria-label="第 14 行" href="#L14">  14</a>     IMAGE = 0</span>
+<span id="L15"><a aria-label="第 15 行" href="#L15">  15</a>     ACTION = 1</span>
+<span id="L16"><a aria-label="第 16 行" href="#L16">  16</a>     PROPRIO = 2</span>
+<span id="L17"><a aria-label="第 17 行" href="#L17">  17</a>     REGISTER = 3</span>
+<span id="L18"><a aria-label="第 18 行" href="#L18">  18</a>     SPATIAL = 4</span>
+<span id="L19"><a aria-label="第 19 行" href="#L19">  19</a>     SHORTCUT_SIGNAL = 5</span>
+<span id="L20"><a aria-label="第 20 行" href="#L20">  20</a>     SHORTCUT_STEP = 6</span>
+<span id="L21"><a aria-label="第 21 行" href="#L21">  21</a>     AGENT = 7</span>
+<span id="L22"><a aria-label="第 22 行" href="#L22">  22</a> </span>
+<span id="L23"><a aria-label="第 23 行" href="#L23">  23</a> </span>
+<span id="L24"><a aria-label="第 24 行" href="#L24">  24</a> @dataclass(frozen=True)</span>
+<span id="L25"><a aria-label="第 25 行" href="#L25">  25</a> class TokenLayout:</span>
+<span id="L26"><a aria-label="第 26 行" href="#L26">  26</a>     n_latents: int</span>
+<span id="L27"><a aria-label="第 27 行" href="#L27">  27</a>     segments: Tuple[Tuple[Modality, int], ...]</span>
+<span id="L28"><a aria-label="第 28 行" href="#L28">  28</a> </span>
+<span id="L29"><a aria-label="第 29 行" href="#L29">  29</a>     def S(self) -&gt; int:</span>
+<span id="L30"><a aria-label="第 30 行" href="#L30">  30</a>         return self.n_latents + sum(n for _, n in self.segments)</span>
+<span id="L31"><a aria-label="第 31 行" href="#L31">  31</a> </span>
+<span id="L32"><a aria-label="第 32 行" href="#L32">  32</a>     def modality_ids(self) -&gt; torch.Tensor:</span>
+<span id="L33"><a aria-label="第 33 行" href="#L33">  33</a>         parts = []</span>
+<span id="L34"><a aria-label="第 34 行" href="#L34">  34</a>         if self.n_latents &gt; 0:</span>
+<span id="L35"><a aria-label="第 35 行" href="#L35">  35</a>             parts.append(torch.full((self.n_latents,), int(Modality.LATENT), dtype=torch.int32))</span>
+<span id="L36"><a aria-label="第 36 行" href="#L36">  36</a>         for m, n in self.segments:</span>
+<span id="L37"><a aria-label="第 37 行" href="#L37">  37</a>             if n &gt; 0:</span>
+<span id="L38"><a aria-label="第 38 行" href="#L38">  38</a>                 parts.append(torch.full((n,), int(m), dtype=torch.int32))</span>
+<span id="L39"><a aria-label="第 39 行" href="#L39">  39</a>         return torch.cat(parts, dim=0) if parts else torch.zeros((0,), dtype=torch.int32)</span>
+<span id="L40"><a aria-label="第 40 行" href="#L40">  40</a> </span>
+<span id="L41"><a aria-label="第 41 行" href="#L41">  41</a>     def slices(self) -&gt; Dict[Modality, slice]:</span>
+<span id="L42"><a aria-label="第 42 行" href="#L42">  42</a>         idx = 0</span>
+<span id="L43"><a aria-label="第 43 行" href="#L43">  43</a>         out: Dict[Modality, slice] = {}</span>
+<span id="L44"><a aria-label="第 44 行" href="#L44">  44</a>         if self.n_latents &gt; 0:</span>
+<span id="L45"><a aria-label="第 45 行" href="#L45">  45</a>             out[Modality.LATENT] = slice(idx, idx + self.n_latents)</span>
+<span id="L46"><a aria-label="第 46 行" href="#L46">  46</a>             idx += self.n_latents</span>
+<span id="L47"><a aria-label="第 47 行" href="#L47">  47</a>         for m, n in self.segments:</span>
+<span id="L48"><a aria-label="第 48 行" href="#L48">  48</a>             if n &gt; 0 and m not in out:</span>
+<span id="L49"><a aria-label="第 49 行" href="#L49">  49</a>                 out[m] = slice(idx, idx + n)</span>
+<span id="L50"><a aria-label="第 50 行" href="#L50">  50</a>             idx += n</span>
+<span id="L51"><a aria-label="第 51 行" href="#L51">  51</a>         return out</span>
+<span id="L52"><a aria-label="第 52 行" href="#L52">  52</a> </span>
+<span id="L53"><a aria-label="第 53 行" href="#L53">  53</a> </span>
+<span id="L54"><a aria-label="第 54 行" href="#L54">  54</a> def temporal_patchify(videos_btchw: torch.Tensor, patch: int) -&gt; torch.Tensor:</span>
+<span id="L55"><a aria-label="第 55 行" href="#L55">  55</a>     """</span>
+<span id="L56"><a aria-label="第 56 行" href="#L56">  56</a>     videos: (B,T,C,H,W) float in [0,1]</span>
+<span id="L57"><a aria-label="第 57 行" href="#L57">  57</a>     returns: (B,T,Np,Dp) where Dp = patch*patch*C and Np = (H/patch)*(W/patch)</span>
+<span id="L58"><a aria-label="第 58 行" href="#L58">  58</a>     """</span>
+<span id="L59"><a aria-label="第 59 行" href="#L59">  59</a>     assert videos_btchw.dim() == 5</span>
+<span id="L60"><a aria-label="第 60 行" href="#L60">  60</a>     B, T, C, H, W = videos_btchw.shape</span>
+<span id="L61"><a aria-label="第 61 行" href="#L61">  61</a>     assert H % patch == 0 and W % patch == 0</span>
+<span id="L62"><a aria-label="第 62 行" href="#L62">  62</a>     x = videos_btchw.reshape(B * T, C, H, W)</span>
+<span id="L63"><a aria-label="第 63 行" href="#L63">  63</a>     cols = F.unfold(x, kernel_size=patch, stride=patch)          # (BT, C*pp, Np)</span>
+<span id="L64"><a aria-label="第 64 行" href="#L64">  64</a>     cols = cols.transpose(1, 2).contiguous()                     # (BT, Np, Dp)</span>
+<span id="L65"><a aria-label="第 65 行" href="#L65">  65</a>     Np, Dp = cols.shape[1], cols.shape[2]</span>
+<span id="L66"><a aria-label="第 66 行" href="#L66">  66</a>     return cols.reshape(B, T, Np, Dp)</span>
+<span id="L67"><a aria-label="第 67 行" href="#L67">  67</a> </span>
+<span id="L68"><a aria-label="第 68 行" href="#L68">  68</a> </span>
+<span id="L69"><a aria-label="第 69 行" href="#L69">  69</a> def temporal_unpatchify(patches_btnd: torch.Tensor, H: int, W: int, C: int, patch: int) -&gt; torch.Tensor:</span>
+<span id="L70"><a aria-label="第 70 行" href="#L70">  70</a>     """</span>
+<span id="L71"><a aria-label="第 71 行" href="#L71">  71</a>     patches: (B,T,Np,Dp) -&gt; (B,T,C,H,W)</span>
+<span id="L72"><a aria-label="第 72 行" href="#L72">  72</a>     """</span>
+<span id="L73"><a aria-label="第 73 行" href="#L73">  73</a>     assert patches_btnd.dim() == 4</span>
+<span id="L74"><a aria-label="第 74 行" href="#L74">  74</a>     B, T, Np, Dp = patches_btnd.shape</span>
+<span id="L75"><a aria-label="第 75 行" href="#L75">  75</a>     assert Dp == C * patch * patch</span>
+<span id="L76"><a aria-label="第 76 行" href="#L76">  76</a>     x = patches_btnd.reshape(B * T, Np, Dp).transpose(1, 2).contiguous()  # (BT, Dp, Np)</span>
+<span id="L77"><a aria-label="第 77 行" href="#L77">  77</a>     out = F.fold(x, output_size=(H, W), kernel_size=patch, stride=patch)  # (BT, C, H, W)</span>
+<span id="L78"><a aria-label="第 78 行" href="#L78">  78</a>     return out.reshape(B, T, C, H, W)</span>
+<span id="L79"><a aria-label="第 79 行" href="#L79">  79</a> </span>
+<span id="L80"><a aria-label="第 80 行" href="#L80">  80</a> </span>
+<span id="L81"><a aria-label="第 81 行" href="#L81">  81</a> def sinusoid_table(n: int, d: int, base: float = 10000.0, device=None) -&gt; torch.Tensor:</span>
+<span id="L82"><a aria-label="第 82 行" href="#L82">  82</a>     # fp32 by construction</span>
+<span id="L83"><a aria-label="第 83 行" href="#L83">  83</a>     pos = torch.arange(n, device=device, dtype=torch.float32).unsqueeze(1)  # (n,1)</span>
+<span id="L84"><a aria-label="第 84 行" href="#L84">  84</a>     i   = torch.arange(d, device=device, dtype=torch.float32).unsqueeze(0)  # (1,d)</span>
+<span id="L85"><a aria-label="第 85 行" href="#L85">  85</a>     k   = torch.floor(i / 2.0)</span>
+<span id="L86"><a aria-label="第 86 行" href="#L86">  86</a>     # stable: exp(log(base) * exponent)</span>
+<span id="L87"><a aria-label="第 87 行" href="#L87">  87</a>     div = torch.exp(-(2.0 * k) / max(1.0, float(d)) * math.log(base))</span>
+<span id="L88"><a aria-label="第 88 行" href="#L88">  88</a>     ang = pos * div</span>
+<span id="L89"><a aria-label="第 89 行" href="#L89">  89</a>     return torch.where((i % 2) == 0, torch.sin(ang), torch.cos(ang))  # (n,d) fp32</span>
+<span id="L90"><a aria-label="第 90 行" href="#L90">  90</a> </span>
+<span id="L91"><a aria-label="第 91 行" href="#L91">  91</a> </span>
+<span id="L92"><a aria-label="第 92 行" href="#L92">  92</a> def add_sinusoidal_positions(tokens_btSd: torch.Tensor, scale_pos_embeds) -&gt; torch.Tensor:</span>
+<span id="L93"><a aria-label="第 93 行" href="#L93">  93</a>     B, T, S, D = tokens_btSd.shape</span>
+<span id="L94"><a aria-label="第 94 行" href="#L94">  94</a>     device = tokens_btSd.device</span>
+<span id="L95"><a aria-label="第 95 行" href="#L95">  95</a>     pos_t = sinusoid_table(T, D, device=device)  # fp32</span>
+<span id="L96"><a aria-label="第 96 行" href="#L96">  96</a>     pos_s = sinusoid_table(S, D, device=device)  # fp32</span>
+<span id="L97"><a aria-label="第 97 行" href="#L97">  97</a>     if scale_pos_embeds:</span>
+<span id="L98"><a aria-label="第 98 行" href="#L98">  98</a>         pos = (pos_t[None, :, None, :] + pos_s[None, None, :, :]) * (1.0 / math.sqrt(D))</span>
+<span id="L99"><a aria-label="第 99 行" href="#L99">  99</a>     else:</span>
+<span id="L100"><a aria-label="第 100 行" href="#L100"> 100</a>         pos = (pos_t[None, :, None, :] + pos_s[None, None, :, :])</span>
+<span id="L101"><a aria-label="第 101 行" href="#L101"> 101</a> </span>
+<span id="L102"><a aria-label="第 102 行" href="#L102"> 102</a>     return tokens_btSd + pos.to(dtype=tokens_btSd.dtype)</span>
+<span id="L103"><a aria-label="第 103 行" href="#L103"> 103</a> </span>
+<span id="L104"><a aria-label="第 104 行" href="#L104"> 104</a> </span>
+<span id="L105"><a aria-label="第 105 行" href="#L105"> 105</a> class MAEReplacer(nn.Module):</span>
+<span id="L106"><a aria-label="第 106 行" href="#L106"> 106</a>     def __init__(self, d_model: int, p_min: float = 0.0, p_max: float = 0.9):</span>
+<span id="L107"><a aria-label="第 107 行" href="#L107"> 107</a>         super().__init__()</span>
+<span id="L108"><a aria-label="第 108 行" href="#L108"> 108</a>         self.p_min = float(p_min)</span>
+<span id="L109"><a aria-label="第 109 行" href="#L109"> 109</a>         self.p_max = float(p_max)</span>
+<span id="L110"><a aria-label="第 110 行" href="#L110"> 110</a>         self.mask_token = nn.Parameter(torch.empty(d_model))</span>
+<span id="L111"><a aria-label="第 111 行" href="#L111"> 111</a>         nn.init.normal_(self.mask_token, std=0.02)</span>
+<span id="L112"><a aria-label="第 112 行" href="#L112"> 112</a> </span>
+<span id="L113"><a aria-label="第 113 行" href="#L113"> 113</a>     def forward(self, patches_btnd: torch.Tensor) -&gt; Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:</span>
+<span id="L114"><a aria-label="第 114 行" href="#L114"> 114</a>         """</span>
+<span id="L115"><a aria-label="第 115 行" href="#L115"> 115</a>         patches: (B,T,Np,D)</span>
+<span id="L116"><a aria-label="第 116 行" href="#L116"> 116</a>         returns:</span>
+<span id="L117"><a aria-label="第 117 行" href="#L117"> 117</a>           replaced: (B,T,Np,D)</span>
+<span id="L118"><a aria-label="第 118 行" href="#L118"> 118</a>           mae_mask: (B,T,Np,1) bool, True where masked (must reconstruct)</span>
+<span id="L119"><a aria-label="第 119 行" href="#L119"> 119</a>           keep_prob:(B,T,1) float</span>
+<span id="L120"><a aria-label="第 120 行" href="#L120"> 120</a>         """</span>
+<span id="L121"><a aria-label="第 121 行" href="#L121"> 121</a>         B, T, Np, D = patches_btnd.shape</span>
+<span id="L122"><a aria-label="第 122 行" href="#L122"> 122</a>         device = patches_btnd.device</span>
+<span id="L123"><a aria-label="第 123 行" href="#L123"> 123</a> </span>
+<span id="L124"><a aria-label="第 124 行" href="#L124"> 124</a>         # fast path: deterministic "no MAE"</span>
+<span id="L125"><a aria-label="第 125 行" href="#L125"> 125</a>         if self.p_min == 0.0 and self.p_max == 0.0:</span>
+<span id="L126"><a aria-label="第 126 行" href="#L126"> 126</a>             keep_prob = torch.ones((B, T, 1), device=device, dtype=patches_btnd.dtype)</span>
+<span id="L127"><a aria-label="第 127 行" href="#L127"> 127</a>             mae_mask = torch.zeros((B, T, Np, 1), device=device, dtype=torch.bool)</span>
+<span id="L128"><a aria-label="第 128 行" href="#L128"> 128</a>             return patches_btnd, mae_mask, keep_prob</span>
+<span id="L129"><a aria-label="第 129 行" href="#L129"> 129</a> </span>
+<span id="L130"><a aria-label="第 130 行" href="#L130"> 130</a>         p_bt = torch.empty((B, T), device=device).uniform_(self.p_min, self.p_max)</span>
+<span id="L131"><a aria-label="第 131 行" href="#L131"> 131</a>         keep_prob = (1.0 - p_bt).unsqueeze(-1)                          # (B,T,1)</span>
+<span id="L132"><a aria-label="第 132 行" href="#L132"> 132</a>         keep = (torch.rand((B, T, Np), device=device) &lt; keep_prob)      # (B,T,Np)</span>
+<span id="L133"><a aria-label="第 133 行" href="#L133"> 133</a>         keep_ = keep.unsqueeze(-1)</span>
+<span id="L134"><a aria-label="第 134 行" href="#L134"> 134</a>         mask_tok = self.mask_token.to(dtype=patches_btnd.dtype)</span>
+<span id="L135"><a aria-label="第 135 行" href="#L135"> 135</a>         replaced = torch.where(keep_, patches_btnd, mask_tok.view(1, 1, 1, D))</span>
+<span id="L136"><a aria-label="第 136 行" href="#L136"> 136</a>         mae_mask = (~keep_).to(torch.bool)</span>
+<span id="L137"><a aria-label="第 137 行" href="#L137"> 137</a>         return replaced, mae_mask, keep_prob</span>
+<span id="L138"><a aria-label="第 138 行" href="#L138"> 138</a> </span>
+<span id="L139"><a aria-label="第 139 行" href="#L139"> 139</a> </span>
+<span id="L140"><a aria-label="第 140 行" href="#L140"> 140</a> class RMSNorm(nn.Module):</span>
+<span id="L141"><a aria-label="第 141 行" href="#L141"> 141</a>     def __init__(self, d: int, eps: float = 1e-6):</span>
+<span id="L142"><a aria-label="第 142 行" href="#L142"> 142</a>         super().__init__()</span>
+<span id="L143"><a aria-label="第 143 行" href="#L143"> 143</a>         self.eps = eps</span>
+<span id="L144"><a aria-label="第 144 行" href="#L144"> 144</a>         self.scale = nn.Parameter(torch.ones(d))</span>
+<span id="L145"><a aria-label="第 145 行" href="#L145"> 145</a> </span>
+<span id="L146"><a aria-label="第 146 行" href="#L146"> 146</a>     def forward(self, x: torch.Tensor) -&gt; torch.Tensor:</span>
+<span id="L147"><a aria-label="第 147 行" href="#L147"> 147</a>         var = x.pow(2).mean(dim=-1, keepdim=True)</span>
+<span id="L148"><a aria-label="第 148 行" href="#L148"> 148</a>         return x * (self.scale / torch.sqrt(var + self.eps))</span>
+<span id="L149"><a aria-label="第 149 行" href="#L149"> 149</a> </span>
+<span id="L150"><a aria-label="第 150 行" href="#L150"> 150</a> </span>
+<span id="L151"><a aria-label="第 151 行" href="#L151"> 151</a> class MLP(nn.Module):</span>
+<span id="L152"><a aria-label="第 152 行" href="#L152"> 152</a>     def __init__(self, d_model: int, mlp_ratio: float = 4.0, dropout: float = 0.0):</span>
+<span id="L153"><a aria-label="第 153 行" href="#L153"> 153</a>         super().__init__()</span>
+<span id="L154"><a aria-label="第 154 行" href="#L154"> 154</a>         hidden = int(d_model * mlp_ratio)</span>
+<span id="L155"><a aria-label="第 155 行" href="#L155"> 155</a>         self.fc_in = nn.Linear(d_model, 2 * hidden)</span>
+<span id="L156"><a aria-label="第 156 行" href="#L156"> 156</a>         self.fc_out = nn.Linear(hidden, d_model)</span>
+<span id="L157"><a aria-label="第 157 行" href="#L157"> 157</a>         self.drop = nn.Dropout(dropout)</span>
+<span id="L158"><a aria-label="第 158 行" href="#L158"> 158</a> </span>
+<span id="L159"><a aria-label="第 159 行" href="#L159"> 159</a>     def forward(self, x: torch.Tensor) -&gt; torch.Tensor:</span>
+<span id="L160"><a aria-label="第 160 行" href="#L160"> 160</a>         u, v = self.fc_in(x).chunk(2, dim=-1)</span>
+<span id="L161"><a aria-label="第 161 行" href="#L161"> 161</a>         h = u * F.silu(v)</span>
+<span id="L162"><a aria-label="第 162 行" href="#L162"> 162</a>         h = self.drop(h)</span>
+<span id="L163"><a aria-label="第 163 行" href="#L163"> 163</a>         y = self.fc_out(h)</span>
+<span id="L164"><a aria-label="第 164 行" href="#L164"> 164</a>         y = self.drop(y)</span>
+<span id="L165"><a aria-label="第 165 行" href="#L165"> 165</a>         return y</span>
+<span id="L166"><a aria-label="第 166 行" href="#L166"> 166</a> </span>
+<span id="L167"><a aria-label="第 167 行" href="#L167"> 167</a> </span>
+<span id="L168"><a aria-label="第 168 行" href="#L168"> 168</a> class MultiheadSelfAttention(nn.Module):</span>
+<span id="L169"><a aria-label="第 169 行" href="#L169"> 169</a>     def __init__(self, d_model: int, n_heads: int, dropout: float = 0.0):</span>
+<span id="L170"><a aria-label="第 170 行" href="#L170"> 170</a>         super().__init__()</span>
+<span id="L171"><a aria-label="第 171 行" href="#L171"> 171</a>         assert d_model % n_heads == 0</span>
+<span id="L172"><a aria-label="第 172 行" href="#L172"> 172</a>         self.d_model = d_model</span>
+<span id="L173"><a aria-label="第 173 行" href="#L173"> 173</a>         self.n_heads = n_heads</span>
+<span id="L174"><a aria-label="第 174 行" href="#L174"> 174</a>         self.head_dim = d_model // n_heads</span>
+<span id="L175"><a aria-label="第 175 行" href="#L175"> 175</a>         self.dropout_p = float(dropout)</span>
+<span id="L176"><a aria-label="第 176 行" href="#L176"> 176</a> </span>
+<span id="L177"><a aria-label="第 177 行" href="#L177"> 177</a>         self.qkv = nn.Linear(d_model, 3 * d_model, bias=True)</span>
+<span id="L178"><a aria-label="第 178 行" href="#L178"> 178</a>         self.out = nn.Linear(d_model, d_model, bias=True)</span>
+<span id="L179"><a aria-label="第 179 行" href="#L179"> 179</a> </span>
+<span id="L180"><a aria-label="第 180 行" href="#L180"> 180</a>     def forward(self, x_nld: torch.Tensor, *, attn_mask: Optional[torch.Tensor] = None, is_causal: bool = False):</span>
+<span id="L181"><a aria-label="第 181 行" href="#L181"> 181</a>         """</span>
+<span id="L182"><a aria-label="第 182 行" href="#L182"> 182</a>         x: (N,L,D)</span>
+<span id="L183"><a aria-label="第 183 行" href="#L183"> 183</a>         attn_mask: bool, True means "allowed to attend" (for torch SDPA), broadcastable to (N,1,L,L) or (N,H,L,L)</span>
+<span id="L184"><a aria-label="第 184 行" href="#L184"> 184</a>         """</span>
+<span id="L185"><a aria-label="第 185 行" href="#L185"> 185</a>         N, L, D = x_nld.shape</span>
+<span id="L186"><a aria-label="第 186 行" href="#L186"> 186</a>         q, k, v = self.qkv(x_nld).chunk(3, dim=-1)</span>
+<span id="L187"><a aria-label="第 187 行" href="#L187"> 187</a> </span>
+<span id="L188"><a aria-label="第 188 行" href="#L188"> 188</a>         q = q.view(N, L, self.n_heads, self.head_dim).transpose(1, 2)</span>
+<span id="L189"><a aria-label="第 189 行" href="#L189"> 189</a>         k = k.view(N, L, self.n_heads, self.head_dim).transpose(1, 2)</span>
+<span id="L190"><a aria-label="第 190 行" href="#L190"> 190</a>         v = v.view(N, L, self.n_heads, self.head_dim).transpose(1, 2)</span>
+<span id="L191"><a aria-label="第 191 行" href="#L191"> 191</a> </span>
+<span id="L192"><a aria-label="第 192 行" href="#L192"> 192</a>         drop = self.dropout_p if self.training else 0.0</span>
+<span id="L193"><a aria-label="第 193 行" href="#L193"> 193</a>         y = F.scaled_dot_product_attention(q, k, v, attn_mask=attn_mask, dropout_p=drop, is_causal=is_causal)</span>
+<span id="L194"><a aria-label="第 194 行" href="#L194"> 194</a>         y = y.transpose(1, 2).contiguous().view(N, L, D)</span>
+<span id="L195"><a aria-label="第 195 行" href="#L195"> 195</a>         return self.out(y)</span>
+<span id="L196"><a aria-label="第 196 行" href="#L196"> 196</a> </span>
+<span id="L197"><a aria-label="第 197 行" href="#L197"> 197</a> </span>
+<span id="L198"><a aria-label="第 198 行" href="#L198"> 198</a> class SpaceSelfAttentionModality(nn.Module):</span>
+<span id="L199"><a aria-label="第 199 行" href="#L199"> 199</a>     def __init__(self, d_model: int, n_heads: int, modality_ids: torch.Tensor, n_latents: int, mode: str, dropout: float):</span>
+<span id="L200"><a aria-label="第 200 行" href="#L200"> 200</a>         super().__init__()</span>
+<span id="L201"><a aria-label="第 201 行" href="#L201"> 201</a>         self.n_latents = int(n_latents)</span>
+<span id="L202"><a aria-label="第 202 行" href="#L202"> 202</a>         self.mode = mode</span>
+<span id="L203"><a aria-label="第 203 行" href="#L203"> 203</a>         self.register_buffer("modality_ids", modality_ids.to(torch.int32), persistent=False)</span>
+<span id="L204"><a aria-label="第 204 行" href="#L204"> 204</a> </span>
+<span id="L205"><a aria-label="第 205 行" href="#L205"> 205</a>         S = int(self.modality_ids.numel())</span>
+<span id="L206"><a aria-label="第 206 行" href="#L206"> 206</a>         allow = self._build_allow(S)                               # (S,S) True=allowed</span>
+<span id="L207"><a aria-label="第 207 行" href="#L207"> 207</a>         attn_mask = allow.unsqueeze(0).unsqueeze(0)                # (1,1,S,S) True=allowed (PyTorch SDPA bool mask)</span>
+<span id="L208"><a aria-label="第 208 行" href="#L208"> 208</a>         self.register_buffer("attn_mask", attn_mask, persistent=False)</span>
+<span id="L209"><a aria-label="第 209 行" href="#L209"> 209</a> </span>
+<span id="L210"><a aria-label="第 210 行" href="#L210"> 210</a>         self.attn = MultiheadSelfAttention(d_model, n_heads, dropout=dropout)</span>
+<span id="L211"><a aria-label="第 211 行" href="#L211"> 211</a> </span>
+<span id="L212"><a aria-label="第 212 行" href="#L212"> 212</a>     def _build_allow(self, S: int) -&gt; torch.Tensor:</span>
+<span id="L213"><a aria-label="第 213 行" href="#L213"> 213</a>         device = self.modality_ids.device</span>
+<span id="L214"><a aria-label="第 214 行" href="#L214"> 214</a>         q_idx = torch.arange(S, device=device).unsqueeze(1)  # (S,1)</span>
+<span id="L215"><a aria-label="第 215 行" href="#L215"> 215</a>         k_idx = torch.arange(S, device=device).unsqueeze(0)  # (1,S)</span>
+<span id="L216"><a aria-label="第 216 行" href="#L216"> 216</a> </span>
+<span id="L217"><a aria-label="第 217 行" href="#L217"> 217</a>         is_q_lat = q_idx &lt; self.n_latents</span>
+<span id="L218"><a aria-label="第 218 行" href="#L218"> 218</a>         is_k_lat = k_idx &lt; self.n_latents</span>
+<span id="L219"><a aria-label="第 219 行" href="#L219"> 219</a> </span>
+<span id="L220"><a aria-label="第 220 行" href="#L220"> 220</a>         q_mod = self.modality_ids[q_idx]</span>
+<span id="L221"><a aria-label="第 221 行" href="#L221"> 221</a>         k_mod = self.modality_ids[k_idx]</span>
+<span id="L222"><a aria-label="第 222 行" href="#L222"> 222</a>         same_mod = (q_mod == k_mod)</span>
+<span id="L223"><a aria-label="第 223 行" href="#L223"> 223</a> </span>
+<span id="L224"><a aria-label="第 224 行" href="#L224"> 224</a>         if self.mode == "encoder":</span>
+<span id="L225"><a aria-label="第 225 行" href="#L225"> 225</a>             allow_lat_q = torch.ones((S, S), dtype=torch.bool, device=device)</span>
+<span id="L226"><a aria-label="第 226 行" href="#L226"> 226</a>             allow_nonlat_q = same_mod</span>
+<span id="L227"><a aria-label="第 227 行" href="#L227"> 227</a>             return torch.where(is_q_lat, allow_lat_q, allow_nonlat_q)</span>
+<span id="L228"><a aria-label="第 228 行" href="#L228"> 228</a> </span>
+<span id="L229"><a aria-label="第 229 行" href="#L229"> 229</a>         if self.mode == "decoder":</span>
+<span id="L230"><a aria-label="第 230 行" href="#L230"> 230</a>             allow_lat_q = is_k_lat</span>
+<span id="L231"><a aria-label="第 231 行" href="#L231"> 231</a>             allow_nonlat_q = same_mod | is_k_lat</span>
+<span id="L232"><a aria-label="第 232 行" href="#L232"> 232</a>             return torch.where(is_q_lat, allow_lat_q, allow_nonlat_q)</span>
+<span id="L233"><a aria-label="第 233 行" href="#L233"> 233</a> </span>
+<span id="L234"><a aria-label="第 234 行" href="#L234"> 234</a>         if self.mode == "wm_agent":</span>
+<span id="L235"><a aria-label="第 235 行" href="#L235"> 235</a>             # full mixing across modalities</span>
+<span id="L236"><a aria-label="第 236 行" href="#L236"> 236</a>             return torch.ones((S, S), dtype=torch.bool, device=device)</span>
+<span id="L237"><a aria-label="第 237 行" href="#L237"> 237</a> </span>
+<span id="L238"><a aria-label="第 238 行" href="#L238"> 238</a>         if self.mode == "wm_agent_isolated":</span>
+<span id="L239"><a aria-label="第 239 行" href="#L239"> 239</a>             # non-agent tokens: can attend to everything EXCEPT agent tokens</span>
+<span id="L240"><a aria-label="第 240 行" href="#L240"> 240</a>             # agent tokens: attend only to agent tokens (keeps them inert in pretrain)</span>
+<span id="L241"><a aria-label="第 241 行" href="#L241"> 241</a>             is_q_agent = (q_mod == int(Modality.AGENT))</span>
+<span id="L242"><a aria-label="第 242 行" href="#L242"> 242</a>             is_k_agent = (k_mod == int(Modality.AGENT))</span>
+<span id="L243"><a aria-label="第 243 行" href="#L243"> 243</a> </span>
+<span id="L244"><a aria-label="第 244 行" href="#L244"> 244</a>             allow = torch.ones((S, S), dtype=torch.bool, device=device)</span>
+<span id="L245"><a aria-label="第 245 行" href="#L245"> 245</a> </span>
+<span id="L246"><a aria-label="第 246 行" href="#L246"> 246</a>             # non-agent queries cannot see agent keys</span>
+<span id="L247"><a aria-label="第 247 行" href="#L247"> 247</a>             allow_non_agent_q = ~is_q_agent</span>
+<span id="L248"><a aria-label="第 248 行" href="#L248"> 248</a>             allow = torch.where(allow_non_agent_q, ~is_k_agent, allow)</span>
+<span id="L249"><a aria-label="第 249 行" href="#L249"> 249</a> </span>
+<span id="L250"><a aria-label="第 250 行" href="#L250"> 250</a>             # agent queries only see agent keys</span>
+<span id="L251"><a aria-label="第 251 行" href="#L251"> 251</a>             allow = torch.where(is_q_agent, is_k_agent, allow)</span>
+<span id="L252"><a aria-label="第 252 行" href="#L252"> 252</a>             return allow</span>
+<span id="L253"><a aria-label="第 253 行" href="#L253"> 253</a> </span>
+<span id="L254"><a aria-label="第 254 行" href="#L254"> 254</a>         raise ValueError(f"Unsupported mode for tokenizer/wm: {self.mode}")</span>
+<span id="L255"><a aria-label="第 255 行" href="#L255"> 255</a> </span>
+<span id="L256"><a aria-label="第 256 行" href="#L256"> 256</a>     def forward(self, x_btSd: torch.Tensor) -&gt; torch.Tensor:</span>
+<span id="L257"><a aria-label="第 257 行" href="#L257"> 257</a>         B, T, S, D = x_btSd.shape</span>
+<span id="L258"><a aria-label="第 258 行" href="#L258"> 258</a>         x = x_btSd.reshape(B * T, S, D)</span>
+<span id="L259"><a aria-label="第 259 行" href="#L259"> 259</a>         mask = self.attn_mask.expand(B * T, 1, S, S)</span>
+<span id="L260"><a aria-label="第 260 行" href="#L260"> 260</a>         y = self.attn(x, attn_mask=mask, is_causal=False)</span>
+<span id="L261"><a aria-label="第 261 行" href="#L261"> 261</a>         return y.reshape(B, T, S, D)</span>
+<span id="L262"><a aria-label="第 262 行" href="#L262"> 262</a> </span>
+<span id="L263"><a aria-label="第 263 行" href="#L263"> 263</a> </span>
+<span id="L264"><a aria-label="第 264 行" href="#L264"> 264</a> class TimeSelfAttention(nn.Module):</span>
+<span id="L265"><a aria-label="第 265 行" href="#L265"> 265</a>     def __init__(self, d_model: int, n_heads: int, dropout: float, latents_only: bool, n_latents: int):</span>
+<span id="L266"><a aria-label="第 266 行" href="#L266"> 266</a>         super().__init__()</span>
+<span id="L267"><a aria-label="第 267 行" href="#L267"> 267</a>         self.latents_only = bool(latents_only)</span>
+<span id="L268"><a aria-label="第 268 行" href="#L268"> 268</a>         self.n_latents = int(n_latents)</span>
+<span id="L269"><a aria-label="第 269 行" href="#L269"> 269</a>         self.attn = MultiheadSelfAttention(d_model, n_heads, dropout=dropout)</span>
+<span id="L270"><a aria-label="第 270 行" href="#L270"> 270</a> </span>
+<span id="L271"><a aria-label="第 271 行" href="#L271"> 271</a>     def forward(self, x_btSd: torch.Tensor) -&gt; torch.Tensor:</span>
+<span id="L272"><a aria-label="第 272 行" href="#L272"> 272</a>         B, T, S, D = x_btSd.shape</span>
+<span id="L273"><a aria-label="第 273 行" href="#L273"> 273</a>         if self.latents_only:</span>
+<span id="L274"><a aria-label="第 274 行" href="#L274"> 274</a>             L = self.n_latents</span>
+<span id="L275"><a aria-label="第 275 行" href="#L275"> 275</a>             lat = x_btSd[:, :, :L, :]  # (B,T,L,D)</span>
+<span id="L276"><a aria-label="第 276 行" href="#L276"> 276</a>             lat_nld = lat.permute(0, 2, 1, 3).contiguous().view(B * L, T, D)</span>
+<span id="L277"><a aria-label="第 277 行" href="#L277"> 277</a>             out = self.attn(lat_nld, is_causal=True)</span>
+<span id="L278"><a aria-label="第 278 行" href="#L278"> 278</a>             out = out.view(B, L, T, D).permute(0, 2, 1, 3).contiguous()</span>
+<span id="L279"><a aria-label="第 279 行" href="#L279"> 279</a>             x = x_btSd.clone()</span>
+<span id="L280"><a aria-label="第 280 行" href="#L280"> 280</a>             x[:, :, :L, :] = out</span>
+<span id="L281"><a aria-label="第 281 行" href="#L281"> 281</a>             return x</span>
+<span id="L282"><a aria-label="第 282 行" href="#L282"> 282</a>         else:</span>
+<span id="L283"><a aria-label="第 283 行" href="#L283"> 283</a>             x_nld = x_btSd.permute(0, 2, 1, 3).contiguous().view(B * S, T, D)</span>
+<span id="L284"><a aria-label="第 284 行" href="#L284"> 284</a>             out = self.attn(x_nld, is_causal=True)</span>
+<span id="L285"><a aria-label="第 285 行" href="#L285"> 285</a>             return out.view(B, S, T, D).permute(0, 2, 1, 3).contiguous()</span>
+<span id="L286"><a aria-label="第 286 行" href="#L286"> 286</a> </span>
+<span id="L287"><a aria-label="第 287 行" href="#L287"> 287</a> </span>
+<span id="L288"><a aria-label="第 288 行" href="#L288"> 288</a> class BlockCausalLayer(nn.Module):</span>
+<span id="L289"><a aria-label="第 289 行" href="#L289"> 289</a>     def __init__(</span>
+<span id="L290"><a aria-label="第 290 行" href="#L290"> 290</a>         self,</span>
+<span id="L291"><a aria-label="第 291 行" href="#L291"> 291</a>         d_model: int,</span>
+<span id="L292"><a aria-label="第 292 行" href="#L292"> 292</a>         n_heads: int,</span>
+<span id="L293"><a aria-label="第 293 行" href="#L293"> 293</a>         n_latents: int,</span>
+<span id="L294"><a aria-label="第 294 行" href="#L294"> 294</a>         modality_ids: torch.Tensor,</span>
+<span id="L295"><a aria-label="第 295 行" href="#L295"> 295</a>         space_mode: str,</span>
+<span id="L296"><a aria-label="第 296 行" href="#L296"> 296</a>         dropout: float,</span>
+<span id="L297"><a aria-label="第 297 行" href="#L297"> 297</a>         mlp_ratio: float,</span>
+<span id="L298"><a aria-label="第 298 行" href="#L298"> 298</a>         layer_index: int,</span>
+<span id="L299"><a aria-label="第 299 行" href="#L299"> 299</a>         time_every: int,</span>
+<span id="L300"><a aria-label="第 300 行" href="#L300"> 300</a>         latents_only_time: bool,</span>
+<span id="L301"><a aria-label="第 301 行" href="#L301"> 301</a>     ):</span>
+<span id="L302"><a aria-label="第 302 行" href="#L302"> 302</a>         super().__init__()</span>
+<span id="L303"><a aria-label="第 303 行" href="#L303"> 303</a>         self.do_time = ((layer_index + 1) % time_every == 0)</span>
+<span id="L304"><a aria-label="第 304 行" href="#L304"> 304</a> </span>
+<span id="L305"><a aria-label="第 305 行" href="#L305"> 305</a>         self.norm1 = RMSNorm(d_model)</span>
+<span id="L306"><a aria-label="第 306 行" href="#L306"> 306</a>         self.space = SpaceSelfAttentionModality(d_model, n_heads, modality_ids, n_latents, space_mode, dropout)</span>
+<span id="L307"><a aria-label="第 307 行" href="#L307"> 307</a>         self.drop1 = nn.Dropout(dropout)</span>
+<span id="L308"><a aria-label="第 308 行" href="#L308"> 308</a> </span>
+<span id="L309"><a aria-label="第 309 行" href="#L309"> 309</a>         if self.do_time:</span>
+<span id="L310"><a aria-label="第 310 行" href="#L310"> 310</a>             self.norm2 = RMSNorm(d_model)</span>
+<span id="L311"><a aria-label="第 311 行" href="#L311"> 311</a>             self.time = TimeSelfAttention(d_model, n_heads, dropout, latents_only_time, n_latents)</span>
+<span id="L312"><a aria-label="第 312 行" href="#L312"> 312</a>             self.drop2 = nn.Dropout(dropout)</span>
+<span id="L313"><a aria-label="第 313 行" href="#L313"> 313</a> </span>
+<span id="L314"><a aria-label="第 314 行" href="#L314"> 314</a>         self.norm3 = RMSNorm(d_model)</span>
+<span id="L315"><a aria-label="第 315 行" href="#L315"> 315</a>         self.mlp = MLP(d_model, mlp_ratio=mlp_ratio, dropout=dropout)</span>
+<span id="L316"><a aria-label="第 316 行" href="#L316"> 316</a> </span>
+<span id="L317"><a aria-label="第 317 行" href="#L317"> 317</a>     def forward(self, x: torch.Tensor) -&gt; torch.Tensor:</span>
+<span id="L318"><a aria-label="第 318 行" href="#L318"> 318</a>         x = x + self.drop1(self.space(self.norm1(x)))</span>
+<span id="L319"><a aria-label="第 319 行" href="#L319"> 319</a>         if self.do_time:</span>
+<span id="L320"><a aria-label="第 320 行" href="#L320"> 320</a>             x = x + self.drop2(self.time(self.norm2(x)))</span>
+<span id="L321"><a aria-label="第 321 行" href="#L321"> 321</a>         x = x + self.mlp(self.norm3(x))</span>
+<span id="L322"><a aria-label="第 322 行" href="#L322"> 322</a>         return x</span>
+<span id="L323"><a aria-label="第 323 行" href="#L323"> 323</a> </span>
+<span id="L324"><a aria-label="第 324 行" href="#L324"> 324</a> </span>
+<span id="L325"><a aria-label="第 325 行" href="#L325"> 325</a> class BlockCausalTransformer(nn.Module):</span>
+<span id="L326"><a aria-label="第 326 行" href="#L326"> 326</a>     def __init__(</span>
+<span id="L327"><a aria-label="第 327 行" href="#L327"> 327</a>         self,</span>
+<span id="L328"><a aria-label="第 328 行" href="#L328"> 328</a>         d_model: int,</span>
+<span id="L329"><a aria-label="第 329 行" href="#L329"> 329</a>         n_heads: int,</span>
+<span id="L330"><a aria-label="第 330 行" href="#L330"> 330</a>         depth: int,</span>
+<span id="L331"><a aria-label="第 331 行" href="#L331"> 331</a>         n_latents: int,</span>
+<span id="L332"><a aria-label="第 332 行" href="#L332"> 332</a>         modality_ids: torch.Tensor,</span>
+<span id="L333"><a aria-label="第 333 行" href="#L333"> 333</a>         space_mode: str,</span>
+<span id="L334"><a aria-label="第 334 行" href="#L334"> 334</a>         dropout: float,</span>
+<span id="L335"><a aria-label="第 335 行" href="#L335"> 335</a>         mlp_ratio: float,</span>
+<span id="L336"><a aria-label="第 336 行" href="#L336"> 336</a>         time_every: int,</span>
+<span id="L337"><a aria-label="第 337 行" href="#L337"> 337</a>         latents_only_time: bool,</span>
+<span id="L338"><a aria-label="第 338 行" href="#L338"> 338</a>     ):</span>
+<span id="L339"><a aria-label="第 339 行" href="#L339"> 339</a>         super().__init__()</span>
+<span id="L340"><a aria-label="第 340 行" href="#L340"> 340</a>         self.layers = nn.ModuleList([</span>
+<span id="L341"><a aria-label="第 341 行" href="#L341"> 341</a>             BlockCausalLayer(</span>
+<span id="L342"><a aria-label="第 342 行" href="#L342"> 342</a>                 d_model=d_model, n_heads=n_heads, n_latents=n_latents,</span>
+<span id="L343"><a aria-label="第 343 行" href="#L343"> 343</a>                 modality_ids=modality_ids, space_mode=space_mode,</span>
+<span id="L344"><a aria-label="第 344 行" href="#L344"> 344</a>                 dropout=dropout, mlp_ratio=mlp_ratio,</span>
+<span id="L345"><a aria-label="第 345 行" href="#L345"> 345</a>                 layer_index=i, time_every=time_every,</span>
+<span id="L346"><a aria-label="第 346 行" href="#L346"> 346</a>                 latents_only_time=latents_only_time,</span>
+<span id="L347"><a aria-label="第 347 行" href="#L347"> 347</a>             )</span>
+<span id="L348"><a aria-label="第 348 行" href="#L348"> 348</a>             for i in range(depth)</span>
+<span id="L349"><a aria-label="第 349 行" href="#L349"> 349</a>         ])</span>
+<span id="L350"><a aria-label="第 350 行" href="#L350"> 350</a> </span>
+<span id="L351"><a aria-label="第 351 行" href="#L351"> 351</a>     def forward(self, x: torch.Tensor) -&gt; torch.Tensor:</span>
+<span id="L352"><a aria-label="第 352 行" href="#L352"> 352</a>         for layer in self.layers:</span>
+<span id="L353"><a aria-label="第 353 行" href="#L353"> 353</a>             x = layer(x)</span>
+<span id="L354"><a aria-label="第 354 行" href="#L354"> 354</a>         return x</span>
+<span id="L355"><a aria-label="第 355 行" href="#L355"> 355</a> </span>
+<span id="L356"><a aria-label="第 356 行" href="#L356"> 356</a> </span>
+<span id="L357"><a aria-label="第 357 行" href="#L357"> 357</a> class Encoder(nn.Module):</span>
+<span id="L358"><a aria-label="第 358 行" href="#L358"> 358</a>     def __init__(</span>
+<span id="L359"><a aria-label="第 359 行" href="#L359"> 359</a>         self,</span>
+<span id="L360"><a aria-label="第 360 行" href="#L360"> 360</a>         *,</span>
+<span id="L361"><a aria-label="第 361 行" href="#L361"> 361</a>         patch_dim: int,</span>
+<span id="L362"><a aria-label="第 362 行" href="#L362"> 362</a>         d_model: int,</span>
+<span id="L363"><a aria-label="第 363 行" href="#L363"> 363</a>         n_latents: int,</span>
+<span id="L364"><a aria-label="第 364 行" href="#L364"> 364</a>         n_patches: int,</span>
+<span id="L365"><a aria-label="第 365 行" href="#L365"> 365</a>         n_heads: int,</span>
+<span id="L366"><a aria-label="第 366 行" href="#L366"> 366</a>         depth: int,</span>
+<span id="L367"><a aria-label="第 367 行" href="#L367"> 367</a>         d_bottleneck: int,</span>
+<span id="L368"><a aria-label="第 368 行" href="#L368"> 368</a>         dropout: float = 0.0,</span>
+<span id="L369"><a aria-label="第 369 行" href="#L369"> 369</a>         mlp_ratio: float = 4.0,</span>
+<span id="L370"><a aria-label="第 370 行" href="#L370"> 370</a>         time_every: int = 4,</span>
+<span id="L371"><a aria-label="第 371 行" href="#L371"> 371</a>         latents_only_time: bool = True,</span>
+<span id="L372"><a aria-label="第 372 行" href="#L372"> 372</a>         mae_p_min: float = 0.0,</span>
+<span id="L373"><a aria-label="第 373 行" href="#L373"> 373</a>         mae_p_max: float = 0.9,</span>
+<span id="L374"><a aria-label="第 374 行" href="#L374"> 374</a>         scale_pos_embeds: bool = True,</span>
+<span id="L375"><a aria-label="第 375 行" href="#L375"> 375</a>     ):</span>
+<span id="L376"><a aria-label="第 376 行" href="#L376"> 376</a>         super().__init__()</span>
+<span id="L377"><a aria-label="第 377 行" href="#L377"> 377</a>         self.d_model = d_model</span>
+<span id="L378"><a aria-label="第 378 行" href="#L378"> 378</a>         self.n_latents = n_latents</span>
+<span id="L379"><a aria-label="第 379 行" href="#L379"> 379</a>         self.n_patches = n_patches</span>
+<span id="L380"><a aria-label="第 380 行" href="#L380"> 380</a>         self.scale_pos_embeds = scale_pos_embeds</span>
+<span id="L381"><a aria-label="第 381 行" href="#L381"> 381</a> </span>
+<span id="L382"><a aria-label="第 382 行" href="#L382"> 382</a>         self.patch_proj = nn.Linear(patch_dim, d_model)</span>
+<span id="L383"><a aria-label="第 383 行" href="#L383"> 383</a>         self.bottleneck_proj = nn.Linear(d_model, d_bottleneck)</span>
+<span id="L384"><a aria-label="第 384 行" href="#L384"> 384</a> </span>
+<span id="L385"><a aria-label="第 385 行" href="#L385"> 385</a>         self.layout = TokenLayout(n_latents=n_latents, segments=((Modality.IMAGE, n_patches),))</span>
+<span id="L386"><a aria-label="第 386 行" href="#L386"> 386</a>         modality_ids = self.layout.modality_ids()  # CPU buffer, moves with .to(device)</span>
+<span id="L387"><a aria-label="第 387 行" href="#L387"> 387</a> </span>
+<span id="L388"><a aria-label="第 388 行" href="#L388"> 388</a>         self.transformer = BlockCausalTransformer(</span>
+<span id="L389"><a aria-label="第 389 行" href="#L389"> 389</a>             d_model=d_model, n_heads=n_heads, depth=depth,</span>
+<span id="L390"><a aria-label="第 390 行" href="#L390"> 390</a>             n_latents=n_latents, modality_ids=modality_ids,</span>
+<span id="L391"><a aria-label="第 391 行" href="#L391"> 391</a>             space_mode="encoder",</span>
+<span id="L392"><a aria-label="第 392 行" href="#L392"> 392</a>             dropout=dropout, mlp_ratio=mlp_ratio,</span>
+<span id="L393"><a aria-label="第 393 行" href="#L393"> 393</a>             time_every=time_every, latents_only_time=latents_only_time,</span>
+<span id="L394"><a aria-label="第 394 行" href="#L394"> 394</a>         )</span>
+<span id="L395"><a aria-label="第 395 行" href="#L395"> 395</a>         self.mae = MAEReplacer(d_model=d_model, p_min=mae_p_min, p_max=mae_p_max)</span>
+<span id="L396"><a aria-label="第 396 行" href="#L396"> 396</a> </span>
+<span id="L397"><a aria-label="第 397 行" href="#L397"> 397</a>         self.latents = nn.Parameter(torch.empty(n_latents, d_model))</span>
+<span id="L398"><a aria-label="第 398 行" href="#L398"> 398</a>         nn.init.normal_(self.latents, std=0.02)</span>
+<span id="L399"><a aria-label="第 399 行" href="#L399"> 399</a> </span>
+<span id="L400"><a aria-label="第 400 行" href="#L400"> 400</a>     def forward(self, patch_tokens_btnd: torch.Tensor):</span>
+<span id="L401"><a aria-label="第 401 行" href="#L401"> 401</a>         B, T, Np, Dp = patch_tokens_btnd.shape</span>
+<span id="L402"><a aria-label="第 402 行" href="#L402"> 402</a>         assert Np == self.n_patches</span>
+<span id="L403"><a aria-label="第 403 行" href="#L403"> 403</a> </span>
+<span id="L404"><a aria-label="第 404 行" href="#L404"> 404</a>         proj = self.patch_proj(patch_tokens_btnd)            # (B,T,Np,D)</span>
+<span id="L405"><a aria-label="第 405 行" href="#L405"> 405</a>         proj_masked, mae_mask, keep_prob = self.mae(proj)    # (B,T,Np,D), (B,T,Np,1), (B,T,1)</span>
+<span id="L406"><a aria-label="第 406 行" href="#L406"> 406</a> </span>
+<span id="L407"><a aria-label="第 407 行" href="#L407"> 407</a>         lat = self.latents.view(1, 1, self.n_latents, -1).expand(B, T, -1, -1)</span>
+<span id="L408"><a aria-label="第 408 行" href="#L408"> 408</a>         tokens = torch.cat([lat, proj_masked], dim=2)        # (B,T,S,D)</span>
+<span id="L409"><a aria-label="第 409 行" href="#L409"> 409</a>         tokens = add_sinusoidal_positions(tokens, self.scale_pos_embeds)</span>
+<span id="L410"><a aria-label="第 410 行" href="#L410"> 410</a> </span>
+<span id="L411"><a aria-label="第 411 行" href="#L411"> 411</a>         enc = self.transformer(tokens)</span>
+<span id="L412"><a aria-label="第 412 行" href="#L412"> 412</a>         z = torch.tanh(self.bottleneck_proj(enc[:, :, :self.n_latents, :]))</span>
+<span id="L413"><a aria-label="第 413 行" href="#L413"> 413</a>         return z, (mae_mask, keep_prob)</span>
+<span id="L414"><a aria-label="第 414 行" href="#L414"> 414</a> </span>
+<span id="L415"><a aria-label="第 415 行" href="#L415"> 415</a> </span>
+<span id="L416"><a aria-label="第 416 行" href="#L416"> 416</a> class Decoder(nn.Module):</span>
+<span id="L417"><a aria-label="第 417 行" href="#L417"> 417</a>     def __init__(</span>
+<span id="L418"><a aria-label="第 418 行" href="#L418"> 418</a>         self,</span>
+<span id="L419"><a aria-label="第 419 行" href="#L419"> 419</a>         *,</span>
+<span id="L420"><a aria-label="第 420 行" href="#L420"> 420</a>         d_bottleneck: int,</span>
+<span id="L421"><a aria-label="第 421 行" href="#L421"> 421</a>         d_model: int,</span>
+<span id="L422"><a aria-label="第 422 行" href="#L422"> 422</a>         n_heads: int,</span>
+<span id="L423"><a aria-label="第 423 行" href="#L423"> 423</a>         depth: int,</span>
+<span id="L424"><a aria-label="第 424 行" href="#L424"> 424</a>         n_latents: int,</span>
+<span id="L425"><a aria-label="第 425 行" href="#L425"> 425</a>         n_patches: int,</span>
+<span id="L426"><a aria-label="第 426 行" href="#L426"> 426</a>         d_patch: int,</span>
+<span id="L427"><a aria-label="第 427 行" href="#L427"> 427</a>         dropout: float = 0.0,</span>
+<span id="L428"><a aria-label="第 428 行" href="#L428"> 428</a>         mlp_ratio: float = 4.0,</span>
+<span id="L429"><a aria-label="第 429 行" href="#L429"> 429</a>         time_every: int = 4,</span>
+<span id="L430"><a aria-label="第 430 行" href="#L430"> 430</a>         latents_only_time: bool = True,</span>
+<span id="L431"><a aria-label="第 431 行" href="#L431"> 431</a>         scale_pos_embeds: bool = True,</span>
+<span id="L432"><a aria-label="第 432 行" href="#L432"> 432</a>     ):</span>
+<span id="L433"><a aria-label="第 433 行" href="#L433"> 433</a>         super().__init__()</span>
+<span id="L434"><a aria-label="第 434 行" href="#L434"> 434</a>         self.n_latents = n_latents</span>
+<span id="L435"><a aria-label="第 435 行" href="#L435"> 435</a>         self.n_patches = n_patches</span>
+<span id="L436"><a aria-label="第 436 行" href="#L436"> 436</a>         self.scale_pos_embeds = scale_pos_embeds</span>
+<span id="L437"><a aria-label="第 437 行" href="#L437"> 437</a> </span>
+<span id="L438"><a aria-label="第 438 行" href="#L438"> 438</a>         self.up_proj = nn.Linear(d_bottleneck, d_model)</span>
+<span id="L439"><a aria-label="第 439 行" href="#L439"> 439</a>         self.patch_queries = nn.Parameter(torch.empty(n_patches, d_model))</span>
+<span id="L440"><a aria-label="第 440 行" href="#L440"> 440</a>         nn.init.normal_(self.patch_queries, std=0.02)</span>
+<span id="L441"><a aria-label="第 441 行" href="#L441"> 441</a> </span>
+<span id="L442"><a aria-label="第 442 行" href="#L442"> 442</a>         self.patch_head = nn.Linear(d_model, d_patch)</span>
+<span id="L443"><a aria-label="第 443 行" href="#L443"> 443</a> </span>
+<span id="L444"><a aria-label="第 444 行" href="#L444"> 444</a>         self.layout = TokenLayout(n_latents=n_latents, segments=((Modality.IMAGE, n_patches),))</span>
+<span id="L445"><a aria-label="第 445 行" href="#L445"> 445</a>         modality_ids = self.layout.modality_ids()</span>
+<span id="L446"><a aria-label="第 446 行" href="#L446"> 446</a> </span>
+<span id="L447"><a aria-label="第 447 行" href="#L447"> 447</a>         self.transformer = BlockCausalTransformer(</span>
+<span id="L448"><a aria-label="第 448 行" href="#L448"> 448</a>             d_model=d_model, n_heads=n_heads, depth=depth,</span>
+<span id="L449"><a aria-label="第 449 行" href="#L449"> 449</a>             n_latents=n_latents, modality_ids=modality_ids,</span>
+<span id="L450"><a aria-label="第 450 行" href="#L450"> 450</a>             space_mode="decoder",</span>
+<span id="L451"><a aria-label="第 451 行" href="#L451"> 451</a>             dropout=dropout, mlp_ratio=mlp_ratio,</span>
+<span id="L452"><a aria-label="第 452 行" href="#L452"> 452</a>             time_every=time_every, latents_only_time=latents_only_time,</span>
+<span id="L453"><a aria-label="第 453 行" href="#L453"> 453</a>         )</span>
+<span id="L454"><a aria-label="第 454 行" href="#L454"> 454</a> </span>
+<span id="L455"><a aria-label="第 455 行" href="#L455"> 455</a>     def forward(self, z_btLd: torch.Tensor) -&gt; torch.Tensor:</span>
+<span id="L456"><a aria-label="第 456 行" href="#L456"> 456</a>         B, T, L, _ = z_btLd.shape</span>
+<span id="L457"><a aria-label="第 457 行" href="#L457"> 457</a>         assert L == self.n_latents</span>
+<span id="L458"><a aria-label="第 458 行" href="#L458"> 458</a> </span>
+<span id="L459"><a aria-label="第 459 行" href="#L459"> 459</a>         lat = torch.tanh(self.up_proj(z_btLd))                                 # (B,T,L,D)</span>
+<span id="L460"><a aria-label="第 460 行" href="#L460"> 460</a>         qry = self.patch_queries.view(1, 1, self.n_patches, -1).expand(B, T, -1, -1)</span>
+<span id="L461"><a aria-label="第 461 行" href="#L461"> 461</a>         tokens = torch.cat([lat, qry], dim=2)                                  # (B,T,S,D)</span>
+<span id="L462"><a aria-label="第 462 行" href="#L462"> 462</a>         tokens = add_sinusoidal_positions(tokens, self.scale_pos_embeds)</span>
+<span id="L463"><a aria-label="第 463 行" href="#L463"> 463</a> </span>
+<span id="L464"><a aria-label="第 464 行" href="#L464"> 464</a>         x = self.transformer(tokens)</span>
+<span id="L465"><a aria-label="第 465 行" href="#L465"> 465</a>         x_p = x[:, :, L:, :]</span>
+<span id="L466"><a aria-label="第 466 行" href="#L466"> 466</a>         return torch.sigmoid(self.patch_head(x_p))                             # (B,T,Np,Dp)</span>
+<span id="L467"><a aria-label="第 467 行" href="#L467"> 467</a> </span>
+<span id="L468"><a aria-label="第 468 行" href="#L468"> 468</a> </span>
+<span id="L469"><a aria-label="第 469 行" href="#L469"> 469</a> class Tokenizer(nn.Module):</span>
+<span id="L470"><a aria-label="第 470 行" href="#L470"> 470</a>     def __init__(self, encoder: Encoder, decoder: Decoder):</span>
+<span id="L471"><a aria-label="第 471 行" href="#L471"> 471</a>         super().__init__()</span>
+<span id="L472"><a aria-label="第 472 行" href="#L472"> 472</a>         self.encoder = encoder</span>
+<span id="L473"><a aria-label="第 473 行" href="#L473"> 473</a>         self.decoder = decoder</span>
+<span id="L474"><a aria-label="第 474 行" href="#L474"> 474</a> </span>
+<span id="L475"><a aria-label="第 475 行" href="#L475"> 475</a>     def forward(self, patches_btnd: torch.Tensor):</span>
+<span id="L476"><a aria-label="第 476 行" href="#L476"> 476</a>         z, (mae_mask, keep_prob) = self.encoder(patches_btnd)</span>
+<span id="L477"><a aria-label="第 477 行" href="#L477"> 477</a>         pred = self.decoder(z)</span>
+<span id="L478"><a aria-label="第 478 行" href="#L478"> 478</a>         return pred, mae_mask, keep_prob</span>
+<span id="L479"><a aria-label="第 479 行" href="#L479"> 479</a> </span>
+<span id="L480"><a aria-label="第 480 行" href="#L480"> 480</a> </span>
+<span id="L481"><a aria-label="第 481 行" href="#L481"> 481</a> def pack_bottleneck_to_spatial(z_btLd: torch.Tensor, *, n_spatial: int, k: int) -&gt; torch.Tensor:</span>
+<span id="L482"><a aria-label="第 482 行" href="#L482"> 482</a>     """</span>
+<span id="L483"><a aria-label="第 483 行" href="#L483"> 483</a>     z: (B,T,L,D_b) where L == n_spatial * k</span>
+<span id="L484"><a aria-label="第 484 行" href="#L484"> 484</a>     -&gt; (B,T,n_spatial,D_b*k)</span>
+<span id="L485"><a aria-label="第 485 行" href="#L485"> 485</a>     """</span>
+<span id="L486"><a aria-label="第 486 行" href="#L486"> 486</a>     B, T, L, D = z_btLd.shape</span>
+<span id="L487"><a aria-label="第 487 行" href="#L487"> 487</a>     assert L == n_spatial * k, f"L={L} must equal n_spatial*k={n_spatial*k}"</span>
+<span id="L488"><a aria-label="第 488 行" href="#L488"> 488</a>     return z_btLd.view(B, T, n_spatial, k * D)</span>
+<span id="L489"><a aria-label="第 489 行" href="#L489"> 489</a> </span>
+<span id="L490"><a aria-label="第 490 行" href="#L490"> 490</a> </span>
+<span id="L491"><a aria-label="第 491 行" href="#L491"> 491</a> def unpack_spatial_to_bottleneck(z_btSd: torch.Tensor, *, k: int) -&gt; torch.Tensor:</span>
+<span id="L492"><a aria-label="第 492 行" href="#L492"> 492</a>     """</span>
+<span id="L493"><a aria-label="第 493 行" href="#L493"> 493</a>     z: (B,T,n_spatial,D_b*k) -&gt; (B,T,n_spatial*k,D_b)</span>
+<span id="L494"><a aria-label="第 494 行" href="#L494"> 494</a>     """</span>
+<span id="L495"><a aria-label="第 495 行" href="#L495"> 495</a>     B, T, S, DK = z_btSd.shape</span>
+<span id="L496"><a aria-label="第 496 行" href="#L496"> 496</a>     assert DK % k == 0, f"D={DK} must be divisible by k={k}"</span>
+<span id="L497"><a aria-label="第 497 行" href="#L497"> 497</a>     D = DK // k</span>
+<span id="L498"><a aria-label="第 498 行" href="#L498"> 498</a>     return z_btSd.view(B, T, S * k, D)</span>
+<span id="L499"><a aria-label="第 499 行" href="#L499"> 499</a> </span>
+<span id="L500"><a aria-label="第 500 行" href="#L500"> 500</a> </span>
+<span id="L501"><a aria-label="第 501 行" href="#L501"> 501</a> class ActionEncoder(nn.Module):</span>
+<span id="L502"><a aria-label="第 502 行" href="#L502"> 502</a>     """</span>
+<span id="L503"><a aria-label="第 503 行" href="#L503"> 503</a>     Continuous actions in [-1,1], shape (B,T,A) -&gt; token (B,T,1,D).</span>
+<span id="L504"><a aria-label="第 504 行" href="#L504"> 504</a>     If actions is None (unlabeled pretrain), emits a learned base token.</span>
+<span id="L505"><a aria-label="第 505 行" href="#L505"> 505</a>     """</span>
+<span id="L506"><a aria-label="第 506 行" href="#L506"> 506</a>     def __init__(self, d_model: int, action_dim: int = 16, hidden_mult: float = 2.0):</span>
+<span id="L507"><a aria-label="第 507 行" href="#L507"> 507</a>         super().__init__()</span>
+<span id="L508"><a aria-label="第 508 行" href="#L508"> 508</a>         self.d_model = int(d_model)</span>
+<span id="L509"><a aria-label="第 509 行" href="#L509"> 509</a>         self.action_dim = int(action_dim)</span>
+<span id="L510"><a aria-label="第 510 行" href="#L510"> 510</a> </span>
+<span id="L511"><a aria-label="第 511 行" href="#L511"> 511</a>         hidden = int(self.d_model * hidden_mult)</span>
+<span id="L512"><a aria-label="第 512 行" href="#L512"> 512</a>         self.base = nn.Parameter(torch.empty(self.d_model))</span>
+<span id="L513"><a aria-label="第 513 行" href="#L513"> 513</a>         nn.init.normal_(self.base, std=0.02)</span>
+<span id="L514"><a aria-label="第 514 行" href="#L514"> 514</a> </span>
+<span id="L515"><a aria-label="第 515 行" href="#L515"> 515</a>         self.fc1 = nn.Linear(self.action_dim, hidden)</span>
+<span id="L516"><a aria-label="第 516 行" href="#L516"> 516</a>         self.fc2 = nn.Linear(hidden, self.d_model)</span>
+<span id="L517"><a aria-label="第 517 行" href="#L517"> 517</a> </span>
+<span id="L518"><a aria-label="第 518 行" href="#L518"> 518</a>         nn.init.normal_(self.fc2.weight, std=1e-3)</span>
+<span id="L519"><a aria-label="第 519 行" href="#L519"> 519</a>         nn.init.zeros_(self.fc2.bias)</span>
+<span id="L520"><a aria-label="第 520 行" href="#L520"> 520</a> </span>
+<span id="L521"><a aria-label="第 521 行" href="#L521"> 521</a>     def forward(</span>
+<span id="L522"><a aria-label="第 522 行" href="#L522"> 522</a>         self,</span>
+<span id="L523"><a aria-label="第 523 行" href="#L523"> 523</a>         actions: Optional[torch.Tensor],                 # (B,T,A) or None</span>
+<span id="L524"><a aria-label="第 524 行" href="#L524"> 524</a>         *,</span>
+<span id="L525"><a aria-label="第 525 行" href="#L525"> 525</a>         batch_time_shape: Optional[Tuple[int,int]] = None,</span>
+<span id="L526"><a aria-label="第 526 行" href="#L526"> 526</a>         act_mask: Optional[torch.Tensor] = None,         # (B,T,A) or (A,)</span>
+<span id="L527"><a aria-label="第 527 行" href="#L527"> 527</a>         as_tokens: bool = True,</span>
+<span id="L528"><a aria-label="第 528 行" href="#L528"> 528</a>     ) -&gt; torch.Tensor:</span>
+<span id="L529"><a aria-label="第 529 行" href="#L529"> 529</a>         if actions is None:</span>
+<span id="L530"><a aria-label="第 530 行" href="#L530"> 530</a>             assert batch_time_shape is not None</span>
+<span id="L531"><a aria-label="第 531 行" href="#L531"> 531</a>             B, T = batch_time_shape</span>
+<span id="L532"><a aria-label="第 532 行" href="#L532"> 532</a>             out = self.base.view(1, 1, -1).expand(B, T, -1)</span>
+<span id="L533"><a aria-label="第 533 行" href="#L533"> 533</a>         else:</span>
+<span id="L534"><a aria-label="第 534 行" href="#L534"> 534</a>             x = actions</span>
+<span id="L535"><a aria-label="第 535 行" href="#L535"> 535</a>             if act_mask is not None:</span>
+<span id="L536"><a aria-label="第 536 行" href="#L536"> 536</a>                 x = x * act_mask</span>
+<span id="L537"><a aria-label="第 537 行" href="#L537"> 537</a>             x = x.clamp(-1, 1)</span>
+<span id="L538"><a aria-label="第 538 行" href="#L538"> 538</a>             out = self.fc2(F.silu(self.fc1(x))) + self.base.view(1, 1, -1)</span>
+<span id="L539"><a aria-label="第 539 行" href="#L539"> 539</a> </span>
+<span id="L540"><a aria-label="第 540 行" href="#L540"> 540</a>         return out[:, :, None, :] if as_tokens else out</span>
+<span id="L541"><a aria-label="第 541 行" href="#L541"> 541</a> </span>
+<span id="L542"><a aria-label="第 542 行" href="#L542"> 542</a> </span>
+<span id="L543"><a aria-label="第 543 行" href="#L543"> 543</a> class TaskEmbedder(nn.Module):</span>
+<span id="L544"><a aria-label="第 544 行" href="#L544"> 544</a>     def __init__(</span>
+<span id="L545"><a aria-label="第 545 行" href="#L545"> 545</a>         self,</span>
+<span id="L546"><a aria-label="第 546 行" href="#L546"> 546</a>         d_model: int,</span>
+<span id="L547"><a aria-label="第 547 行" href="#L547"> 547</a>         n_agent: int = 1,</span>
+<span id="L548"><a aria-label="第 548 行" href="#L548"> 548</a>         use_ids: bool = True,</span>
+<span id="L549"><a aria-label="第 549 行" href="#L549"> 549</a>         n_tasks: int = 128,</span>
+<span id="L550"><a aria-label="第 550 行" href="#L550"> 550</a>         d_task: int = 64,</span>
+<span id="L551"><a aria-label="第 551 行" href="#L551"> 551</a>     ):</span>
+<span id="L552"><a aria-label="第 552 行" href="#L552"> 552</a>         super().__init__()</span>
+<span id="L553"><a aria-label="第 553 行" href="#L553"> 553</a>         self.d_model = int(d_model)</span>
+<span id="L554"><a aria-label="第 554 行" href="#L554"> 554</a>         self.n_agent = int(n_agent)</span>
+<span id="L555"><a aria-label="第 555 行" href="#L555"> 555</a>         self.use_ids = bool(use_ids)</span>
+<span id="L556"><a aria-label="第 556 行" href="#L556"> 556</a>         self.n_tasks = int(n_tasks)</span>
+<span id="L557"><a aria-label="第 557 行" href="#L557"> 557</a>         self.d_task = int(d_task)</span>
+<span id="L558"><a aria-label="第 558 行" href="#L558"> 558</a> </span>
+<span id="L559"><a aria-label="第 559 行" href="#L559"> 559</a>         if self.use_ids:</span>
+<span id="L560"><a aria-label="第 560 行" href="#L560"> 560</a>             self.task_table = nn.Embedding(self.n_tasks, self.d_model)</span>
+<span id="L561"><a aria-label="第 561 行" href="#L561"> 561</a>         else:</span>
+<span id="L562"><a aria-label="第 562 行" href="#L562"> 562</a>             self.task_proj = nn.Linear(self.d_task, self.d_model)</span>
+<span id="L563"><a aria-label="第 563 行" href="#L563"> 563</a> </span>
+<span id="L564"><a aria-label="第 564 行" href="#L564"> 564</a>         self.agent_base = nn.Parameter(torch.empty(self.d_model))</span>
+<span id="L565"><a aria-label="第 565 行" href="#L565"> 565</a>         nn.init.normal_(self.agent_base, std=0.02)</span>
+<span id="L566"><a aria-label="第 566 行" href="#L566"> 566</a> </span>
+<span id="L567"><a aria-label="第 567 行" href="#L567"> 567</a>     def forward(self, task: torch.Tensor, *, B: int, T: int) -&gt; torch.Tensor:</span>
+<span id="L568"><a aria-label="第 568 行" href="#L568"> 568</a>         if self.use_ids:</span>
+<span id="L569"><a aria-label="第 569 行" href="#L569"> 569</a>             emb = self.task_table(task.to(torch.long))  # (B,D)</span>
+<span id="L570"><a aria-label="第 570 行" href="#L570"> 570</a>         else:</span>
+<span id="L571"><a aria-label="第 571 行" href="#L571"> 571</a>             emb = self.task_proj(task)                  # (B,D)</span>
+<span id="L572"><a aria-label="第 572 行" href="#L572"> 572</a> </span>
+<span id="L573"><a aria-label="第 573 行" href="#L573"> 573</a>         x = emb + self.agent_base.view(1, -1)          # (B,D)</span>
+<span id="L574"><a aria-label="第 574 行" href="#L574"> 574</a>         return x[:, None, None, :].expand(B, T, self.n_agent, self.d_model)</span>
+<span id="L575"><a aria-label="第 575 行" href="#L575"> 575</a> </span>
+<span id="L576"><a aria-label="第 576 行" href="#L576"> 576</a> </span>
+<span id="L577"><a aria-label="第 577 行" href="#L577"> 577</a> class Dynamics(nn.Module):</span>
+<span id="L578"><a aria-label="第 578 行" href="#L578"> 578</a>     def __init__(</span>
+<span id="L579"><a aria-label="第 579 行" href="#L579"> 579</a>         self,</span>
+<span id="L580"><a aria-label="第 580 行" href="#L580"> 580</a>         *,</span>
+<span id="L581"><a aria-label="第 581 行" href="#L581"> 581</a>         d_model: int,</span>
+<span id="L582"><a aria-label="第 582 行" href="#L582"> 582</a>         d_bottleneck: int,</span>
+<span id="L583"><a aria-label="第 583 行" href="#L583"> 583</a>         d_spatial: int,</span>
+<span id="L584"><a aria-label="第 584 行" href="#L584"> 584</a>         n_spatial: int,</span>
+<span id="L585"><a aria-label="第 585 行" href="#L585"> 585</a>         n_register: int,</span>
+<span id="L586"><a aria-label="第 586 行" href="#L586"> 586</a>         n_agent: int,</span>
+<span id="L587"><a aria-label="第 587 行" href="#L587"> 587</a>         n_heads: int,</span>
+<span id="L588"><a aria-label="第 588 行" href="#L588"> 588</a>         depth: int,</span>
+<span id="L589"><a aria-label="第 589 行" href="#L589"> 589</a>         k_max: int,</span>
+<span id="L590"><a aria-label="第 590 行" href="#L590"> 590</a>         dropout: float = 0.0,</span>
+<span id="L591"><a aria-label="第 591 行" href="#L591"> 591</a>         mlp_ratio: float = 4.0,</span>
+<span id="L592"><a aria-label="第 592 行" href="#L592"> 592</a>         time_every: int = 4,</span>
+<span id="L593"><a aria-label="第 593 行" href="#L593"> 593</a>         space_mode: str = "wm_agent_isolated",  # or "wm_agent"</span>
+<span id="L594"><a aria-label="第 594 行" href="#L594"> 594</a>         scale_pos_embeds: bool = True,</span>
+<span id="L595"><a aria-label="第 595 行" href="#L595"> 595</a>     ):</span>
+<span id="L596"><a aria-label="第 596 行" href="#L596"> 596</a>         super().__init__()</span>
+<span id="L597"><a aria-label="第 597 行" href="#L597"> 597</a>         assert d_spatial % d_bottleneck == 0, "expected packing: d_spatial = d_bottleneck * packing_factor"</span>
+<span id="L598"><a aria-label="第 598 行" href="#L598"> 598</a>         self.d_model = int(d_model)</span>
+<span id="L599"><a aria-label="第 599 行" href="#L599"> 599</a>         self.d_spatial = int(d_spatial)</span>
+<span id="L600"><a aria-label="第 600 行" href="#L600"> 600</a>         self.n_spatial = int(n_spatial)</span>
+<span id="L601"><a aria-label="第 601 行" href="#L601"> 601</a>         self.n_register = int(n_register)</span>
+<span id="L602"><a aria-label="第 602 行" href="#L602"> 602</a>         self.n_agent = int(n_agent)</span>
+<span id="L603"><a aria-label="第 603 行" href="#L603"> 603</a>         self.k_max = int(k_max)</span>
+<span id="L604"><a aria-label="第 604 行" href="#L604"> 604</a>         self.scale_pos_embeds = scale_pos_embeds</span>
+<span id="L605"><a aria-label="第 605 行" href="#L605"> 605</a> </span>
+<span id="L606"><a aria-label="第 606 行" href="#L606"> 606</a>         self.spatial_proj = nn.Linear(self.d_spatial, self.d_model)</span>
+<span id="L607"><a aria-label="第 607 行" href="#L607"> 607</a>         self.register_tokens = nn.Parameter(torch.empty(self.n_register, self.d_model))</span>
+<span id="L608"><a aria-label="第 608 行" href="#L608"> 608</a>         nn.init.normal_(self.register_tokens, std=0.02)</span>
+<span id="L609"><a aria-label="第 609 行" href="#L609"> 609</a> </span>
+<span id="L610"><a aria-label="第 610 行" href="#L610"> 610</a>         self.action_encoder = ActionEncoder(d_model=self.d_model, action_dim=16)</span>
+<span id="L611"><a aria-label="第 611 行" href="#L611"> 611</a> </span>
+<span id="L612"><a aria-label="第 612 行" href="#L612"> 612</a>         # shortcut conditioning</span>
+<span id="L613"><a aria-label="第 613 行" href="#L613"> 613</a>         self.num_step_bins = int(math.log2(self.k_max)) + 1</span>
+<span id="L614"><a aria-label="第 614 行" href="#L614"> 614</a>         self.step_embed = nn.Embedding(self.num_step_bins, self.d_model)</span>
+<span id="L615"><a aria-label="第 615 行" href="#L615"> 615</a>         self.signal_embed = nn.Embedding(self.k_max + 1, self.d_model)</span>
+<span id="L616"><a aria-label="第 616 行" href="#L616"> 616</a> </span>
+<span id="L617"><a aria-label="第 617 行" href="#L617"> 617</a>         segments = [</span>
+<span id="L618"><a aria-label="第 618 行" href="#L618"> 618</a>             (Modality.ACTION, 1),</span>
+<span id="L619"><a aria-label="第 619 行" href="#L619"> 619</a>             (Modality.SHORTCUT_SIGNAL, 1),</span>
+<span id="L620"><a aria-label="第 620 行" href="#L620"> 620</a>             (Modality.SHORTCUT_STEP, 1),</span>
+<span id="L621"><a aria-label="第 621 行" href="#L621"> 621</a>             (Modality.SPATIAL, self.n_spatial),</span>
+<span id="L622"><a aria-label="第 622 行" href="#L622"> 622</a>             (Modality.REGISTER, self.n_register),</span>
+<span id="L623"><a aria-label="第 623 行" href="#L623"> 623</a>         ]</span>
+<span id="L624"><a aria-label="第 624 行" href="#L624"> 624</a>         if self.n_agent &gt; 0:</span>
+<span id="L625"><a aria-label="第 625 行" href="#L625"> 625</a>             segments.append((Modality.AGENT, self.n_agent))</span>
+<span id="L626"><a aria-label="第 626 行" href="#L626"> 626</a> </span>
+<span id="L627"><a aria-label="第 627 行" href="#L627"> 627</a>         self.layout = TokenLayout(n_latents=0, segments=tuple(segments))</span>
+<span id="L628"><a aria-label="第 628 行" href="#L628"> 628</a>         sl = self.layout.slices()</span>
+<span id="L629"><a aria-label="第 629 行" href="#L629"> 629</a>         self.spatial_slice = sl[Modality.SPATIAL]</span>
+<span id="L630"><a aria-label="第 630 行" href="#L630"> 630</a>         self.agent_slice = sl.get(Modality.AGENT, slice(0, 0))</span>
+<span id="L631"><a aria-label="第 631 行" href="#L631"> 631</a>         modality_ids = self.layout.modality_ids()</span>
+<span id="L632"><a aria-label="第 632 行" href="#L632"> 632</a> </span>
+<span id="L633"><a aria-label="第 633 行" href="#L633"> 633</a>         self.transformer = BlockCausalTransformer(</span>
+<span id="L634"><a aria-label="第 634 行" href="#L634"> 634</a>             d_model=self.d_model,</span>
+<span id="L635"><a aria-label="第 635 行" href="#L635"> 635</a>             n_heads=int(n_heads),</span>
+<span id="L636"><a aria-label="第 636 行" href="#L636"> 636</a>             depth=int(depth),</span>
+<span id="L637"><a aria-label="第 637 行" href="#L637"> 637</a>             n_latents=0,</span>
+<span id="L638"><a aria-label="第 638 行" href="#L638"> 638</a>             modality_ids=modality_ids,</span>
+<span id="L639"><a aria-label="第 639 行" href="#L639"> 639</a>             space_mode=space_mode,</span>
+<span id="L640"><a aria-label="第 640 行" href="#L640"> 640</a>             dropout=float(dropout),</span>
+<span id="L641"><a aria-label="第 641 行" href="#L641"> 641</a>             mlp_ratio=float(mlp_ratio),</span>
+<span id="L642"><a aria-label="第 642 行" href="#L642"> 642</a>             time_every=int(time_every),</span>
+<span id="L643"><a aria-label="第 643 行" href="#L643"> 643</a>             latents_only_time=False,</span>
+<span id="L644"><a aria-label="第 644 行" href="#L644"> 644</a>         )</span>
+<span id="L645"><a aria-label="第 645 行" href="#L645"> 645</a> </span>
+<span id="L646"><a aria-label="第 646 行" href="#L646"> 646</a>         self.flow_x_head = nn.Linear(self.d_model, self.d_spatial)</span>
+<span id="L647"><a aria-label="第 647 行" href="#L647"> 647</a>         nn.init.zeros_(self.flow_x_head.weight)</span>
+<span id="L648"><a aria-label="第 648 行" href="#L648"> 648</a>         nn.init.zeros_(self.flow_x_head.bias)</span>
+<span id="L649"><a aria-label="第 649 行" href="#L649"> 649</a> </span>
+<span id="L650"><a aria-label="第 650 行" href="#L650"> 650</a>     def forward(</span>
+<span id="L651"><a aria-label="第 651 行" href="#L651"> 651</a>         self,</span>
+<span id="L652"><a aria-label="第 652 行" href="#L652"> 652</a>         actions: Optional[torch.Tensor],          # (B,T,16) or None</span>
+<span id="L653"><a aria-label="第 653 行" href="#L653"> 653</a>         step_idxs: torch.Tensor,                  # (B,T)</span>
+<span id="L654"><a aria-label="第 654 行" href="#L654"> 654</a>         signal_idxs: torch.Tensor,                # (B,T)</span>
+<span id="L655"><a aria-label="第 655 行" href="#L655"> 655</a>         packed_enc_tokens: torch.Tensor,          # (B,T,n_spatial,d_spatial)</span>
+<span id="L656"><a aria-label="第 656 行" href="#L656"> 656</a>         *,</span>
+<span id="L657"><a aria-label="第 657 行" href="#L657"> 657</a>         act_mask: Optional[torch.Tensor] = None,  # (B,T,16) or (16,) or None</span>
+<span id="L658"><a aria-label="第 658 行" href="#L658"> 658</a>         agent_tokens: Optional[torch.Tensor] = None,</span>
+<span id="L659"><a aria-label="第 659 行" href="#L659"> 659</a>     ) -&gt; Tuple[torch.Tensor, Optional[torch.Tensor]]:</span>
+<span id="L660"><a aria-label="第 660 行" href="#L660"> 660</a>         B, T = packed_enc_tokens.shape[:2]</span>
+<span id="L661"><a aria-label="第 661 行" href="#L661"> 661</a> </span>
+<span id="L662"><a aria-label="第 662 行" href="#L662"> 662</a>         spatial_tokens = self.spatial_proj(packed_enc_tokens)  # (B,T,n_spatial,d_model)</span>
+<span id="L663"><a aria-label="第 663 行" href="#L663"> 663</a> </span>
+<span id="L664"><a aria-label="第 664 行" href="#L664"> 664</a>         action_tokens = self.action_encoder(</span>
+<span id="L665"><a aria-label="第 665 行" href="#L665"> 665</a>             actions,</span>
+<span id="L666"><a aria-label="第 666 行" href="#L666"> 666</a>             batch_time_shape=(B, T),</span>
+<span id="L667"><a aria-label="第 667 行" href="#L667"> 667</a>             act_mask=act_mask,</span>
+<span id="L668"><a aria-label="第 668 行" href="#L668"> 668</a>             as_tokens=True,</span>
+<span id="L669"><a aria-label="第 669 行" href="#L669"> 669</a>         )  # (B,T,1,d_model)</span>
+<span id="L670"><a aria-label="第 670 行" href="#L670"> 670</a> </span>
+<span id="L671"><a aria-label="第 671 行" href="#L671"> 671</a>         reg = self.register_tokens.view(1, 1, self.n_register, self.d_model).expand(B, T, -1, -1)</span>
+<span id="L672"><a aria-label="第 672 行" href="#L672"> 672</a> </span>
+<span id="L673"><a aria-label="第 673 行" href="#L673"> 673</a>         step_tok = self.step_embed(step_idxs.to(torch.long))[:, :, None, :]</span>
+<span id="L674"><a aria-label="第 674 行" href="#L674"> 674</a>         sig_tok = self.signal_embed(signal_idxs.to(torch.long))[:, :, None, :]</span>
+<span id="L675"><a aria-label="第 675 行" href="#L675"> 675</a> </span>
+<span id="L676"><a aria-label="第 676 行" href="#L676"> 676</a>         if self.n_agent &gt; 0:</span>
+<span id="L677"><a aria-label="第 677 行" href="#L677"> 677</a>             if agent_tokens is None:</span>
+<span id="L678"><a aria-label="第 678 行" href="#L678"> 678</a>                 agent_tokens = torch.zeros((B, T, self.n_agent, self.d_model), device=spatial_tokens.device, dtype=spatial_tokens.dtype)</span>
+<span id="L679"><a aria-label="第 679 行" href="#L679"> 679</a>             toks = [action_tokens, sig_tok, step_tok, spatial_tokens, reg, agent_tokens]</span>
+<span id="L680"><a aria-label="第 680 行" href="#L680"> 680</a>         else:</span>
+<span id="L681"><a aria-label="第 681 行" href="#L681"> 681</a>             toks = [action_tokens, sig_tok, step_tok, spatial_tokens, reg]</span>
+<span id="L682"><a aria-label="第 682 行" href="#L682"> 682</a> </span>
+<span id="L683"><a aria-label="第 683 行" href="#L683"> 683</a>         tokens = torch.cat(toks, dim=2)  # (B,T,S,D)</span>
+<span id="L684"><a aria-label="第 684 行" href="#L684"> 684</a>         tokens = add_sinusoidal_positions(tokens, self.scale_pos_embeds)</span>
+<span id="L685"><a aria-label="第 685 行" href="#L685"> 685</a>         x = self.transformer(tokens)</span>
+<span id="L686"><a aria-label="第 686 行" href="#L686"> 686</a> </span>
+<span id="L687"><a aria-label="第 687 行" href="#L687"> 687</a>         spatial_out = x[:, :, self.spatial_slice, :]</span>
+<span id="L688"><a aria-label="第 688 行" href="#L688"> 688</a>         x1_hat = self.flow_x_head(spatial_out)  # (B,T,n_spatial,d_spatial)</span>
+<span id="L689"><a aria-label="第 689 行" href="#L689"> 689</a> </span>
+<span id="L690"><a aria-label="第 690 行" href="#L690"> 690</a>         h_t = None</span>
+<span id="L691"><a aria-label="第 691 行" href="#L691"> 691</a>         if self.n_agent &gt; 0:</span>
+<span id="L692"><a aria-label="第 692 行" href="#L692"> 692</a>             h_t = x[:, :, self.agent_slice, :]   # (B,T,n_agent,d_model)</span>
+<span id="L693"><a aria-label="第 693 行" href="#L693"> 693</a> </span>
+<span id="L694"><a aria-label="第 694 行" href="#L694"> 694</a>         return x1_hat, h_t</span>
+<span id="L695"><a aria-label="第 695 行" href="#L695"> 695</a> </span>
+<span id="L696"><a aria-label="第 696 行" href="#L696"> 696</a> </span>
+<span id="L697"><a aria-label="第 697 行" href="#L697"> 697</a> def recon_loss_from_mae(pred_btnd: torch.Tensor,</span>
+<span id="L698"><a aria-label="第 698 行" href="#L698"> 698</a>                         target_btnd: torch.Tensor,</span>
+<span id="L699"><a aria-label="第 699 行" href="#L699"> 699</a>                         mae_mask_btNp1: torch.Tensor) -&gt; torch.Tensor:</span>
+<span id="L700"><a aria-label="第 700 行" href="#L700"> 700</a>     # mask: (B,T,Np,1) bool, True where masked</span>
+<span id="L701"><a aria-label="第 701 行" href="#L701"> 701</a>     mask = mae_mask_btNp1.to(dtype=torch.float32)  # (B,T,Np,1)</span>
+<span id="L702"><a aria-label="第 702 行" href="#L702"> 702</a> </span>
+<span id="L703"><a aria-label="第 703 行" href="#L703"> 703</a>     # compute in fp32 to avoid fp16 overflow on reduction</span>
+<span id="L704"><a aria-label="第 704 行" href="#L704"> 704</a>     diff = (pred_btnd.float() - target_btnd.float())          # (B,T,Np,Dp)</span>
+<span id="L705"><a aria-label="第 705 行" href="#L705"> 705</a>     sq = diff.mul(diff) * mask                                # broadcast mask over Dp</span>
+<span id="L706"><a aria-label="第 706 行" href="#L706"> 706</a>     denom = mask.sum().clamp_min(1.0) * diff.shape[-1]        # (#masked patches) * Dp</span>
+<span id="L707"><a aria-label="第 707 行" href="#L707"> 707</a>     return sq.sum() / denom</span>
+<span id="L708"><a aria-label="第 708 行" href="#L708"> 708</a> </span>
+<span id="L709"><a aria-label="第 709 行" href="#L709"> 709</a> </span>
+<span id="L710"><a aria-label="第 710 行" href="#L710"> 710</a> def lpips_on_mae_recon(</span>
+<span id="L711"><a aria-label="第 711 行" href="#L711"> 711</a>     lpips_fn,</span>
+<span id="L712"><a aria-label="第 712 行" href="#L712"> 712</a>     pred_btnd: torch.Tensor,</span>
+<span id="L713"><a aria-label="第 713 行" href="#L713"> 713</a>     target_btnd: torch.Tensor,</span>
+<span id="L714"><a aria-label="第 714 行" href="#L714"> 714</a>     mae_mask_btNp1: torch.Tensor,</span>
+<span id="L715"><a aria-label="第 715 行" href="#L715"> 715</a>     *,</span>
+<span id="L716"><a aria-label="第 716 行" href="#L716"> 716</a>     H: int, W: int, C: int, patch: int,</span>
+<span id="L717"><a aria-label="第 717 行" href="#L717"> 717</a>     subsample_frac: float = 1.0,</span>
+<span id="L718"><a aria-label="第 718 行" href="#L718"> 718</a> ) -&gt; torch.Tensor:</span>
+<span id="L719"><a aria-label="第 719 行" href="#L719"> 719</a>     recon_masked_btnd = torch.where(mae_mask_btNp1, pred_btnd, target_btnd)</span>
+<span id="L720"><a aria-label="第 720 行" href="#L720"> 720</a>     recon = temporal_unpatchify(recon_masked_btnd.float(), H, W, C, patch)</span>
+<span id="L721"><a aria-label="第 721 行" href="#L721"> 721</a>     tgt   = temporal_unpatchify(target_btnd.float(),        H, W, C, patch)</span>
+<span id="L722"><a aria-label="第 722 行" href="#L722"> 722</a> </span>
+<span id="L723"><a aria-label="第 723 行" href="#L723"> 723</a>     if subsample_frac &lt; 1.0:</span>
+<span id="L724"><a aria-label="第 724 行" href="#L724"> 724</a>         B, T = recon.shape[:2]</span>
+<span id="L725"><a aria-label="第 725 行" href="#L725"> 725</a>         step = max(1, int(1.0 / subsample_frac))</span>
+<span id="L726"><a aria-label="第 726 行" href="#L726"> 726</a>         recon = recon[:, ::step]</span>
+<span id="L727"><a aria-label="第 727 行" href="#L727"> 727</a>         tgt   = tgt[:, ::step]</span>
+<span id="L728"><a aria-label="第 728 行" href="#L728"> 728</a> </span>
+<span id="L729"><a aria-label="第 729 行" href="#L729"> 729</a>     recon = (recon.clamp(0, 1) * 2.0 - 1.0).float()</span>
+<span id="L730"><a aria-label="第 730 行" href="#L730"> 730</a>     tgt   = (tgt.clamp(0, 1)   * 2.0 - 1.0).float()</span>
+<span id="L731"><a aria-label="第 731 行" href="#L731"> 731</a> </span>
+<span id="L732"><a aria-label="第 732 行" href="#L732"> 732</a>     B, T = recon.shape[:2]</span>
+<span id="L733"><a aria-label="第 733 行" href="#L733"> 733</a>     recon = recon.reshape(B * T, C, H, W)</span>
+<span id="L734"><a aria-label="第 734 行" href="#L734"> 734</a>     tgt   = tgt.reshape(B * T, C, H, W)</span>
+<span id="L735"><a aria-label="第 735 行" href="#L735"> 735</a> </span>
+<span id="L736"><a aria-label="第 736 行" href="#L736"> 736</a>     with torch.autocast(device_type="cuda", enabled=False):</span>
+<span id="L737"><a aria-label="第 737 行" href="#L737"> 737</a>         lp = lpips_fn(recon, tgt)</span>
+<span id="L738"><a aria-label="第 738 行" href="#L738"> 738</a>     return lp.mean()</span></pre></body></html>

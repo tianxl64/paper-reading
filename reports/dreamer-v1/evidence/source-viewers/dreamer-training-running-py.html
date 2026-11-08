@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>dreamer/training/running.py</title><style>body{margin:0;background:#152a2e;color:#e4f3f3;font:13px/1.55 Consolas,monospace}.head{padding:16px;overflow-wrap:anywhere}.code{padding:16px;overflow:auto;white-space:pre}.line{display:block;min-width:max-content}.line:target{background:#665b18}a{color:#b9d9e3}</style><link href="../../../../favicon.ico" rel="icon"/></head><body><div class="head">dreamer/training/running.py<br/>COMMIT: 0ffec86436239d41cecaff34abcf57dca5539839<br/>SHA-256: 1c8eac2a977bbb81600217e7d6c506d643013907ac964f44f5b318e59dfef961</div><pre class="code"><span class="line" id="L1"><a href="#L1">0001</a> # Copyright 2019 The Dreamer Authors. All rights reserved.</span>
+<span class="line" id="L2"><a href="#L2">0002</a> #</span>
+<span class="line" id="L3"><a href="#L3">0003</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span class="line" id="L4"><a href="#L4">0004</a> # you may not use this file except in compliance with the License.</span>
+<span class="line" id="L5"><a href="#L5">0005</a> # You may obtain a copy of the License at</span>
+<span class="line" id="L6"><a href="#L6">0006</a> #</span>
+<span class="line" id="L7"><a href="#L7">0007</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="line" id="L8"><a href="#L8">0008</a> #</span>
+<span class="line" id="L9"><a href="#L9">0009</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span class="line" id="L10"><a href="#L10">0010</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span class="line" id="L11"><a href="#L11">0011</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="line" id="L12"><a href="#L12">0012</a> # See the License for the specific language governing permissions and</span>
+<span class="line" id="L13"><a href="#L13">0013</a> # limitations under the License.</span>
+<span class="line" id="L14"><a href="#L14">0014</a> </span>
+<span class="line" id="L15"><a href="#L15">0015</a> from __future__ import absolute_import</span>
+<span class="line" id="L16"><a href="#L16">0016</a> from __future__ import division</span>
+<span class="line" id="L17"><a href="#L17">0017</a> from __future__ import print_function</span>
+<span class="line" id="L18"><a href="#L18">0018</a> </span>
+<span class="line" id="L19"><a href="#L19">0019</a> import datetime</span>
+<span class="line" id="L20"><a href="#L20">0020</a> import itertools</span>
+<span class="line" id="L21"><a href="#L21">0021</a> import os</span>
+<span class="line" id="L22"><a href="#L22">0022</a> import pickle</span>
+<span class="line" id="L23"><a href="#L23">0023</a> import six</span>
+<span class="line" id="L24"><a href="#L24">0024</a> import sys</span>
+<span class="line" id="L25"><a href="#L25">0025</a> import threading</span>
+<span class="line" id="L26"><a href="#L26">0026</a> import time</span>
+<span class="line" id="L27"><a href="#L27">0027</a> import traceback</span>
+<span class="line" id="L28"><a href="#L28">0028</a> import uuid</span>
+<span class="line" id="L29"><a href="#L29">0029</a> </span>
+<span class="line" id="L30"><a href="#L30">0030</a> import numpy as np</span>
+<span class="line" id="L31"><a href="#L31">0031</a> import tensorflow as tf</span>
+<span class="line" id="L32"><a href="#L32">0032</a> </span>
+<span class="line" id="L33"><a href="#L33">0033</a> </span>
+<span class="line" id="L34"><a href="#L34">0034</a> class StopExperiment(Exception):</span>
+<span class="line" id="L35"><a href="#L35">0035</a>   pass</span>
+<span class="line" id="L36"><a href="#L36">0036</a> </span>
+<span class="line" id="L37"><a href="#L37">0037</a> </span>
+<span class="line" id="L38"><a href="#L38">0038</a> class WorkerConflict(Exception):</span>
+<span class="line" id="L39"><a href="#L39">0039</a>   pass</span>
+<span class="line" id="L40"><a href="#L40">0040</a> </span>
+<span class="line" id="L41"><a href="#L41">0041</a> </span>
+<span class="line" id="L42"><a href="#L42">0042</a> class SkipRun(Exception):</span>
+<span class="line" id="L43"><a href="#L43">0043</a>   pass</span>
+<span class="line" id="L44"><a href="#L44">0044</a> </span>
+<span class="line" id="L45"><a href="#L45">0045</a> </span>
+<span class="line" id="L46"><a href="#L46">0046</a> class Experiment(object):</span>
+<span class="line" id="L47"><a href="#L47">0047</a> </span>
+<span class="line" id="L48"><a href="#L48">0048</a>   def __init__(</span>
+<span class="line" id="L49"><a href="#L49">0049</a>       self, basedir, process_fn, start_fn=None, resume_fn=None,</span>
+<span class="line" id="L50"><a href="#L50">0050</a>       num_runs=None, worker_name=None, ping_every=30, resume_runs=True):</span>
+<span class="line" id="L51"><a href="#L51">0051</a>     self._basedir = basedir</span>
+<span class="line" id="L52"><a href="#L52">0052</a>     self._process_fn = process_fn</span>
+<span class="line" id="L53"><a href="#L53">0053</a>     self._start_fn = start_fn</span>
+<span class="line" id="L54"><a href="#L54">0054</a>     self._resume_fn = resume_fn</span>
+<span class="line" id="L55"><a href="#L55">0055</a>     self._num_runs = num_runs</span>
+<span class="line" id="L56"><a href="#L56">0056</a>     self._worker_name = worker_name or str(uuid.uuid4())</span>
+<span class="line" id="L57"><a href="#L57">0057</a>     self._ping_every = ping_every</span>
+<span class="line" id="L58"><a href="#L58">0058</a>     self._ping_stale = ping_every and 2 * ping_every</span>
+<span class="line" id="L59"><a href="#L59">0059</a>     self._resume_runs = resume_runs</span>
+<span class="line" id="L60"><a href="#L60">0060</a> </span>
+<span class="line" id="L61"><a href="#L61">0061</a>   def __iter__(self):</span>
+<span class="line" id="L62"><a href="#L62">0062</a>     for current_run in self._generate_run_numbers():</span>
+<span class="line" id="L63"><a href="#L63">0063</a>       logdir = self._basedir and os.path.join(</span>
+<span class="line" id="L64"><a href="#L64">0064</a>           self._basedir, '{:05}'.format(current_run))</span>
+<span class="line" id="L65"><a href="#L65">0065</a>       try:</span>
+<span class="line" id="L66"><a href="#L66">0066</a>         run = Run(</span>
+<span class="line" id="L67"><a href="#L67">0067</a>             logdir, self._process_fn, self._start_fn, self._resume_fn,</span>
+<span class="line" id="L68"><a href="#L68">0068</a>             self._worker_name, self._ping_every, self._ping_stale,</span>
+<span class="line" id="L69"><a href="#L69">0069</a>             self._resume_runs)</span>
+<span class="line" id="L70"><a href="#L70">0070</a>         yield run</span>
+<span class="line" id="L71"><a href="#L71">0071</a>       except SkipRun:</span>
+<span class="line" id="L72"><a href="#L72">0072</a>         continue</span>
+<span class="line" id="L73"><a href="#L73">0073</a>       except StopExperiment:</span>
+<span class="line" id="L74"><a href="#L74">0074</a>         print('Stopping.')</span>
+<span class="line" id="L75"><a href="#L75">0075</a>         break</span>
+<span class="line" id="L76"><a href="#L76">0076</a>     print('All runs completed.')</span>
+<span class="line" id="L77"><a href="#L77">0077</a> </span>
+<span class="line" id="L78"><a href="#L78">0078</a>   def _generate_run_numbers(self):</span>
+<span class="line" id="L79"><a href="#L79">0079</a>     if self._num_runs:</span>
+<span class="line" id="L80"><a href="#L80">0080</a>       # Don't wait initially and see if there are runs that are already stale.</span>
+<span class="line" id="L81"><a href="#L81">0081</a>       runs = np.random.permutation(range(self._num_runs))</span>
+<span class="line" id="L82"><a href="#L82">0082</a>       for run in runs:</span>
+<span class="line" id="L83"><a href="#L83">0083</a>         yield run + 1</span>
+<span class="line" id="L84"><a href="#L84">0084</a>       # At the end, wait for all dead runs to become stale, and pick them up.</span>
+<span class="line" id="L85"><a href="#L85">0085</a>       # This is necessary for complete runs of workers that died very recently.</span>
+<span class="line" id="L86"><a href="#L86">0086</a>       if self._ping_stale:</span>
+<span class="line" id="L87"><a href="#L87">0087</a>         time.sleep(self._ping_stale)</span>
+<span class="line" id="L88"><a href="#L88">0088</a>         for run in runs:</span>
+<span class="line" id="L89"><a href="#L89">0089</a>           yield run + 1</span>
+<span class="line" id="L90"><a href="#L90">0090</a>     else:</span>
+<span class="line" id="L91"><a href="#L91">0091</a>       # For infinite runs, we want to always finish started jobs first.</span>
+<span class="line" id="L92"><a href="#L92">0092</a>       # Therefore, we need to wait for them to become stale in the beginning.</span>
+<span class="line" id="L93"><a href="#L93">0093</a>       if self._ping_stale:</span>
+<span class="line" id="L94"><a href="#L94">0094</a>         time.sleep(self._ping_stale)</span>
+<span class="line" id="L95"><a href="#L95">0095</a>       for run in itertools.count():</span>
+<span class="line" id="L96"><a href="#L96">0096</a>         yield run + 1</span>
+<span class="line" id="L97"><a href="#L97">0097</a> </span>
+<span class="line" id="L98"><a href="#L98">0098</a> </span>
+<span class="line" id="L99"><a href="#L99">0099</a> class Run(object):</span>
+<span class="line" id="L100"><a href="#L100">0100</a> </span>
+<span class="line" id="L101"><a href="#L101">0101</a>   def __init__(</span>
+<span class="line" id="L102"><a href="#L102">0102</a>       self, logdir, process_fn, start_fn, resume_fn, worker_name,</span>
+<span class="line" id="L103"><a href="#L103">0103</a>       ping_every=30, ping_stale=60, reuse_if_exists=True):</span>
+<span class="line" id="L104"><a href="#L104">0104</a>     self._logdir = os.path.expanduser(logdir)</span>
+<span class="line" id="L105"><a href="#L105">0105</a>     self._process_fn = process_fn</span>
+<span class="line" id="L106"><a href="#L106">0106</a>     self._worker_name = worker_name</span>
+<span class="line" id="L107"><a href="#L107">0107</a>     self._ping_every = ping_every</span>
+<span class="line" id="L108"><a href="#L108">0108</a>     self._ping_stale = ping_stale</span>
+<span class="line" id="L109"><a href="#L109">0109</a>     self._logger = self._create_logger()</span>
+<span class="line" id="L110"><a href="#L110">0110</a>     try:</span>
+<span class="line" id="L111"><a href="#L111">0111</a>       if self._should_start():</span>
+<span class="line" id="L112"><a href="#L112">0112</a>         self._claim()</span>
+<span class="line" id="L113"><a href="#L113">0113</a>         self._logger.info('Start.')</span>
+<span class="line" id="L114"><a href="#L114">0114</a>         self._init_fn = start_fn</span>
+<span class="line" id="L115"><a href="#L115">0115</a>       elif reuse_if_exists and self._should_resume():</span>
+<span class="line" id="L116"><a href="#L116">0116</a>         self._claim()</span>
+<span class="line" id="L117"><a href="#L117">0117</a>         self._logger.info('Resume.')</span>
+<span class="line" id="L118"><a href="#L118">0118</a>         self._init_fn = resume_fn</span>
+<span class="line" id="L119"><a href="#L119">0119</a>       else:</span>
+<span class="line" id="L120"><a href="#L120">0120</a>         raise SkipRun</span>
+<span class="line" id="L121"><a href="#L121">0121</a>     except WorkerConflict:</span>
+<span class="line" id="L122"><a href="#L122">0122</a>       self._logger.info('Leave to other worker.')</span>
+<span class="line" id="L123"><a href="#L123">0123</a>       raise SkipRun</span>
+<span class="line" id="L124"><a href="#L124">0124</a>     self._thread = None</span>
+<span class="line" id="L125"><a href="#L125">0125</a>     self._running = [True]</span>
+<span class="line" id="L126"><a href="#L126">0126</a>     self._thread = threading.Thread(target=self._store_ping_thread)</span>
+<span class="line" id="L127"><a href="#L127">0127</a>     self._thread.daemon = True  # Terminate with main thread.</span>
+<span class="line" id="L128"><a href="#L128">0128</a>     self._thread.start()</span>
+<span class="line" id="L129"><a href="#L129">0129</a> </span>
+<span class="line" id="L130"><a href="#L130">0130</a>   def __iter__(self):</span>
+<span class="line" id="L131"><a href="#L131">0131</a>     try:</span>
+<span class="line" id="L132"><a href="#L132">0132</a>       args = self._init_fn and self._init_fn(self._logdir)</span>
+<span class="line" id="L133"><a href="#L133">0133</a>       if args is None:</span>
+<span class="line" id="L134"><a href="#L134">0134</a>         args = ()</span>
+<span class="line" id="L135"><a href="#L135">0135</a>       if not isinstance(args, tuple):</span>
+<span class="line" id="L136"><a href="#L136">0136</a>         args = (args,)</span>
+<span class="line" id="L137"><a href="#L137">0137</a>       for value in self._process_fn(self._logdir, *args):</span>
+<span class="line" id="L138"><a href="#L138">0138</a>         if not self._running[0]:</span>
+<span class="line" id="L139"><a href="#L139">0139</a>           break</span>
+<span class="line" id="L140"><a href="#L140">0140</a>         yield value</span>
+<span class="line" id="L141"><a href="#L141">0141</a>       self._logger.info('Done.')</span>
+<span class="line" id="L142"><a href="#L142">0142</a>       self._store_done()</span>
+<span class="line" id="L143"><a href="#L143">0143</a>     except WorkerConflict:</span>
+<span class="line" id="L144"><a href="#L144">0144</a>       self._logging.warn('Unexpected takeover.')</span>
+<span class="line" id="L145"><a href="#L145">0145</a>       raise SkipRun</span>
+<span class="line" id="L146"><a href="#L146">0146</a>     except Exception as e:</span>
+<span class="line" id="L147"><a href="#L147">0147</a>       exc_info = sys.exc_info()</span>
+<span class="line" id="L148"><a href="#L148">0148</a>       self._handle_exception(e)</span>
+<span class="line" id="L149"><a href="#L149">0149</a>       six.reraise(*exc_info)</span>
+<span class="line" id="L150"><a href="#L150">0150</a>     finally:</span>
+<span class="line" id="L151"><a href="#L151">0151</a>       self._running[0] = False</span>
+<span class="line" id="L152"><a href="#L152">0152</a>       self._thread and self._thread.join()</span>
+<span class="line" id="L153"><a href="#L153">0153</a> </span>
+<span class="line" id="L154"><a href="#L154">0154</a>   def _should_start(self):</span>
+<span class="line" id="L155"><a href="#L155">0155</a>     if not self._logdir:</span>
+<span class="line" id="L156"><a href="#L156">0156</a>       return True</span>
+<span class="line" id="L157"><a href="#L157">0157</a>     if tf.gfile.Exists(os.path.join(self._logdir, 'PING')):</span>
+<span class="line" id="L158"><a href="#L158">0158</a>       return False</span>
+<span class="line" id="L159"><a href="#L159">0159</a>     if tf.gfile.Exists(os.path.join(self._logdir, 'DONE')):</span>
+<span class="line" id="L160"><a href="#L160">0160</a>       return False</span>
+<span class="line" id="L161"><a href="#L161">0161</a>     return True</span>
+<span class="line" id="L162"><a href="#L162">0162</a> </span>
+<span class="line" id="L163"><a href="#L163">0163</a>   def _should_resume(self):</span>
+<span class="line" id="L164"><a href="#L164">0164</a>     if not self._logdir:</span>
+<span class="line" id="L165"><a href="#L165">0165</a>       return False</span>
+<span class="line" id="L166"><a href="#L166">0166</a>     if tf.gfile.Exists(os.path.join(self._logdir, 'DONE')):</span>
+<span class="line" id="L167"><a href="#L167">0167</a>       # self._logger.debug('Already done.')</span>
+<span class="line" id="L168"><a href="#L168">0168</a>       return False</span>
+<span class="line" id="L169"><a href="#L169">0169</a>     if not tf.gfile.Exists(os.path.join(self._logdir, 'PING')):</span>
+<span class="line" id="L170"><a href="#L170">0170</a>       # self._logger.debug('Not started yet.')</span>
+<span class="line" id="L171"><a href="#L171">0171</a>       return False</span>
+<span class="line" id="L172"><a href="#L172">0172</a>     last_worker, last_ping = self._read_ping()</span>
+<span class="line" id="L173"><a href="#L173">0173</a>     if last_worker != self._worker_name and last_ping &lt; self._ping_stale:</span>
+<span class="line" id="L174"><a href="#L174">0174</a>       # self._logger.debug('Already in progress.')</span>
+<span class="line" id="L175"><a href="#L175">0175</a>       return False</span>
+<span class="line" id="L176"><a href="#L176">0176</a>     return True</span>
+<span class="line" id="L177"><a href="#L177">0177</a> </span>
+<span class="line" id="L178"><a href="#L178">0178</a>   def _claim(self):</span>
+<span class="line" id="L179"><a href="#L179">0179</a>     if not self._logdir:</span>
+<span class="line" id="L180"><a href="#L180">0180</a>       return False</span>
+<span class="line" id="L181"><a href="#L181">0181</a>     self._store_ping(overwrite=True)</span>
+<span class="line" id="L182"><a href="#L182">0182</a>     if self._ping_every:</span>
+<span class="line" id="L183"><a href="#L183">0183</a>       time.sleep(self._ping_every)</span>
+<span class="line" id="L184"><a href="#L184">0184</a>     if self._read_ping()[0] != self._worker_name:</span>
+<span class="line" id="L185"><a href="#L185">0185</a>       raise WorkerConflict</span>
+<span class="line" id="L186"><a href="#L186">0186</a>     self._store_ping()</span>
+<span class="line" id="L187"><a href="#L187">0187</a> </span>
+<span class="line" id="L188"><a href="#L188">0188</a>   def _store_done(self):</span>
+<span class="line" id="L189"><a href="#L189">0189</a>     if not self._logdir:</span>
+<span class="line" id="L190"><a href="#L190">0190</a>       return</span>
+<span class="line" id="L191"><a href="#L191">0191</a>     with tf.gfile.Open(os.path.join(self._logdir, 'DONE'), 'w') as file_:</span>
+<span class="line" id="L192"><a href="#L192">0192</a>       file_.write('\n')</span>
+<span class="line" id="L193"><a href="#L193">0193</a> </span>
+<span class="line" id="L194"><a href="#L194">0194</a>   def _store_fail(self, message):</span>
+<span class="line" id="L195"><a href="#L195">0195</a>     if not self._logdir:</span>
+<span class="line" id="L196"><a href="#L196">0196</a>       return</span>
+<span class="line" id="L197"><a href="#L197">0197</a>     with tf.gfile.Open(os.path.join(self._logdir, 'FAIL'), 'w') as file_:</span>
+<span class="line" id="L198"><a href="#L198">0198</a>       file_.write(message + '\n')</span>
+<span class="line" id="L199"><a href="#L199">0199</a> </span>
+<span class="line" id="L200"><a href="#L200">0200</a>   def _read_ping(self):</span>
+<span class="line" id="L201"><a href="#L201">0201</a>     if not tf.gfile.Exists(os.path.join(self._logdir, 'PING')):</span>
+<span class="line" id="L202"><a href="#L202">0202</a>       return None, None</span>
+<span class="line" id="L203"><a href="#L203">0203</a>     try:</span>
+<span class="line" id="L204"><a href="#L204">0204</a>       with tf.gfile.Open(os.path.join(self._logdir, 'PING'), 'rb') as file_:</span>
+<span class="line" id="L205"><a href="#L205">0205</a>         last_worker, last_ping = pickle.load(file_)</span>
+<span class="line" id="L206"><a href="#L206">0206</a>       duration = (datetime.datetime.utcnow() - last_ping).total_seconds()</span>
+<span class="line" id="L207"><a href="#L207">0207</a>       return last_worker, duration</span>
+<span class="line" id="L208"><a href="#L208">0208</a>     except (EOFError, IOError, tf.errors.NotFoundError):</span>
+<span class="line" id="L209"><a href="#L209">0209</a>       raise WorkerConflict</span>
+<span class="line" id="L210"><a href="#L210">0210</a> </span>
+<span class="line" id="L211"><a href="#L211">0211</a>   def _store_ping(self, overwrite=False):</span>
+<span class="line" id="L212"><a href="#L212">0212</a>     if not self._logdir:</span>
+<span class="line" id="L213"><a href="#L213">0213</a>       return</span>
+<span class="line" id="L214"><a href="#L214">0214</a>     try:</span>
+<span class="line" id="L215"><a href="#L215">0215</a>       last_worker, _ = self._read_ping()</span>
+<span class="line" id="L216"><a href="#L216">0216</a>       if last_worker is None:</span>
+<span class="line" id="L217"><a href="#L217">0217</a>         self._logger.info("Create directory '{}'.".format(self._logdir))</span>
+<span class="line" id="L218"><a href="#L218">0218</a>         tf.gfile.MakeDirs(self._logdir)</span>
+<span class="line" id="L219"><a href="#L219">0219</a>       elif last_worker != self._worker_name and not overwrite:</span>
+<span class="line" id="L220"><a href="#L220">0220</a>         raise WorkerConflict</span>
+<span class="line" id="L221"><a href="#L221">0221</a>       # self._logger.debug('Store ping.')</span>
+<span class="line" id="L222"><a href="#L222">0222</a>       with tf.gfile.Open(os.path.join(self._logdir, 'PING'), 'wb') as file_:</span>
+<span class="line" id="L223"><a href="#L223">0223</a>         pickle.dump((self._worker_name, datetime.datetime.utcnow()), file_)</span>
+<span class="line" id="L224"><a href="#L224">0224</a>     except (EOFError, IOError, tf.errors.NotFoundError):</span>
+<span class="line" id="L225"><a href="#L225">0225</a>       raise WorkerConflict</span>
+<span class="line" id="L226"><a href="#L226">0226</a> </span>
+<span class="line" id="L227"><a href="#L227">0227</a>   def _store_ping_thread(self):</span>
+<span class="line" id="L228"><a href="#L228">0228</a>     if not self._ping_every:</span>
+<span class="line" id="L229"><a href="#L229">0229</a>       return</span>
+<span class="line" id="L230"><a href="#L230">0230</a>     try:</span>
+<span class="line" id="L231"><a href="#L231">0231</a>       last_write = time.time()</span>
+<span class="line" id="L232"><a href="#L232">0232</a>       self._store_ping(self._logdir)</span>
+<span class="line" id="L233"><a href="#L233">0233</a>       while self._running[0]:</span>
+<span class="line" id="L234"><a href="#L234">0234</a>         if time.time() &gt;= last_write + self._ping_every:</span>
+<span class="line" id="L235"><a href="#L235">0235</a>             last_write = time.time()</span>
+<span class="line" id="L236"><a href="#L236">0236</a>             self._store_ping(self._logdir)</span>
+<span class="line" id="L237"><a href="#L237">0237</a>         # Only wait short times to quickly react to abort.</span>
+<span class="line" id="L238"><a href="#L238">0238</a>         time.sleep(0.01)</span>
+<span class="line" id="L239"><a href="#L239">0239</a>     except WorkerConflict:</span>
+<span class="line" id="L240"><a href="#L240">0240</a>       self._running[0] = False</span>
+<span class="line" id="L241"><a href="#L241">0241</a> </span>
+<span class="line" id="L242"><a href="#L242">0242</a>   def _handle_exception(self, exception):</span>
+<span class="line" id="L243"><a href="#L243">0243</a>     message = ''.join(traceback.format_exception(*sys.exc_info()))</span>
+<span class="line" id="L244"><a href="#L244">0244</a>     self._logger.warning('Exception:\n{}'.format(message))</span>
+<span class="line" id="L245"><a href="#L245">0245</a>     self._logger.warning('Failed.')</span>
+<span class="line" id="L246"><a href="#L246">0246</a>     try:</span>
+<span class="line" id="L247"><a href="#L247">0247</a>       self._store_done()</span>
+<span class="line" id="L248"><a href="#L248">0248</a>       self._store_fail(message)</span>
+<span class="line" id="L249"><a href="#L249">0249</a>     except Exception:</span>
+<span class="line" id="L250"><a href="#L250">0250</a>       message = ''.join(traceback.format_exception(*sys.exc_info()))</span>
+<span class="line" id="L251"><a href="#L251">0251</a>       template = 'Exception in exception handler:\n{}'</span>
+<span class="line" id="L252"><a href="#L252">0252</a>       self._logger.warning(template.format(message))</span>
+<span class="line" id="L253"><a href="#L253">0253</a> </span>
+<span class="line" id="L254"><a href="#L254">0254</a>   def _create_logger(self):</span>
+<span class="line" id="L255"><a href="#L255">0255</a>     run_name = self._logdir and os.path.basename(self._logdir)</span>
+<span class="line" id="L256"><a href="#L256">0256</a>     methods = {}</span>
+<span class="line" id="L257"><a href="#L257">0257</a>     for name in 'debug info warning'.split():</span>
+<span class="line" id="L258"><a href="#L258">0258</a>       methods[name] = lambda unused_self, message: print(</span>
+<span class="line" id="L259"><a href="#L259">0259</a>           'Worker {} run {}: {}'.format(self._worker_name, run_name, message))</span>
+<span class="line" id="L260"><a href="#L260">0260</a>     return type('PrefixedLogger', (object,), methods)()</span></pre></body></html>

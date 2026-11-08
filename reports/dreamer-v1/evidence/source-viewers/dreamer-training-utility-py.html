@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>dreamer/training/utility.py</title><style>body{margin:0;background:#152a2e;color:#e4f3f3;font:13px/1.55 Consolas,monospace}.head{padding:16px;overflow-wrap:anywhere}.code{padding:16px;overflow:auto;white-space:pre}.line{display:block;min-width:max-content}.line:target{background:#665b18}a{color:#b9d9e3}</style><link href="../../../../favicon.ico" rel="icon"/></head><body><div class="head">dreamer/training/utility.py<br/>COMMIT: 0ffec86436239d41cecaff34abcf57dca5539839<br/>SHA-256: 46668df6942013d81a69ff5d73280fb32d4eaa1fb344e3a482441986ff29ea23</div><pre class="code"><span class="line" id="L1"><a href="#L1">0001</a> # Copyright 2019 The Dreamer Authors. All rights reserved.</span>
+<span class="line" id="L2"><a href="#L2">0002</a> #</span>
+<span class="line" id="L3"><a href="#L3">0003</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span class="line" id="L4"><a href="#L4">0004</a> # you may not use this file except in compliance with the License.</span>
+<span class="line" id="L5"><a href="#L5">0005</a> # You may obtain a copy of the License at</span>
+<span class="line" id="L6"><a href="#L6">0006</a> #</span>
+<span class="line" id="L7"><a href="#L7">0007</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="line" id="L8"><a href="#L8">0008</a> #</span>
+<span class="line" id="L9"><a href="#L9">0009</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span class="line" id="L10"><a href="#L10">0010</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span class="line" id="L11"><a href="#L11">0011</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="line" id="L12"><a href="#L12">0012</a> # See the License for the specific language governing permissions and</span>
+<span class="line" id="L13"><a href="#L13">0013</a> # limitations under the License.</span>
+<span class="line" id="L14"><a href="#L14">0014</a> </span>
+<span class="line" id="L15"><a href="#L15">0015</a> from __future__ import absolute_import</span>
+<span class="line" id="L16"><a href="#L16">0016</a> from __future__ import division</span>
+<span class="line" id="L17"><a href="#L17">0017</a> from __future__ import print_function</span>
+<span class="line" id="L18"><a href="#L18">0018</a> </span>
+<span class="line" id="L19"><a href="#L19">0019</a> import collections</span>
+<span class="line" id="L20"><a href="#L20">0020</a> import datetime</span>
+<span class="line" id="L21"><a href="#L21">0021</a> import functools</span>
+<span class="line" id="L22"><a href="#L22">0022</a> import os</span>
+<span class="line" id="L23"><a href="#L23">0023</a> import re</span>
+<span class="line" id="L24"><a href="#L24">0024</a> </span>
+<span class="line" id="L25"><a href="#L25">0025</a> import numpy as np</span>
+<span class="line" id="L26"><a href="#L26">0026</a> import ruamel.yaml as yaml</span>
+<span class="line" id="L27"><a href="#L27">0027</a> import tensorflow as tf</span>
+<span class="line" id="L28"><a href="#L28">0028</a> </span>
+<span class="line" id="L29"><a href="#L29">0029</a> from dreamer import control</span>
+<span class="line" id="L30"><a href="#L30">0030</a> from dreamer import tools</span>
+<span class="line" id="L31"><a href="#L31">0031</a> from dreamer.training import trainer as trainer_</span>
+<span class="line" id="L32"><a href="#L32">0032</a> </span>
+<span class="line" id="L33"><a href="#L33">0033</a> </span>
+<span class="line" id="L34"><a href="#L34">0034</a> Objective = collections.namedtuple(</span>
+<span class="line" id="L35"><a href="#L35">0035</a>     'Objective', 'name, value, goal, include, exclude')</span>
+<span class="line" id="L36"><a href="#L36">0036</a> </span>
+<span class="line" id="L37"><a href="#L37">0037</a> </span>
+<span class="line" id="L38"><a href="#L38">0038</a> def LOG(x, m, *a):</span>
+<span class="line" id="L39"><a href="#L39">0039</a>   xf = tf.cast(x, tf.float32)</span>
+<span class="line" id="L40"><a href="#L40">0040</a>   print_op = tf.print(</span>
+<span class="line" id="L41"><a href="#L41">0041</a>       m, '(',</span>
+<span class="line" id="L42"><a href="#L42">0042</a>       tf.shape(xf),</span>
+<span class="line" id="L43"><a href="#L43">0043</a>       tf.reduce_min(xf),</span>
+<span class="line" id="L44"><a href="#L44">0044</a>       tf.reduce_mean(xf),</span>
+<span class="line" id="L45"><a href="#L45">0045</a>       tf.reduce_max(xf),</span>
+<span class="line" id="L46"><a href="#L46">0046</a>       ')', *a)</span>
+<span class="line" id="L47"><a href="#L47">0047</a>   with tf.control_dependencies([print_op]):</span>
+<span class="line" id="L48"><a href="#L48">0048</a>     return tf.identity(x)</span>
+<span class="line" id="L49"><a href="#L49">0049</a> </span>
+<span class="line" id="L50"><a href="#L50">0050</a> </span>
+<span class="line" id="L51"><a href="#L51">0051</a> def save_config(config, logdir=None):</span>
+<span class="line" id="L52"><a href="#L52">0052</a>   if logdir:</span>
+<span class="line" id="L53"><a href="#L53">0053</a>     with config.unlocked:</span>
+<span class="line" id="L54"><a href="#L54">0054</a>       config.logdir = logdir</span>
+<span class="line" id="L55"><a href="#L55">0055</a>     message = 'Start a new run and write summaries and checkpoints to {}.'</span>
+<span class="line" id="L56"><a href="#L56">0056</a>     print(message.format(config.logdir))</span>
+<span class="line" id="L57"><a href="#L57">0057</a>     tf.gfile.MakeDirs(config.logdir)</span>
+<span class="line" id="L58"><a href="#L58">0058</a>     config_path = os.path.join(config.logdir, 'config.yaml')</span>
+<span class="line" id="L59"><a href="#L59">0059</a>     with tf.gfile.GFile(config_path, 'w') as file_:</span>
+<span class="line" id="L60"><a href="#L60">0060</a>       yaml.dump(</span>
+<span class="line" id="L61"><a href="#L61">0061</a>           config, file_, yaml.Dumper,</span>
+<span class="line" id="L62"><a href="#L62">0062</a>           allow_unicode=True,</span>
+<span class="line" id="L63"><a href="#L63">0063</a>           default_flow_style=False)</span>
+<span class="line" id="L64"><a href="#L64">0064</a>   else:</span>
+<span class="line" id="L65"><a href="#L65">0065</a>     message = (</span>
+<span class="line" id="L66"><a href="#L66">0066</a>         'Start a new run without storing summaries and checkpoints since no '</span>
+<span class="line" id="L67"><a href="#L67">0067</a>         'logging directory was specified.')</span>
+<span class="line" id="L68"><a href="#L68">0068</a>     print(message)</span>
+<span class="line" id="L69"><a href="#L69">0069</a>   return config</span>
+<span class="line" id="L70"><a href="#L70">0070</a> </span>
+<span class="line" id="L71"><a href="#L71">0071</a> </span>
+<span class="line" id="L72"><a href="#L72">0072</a> def load_config(logdir):</span>
+<span class="line" id="L73"><a href="#L73">0073</a>   config_path = logdir and os.path.join(logdir, 'config.yaml')</span>
+<span class="line" id="L74"><a href="#L74">0074</a>   if not config_path or not tf.gfile.Exists(config_path):</span>
+<span class="line" id="L75"><a href="#L75">0075</a>     message = (</span>
+<span class="line" id="L76"><a href="#L76">0076</a>         'Cannot resume an existing run since the logging directory does not '</span>
+<span class="line" id="L77"><a href="#L77">0077</a>         'contain a configuration file.')</span>
+<span class="line" id="L78"><a href="#L78">0078</a>     raise IOError(message)</span>
+<span class="line" id="L79"><a href="#L79">0079</a>   with tf.gfile.GFile(config_path, 'r') as file_:</span>
+<span class="line" id="L80"><a href="#L80">0080</a>     config = yaml.load(file_, yaml.Loader)</span>
+<span class="line" id="L81"><a href="#L81">0081</a>     message = 'Resume run and write summaries and checkpoints to {}.'</span>
+<span class="line" id="L82"><a href="#L82">0082</a>     print(message.format(config.logdir))</span>
+<span class="line" id="L83"><a href="#L83">0083</a>   return config</span>
+<span class="line" id="L84"><a href="#L84">0084</a> </span>
+<span class="line" id="L85"><a href="#L85">0085</a> </span>
+<span class="line" id="L86"><a href="#L86">0086</a> def train(model_fn, datasets, logdir, config):</span>
+<span class="line" id="L87"><a href="#L87">0087</a>   if not config:</span>
+<span class="line" id="L88"><a href="#L88">0088</a>     raise KeyError('You must specify a configuration.')</span>
+<span class="line" id="L89"><a href="#L89">0089</a>   logdir = logdir and os.path.expanduser(logdir)</span>
+<span class="line" id="L90"><a href="#L90">0090</a>   try:</span>
+<span class="line" id="L91"><a href="#L91">0091</a>     config = load_config(logdir)</span>
+<span class="line" id="L92"><a href="#L92">0092</a>   except RuntimeError:</span>
+<span class="line" id="L93"><a href="#L93">0093</a>     print('Failed to load existing config.')</span>
+<span class="line" id="L94"><a href="#L94">0094</a>   except IOError:</span>
+<span class="line" id="L95"><a href="#L95">0095</a>     config = save_config(config, logdir)</span>
+<span class="line" id="L96"><a href="#L96">0096</a>   with datasets.unlocked:</span>
+<span class="line" id="L97"><a href="#L97">0097</a>     datasets.train = datasets.train.make_one_shot_iterator()</span>
+<span class="line" id="L98"><a href="#L98">0098</a>     datasets.test = datasets.test.make_one_shot_iterator()</span>
+<span class="line" id="L99"><a href="#L99">0099</a>   trainer = trainer_.Trainer(logdir, config=config)</span>
+<span class="line" id="L100"><a href="#L100">0100</a>   cleanups = []</span>
+<span class="line" id="L101"><a href="#L101">0101</a>   try:</span>
+<span class="line" id="L102"><a href="#L102">0102</a>     with tf.variable_scope('graph', use_resource=True):</span>
+<span class="line" id="L103"><a href="#L103">0103</a>       data = tf.cond(</span>
+<span class="line" id="L104"><a href="#L104">0104</a>           tf.equal(trainer.phase, 'train'),</span>
+<span class="line" id="L105"><a href="#L105">0105</a>           datasets.train.get_next, datasets.test.get_next)</span>
+<span class="line" id="L106"><a href="#L106">0106</a>       score, summary, cleanups = model_fn(data, trainer, config)</span>
+<span class="line" id="L107"><a href="#L107">0107</a>       message = 'Graph contains {} trainable variables.'</span>
+<span class="line" id="L108"><a href="#L108">0108</a>       print(message.format(tools.count_weights()))</span>
+<span class="line" id="L109"><a href="#L109">0109</a>       if config.train_steps:</span>
+<span class="line" id="L110"><a href="#L110">0110</a>         trainer.add_phase(</span>
+<span class="line" id="L111"><a href="#L111">0111</a>             'train', config.train_steps, score, summary,</span>
+<span class="line" id="L112"><a href="#L112">0112</a>             batch_size=config.batch_shape[0],</span>
+<span class="line" id="L113"><a href="#L113">0113</a>             report_every=None,</span>
+<span class="line" id="L114"><a href="#L114">0114</a>             log_every=config.train_log_every,</span>
+<span class="line" id="L115"><a href="#L115">0115</a>             checkpoint_every=config.train_checkpoint_every)</span>
+<span class="line" id="L116"><a href="#L116">0116</a>       if config.test_steps:</span>
+<span class="line" id="L117"><a href="#L117">0117</a>         trainer.add_phase(</span>
+<span class="line" id="L118"><a href="#L118">0118</a>             'test', config.test_steps, score, summary,</span>
+<span class="line" id="L119"><a href="#L119">0119</a>             batch_size=config.batch_shape[0],</span>
+<span class="line" id="L120"><a href="#L120">0120</a>             report_every=config.test_steps,</span>
+<span class="line" id="L121"><a href="#L121">0121</a>             log_every=config.test_steps,</span>
+<span class="line" id="L122"><a href="#L122">0122</a>             checkpoint_every=config.test_checkpoint_every)</span>
+<span class="line" id="L123"><a href="#L123">0123</a>     for saver in config.savers:</span>
+<span class="line" id="L124"><a href="#L124">0124</a>       trainer.add_saver(**saver)</span>
+<span class="line" id="L125"><a href="#L125">0125</a>     for score in trainer.iterate(config.max_steps):</span>
+<span class="line" id="L126"><a href="#L126">0126</a>       yield score</span>
+<span class="line" id="L127"><a href="#L127">0127</a>   finally:</span>
+<span class="line" id="L128"><a href="#L128">0128</a>     for cleanup in cleanups:</span>
+<span class="line" id="L129"><a href="#L129">0129</a>       cleanup()</span>
+<span class="line" id="L130"><a href="#L130">0130</a> </span>
+<span class="line" id="L131"><a href="#L131">0131</a> </span>
+<span class="line" id="L132"><a href="#L132">0132</a> def compute_objectives(posterior, prior, target, graph, config):</span>
+<span class="line" id="L133"><a href="#L133">0133</a>   raw_features = graph.cell.features_from_state(posterior)</span>
+<span class="line" id="L134"><a href="#L134">0134</a>   heads = graph.heads</span>
+<span class="line" id="L135"><a href="#L135">0135</a>   if config.imagination_horizon:</span>
+<span class="line" id="L136"><a href="#L136">0136</a>     imagination_start = posterior</span>
+<span class="line" id="L137"><a href="#L137">0137</a>     if config.imagination_skip_last:</span>
+<span class="line" id="L138"><a href="#L138">0138</a>       imagination_start = tools.nested.map(</span>
+<span class="line" id="L139"><a href="#L139">0139</a>           lambda x: x[:, :-config.imagination_skip_last], imagination_start)</span>
+<span class="line" id="L140"><a href="#L140">0140</a>     raw_states = imagine_forward(</span>
+<span class="line" id="L141"><a href="#L141">0141</a>         imagination_start, config.imagination_horizon, graph, config,</span>
+<span class="line" id="L142"><a href="#L142">0142</a>         graph.heads.action, stop_grad_post_action=False,</span>
+<span class="line" id="L143"><a href="#L143">0143</a>         stop_grad_pre_action=config.stop_grad_pre_action)</span>
+<span class="line" id="L144"><a href="#L144">0144</a>   else:</span>
+<span class="line" id="L145"><a href="#L145">0145</a>     raw_states = None</span>
+<span class="line" id="L146"><a href="#L146">0146</a>   objectives = []</span>
+<span class="line" id="L147"><a href="#L147">0147</a>   for name, scale in sorted(config.loss_scales.items(), key=lambda x: x[0]):</span>
+<span class="line" id="L148"><a href="#L148">0148</a>     if config.loss_scales[name] == 0.0:</span>
+<span class="line" id="L149"><a href="#L149">0149</a>       continue</span>
+<span class="line" id="L150"><a href="#L150">0150</a>     if name in config.heads and name not in config.gradient_heads:</span>
+<span class="line" id="L151"><a href="#L151">0151</a>       features = tf.stop_gradient(raw_features)</span>
+<span class="line" id="L152"><a href="#L152">0152</a>       include = r'.*/head_{}/.*'.format(name)</span>
+<span class="line" id="L153"><a href="#L153">0153</a>       exclude = None</span>
+<span class="line" id="L154"><a href="#L154">0154</a>     else:</span>
+<span class="line" id="L155"><a href="#L155">0155</a>       features = raw_features</span>
+<span class="line" id="L156"><a href="#L156">0156</a>       include = None</span>
+<span class="line" id="L157"><a href="#L157">0157</a>       exclude = None</span>
+<span class="line" id="L158"><a href="#L158">0158</a> </span>
+<span class="line" id="L159"><a href="#L159">0159</a>     if name == 'divergence':</span>
+<span class="line" id="L160"><a href="#L160">0160</a>       loss = graph.cell.divergence_from_states(posterior, prior)</span>
+<span class="line" id="L161"><a href="#L161">0161</a>       if config.free_nats is not None:</span>
+<span class="line" id="L162"><a href="#L162">0162</a>         loss = tf.maximum(0.0, loss - float(config.free_nats))</span>
+<span class="line" id="L163"><a href="#L163">0163</a>       objectives.append(Objective('divergence', loss, min, include, exclude))</span>
+<span class="line" id="L164"><a href="#L164">0164</a> </span>
+<span class="line" id="L165"><a href="#L165">0165</a>     elif name == 'cpc':</span>
+<span class="line" id="L166"><a href="#L166">0166</a>       pred = heads.cpc(graph.embedded)</span>
+<span class="line" id="L167"><a href="#L167">0167</a>       objective = compute_cpc_loss(pred, features, config)</span>
+<span class="line" id="L168"><a href="#L168">0168</a>       objectives.append(Objective('cpc', objective, max, include, exclude))</span>
+<span class="line" id="L169"><a href="#L169">0169</a> </span>
+<span class="line" id="L170"><a href="#L170">0170</a>     elif name == 'overshooting':</span>
+<span class="line" id="L171"><a href="#L171">0171</a>       shape = tools.shape(graph.data['action'])</span>
+<span class="line" id="L172"><a href="#L172">0172</a>       length = tf.tile(tf.constant(shape[1])[None], [shape[0]])</span>
+<span class="line" id="L173"><a href="#L173">0173</a>       _, priors, posteriors, mask = tools.overshooting(</span>
+<span class="line" id="L174"><a href="#L174">0174</a>           graph.cell, {}, graph.embedded, graph.data['action'], length,</span>
+<span class="line" id="L175"><a href="#L175">0175</a>           config.overshooting_distance, posterior)</span>
+<span class="line" id="L176"><a href="#L176">0176</a>       posteriors, priors, mask = tools.nested.map(</span>
+<span class="line" id="L177"><a href="#L177">0177</a>           lambda x: x[:, :, 1:-1], (posteriors, priors, mask))</span>
+<span class="line" id="L178"><a href="#L178">0178</a>       if config.os_stop_posterior_grad:</span>
+<span class="line" id="L179"><a href="#L179">0179</a>         posteriors = tools.nested.map(tf.stop_gradient, posteriors)</span>
+<span class="line" id="L180"><a href="#L180">0180</a>       loss = graph.cell.divergence_from_states(posteriors, priors)</span>
+<span class="line" id="L181"><a href="#L181">0181</a>       if config.free_nats is not None:</span>
+<span class="line" id="L182"><a href="#L182">0182</a>         loss = tf.maximum(0.0, loss - float(config.free_nats))</span>
+<span class="line" id="L183"><a href="#L183">0183</a>       objectives.append(Objective('overshooting', loss, min, include, exclude))</span>
+<span class="line" id="L184"><a href="#L184">0184</a> </span>
+<span class="line" id="L185"><a href="#L185">0185</a>     elif name == 'value':</span>
+<span class="line" id="L186"><a href="#L186">0186</a>       if config.value_source == 'dataset':</span>
+<span class="line" id="L187"><a href="#L187">0187</a>         loss = compute_value_loss(</span>
+<span class="line" id="L188"><a href="#L188">0188</a>             config, graph, priors, features, target['reward'])</span>
+<span class="line" id="L189"><a href="#L189">0189</a>       elif config.value_source == 'model':</span>
+<span class="line" id="L190"><a href="#L190">0190</a>         if 'action_target' in graph.heads or not config.imagination_horizon:</span>
+<span class="line" id="L191"><a href="#L191">0191</a>           if 'action_target' in graph.heads:</span>
+<span class="line" id="L192"><a href="#L192">0192</a>             policy = graph.heads.action_target</span>
+<span class="line" id="L193"><a href="#L193">0193</a>           else:</span>
+<span class="line" id="L194"><a href="#L194">0194</a>             policy = graph.heads.action</span>
+<span class="line" id="L195"><a href="#L195">0195</a>           states = imagine_forward(</span>
+<span class="line" id="L196"><a href="#L196">0196</a>               posterior, config.value_model_horizon, graph, config, policy)</span>
+<span class="line" id="L197"><a href="#L197">0197</a>         else:</span>
+<span class="line" id="L198"><a href="#L198">0198</a>           states = raw_states</span>
+<span class="line" id="L199"><a href="#L199">0199</a>         feat = graph.cell.features_from_state(states)</span>
+<span class="line" id="L200"><a href="#L200">0200</a>         loss = compute_value_loss(config, graph, states, feat, None)</span>
+<span class="line" id="L201"><a href="#L201">0201</a>       else:</span>
+<span class="line" id="L202"><a href="#L202">0202</a>         raise NotImplementedError(config.value_source)</span>
+<span class="line" id="L203"><a href="#L203">0203</a>       objectives.append(Objective('value', loss, min, include, exclude))</span>
+<span class="line" id="L204"><a href="#L204">0204</a> </span>
+<span class="line" id="L205"><a href="#L205">0205</a>     elif name == 'action':</span>
+<span class="line" id="L206"><a href="#L206">0206</a>       if config.action_source == 'model':</span>
+<span class="line" id="L207"><a href="#L207">0207</a>         if not config.imagination_horizon:</span>
+<span class="line" id="L208"><a href="#L208">0208</a>           states = imagine_forward(</span>
+<span class="line" id="L209"><a href="#L209">0209</a>               posterior, config.action_model_horizon, graph, config,</span>
+<span class="line" id="L210"><a href="#L210">0210</a>               policy=graph.heads.action, stop_grad_post_action=False)</span>
+<span class="line" id="L211"><a href="#L211">0211</a>         else:</span>
+<span class="line" id="L212"><a href="#L212">0212</a>           states = raw_states</span>
+<span class="line" id="L213"><a href="#L213">0213</a>         feat = graph.cell.features_from_state(states)</span>
+<span class="line" id="L214"><a href="#L214">0214</a>         objective = compute_action_values(config, graph, states, feat)</span>
+<span class="line" id="L215"><a href="#L215">0215</a>         objectives.append(Objective(</span>
+<span class="line" id="L216"><a href="#L216">0216</a>             'action', objective, max, include, exclude))</span>
+<span class="line" id="L217"><a href="#L217">0217</a>       elif config.action_source == 'dataset':</span>
+<span class="line" id="L218"><a href="#L218">0218</a>         objective = heads.action(features).log_prob(target[name])</span>
+<span class="line" id="L219"><a href="#L219">0219</a>         objective -= compute_action_divergence(features, graph, config)</span>
+<span class="line" id="L220"><a href="#L220">0220</a>         objectives.append(Objective(</span>
+<span class="line" id="L221"><a href="#L221">0221</a>             'action', objective, max, include, exclude))</span>
+<span class="line" id="L222"><a href="#L222">0222</a>       else:</span>
+<span class="line" id="L223"><a href="#L223">0223</a>         raise NotImplementedError(config.action_source)</span>
+<span class="line" id="L224"><a href="#L224">0224</a> </span>
+<span class="line" id="L225"><a href="#L225">0225</a>     elif name == 'reward':</span>
+<span class="line" id="L226"><a href="#L226">0226</a>       reward_mask = tf.squeeze(target['reward_mask'], [-1])</span>
+<span class="line" id="L227"><a href="#L227">0227</a>       logprob = heads.reward(features).log_prob(target[name]) * reward_mask</span>
+<span class="line" id="L228"><a href="#L228">0228</a>       objectives.append(Objective('reward', logprob, max, include, exclude))</span>
+<span class="line" id="L229"><a href="#L229">0229</a> </span>
+<span class="line" id="L230"><a href="#L230">0230</a>     elif name == 'pcont' and config.pcont_label_weight:</span>
+<span class="line" id="L231"><a href="#L231">0231</a>       terminal = tf.cast(tf.less(target[name], 0.5), tf.float32)</span>
+<span class="line" id="L232"><a href="#L232">0232</a>       logprob = heads[name](features).log_prob(target[name])</span>
+<span class="line" id="L233"><a href="#L233">0233</a>       logprob *= 1 + terminal * (config.pcont_label_weight - 1)</span>
+<span class="line" id="L234"><a href="#L234">0234</a>       objectives.append(Objective(name, logprob, max, include, exclude))</span>
+<span class="line" id="L235"><a href="#L235">0235</a> </span>
+<span class="line" id="L236"><a href="#L236">0236</a>     else:</span>
+<span class="line" id="L237"><a href="#L237">0237</a>       logprob = heads[name](features).log_prob(target[name])</span>
+<span class="line" id="L238"><a href="#L238">0238</a>       objectives.append(Objective(name, logprob, max, include, exclude))</span>
+<span class="line" id="L239"><a href="#L239">0239</a> </span>
+<span class="line" id="L240"><a href="#L240">0240</a>   objectives = [o._replace(value=tf.reduce_mean(o.value)) for o in objectives]</span>
+<span class="line" id="L241"><a href="#L241">0241</a>   return objectives</span>
+<span class="line" id="L242"><a href="#L242">0242</a> </span>
+<span class="line" id="L243"><a href="#L243">0243</a> </span>
+<span class="line" id="L244"><a href="#L244">0244</a> def imagine_forward(</span>
+<span class="line" id="L245"><a href="#L245">0245</a>     initial_state, distance, graph, config, policy,</span>
+<span class="line" id="L246"><a href="#L246">0246</a>     stop_grad_post_action=True, stop_grad_pre_action=True):</span>
+<span class="line" id="L247"><a href="#L247">0247</a>   extended_batch = np.prod(tools.shape(</span>
+<span class="line" id="L248"><a href="#L248">0248</a>       tools.nested.flatten(initial_state)[0])[:2])</span>
+<span class="line" id="L249"><a href="#L249">0249</a>   obs = tf.zeros([extended_batch] + list(graph.embedded.shape[2:]))</span>
+<span class="line" id="L250"><a href="#L250">0250</a>   use_obs = tf.zeros([extended_batch, 1], tf.bool)</span>
+<span class="line" id="L251"><a href="#L251">0251</a>   new_shape = lambda t: [</span>
+<span class="line" id="L252"><a href="#L252">0252</a>       tf.reduce_prod(tools.shape(t)[:2])] + tools.shape(t)[2:]</span>
+<span class="line" id="L253"><a href="#L253">0253</a>   initial_state = tools.nested.map(</span>
+<span class="line" id="L254"><a href="#L254">0254</a>       lambda tensor: tf.reshape(tensor, new_shape(tensor)),</span>
+<span class="line" id="L255"><a href="#L255">0255</a>       initial_state)</span>
+<span class="line" id="L256"><a href="#L256">0256</a>   def step_fn(prev, index):</span>
+<span class="line" id="L257"><a href="#L257">0257</a>     feature = graph.cell.features_from_state(prev)</span>
+<span class="line" id="L258"><a href="#L258">0258</a>     if stop_grad_pre_action:</span>
+<span class="line" id="L259"><a href="#L259">0259</a>       feature = tf.stop_gradient(feature)</span>
+<span class="line" id="L260"><a href="#L260">0260</a>     action = policy(feature).sample()</span>
+<span class="line" id="L261"><a href="#L261">0261</a>     if stop_grad_post_action:</span>
+<span class="line" id="L262"><a href="#L262">0262</a>       action = tf.stop_gradient(action)</span>
+<span class="line" id="L263"><a href="#L263">0263</a>     (_, state), _ = graph.cell((obs, action, use_obs), prev)</span>
+<span class="line" id="L264"><a href="#L264">0264</a>     return state</span>
+<span class="line" id="L265"><a href="#L265">0265</a>   states = tf.scan(step_fn, tf.range(distance), initial_state, back_prop=True)</span>
+<span class="line" id="L266"><a href="#L266">0266</a>   states = tools.nested.map(lambda x: tf.transpose(x, [1, 0, 2]), states)</span>
+<span class="line" id="L267"><a href="#L267">0267</a>   return states</span>
+<span class="line" id="L268"><a href="#L268">0268</a> </span>
+<span class="line" id="L269"><a href="#L269">0269</a> </span>
+<span class="line" id="L270"><a href="#L270">0270</a> def compute_value_loss(config, graph, states, features, reward):</span>
+<span class="line" id="L271"><a href="#L271">0271</a>   if reward is None:</span>
+<span class="line" id="L272"><a href="#L272">0272</a>     reward = graph.heads.reward(features).mode()</span>
+<span class="line" id="L273"><a href="#L273">0273</a>   if config.value_maxent:</span>
+<span class="line" id="L274"><a href="#L274">0274</a>     reward -= compute_action_divergence(features, graph, config)</span>
+<span class="line" id="L275"><a href="#L275">0275</a>     reward -= compute_state_divergence(states, graph, config)</span>
+<span class="line" id="L276"><a href="#L276">0276</a>   if config.value_loss_pcont:</span>
+<span class="line" id="L277"><a href="#L277">0277</a>     pcont = tf.stop_gradient(graph.heads.pcont(features).mean())</span>
+<span class="line" id="L278"><a href="#L278">0278</a>   else:</span>
+<span class="line" id="L279"><a href="#L279">0279</a>     pcont = tf.ones_like(reward)</span>
+<span class="line" id="L280"><a href="#L280">0280</a>   pcont *= config.value_discount</span>
+<span class="line" id="L281"><a href="#L281">0281</a>   pred = graph.heads.value(features)</span>
+<span class="line" id="L282"><a href="#L282">0282</a>   if 'value_target' in graph.heads:</span>
+<span class="line" id="L283"><a href="#L283">0283</a>     value = graph.heads.value_target(features).mode()</span>
+<span class="line" id="L284"><a href="#L284">0284</a>   else:</span>
+<span class="line" id="L285"><a href="#L285">0285</a>     value = pred.mode()</span>
+<span class="line" id="L286"><a href="#L286">0286</a>   bootstrap = None</span>
+<span class="line" id="L287"><a href="#L287">0287</a>   if config.value_bootstrap:</span>
+<span class="line" id="L288"><a href="#L288">0288</a>     reward = reward[:, :-1]</span>
+<span class="line" id="L289"><a href="#L289">0289</a>     value = value[:, :-1]</span>
+<span class="line" id="L290"><a href="#L290">0290</a>     pcont = pcont[:, :-1]</span>
+<span class="line" id="L291"><a href="#L291">0291</a>     bootstrap = value[:, -1]</span>
+<span class="line" id="L292"><a href="#L292">0292</a>   return_ = control.lambda_return(</span>
+<span class="line" id="L293"><a href="#L293">0293</a>       reward, value, bootstrap, pcont,</span>
+<span class="line" id="L294"><a href="#L294">0294</a>       config.value_lambda, axis=1, stop_gradient=True)</span>
+<span class="line" id="L295"><a href="#L295">0295</a>   return_ = tf.concat([return_, tf.zeros_like(return_[:, -1:])], 1)</span>
+<span class="line" id="L296"><a href="#L296">0296</a>   loss = -pred.log_prob(return_)[:, :-1]</span>
+<span class="line" id="L297"><a href="#L297">0297</a>   if config.value_pcont_weight:</span>
+<span class="line" id="L298"><a href="#L298">0298</a>     loss *= tf.stop_gradient(tf.cumprod(tf.concat([</span>
+<span class="line" id="L299"><a href="#L299">0299</a>         tf.ones_like(pcont[:, :1]), pcont[:, :-1]], 1), 1))</span>
+<span class="line" id="L300"><a href="#L300">0300</a>   return loss</span>
+<span class="line" id="L301"><a href="#L301">0301</a> </span>
+<span class="line" id="L302"><a href="#L302">0302</a> </span>
+<span class="line" id="L303"><a href="#L303">0303</a> def compute_action_values(config, graph, states, features):</span>
+<span class="line" id="L304"><a href="#L304">0304</a>   reward = graph.heads.reward(features).mode()</span>
+<span class="line" id="L305"><a href="#L305">0305</a>   reward -= compute_action_divergence(features, graph, config)</span>
+<span class="line" id="L306"><a href="#L306">0306</a>   reward -= compute_state_divergence(states, graph, config)</span>
+<span class="line" id="L307"><a href="#L307">0307</a>   if config.action_loss_pcont:</span>
+<span class="line" id="L308"><a href="#L308">0308</a>     pcont = graph.heads.pcont(features).mean()</span>
+<span class="line" id="L309"><a href="#L309">0309</a>     if config.action_pcont_stop_grad:</span>
+<span class="line" id="L310"><a href="#L310">0310</a>       pcont = tf.stop_gradient(pcont)</span>
+<span class="line" id="L311"><a href="#L311">0311</a>   else:</span>
+<span class="line" id="L312"><a href="#L312">0312</a>     pcont = tf.ones_like(reward)</span>
+<span class="line" id="L313"><a href="#L313">0313</a>   pcont *= config.action_discount</span>
+<span class="line" id="L314"><a href="#L314">0314</a>   if 'value' not in graph.heads:</span>
+<span class="line" id="L315"><a href="#L315">0315</a>     return control.discounted_return(</span>
+<span class="line" id="L316"><a href="#L316">0316</a>         reward, pcont, bootstrap=None, axis=1, stop_gradient=False)</span>
+<span class="line" id="L317"><a href="#L317">0317</a>   value = graph.heads.value(features).mode()</span>
+<span class="line" id="L318"><a href="#L318">0318</a>   bootstrap = None</span>
+<span class="line" id="L319"><a href="#L319">0319</a>   if config.action_bootstrap:</span>
+<span class="line" id="L320"><a href="#L320">0320</a>     reward = reward[:, :-1]</span>
+<span class="line" id="L321"><a href="#L321">0321</a>     value = value[:, :-1]</span>
+<span class="line" id="L322"><a href="#L322">0322</a>     pcont = pcont[:, :-1]</span>
+<span class="line" id="L323"><a href="#L323">0323</a>     bootstrap = value[:, -1]</span>
+<span class="line" id="L324"><a href="#L324">0324</a>   return_ = control.lambda_return(</span>
+<span class="line" id="L325"><a href="#L325">0325</a>       reward, value, bootstrap, pcont,</span>
+<span class="line" id="L326"><a href="#L326">0326</a>       config.action_lambda,</span>
+<span class="line" id="L327"><a href="#L327">0327</a>       axis=1, stop_gradient=False)</span>
+<span class="line" id="L328"><a href="#L328">0328</a>   if config.action_pcont_weight:</span>
+<span class="line" id="L329"><a href="#L329">0329</a>     return_ *= tf.stop_gradient(tf.cumprod(tf.concat([</span>
+<span class="line" id="L330"><a href="#L330">0330</a>         tf.ones_like(pcont[:, :1]), pcont[:, :-1]], 1), 1))</span>
+<span class="line" id="L331"><a href="#L331">0331</a>   return return_</span>
+<span class="line" id="L332"><a href="#L332">0332</a> </span>
+<span class="line" id="L333"><a href="#L333">0333</a> </span>
+<span class="line" id="L334"><a href="#L334">0334</a> def compute_action_divergence(features, graph, config):</span>
+<span class="line" id="L335"><a href="#L335">0335</a>   features = tf.stop_gradient(features)</span>
+<span class="line" id="L336"><a href="#L336">0336</a>   pred = graph.heads.action(features)</span>
+<span class="line" id="L337"><a href="#L337">0337</a>   if not config.action_beta:</span>
+<span class="line" id="L338"><a href="#L338">0338</a>     return 0.0</span>
+<span class="line" id="L339"><a href="#L339">0339</a>   try:</span>
+<span class="line" id="L340"><a href="#L340">0340</a>     amount = -pred.entropy()</span>
+<span class="line" id="L341"><a href="#L341">0341</a>   except NotImplementedError:</span>
+<span class="line" id="L342"><a href="#L342">0342</a>     samples = pred.sample(100)</span>
+<span class="line" id="L343"><a href="#L343">0343</a>     amount = tf.reduce_mean(pred.log_prob(samples), 0)</span>
+<span class="line" id="L344"><a href="#L344">0344</a>   amount *= config.action_beta</span>
+<span class="line" id="L345"><a href="#L345">0345</a>   value = config.action_beta_dims_value</span>
+<span class="line" id="L346"><a href="#L346">0346</a>   if value and value &lt; 0:</span>
+<span class="line" id="L347"><a href="#L347">0347</a>     amount /= value * float(pred.event_shape[-1].value)</span>
+<span class="line" id="L348"><a href="#L348">0348</a>   if value and value &gt; 0:</span>
+<span class="line" id="L349"><a href="#L349">0349</a>     amount *= value * float(pred.event_shape[-1].value)</span>
+<span class="line" id="L350"><a href="#L350">0350</a>   return amount</span>
+<span class="line" id="L351"><a href="#L351">0351</a> </span>
+<span class="line" id="L352"><a href="#L352">0352</a> </span>
+<span class="line" id="L353"><a href="#L353">0353</a> def compute_state_divergence(states, graph, config):</span>
+<span class="line" id="L354"><a href="#L354">0354</a>   pred = graph.cell.dist_from_state(states)</span>
+<span class="line" id="L355"><a href="#L355">0355</a>   if not config.state_beta:</span>
+<span class="line" id="L356"><a href="#L356">0356</a>     return 0.0</span>
+<span class="line" id="L357"><a href="#L357">0357</a>   try:</span>
+<span class="line" id="L358"><a href="#L358">0358</a>     amount = -pred.entropy()</span>
+<span class="line" id="L359"><a href="#L359">0359</a>   except NotImplementedError:</span>
+<span class="line" id="L360"><a href="#L360">0360</a>     samples = pred.sample(100)</span>
+<span class="line" id="L361"><a href="#L361">0361</a>     amount = tf.reduce_mean(pred.log_prob(samples), 0)</span>
+<span class="line" id="L362"><a href="#L362">0362</a>   amount *= config.state_beta</span>
+<span class="line" id="L363"><a href="#L363">0363</a>   return amount</span>
+<span class="line" id="L364"><a href="#L364">0364</a> </span>
+<span class="line" id="L365"><a href="#L365">0365</a> </span>
+<span class="line" id="L366"><a href="#L366">0366</a> def compute_cpc_loss(pred, features, config):</span>
+<span class="line" id="L367"><a href="#L367">0367</a>   if config.cpc_contrast == 'batch':</span>
+<span class="line" id="L368"><a href="#L368">0368</a>     ta = tf.TensorArray(tf.float32, 0, True, element_shape=[None, None])</span>
+<span class="line" id="L369"><a href="#L369">0369</a>     _, _, ta = tf.while_loop(</span>
+<span class="line" id="L370"><a href="#L370">0370</a>         lambda i, f, ta: tf.less(i, tf.shape(f)[0]),</span>
+<span class="line" id="L371"><a href="#L371">0371</a>         lambda i, f, ta: (</span>
+<span class="line" id="L372"><a href="#L372">0372</a>             i + 1, f, ta.write(ta.size(), pred.log_prob(tf.roll(f, i, 0)))),</span>
+<span class="line" id="L373"><a href="#L373">0373</a>         (0, features, ta), back_prop=True, swap_memory=True)</span>
+<span class="line" id="L374"><a href="#L374">0374</a>     positive = pred.log_prob(features)</span>
+<span class="line" id="L375"><a href="#L375">0375</a>     negative = tf.reduce_logsumexp(ta.stack(), 0)</span>
+<span class="line" id="L376"><a href="#L376">0376</a>     return positive - negative</span>
+<span class="line" id="L377"><a href="#L377">0377</a>   elif config.cpc_contrast == 'time':</span>
+<span class="line" id="L378"><a href="#L378">0378</a>     ta = tf.TensorArray(tf.float32, 0, True, element_shape=[None, None])</span>
+<span class="line" id="L379"><a href="#L379">0379</a>     _, _, ta = tf.while_loop(</span>
+<span class="line" id="L380"><a href="#L380">0380</a>         lambda i, f, ta: tf.less(i, tf.shape(f)[1]),</span>
+<span class="line" id="L381"><a href="#L381">0381</a>         lambda i, f, ta: (</span>
+<span class="line" id="L382"><a href="#L382">0382</a>             i + 1, f, ta.write(ta.size(), pred.log_prob(tf.roll(f, i, 1)))),</span>
+<span class="line" id="L383"><a href="#L383">0383</a>         (0, features, ta), back_prop=True, swap_memory=True)</span>
+<span class="line" id="L384"><a href="#L384">0384</a>     positive = pred.log_prob(features)</span>
+<span class="line" id="L385"><a href="#L385">0385</a>     negative = tf.reduce_logsumexp(ta.stack(), 0)</span>
+<span class="line" id="L386"><a href="#L386">0386</a>     return positive - negative</span>
+<span class="line" id="L387"><a href="#L387">0387</a>   elif config.cpc_contrast == 'window':</span>
+<span class="line" id="L388"><a href="#L388">0388</a>     assert config.cpc_batch_amount &lt;= config.batch_shape[0]</span>
+<span class="line" id="L389"><a href="#L389">0389</a>     assert config.cpc_time_amount &lt;= config.batch_shape[1]</span>
+<span class="line" id="L390"><a href="#L390">0390</a>     total_amount = config.cpc_batch_amount * config.cpc_time_amount</span>
+<span class="line" id="L391"><a href="#L391">0391</a>     ta = tf.TensorArray(tf.float32, 0, True, element_shape=[None, None])</span>
+<span class="line" id="L392"><a href="#L392">0392</a>     def compute_negatives(index, ta):</span>
+<span class="line" id="L393"><a href="#L393">0393</a>       batch_shift = tf.math.floordiv(index, config.cpc_time_amount)</span>
+<span class="line" id="L394"><a href="#L394">0394</a>       time_shift = tf.mod(index, config.cpc_time_amount)</span>
+<span class="line" id="L395"><a href="#L395">0395</a>       batch_shift -= config.cpc_batch_amount // 2</span>
+<span class="line" id="L396"><a href="#L396">0396</a>       time_shift -= config.cpc_time_amount // 2</span>
+<span class="line" id="L397"><a href="#L397">0397</a>       rolled = tf.roll(tf.roll(features, batch_shift, 0), time_shift, 1)</span>
+<span class="line" id="L398"><a href="#L398">0398</a>       return ta.write(ta.size(), pred.log_prob(rolled))</span>
+<span class="line" id="L399"><a href="#L399">0399</a>     _, ta = tf.while_loop(</span>
+<span class="line" id="L400"><a href="#L400">0400</a>         lambda index, ta: tf.less(index, total_amount),</span>
+<span class="line" id="L401"><a href="#L401">0401</a>         lambda index, ta: (index + 1, compute_negatives(index, ta)),</span>
+<span class="line" id="L402"><a href="#L402">0402</a>         (0, ta), back_prop=True, swap_memory=True)</span>
+<span class="line" id="L403"><a href="#L403">0403</a>     positive = pred.log_prob(features)</span>
+<span class="line" id="L404"><a href="#L404">0404</a>     negative = tf.reduce_logsumexp(ta.stack(), 0)</span>
+<span class="line" id="L405"><a href="#L405">0405</a>     return positive - negative</span>
+<span class="line" id="L406"><a href="#L406">0406</a>   else:</span>
+<span class="line" id="L407"><a href="#L407">0407</a>     raise NotImplementedError(config.cpc_contrast)</span>
+<span class="line" id="L408"><a href="#L408">0408</a> </span>
+<span class="line" id="L409"><a href="#L409">0409</a> </span>
+<span class="line" id="L410"><a href="#L410">0410</a> def apply_optimizers(objectives, trainer, config):</span>
+<span class="line" id="L411"><a href="#L411">0411</a>   # Make sure all losses are computed and apply loss scales.</span>
+<span class="line" id="L412"><a href="#L412">0412</a>   processed = []</span>
+<span class="line" id="L413"><a href="#L413">0413</a>   values = [ob.value for ob in objectives]</span>
+<span class="line" id="L414"><a href="#L414">0414</a>   for ob in objectives:</span>
+<span class="line" id="L415"><a href="#L415">0415</a>     loss = {min: ob.value, max: -ob.value}[ob.goal]</span>
+<span class="line" id="L416"><a href="#L416">0416</a>     loss *= config.loss_scales[ob.name]</span>
+<span class="line" id="L417"><a href="#L417">0417</a>     with tf.control_dependencies(values):</span>
+<span class="line" id="L418"><a href="#L418">0418</a>       loss = tf.identity(loss)</span>
+<span class="line" id="L419"><a href="#L419">0419</a>     processed.append(ob._replace(value=loss, goal=min))</span>
+<span class="line" id="L420"><a href="#L420">0420</a>   # Merge objectives that operate on the whole model to compute only one</span>
+<span class="line" id="L421"><a href="#L421">0421</a>   # backward pass and to share optimizer statistics.</span>
+<span class="line" id="L422"><a href="#L422">0422</a>   objectives = []</span>
+<span class="line" id="L423"><a href="#L423">0423</a>   losses = []</span>
+<span class="line" id="L424"><a href="#L424">0424</a>   for ob in processed:</span>
+<span class="line" id="L425"><a href="#L425">0425</a>     if ob.include is None and ob.exclude is None:</span>
+<span class="line" id="L426"><a href="#L426">0426</a>       assert ob.goal == min</span>
+<span class="line" id="L427"><a href="#L427">0427</a>       losses.append(ob.value)</span>
+<span class="line" id="L428"><a href="#L428">0428</a>     else:</span>
+<span class="line" id="L429"><a href="#L429">0429</a>       objectives.append(ob)</span>
+<span class="line" id="L430"><a href="#L430">0430</a>   loss = tf.reduce_sum(losses)</span>
+<span class="line" id="L431"><a href="#L431">0431</a>   # modules = ['encoder', 'rnn']</span>
+<span class="line" id="L432"><a href="#L432">0432</a>   # modules += ['head_{}'.format(name) for name in config.gradient_heads]</span>
+<span class="line" id="L433"><a href="#L433">0433</a>   # include = r'graph/({})/.*'.format('|'.join(modules))</span>
+<span class="line" id="L434"><a href="#L434">0434</a>   include = r'.*'</span>
+<span class="line" id="L435"><a href="#L435">0435</a>   objectives.append(Objective('model', loss, min, include, None))</span>
+<span class="line" id="L436"><a href="#L436">0436</a>   # Apply optimizers and collect loss summaries.</span>
+<span class="line" id="L437"><a href="#L437">0437</a>   summaries = []</span>
+<span class="line" id="L438"><a href="#L438">0438</a>   grad_norms = {}</span>
+<span class="line" id="L439"><a href="#L439">0439</a>   for ob in objectives:</span>
+<span class="line" id="L440"><a href="#L440">0440</a>     assert ob.name in list(config.loss_scales.keys()) + ['model'], ob</span>
+<span class="line" id="L441"><a href="#L441">0441</a>     assert ob.goal == min, ob</span>
+<span class="line" id="L442"><a href="#L442">0442</a>     if ob.name not in config.optimizers:</span>
+<span class="line" id="L443"><a href="#L443">0443</a>       with config.optimizers.unlocked:</span>
+<span class="line" id="L444"><a href="#L444">0444</a>         config.optimizers[ob.name] = config.optimizers.default.copy()</span>
+<span class="line" id="L445"><a href="#L445">0445</a>     optimizer = config.optimizers[ob.name](</span>
+<span class="line" id="L446"><a href="#L446">0446</a>         include=ob.include,</span>
+<span class="line" id="L447"><a href="#L447">0447</a>         exclude=ob.exclude,</span>
+<span class="line" id="L448"><a href="#L448">0448</a>         step=trainer.step,</span>
+<span class="line" id="L449"><a href="#L449">0449</a>         log=trainer.log,</span>
+<span class="line" id="L450"><a href="#L450">0450</a>         debug=config.debug,</span>
+<span class="line" id="L451"><a href="#L451">0451</a>         name=ob.name)</span>
+<span class="line" id="L452"><a href="#L452">0452</a>     condition = tf.equal(trainer.phase, 'train')</span>
+<span class="line" id="L453"><a href="#L453">0453</a>     summary, grad_norm = optimizer.maybe_minimize(condition, ob.value)</span>
+<span class="line" id="L454"><a href="#L454">0454</a>     summaries.append(summary)</span>
+<span class="line" id="L455"><a href="#L455">0455</a>     grad_norms[ob.name] = grad_norm</span>
+<span class="line" id="L456"><a href="#L456">0456</a>   return summaries, grad_norms</span>
+<span class="line" id="L457"><a href="#L457">0457</a> </span>
+<span class="line" id="L458"><a href="#L458">0458</a> </span>
+<span class="line" id="L459"><a href="#L459">0459</a> def simulate(metrics, config, params, graph, cleanups, gif_summary, name):</span>
+<span class="line" id="L460"><a href="#L460">0460</a>   def env_ctor():</span>
+<span class="line" id="L461"><a href="#L461">0461</a>     env = params.task.env_ctor()</span>
+<span class="line" id="L462"><a href="#L462">0462</a>     if params.save_episode_dir:</span>
+<span class="line" id="L463"><a href="#L463">0463</a>       env = control.wrappers.CollectDataset(env, params.save_episode_dir)</span>
+<span class="line" id="L464"><a href="#L464">0464</a>     return env</span>
+<span class="line" id="L465"><a href="#L465">0465</a>   bind_or_none = lambda x, **kw: x and functools.partial(x, **kw)</span>
+<span class="line" id="L466"><a href="#L466">0466</a>   cell = graph.cell</span>
+<span class="line" id="L467"><a href="#L467">0467</a>   agent_config = tools.AttrDict(</span>
+<span class="line" id="L468"><a href="#L468">0468</a>       cell=cell,</span>
+<span class="line" id="L469"><a href="#L469">0469</a>       encoder=graph.encoder,</span>
+<span class="line" id="L470"><a href="#L470">0470</a>       planner=functools.partial(params.planner, graph=graph),</span>
+<span class="line" id="L471"><a href="#L471">0471</a>       objective=bind_or_none(params.objective, graph=graph),</span>
+<span class="line" id="L472"><a href="#L472">0472</a>       exploration=params.exploration,</span>
+<span class="line" id="L473"><a href="#L473">0473</a>       preprocess_fn=config.preprocess_fn,</span>
+<span class="line" id="L474"><a href="#L474">0474</a>       postprocess_fn=config.postprocess_fn)</span>
+<span class="line" id="L475"><a href="#L475">0475</a>   params = params.copy()</span>
+<span class="line" id="L476"><a href="#L476">0476</a>   with params.unlocked:</span>
+<span class="line" id="L477"><a href="#L477">0477</a>     params.update(agent_config)</span>
+<span class="line" id="L478"><a href="#L478">0478</a>   with agent_config.unlocked:</span>
+<span class="line" id="L479"><a href="#L479">0479</a>     agent_config.update(params)</span>
+<span class="line" id="L480"><a href="#L480">0480</a>   with tf.variable_scope(name):</span>
+<span class="line" id="L481"><a href="#L481">0481</a>     summaries = []</span>
+<span class="line" id="L482"><a href="#L482">0482</a>     env = control.create_batch_env(</span>
+<span class="line" id="L483"><a href="#L483">0483</a>         env_ctor, params.num_envs, config.isolate_envs)</span>
+<span class="line" id="L484"><a href="#L484">0484</a>     agent = control.MPCAgent(env, graph.step, False, False, agent_config)</span>
+<span class="line" id="L485"><a href="#L485">0485</a>     cleanup = lambda: env.close()</span>
+<span class="line" id="L486"><a href="#L486">0486</a>     scores, lengths, data = control.simulate(</span>
+<span class="line" id="L487"><a href="#L487">0487</a>         agent, env, params.num_episodes, params.num_steps)</span>
+<span class="line" id="L488"><a href="#L488">0488</a>     summaries.append(tf.summary.scalar('return', scores[0]))</span>
+<span class="line" id="L489"><a href="#L489">0489</a>     summaries.append(tf.summary.scalar('length', lengths[0]))</span>
+<span class="line" id="L490"><a href="#L490">0490</a>     if gif_summary:</span>
+<span class="line" id="L491"><a href="#L491">0491</a>       summaries.append(tools.gif_summary(</span>
+<span class="line" id="L492"><a href="#L492">0492</a>           'gif', data['image'], max_outputs=1, fps=20))</span>
+<span class="line" id="L493"><a href="#L493">0493</a>     write_metrics = [</span>
+<span class="line" id="L494"><a href="#L494">0494</a>         metrics.add_scalars(name + '/return', scores),</span>
+<span class="line" id="L495"><a href="#L495">0495</a>         metrics.add_scalars(name + '/length', lengths),</span>
+<span class="line" id="L496"><a href="#L496">0496</a>         # metrics.add_tensor(name + '/frames', data['image']),</span>
+<span class="line" id="L497"><a href="#L497">0497</a>     ]</span>
+<span class="line" id="L498"><a href="#L498">0498</a>     with tf.control_dependencies(write_metrics):</span>
+<span class="line" id="L499"><a href="#L499">0499</a>       summary = tf.summary.merge(summaries)</span>
+<span class="line" id="L500"><a href="#L500">0500</a>   cleanups.append(cleanup)  # Work around tf.cond() tensor return type.</span>
+<span class="line" id="L501"><a href="#L501">0501</a>   return summary, tf.reduce_mean(scores)</span>
+<span class="line" id="L502"><a href="#L502">0502</a> </span>
+<span class="line" id="L503"><a href="#L503">0503</a> </span>
+<span class="line" id="L504"><a href="#L504">0504</a> def print_metrics(metrics, step, every, decimals=2, name='metrics'):</span>
+<span class="line" id="L505"><a href="#L505">0505</a>   factor = 10 ** decimals</span>
+<span class="line" id="L506"><a href="#L506">0506</a>   means, updates = [], []</span>
+<span class="line" id="L507"><a href="#L507">0507</a>   for key, value in metrics.items():</span>
+<span class="line" id="L508"><a href="#L508">0508</a>     key = 'metrics_{}_{}'.format(name, key)</span>
+<span class="line" id="L509"><a href="#L509">0509</a>     mean = tools.StreamingMean((), tf.float32, key)</span>
+<span class="line" id="L510"><a href="#L510">0510</a>     means.append(mean)</span>
+<span class="line" id="L511"><a href="#L511">0511</a>     updates.append(mean.submit(value))</span>
+<span class="line" id="L512"><a href="#L512">0512</a>   with tf.control_dependencies(updates):</span>
+<span class="line" id="L513"><a href="#L513">0513</a>     message = '{}: step/{} ='.format(name, '/'.join(metrics.keys()))</span>
+<span class="line" id="L514"><a href="#L514">0514</a>     print_metrics = tf.cond(</span>
+<span class="line" id="L515"><a href="#L515">0515</a>         tf.equal(step % every, 0),</span>
+<span class="line" id="L516"><a href="#L516">0516</a>         lambda: tf.print(message, [step] + [</span>
+<span class="line" id="L517"><a href="#L517">0517</a>             tf.round(mean.clear() * factor) / factor for mean in means]),</span>
+<span class="line" id="L518"><a href="#L518">0518</a>         tf.no_op)</span>
+<span class="line" id="L519"><a href="#L519">0519</a>   return print_metrics</span>
+<span class="line" id="L520"><a href="#L520">0520</a> </span>
+<span class="line" id="L521"><a href="#L521">0521</a> </span>
+<span class="line" id="L522"><a href="#L522">0522</a> def collect_initial_episodes(metrics, config):</span>
+<span class="line" id="L523"><a href="#L523">0523</a>   items = config.random_collects.items()</span>
+<span class="line" id="L524"><a href="#L524">0524</a>   items = sorted(items, key=lambda x: x[0])</span>
+<span class="line" id="L525"><a href="#L525">0525</a>   for name, params in items:</span>
+<span class="line" id="L526"><a href="#L526">0526</a>     metrics.set_tags(</span>
+<span class="line" id="L527"><a href="#L527">0527</a>         global_step=0,</span>
+<span class="line" id="L528"><a href="#L528">0528</a>         step=0,</span>
+<span class="line" id="L529"><a href="#L529">0529</a>         phase=name.split('-')[0],</span>
+<span class="line" id="L530"><a href="#L530">0530</a>         time=datetime.datetime.utcnow().strftime('%Y%m%dT%H%M%S'))</span>
+<span class="line" id="L531"><a href="#L531">0531</a>     tf.gfile.MakeDirs(params.save_episode_dir)</span>
+<span class="line" id="L532"><a href="#L532">0532</a>     # Compute number of missing episodes and steps.</span>
+<span class="line" id="L533"><a href="#L533">0533</a>     filenames = tf.gfile.Glob(os.path.join(params.save_episode_dir, '*.npz'))</span>
+<span class="line" id="L534"><a href="#L534">0534</a>     num_episodes = len(filenames)</span>
+<span class="line" id="L535"><a href="#L535">0535</a>     # num_steps = sum([</span>
+<span class="line" id="L536"><a href="#L536">0536</a>     #     int(f.rsplit('.', 1)[0].split('-')[2]) for f in filenames])</span>
+<span class="line" id="L537"><a href="#L537">0537</a>     num_steps = sum([</span>
+<span class="line" id="L538"><a href="#L538">0538</a>         int(re.search(r'-([0-9]+)\.npz', f).group(1)) for f in filenames])</span>
+<span class="line" id="L539"><a href="#L539">0539</a>     remaining_episodes = params.num_episodes - num_episodes</span>
+<span class="line" id="L540"><a href="#L540">0540</a>     remaining_steps = params.num_steps - num_steps</span>
+<span class="line" id="L541"><a href="#L541">0541</a>     if remaining_episodes &lt;= 0 and remaining_steps &lt;= 0:</span>
+<span class="line" id="L542"><a href="#L542">0542</a>       continue</span>
+<span class="line" id="L543"><a href="#L543">0543</a>     # User message.</span>
+<span class="line" id="L544"><a href="#L544">0544</a>     if params.give_rewards:</span>
+<span class="line" id="L545"><a href="#L545">0545</a>       env_ctor = params.task.env_ctor</span>
+<span class="line" id="L546"><a href="#L546">0546</a>       word = 'with'</span>
+<span class="line" id="L547"><a href="#L547">0547</a>     else:</span>
+<span class="line" id="L548"><a href="#L548">0548</a>       env_ctor = functools.partial(</span>
+<span class="line" id="L549"><a href="#L549">0549</a>           lambda ctor: control.wrappers.NoRewardHint(ctor()),</span>
+<span class="line" id="L550"><a href="#L550">0550</a>           params.task.env_ctor)</span>
+<span class="line" id="L551"><a href="#L551">0551</a>       word = 'without'</span>
+<span class="line" id="L552"><a href="#L552">0552</a>     message = 'Collecting initial {} episodes or {} steps ({}) {} rewards.'</span>
+<span class="line" id="L553"><a href="#L553">0553</a>     print(message.format(remaining_episodes, remaining_steps, name, word))</span>
+<span class="line" id="L554"><a href="#L554">0554</a>     episodes = control.random_episodes(</span>
+<span class="line" id="L555"><a href="#L555">0555</a>         env_ctor, remaining_episodes, remaining_steps,</span>
+<span class="line" id="L556"><a href="#L556">0556</a>         params.save_episode_dir, config.isolate_envs)</span>
+<span class="line" id="L557"><a href="#L557">0557</a>     scores = [episode['reward'].sum() for episode in episodes]</span>
+<span class="line" id="L558"><a href="#L558">0558</a>     lengths = [len(episode['reward']) for episode in episodes]</span>
+<span class="line" id="L559"><a href="#L559">0559</a>     metrics.add_scalars(name + '/return', scores)</span>
+<span class="line" id="L560"><a href="#L560">0560</a>     metrics.add_scalars(name + '/length', lengths)</span>
+<span class="line" id="L561"><a href="#L561">0561</a>   metrics.flush()</span></pre></body></html>

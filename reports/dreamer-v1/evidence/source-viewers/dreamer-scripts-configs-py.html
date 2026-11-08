@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>dreamer/scripts/configs.py</title><style>body{margin:0;background:#152a2e;color:#e4f3f3;font:13px/1.55 Consolas,monospace}.head{padding:16px;overflow-wrap:anywhere}.code{padding:16px;overflow:auto;white-space:pre}.line{display:block;min-width:max-content}.line:target{background:#665b18}a{color:#b9d9e3}</style><link href="../../../../favicon.ico" rel="icon"/></head><body><div class="head">dreamer/scripts/configs.py<br/>COMMIT: 0ffec86436239d41cecaff34abcf57dca5539839<br/>SHA-256: 6c282c582ae365485c679a1110ba93e24d09262b45e6a1f7b3b6dd44aa6dd145</div><pre class="code"><span class="line" id="L1"><a href="#L1">0001</a> # Copyright 2019 The Dreamer Authors. All rights reserved.</span>
+<span class="line" id="L2"><a href="#L2">0002</a> #</span>
+<span class="line" id="L3"><a href="#L3">0003</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span class="line" id="L4"><a href="#L4">0004</a> # you may not use this file except in compliance with the License.</span>
+<span class="line" id="L5"><a href="#L5">0005</a> # You may obtain a copy of the License at</span>
+<span class="line" id="L6"><a href="#L6">0006</a> #</span>
+<span class="line" id="L7"><a href="#L7">0007</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="line" id="L8"><a href="#L8">0008</a> #</span>
+<span class="line" id="L9"><a href="#L9">0009</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span class="line" id="L10"><a href="#L10">0010</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span class="line" id="L11"><a href="#L11">0011</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="line" id="L12"><a href="#L12">0012</a> # See the License for the specific language governing permissions and</span>
+<span class="line" id="L13"><a href="#L13">0013</a> # limitations under the License.</span>
+<span class="line" id="L14"><a href="#L14">0014</a> </span>
+<span class="line" id="L15"><a href="#L15">0015</a> from __future__ import absolute_import</span>
+<span class="line" id="L16"><a href="#L16">0016</a> from __future__ import division</span>
+<span class="line" id="L17"><a href="#L17">0017</a> from __future__ import print_function</span>
+<span class="line" id="L18"><a href="#L18">0018</a> </span>
+<span class="line" id="L19"><a href="#L19">0019</a> import os</span>
+<span class="line" id="L20"><a href="#L20">0020</a> </span>
+<span class="line" id="L21"><a href="#L21">0021</a> import tensorflow as tf</span>
+<span class="line" id="L22"><a href="#L22">0022</a> </span>
+<span class="line" id="L23"><a href="#L23">0023</a> from dreamer import control</span>
+<span class="line" id="L24"><a href="#L24">0024</a> from dreamer import models</span>
+<span class="line" id="L25"><a href="#L25">0025</a> from dreamer import networks</span>
+<span class="line" id="L26"><a href="#L26">0026</a> from dreamer import tools</span>
+<span class="line" id="L27"><a href="#L27">0027</a> from dreamer.scripts import tasks as tasks_lib</span>
+<span class="line" id="L28"><a href="#L28">0028</a> from dreamer.scripts import objectives as objectives_lib</span>
+<span class="line" id="L29"><a href="#L29">0029</a> </span>
+<span class="line" id="L30"><a href="#L30">0030</a> </span>
+<span class="line" id="L31"><a href="#L31">0031</a> ACTIVATIONS = {</span>
+<span class="line" id="L32"><a href="#L32">0032</a>     'relu': tf.nn.relu,</span>
+<span class="line" id="L33"><a href="#L33">0033</a>     'elu': tf.nn.elu,</span>
+<span class="line" id="L34"><a href="#L34">0034</a>     'tanh': tf.tanh,</span>
+<span class="line" id="L35"><a href="#L35">0035</a>     'swish': tf.nn.swish,</span>
+<span class="line" id="L36"><a href="#L36">0036</a>     'softplus': tf.nn.softplus,</span>
+<span class="line" id="L37"><a href="#L37">0037</a>     'none': None,</span>
+<span class="line" id="L38"><a href="#L38">0038</a> }</span>
+<span class="line" id="L39"><a href="#L39">0039</a> </span>
+<span class="line" id="L40"><a href="#L40">0040</a> </span>
+<span class="line" id="L41"><a href="#L41">0041</a> DEFAULTS = dict(</span>
+<span class="line" id="L42"><a href="#L42">0042</a>     dreamer=dict(</span>
+<span class="line" id="L43"><a href="#L43">0043</a>         train_planner='policy_sample',</span>
+<span class="line" id="L44"><a href="#L44">0044</a>         test_planner='policy_mode',</span>
+<span class="line" id="L45"><a href="#L45">0045</a>         planner_objective='reward_value',</span>
+<span class="line" id="L46"><a href="#L46">0046</a>         action_head=True,</span>
+<span class="line" id="L47"><a href="#L47">0047</a>         value_head=True,</span>
+<span class="line" id="L48"><a href="#L48">0048</a>         train_action_noise=0.3,</span>
+<span class="line" id="L49"><a href="#L49">0049</a>     ),</span>
+<span class="line" id="L50"><a href="#L50">0050</a>     actor=dict(</span>
+<span class="line" id="L51"><a href="#L51">0051</a>         train_planner='policy_sample',</span>
+<span class="line" id="L52"><a href="#L52">0052</a>         test_planner='policy_mode',</span>
+<span class="line" id="L53"><a href="#L53">0053</a>         planner_objective='reward',</span>
+<span class="line" id="L54"><a href="#L54">0054</a>         action_head=True,</span>
+<span class="line" id="L55"><a href="#L55">0055</a>         value_head=False,</span>
+<span class="line" id="L56"><a href="#L56">0056</a>         train_action_noise=0.3,</span>
+<span class="line" id="L57"><a href="#L57">0057</a>     ),</span>
+<span class="line" id="L58"><a href="#L58">0058</a>     planet=dict(</span>
+<span class="line" id="L59"><a href="#L59">0059</a>         train_planner='cem',</span>
+<span class="line" id="L60"><a href="#L60">0060</a>         test_planner='cem',</span>
+<span class="line" id="L61"><a href="#L61">0061</a>         planner_objective='reward',</span>
+<span class="line" id="L62"><a href="#L62">0062</a>         action_head=False,</span>
+<span class="line" id="L63"><a href="#L63">0063</a>         value_head=False,</span>
+<span class="line" id="L64"><a href="#L64">0064</a>         imagination_horizon=0,</span>
+<span class="line" id="L65"><a href="#L65">0065</a>         train_action_noise=0.3,</span>
+<span class="line" id="L66"><a href="#L66">0066</a>     ),</span>
+<span class="line" id="L67"><a href="#L67">0067</a>     debug=dict(</span>
+<span class="line" id="L68"><a href="#L68">0068</a>         debug=True,</span>
+<span class="line" id="L69"><a href="#L69">0069</a>         action_repeat=50,</span>
+<span class="line" id="L70"><a href="#L70">0070</a>         num_seed_episodes=1,</span>
+<span class="line" id="L71"><a href="#L71">0071</a>         num_seed_steps=1,</span>
+<span class="line" id="L72"><a href="#L72">0072</a>         collect_steps=1,</span>
+<span class="line" id="L73"><a href="#L73">0073</a>         train_steps=10,</span>
+<span class="line" id="L74"><a href="#L74">0074</a>         test_steps=10,</span>
+<span class="line" id="L75"><a href="#L75">0075</a>         max_steps=500,</span>
+<span class="line" id="L76"><a href="#L76">0076</a>         train_collects=[dict(steps_after=10, steps_every=10)],</span>
+<span class="line" id="L77"><a href="#L77">0077</a>         test_collects=[dict(steps_after=10, steps_every=10)],</span>
+<span class="line" id="L78"><a href="#L78">0078</a>         model_size=10,</span>
+<span class="line" id="L79"><a href="#L79">0079</a>         state_size=5,</span>
+<span class="line" id="L80"><a href="#L80">0080</a>         num_layers=1,</span>
+<span class="line" id="L81"><a href="#L81">0081</a>         num_units=10,</span>
+<span class="line" id="L82"><a href="#L82">0082</a>         batch_shape=[5, 10],</span>
+<span class="line" id="L83"><a href="#L83">0083</a>         loader_every=5,</span>
+<span class="line" id="L84"><a href="#L84">0084</a>         loader_window=2,</span>
+<span class="line" id="L85"><a href="#L85">0085</a>     ),</span>
+<span class="line" id="L86"><a href="#L86">0086</a>     pcont=dict(</span>
+<span class="line" id="L87"><a href="#L87">0087</a>         gradient_heads=['image', 'reward', 'pcont'],</span>
+<span class="line" id="L88"><a href="#L88">0088</a>         imagination_skip_last=1,</span>
+<span class="line" id="L89"><a href="#L89">0089</a>         value_loss_pcont=True,</span>
+<span class="line" id="L90"><a href="#L90">0090</a>         action_loss_pcont=True,</span>
+<span class="line" id="L91"><a href="#L91">0091</a>         action_discount=1.0,</span>
+<span class="line" id="L92"><a href="#L92">0092</a>         value_discount=1.0,</span>
+<span class="line" id="L93"><a href="#L93">0093</a>     ),</span>
+<span class="line" id="L94"><a href="#L94">0094</a>     discrete=dict(</span>
+<span class="line" id="L95"><a href="#L95">0095</a>         action_head_dist='onehot_score',</span>
+<span class="line" id="L96"><a href="#L96">0096</a>         imagination_horizon=10,</span>
+<span class="line" id="L97"><a href="#L97">0097</a>         divergence_scale=0.1,</span>
+<span class="line" id="L98"><a href="#L98">0098</a>         clip_rewards='tanh',</span>
+<span class="line" id="L99"><a href="#L99">0099</a>         action_noise_type='epsilon_greedy',</span>
+<span class="line" id="L100"><a href="#L100">0100</a>         train_action_noise=0.4,</span>
+<span class="line" id="L101"><a href="#L101">0101</a>         train_action_noise_ramp=-10000000,</span>
+<span class="line" id="L102"><a href="#L102">0102</a>         train_action_noise_min=0.25,</span>
+<span class="line" id="L103"><a href="#L103">0103</a>         test_action_noise=0.001,</span>
+<span class="line" id="L104"><a href="#L104">0104</a>     ),</span>
+<span class="line" id="L105"><a href="#L105">0105</a>     atari=dict(</span>
+<span class="line" id="L106"><a href="#L106">0106</a>         max_length=27000,</span>
+<span class="line" id="L107"><a href="#L107">0107</a>         atari_lifes=True,</span>
+<span class="line" id="L108"><a href="#L108">0108</a>     ),</span>
+<span class="line" id="L109"><a href="#L109">0109</a> )</span>
+<span class="line" id="L110"><a href="#L110">0110</a> </span>
+<span class="line" id="L111"><a href="#L111">0111</a> </span>
+<span class="line" id="L112"><a href="#L112">0112</a> def make_config(params):</span>
+<span class="line" id="L113"><a href="#L113">0113</a>   config = tools.AttrDict()</span>
+<span class="line" id="L114"><a href="#L114">0114</a>   config.debug = params.get('debug', False)</span>
+<span class="line" id="L115"><a href="#L115">0115</a>   with params.unlocked:</span>
+<span class="line" id="L116"><a href="#L116">0116</a>     for name in params.get('defaults', ['dreamer']):</span>
+<span class="line" id="L117"><a href="#L117">0117</a>       for key, value in DEFAULTS[name].items():</span>
+<span class="line" id="L118"><a href="#L118">0118</a>         if key not in params:</span>
+<span class="line" id="L119"><a href="#L119">0119</a>           params[key] = value</span>
+<span class="line" id="L120"><a href="#L120">0120</a>   config.loss_scales = tools.AttrDict()</span>
+<span class="line" id="L121"><a href="#L121">0121</a>   config = _data_processing(config, params)</span>
+<span class="line" id="L122"><a href="#L122">0122</a>   config = _model_components(config, params)</span>
+<span class="line" id="L123"><a href="#L123">0123</a>   config = _tasks(config, params)</span>
+<span class="line" id="L124"><a href="#L124">0124</a>   config = _loss_functions(config, params)</span>
+<span class="line" id="L125"><a href="#L125">0125</a>   config = _training_schedule(config, params)</span>
+<span class="line" id="L126"><a href="#L126">0126</a>   # Mark params as used which are only accessed at run-time.</span>
+<span class="line" id="L127"><a href="#L127">0127</a>   run_time_keys = [</span>
+<span class="line" id="L128"><a href="#L128">0128</a>       'planner_discount', 'planner_lambda', 'objective_entropy_scale',</span>
+<span class="line" id="L129"><a href="#L129">0129</a>       'normalize_actions', 'max_length', 'render_size', 'atari_lifes',</span>
+<span class="line" id="L130"><a href="#L130">0130</a>       'atari_noops', 'atari_sticky', 'atari_train_max_length',</span>
+<span class="line" id="L131"><a href="#L131">0131</a>       'atari_grayscale']</span>
+<span class="line" id="L132"><a href="#L132">0132</a>   for key in run_time_keys:</span>
+<span class="line" id="L133"><a href="#L133">0133</a>     params.get(key, None)</span>
+<span class="line" id="L134"><a href="#L134">0134</a>   if params.untouched:</span>
+<span class="line" id="L135"><a href="#L135">0135</a>     message = 'Found unused config overrides: {}'</span>
+<span class="line" id="L136"><a href="#L136">0136</a>     raise KeyError(message.format(', '.join(params.untouched)))</span>
+<span class="line" id="L137"><a href="#L137">0137</a>   return config</span>
+<span class="line" id="L138"><a href="#L138">0138</a> </span>
+<span class="line" id="L139"><a href="#L139">0139</a> </span>
+<span class="line" id="L140"><a href="#L140">0140</a> def _data_processing(config, params):</span>
+<span class="line" id="L141"><a href="#L141">0141</a>   config.batch_shape = params.get('batch_shape', (50, 50))</span>
+<span class="line" id="L142"><a href="#L142">0142</a>   config.num_chunks = params.get('num_chunks', 1)</span>
+<span class="line" id="L143"><a href="#L143">0143</a>   image_bits = params.get('image_bits', 8)</span>
+<span class="line" id="L144"><a href="#L144">0144</a>   config.preprocess_fn = tools.bind(</span>
+<span class="line" id="L145"><a href="#L145">0145</a>       tools.preprocess.preprocess, bits=image_bits)</span>
+<span class="line" id="L146"><a href="#L146">0146</a>   config.postprocess_fn = tools.bind(</span>
+<span class="line" id="L147"><a href="#L147">0147</a>       tools.preprocess.postprocess, bits=image_bits)</span>
+<span class="line" id="L148"><a href="#L148">0148</a>   config.open_loop_context = 5</span>
+<span class="line" id="L149"><a href="#L149">0149</a>   config.data_reader = tools.bind(</span>
+<span class="line" id="L150"><a href="#L150">0150</a>       tools.numpy_episodes.episode_reader,</span>
+<span class="line" id="L151"><a href="#L151">0151</a>       clip_rewards=params.get('clip_rewards', False),</span>
+<span class="line" id="L152"><a href="#L152">0152</a>       pcont_scale=params.get('pcont_scale', 0.99))</span>
+<span class="line" id="L153"><a href="#L153">0153</a>   config.data_loader = {</span>
+<span class="line" id="L154"><a href="#L154">0154</a>       'cache': tools.bind(</span>
+<span class="line" id="L155"><a href="#L155">0155</a>           tools.numpy_episodes.cache_loader,</span>
+<span class="line" id="L156"><a href="#L156">0156</a>           every=params.get('loader_every', 1000)),</span>
+<span class="line" id="L157"><a href="#L157">0157</a>       'recent': tools.bind(</span>
+<span class="line" id="L158"><a href="#L158">0158</a>           tools.numpy_episodes.recent_loader,</span>
+<span class="line" id="L159"><a href="#L159">0159</a>           every=params.get('loader_every', 1000)),</span>
+<span class="line" id="L160"><a href="#L160">0160</a>       'window': tools.bind(</span>
+<span class="line" id="L161"><a href="#L161">0161</a>           tools.numpy_episodes.window_loader,</span>
+<span class="line" id="L162"><a href="#L162">0162</a>           window=params.get('loader_window', 400),</span>
+<span class="line" id="L163"><a href="#L163">0163</a>           every=params.get('loader_every', 1000)),</span>
+<span class="line" id="L164"><a href="#L164">0164</a>       'reload': tools.numpy_episodes.reload_loader,</span>
+<span class="line" id="L165"><a href="#L165">0165</a>       'dummy': tools.numpy_episodes.dummy_loader,</span>
+<span class="line" id="L166"><a href="#L166">0166</a>   }[params.get('loader', 'cache')]</span>
+<span class="line" id="L167"><a href="#L167">0167</a>   config.gpu_prefetch = params.get('gpu_prefetch', False)</span>
+<span class="line" id="L168"><a href="#L168">0168</a>   return config</span>
+<span class="line" id="L169"><a href="#L169">0169</a> </span>
+<span class="line" id="L170"><a href="#L170">0170</a> </span>
+<span class="line" id="L171"><a href="#L171">0171</a> def _model_components(config, params):</span>
+<span class="line" id="L172"><a href="#L172">0172</a>   config.gradient_heads = params.get('gradient_heads', ['image', 'reward'])</span>
+<span class="line" id="L173"><a href="#L173">0173</a>   config.activation = ACTIVATIONS[params.get('activation', 'elu')]</span>
+<span class="line" id="L174"><a href="#L174">0174</a>   config.num_layers = params.get('num_layers', 3)</span>
+<span class="line" id="L175"><a href="#L175">0175</a>   config.num_units = params.get('num_units', 400)</span>
+<span class="line" id="L176"><a href="#L176">0176</a>   encoder = params.get('encoder', 'conv')</span>
+<span class="line" id="L177"><a href="#L177">0177</a>   if encoder == 'conv':</span>
+<span class="line" id="L178"><a href="#L178">0178</a>     config.encoder = networks.conv.encoder</span>
+<span class="line" id="L179"><a href="#L179">0179</a>   elif encoder == 'proprio':</span>
+<span class="line" id="L180"><a href="#L180">0180</a>     config.encoder = tools.bind(</span>
+<span class="line" id="L181"><a href="#L181">0181</a>         networks.proprio.encoder,</span>
+<span class="line" id="L182"><a href="#L182">0182</a>         keys=params.get('proprio_encoder_keys'),</span>
+<span class="line" id="L183"><a href="#L183">0183</a>         num_layers=params.get('proprio_encoder_num_layers', 3),</span>
+<span class="line" id="L184"><a href="#L184">0184</a>         units=params.get('proprio_encoder_units', 300))</span>
+<span class="line" id="L185"><a href="#L185">0185</a>   else:</span>
+<span class="line" id="L186"><a href="#L186">0186</a>     raise NotImplementedError(encoder)</span>
+<span class="line" id="L187"><a href="#L187">0187</a>   config.head_network = tools.bind(</span>
+<span class="line" id="L188"><a href="#L188">0188</a>       networks.feed_forward,</span>
+<span class="line" id="L189"><a href="#L189">0189</a>       num_layers=config.num_layers,</span>
+<span class="line" id="L190"><a href="#L190">0190</a>       units=config.num_units,</span>
+<span class="line" id="L191"><a href="#L191">0191</a>       activation=config.activation)</span>
+<span class="line" id="L192"><a href="#L192">0192</a>   config.heads = tools.AttrDict()</span>
+<span class="line" id="L193"><a href="#L193">0193</a>   if params.get('value_head', True):</span>
+<span class="line" id="L194"><a href="#L194">0194</a>     config.heads.value = tools.bind(</span>
+<span class="line" id="L195"><a href="#L195">0195</a>         config.head_network,</span>
+<span class="line" id="L196"><a href="#L196">0196</a>         num_layers=params.get('value_layers', 3),</span>
+<span class="line" id="L197"><a href="#L197">0197</a>         data_shape=[],</span>
+<span class="line" id="L198"><a href="#L198">0198</a>         dist=params.get('value_dist', 'normal'))</span>
+<span class="line" id="L199"><a href="#L199">0199</a>   if params.get('value_target_head', False):</span>
+<span class="line" id="L200"><a href="#L200">0200</a>     config.heads.value_target = tools.bind(</span>
+<span class="line" id="L201"><a href="#L201">0201</a>         config.head_network,</span>
+<span class="line" id="L202"><a href="#L202">0202</a>         num_layers=params.get('value_layers', 3),</span>
+<span class="line" id="L203"><a href="#L203">0203</a>         data_shape=[],</span>
+<span class="line" id="L204"><a href="#L204">0204</a>         stop_gradient=True,</span>
+<span class="line" id="L205"><a href="#L205">0205</a>         dist=params.get('value_dist', 'normal'))</span>
+<span class="line" id="L206"><a href="#L206">0206</a>   if params.get('return_head', False):</span>
+<span class="line" id="L207"><a href="#L207">0207</a>     config.heads['return'] = tools.bind(</span>
+<span class="line" id="L208"><a href="#L208">0208</a>         config.head_network,</span>
+<span class="line" id="L209"><a href="#L209">0209</a>         activation=config.activation)</span>
+<span class="line" id="L210"><a href="#L210">0210</a>   if params.get('action_head', True):</span>
+<span class="line" id="L211"><a href="#L211">0211</a>     config.heads.action = tools.bind(</span>
+<span class="line" id="L212"><a href="#L212">0212</a>         config.head_network,</span>
+<span class="line" id="L213"><a href="#L213">0213</a>         num_layers=params.get('action_layers', 4),</span>
+<span class="line" id="L214"><a href="#L214">0214</a>         mean_activation=ACTIVATIONS[</span>
+<span class="line" id="L215"><a href="#L215">0215</a>             params.get('action_mean_activation', 'none')],</span>
+<span class="line" id="L216"><a href="#L216">0216</a>         dist=params.get('action_head_dist', 'tanh_normal_tanh'),</span>
+<span class="line" id="L217"><a href="#L217">0217</a>         std=params.get('action_head_std', 'learned'),</span>
+<span class="line" id="L218"><a href="#L218">0218</a>         min_std=params.get('action_head_min_std', 1e-4),</span>
+<span class="line" id="L219"><a href="#L219">0219</a>         init_std=params.get('action_head_init_std', 5.0))</span>
+<span class="line" id="L220"><a href="#L220">0220</a>   if params.get('action_target_head', False):</span>
+<span class="line" id="L221"><a href="#L221">0221</a>     config.heads.action_target = tools.bind(</span>
+<span class="line" id="L222"><a href="#L222">0222</a>         config.head_network,</span>
+<span class="line" id="L223"><a href="#L223">0223</a>         num_layers=params.get('action_layers', 4),</span>
+<span class="line" id="L224"><a href="#L224">0224</a>         stop_gradient=True,</span>
+<span class="line" id="L225"><a href="#L225">0225</a>         mean_activation=ACTIVATIONS[</span>
+<span class="line" id="L226"><a href="#L226">0226</a>             params.get('action_mean_activation', 'none')],</span>
+<span class="line" id="L227"><a href="#L227">0227</a>         dist=params.get('action_head_dist', 'tanh_normal_tanh'),</span>
+<span class="line" id="L228"><a href="#L228">0228</a>         std=params.get('action_head_std', 'learned'),</span>
+<span class="line" id="L229"><a href="#L229">0229</a>         min_std=params.get('action_head_min_std', 1e-4),</span>
+<span class="line" id="L230"><a href="#L230">0230</a>         init_std=params.get('action_head_init_std', 5.0))</span>
+<span class="line" id="L231"><a href="#L231">0231</a>   if params.get('cpc_head', False):</span>
+<span class="line" id="L232"><a href="#L232">0232</a>     config.heads.cpc = config.head_network.copy(</span>
+<span class="line" id="L233"><a href="#L233">0233</a>         dist=params.get('cpc_head_dist', 'normal'),</span>
+<span class="line" id="L234"><a href="#L234">0234</a>         std=params.get('cpc_head_std', 'learned'),</span>
+<span class="line" id="L235"><a href="#L235">0235</a>         num_layers=params.get('cpc_head_layers', 3))</span>
+<span class="line" id="L236"><a href="#L236">0236</a>   image_head = params.get('image_head', 'conv')</span>
+<span class="line" id="L237"><a href="#L237">0237</a>   if image_head == 'conv':</span>
+<span class="line" id="L238"><a href="#L238">0238</a>     config.heads.image = tools.bind(</span>
+<span class="line" id="L239"><a href="#L239">0239</a>         networks.conv.decoder,</span>
+<span class="line" id="L240"><a href="#L240">0240</a>         std=params.get('image_head_std', 1.0))</span>
+<span class="line" id="L241"><a href="#L241">0241</a>   else:</span>
+<span class="line" id="L242"><a href="#L242">0242</a>     raise NotImplementedError(image_head)</span>
+<span class="line" id="L243"><a href="#L243">0243</a>   hidden_size = params.get('model_size', 200)</span>
+<span class="line" id="L244"><a href="#L244">0244</a>   state_size = params.get('state_size', 30)</span>
+<span class="line" id="L245"><a href="#L245">0245</a>   model = params.get('model', 'rssm')</span>
+<span class="line" id="L246"><a href="#L246">0246</a>   if model == 'rssm':</span>
+<span class="line" id="L247"><a href="#L247">0247</a>     config.cell = tools.bind(</span>
+<span class="line" id="L248"><a href="#L248">0248</a>         models.RSSM, state_size, hidden_size, hidden_size,</span>
+<span class="line" id="L249"><a href="#L249">0249</a>         params.get('future_rnn', True),</span>
+<span class="line" id="L250"><a href="#L250">0250</a>         params.get('mean_only', False),</span>
+<span class="line" id="L251"><a href="#L251">0251</a>         params.get('min_stddev', 1e-1),</span>
+<span class="line" id="L252"><a href="#L252">0252</a>         config.activation,</span>
+<span class="line" id="L253"><a href="#L253">0253</a>         params.get('model_layers', 1))</span>
+<span class="line" id="L254"><a href="#L254">0254</a>   else:</span>
+<span class="line" id="L255"><a href="#L255">0255</a>     raise NotImplementedError(model)</span>
+<span class="line" id="L256"><a href="#L256">0256</a>   return config</span>
+<span class="line" id="L257"><a href="#L257">0257</a> </span>
+<span class="line" id="L258"><a href="#L258">0258</a> </span>
+<span class="line" id="L259"><a href="#L259">0259</a> def _tasks(config, params):</span>
+<span class="line" id="L260"><a href="#L260">0260</a>   config.isolate_envs = params.get('isolate_envs', 'thread')</span>
+<span class="line" id="L261"><a href="#L261">0261</a>   train_tasks, test_tasks = [], []</span>
+<span class="line" id="L262"><a href="#L262">0262</a>   for name in params.get('tasks', ['cheetah_run']):</span>
+<span class="line" id="L263"><a href="#L263">0263</a>     try:</span>
+<span class="line" id="L264"><a href="#L264">0264</a>       train_tasks.append(getattr(tasks_lib, name)(config, params, 'train'))</span>
+<span class="line" id="L265"><a href="#L265">0265</a>       test_tasks.append(getattr(tasks_lib, name)(config, params, 'test'))</span>
+<span class="line" id="L266"><a href="#L266">0266</a>     except TypeError:</span>
+<span class="line" id="L267"><a href="#L267">0267</a>       train_tasks.append(getattr(tasks_lib, name)(config, params))</span>
+<span class="line" id="L268"><a href="#L268">0268</a>       test_tasks.append(getattr(tasks_lib, name)(config, params))</span>
+<span class="line" id="L269"><a href="#L269">0269</a>   def common_spaces_ctor(task, action_spaces):</span>
+<span class="line" id="L270"><a href="#L270">0270</a>     env = task.env_ctor()</span>
+<span class="line" id="L271"><a href="#L271">0271</a>     env = control.wrappers.SelectObservations(env, ['image'])</span>
+<span class="line" id="L272"><a href="#L272">0272</a>     env = control.wrappers.PadActions(env, action_spaces)</span>
+<span class="line" id="L273"><a href="#L273">0273</a>     return env</span>
+<span class="line" id="L274"><a href="#L274">0274</a>   if len(train_tasks) &gt; 1:</span>
+<span class="line" id="L275"><a href="#L275">0275</a>     action_spaces = [task.env_ctor().action_space for task in train_tasks]</span>
+<span class="line" id="L276"><a href="#L276">0276</a>     for index, task in enumerate(train_tasks):</span>
+<span class="line" id="L277"><a href="#L277">0277</a>       env_ctor = tools.bind(common_spaces_ctor, task, action_spaces)</span>
+<span class="line" id="L278"><a href="#L278">0278</a>       train_tasks[index] = tasks_lib.Task(task.name, env_ctor, [])</span>
+<span class="line" id="L279"><a href="#L279">0279</a>   if len(test_tasks) &gt; 1:</span>
+<span class="line" id="L280"><a href="#L280">0280</a>     action_spaces = [task.env_ctor().action_space for task in test_tasks]</span>
+<span class="line" id="L281"><a href="#L281">0281</a>     for index, task in enumerate(test_tasks):</span>
+<span class="line" id="L282"><a href="#L282">0282</a>       env_ctor = tools.bind(common_spaces_ctor, task, action_spaces)</span>
+<span class="line" id="L283"><a href="#L283">0283</a>       test_tasks[index] = tasks_lib.Task(task.name, env_ctor, [])</span>
+<span class="line" id="L284"><a href="#L284">0284</a>   if config.gradient_heads == 'all_but_image':</span>
+<span class="line" id="L285"><a href="#L285">0285</a>     config.gradient_heads = train_tasks[0].state_components</span>
+<span class="line" id="L286"><a href="#L286">0286</a>   diags = params.get('state_diagnostics', True)</span>
+<span class="line" id="L287"><a href="#L287">0287</a>   for name in train_tasks[0].state_components + ['reward', 'pcont']:</span>
+<span class="line" id="L288"><a href="#L288">0288</a>     if name not in config.gradient_heads + ['reward', 'pcont'] and not diags:</span>
+<span class="line" id="L289"><a href="#L289">0289</a>       continue</span>
+<span class="line" id="L290"><a href="#L290">0290</a>     kwargs = {}</span>
+<span class="line" id="L291"><a href="#L291">0291</a>     kwargs['stop_gradient'] = name not in config.gradient_heads</span>
+<span class="line" id="L292"><a href="#L292">0292</a>     if name == 'pcont':</span>
+<span class="line" id="L293"><a href="#L293">0293</a>       kwargs['dist'] = 'binary'</span>
+<span class="line" id="L294"><a href="#L294">0294</a>     default = dict(reward=2).get(name, config.num_layers)</span>
+<span class="line" id="L295"><a href="#L295">0295</a>     kwargs['num_layers'] = params.get(name + '_layers', default)</span>
+<span class="line" id="L296"><a href="#L296">0296</a>     config.heads[name] = tools.bind(config.head_network, **kwargs)</span>
+<span class="line" id="L297"><a href="#L297">0297</a>     config.loss_scales[name] = 1.0</span>
+<span class="line" id="L298"><a href="#L298">0298</a>   config.train_tasks = train_tasks</span>
+<span class="line" id="L299"><a href="#L299">0299</a>   config.test_tasks = test_tasks</span>
+<span class="line" id="L300"><a href="#L300">0300</a>   return config</span>
+<span class="line" id="L301"><a href="#L301">0301</a> </span>
+<span class="line" id="L302"><a href="#L302">0302</a> </span>
+<span class="line" id="L303"><a href="#L303">0303</a> def _loss_functions(config, params):</span>
+<span class="line" id="L304"><a href="#L304">0304</a>   for head in config.gradient_heads:</span>
+<span class="line" id="L305"><a href="#L305">0305</a>     assert head in config.heads, head</span>
+<span class="line" id="L306"><a href="#L306">0306</a>   config.imagination_horizon = params.get('imagination_horizon', 15)</span>
+<span class="line" id="L307"><a href="#L307">0307</a>   config.imagination_skip_last = params.get('imagination_skip_last', None)</span>
+<span class="line" id="L308"><a href="#L308">0308</a>   config.imagination_include_initial = params.get(</span>
+<span class="line" id="L309"><a href="#L309">0309</a>       'imagination_include_initial', True)</span>
+<span class="line" id="L310"><a href="#L310">0310</a> </span>
+<span class="line" id="L311"><a href="#L311">0311</a>   config.action_source = params.get('action_source', 'model')</span>
+<span class="line" id="L312"><a href="#L312">0312</a>   config.action_model_horizon = params.get('action_model_horizon', None)</span>
+<span class="line" id="L313"><a href="#L313">0313</a>   config.action_bootstrap = params.get('action_bootstrap', True)</span>
+<span class="line" id="L314"><a href="#L314">0314</a>   config.action_discount = params.get('action_discount', 0.99)</span>
+<span class="line" id="L315"><a href="#L315">0315</a>   config.action_lambda = params.get('action_lambda', 0.95)</span>
+<span class="line" id="L316"><a href="#L316">0316</a>   config.action_target_update = params.get('action_target_update', 1)</span>
+<span class="line" id="L317"><a href="#L317">0317</a>   config.action_target_period = params.get('action_target_period', 50000)</span>
+<span class="line" id="L318"><a href="#L318">0318</a>   config.action_loss_pcont = params.get('action_loss_pcont', False)</span>
+<span class="line" id="L319"><a href="#L319">0319</a>   config.action_pcont_stop_grad = params.get('action_pcont_stop_grad', False)</span>
+<span class="line" id="L320"><a href="#L320">0320</a>   config.action_pcont_weight = params.get('action_pcont_weight', True)</span>
+<span class="line" id="L321"><a href="#L321">0321</a> </span>
+<span class="line" id="L322"><a href="#L322">0322</a>   config.value_source = params.get('value_source', 'model')</span>
+<span class="line" id="L323"><a href="#L323">0323</a>   config.value_model_horizon = params.get('value_model_horizon', None)</span>
+<span class="line" id="L324"><a href="#L324">0324</a>   config.value_discount = params.get('value_discount', 0.99)</span>
+<span class="line" id="L325"><a href="#L325">0325</a>   config.value_lambda = params.get('value_lambda', 0.95)</span>
+<span class="line" id="L326"><a href="#L326">0326</a>   config.value_bootstrap = params.get('value_bootstrap', True)</span>
+<span class="line" id="L327"><a href="#L327">0327</a>   config.value_target_update = params.get('value_target_update', 1)</span>
+<span class="line" id="L328"><a href="#L328">0328</a>   config.value_target_period = params.get('value_target_period', 50000)</span>
+<span class="line" id="L329"><a href="#L329">0329</a>   config.value_loss_pcont = params.get('value_loss_pcont', False)</span>
+<span class="line" id="L330"><a href="#L330">0330</a>   config.value_pcont_weight = params.get('value_pcont_weight', True)</span>
+<span class="line" id="L331"><a href="#L331">0331</a>   config.value_maxent = params.get('value_maxent', False)</span>
+<span class="line" id="L332"><a href="#L332">0332</a> </span>
+<span class="line" id="L333"><a href="#L333">0333</a>   config.action_beta = params.get('action_beta', 0.0)</span>
+<span class="line" id="L334"><a href="#L334">0334</a>   config.action_beta_dims_value = params.get('action_beta_dims_value', None)</span>
+<span class="line" id="L335"><a href="#L335">0335</a>   config.state_beta = params.get('state_beta', 0.0)</span>
+<span class="line" id="L336"><a href="#L336">0336</a>   config.stop_grad_pre_action = params.get('stop_grad_pre_action', True)</span>
+<span class="line" id="L337"><a href="#L337">0337</a>   config.pcont_label_weight = params.get('pcont_label_weight', None)</span>
+<span class="line" id="L338"><a href="#L338">0338</a> </span>
+<span class="line" id="L339"><a href="#L339">0339</a>   config.loss_scales.divergence = params.get('divergence_scale', 1.0)</span>
+<span class="line" id="L340"><a href="#L340">0340</a>   config.loss_scales.global_divergence = params.get('global_div_scale', 0.0)</span>
+<span class="line" id="L341"><a href="#L341">0341</a>   config.loss_scales.overshooting = params.get('overshooting_scale', 0.0)</span>
+<span class="line" id="L342"><a href="#L342">0342</a>   for head in config.heads:</span>
+<span class="line" id="L343"><a href="#L343">0343</a>     if head in ('value_target', 'action_target'):  # Untrained.</span>
+<span class="line" id="L344"><a href="#L344">0344</a>       continue</span>
+<span class="line" id="L345"><a href="#L345">0345</a>     config.loss_scales[head] = params.get(head + '_loss_scale', 1.0)</span>
+<span class="line" id="L346"><a href="#L346">0346</a> </span>
+<span class="line" id="L347"><a href="#L347">0347</a>   config.free_nats = params.get('free_nats', 3.0)</span>
+<span class="line" id="L348"><a href="#L348">0348</a>   config.overshooting_distance = params.get('overshooting_distance', 0)</span>
+<span class="line" id="L349"><a href="#L349">0349</a>   config.os_stop_posterior_grad = params.get('os_stop_posterior_grad', True)</span>
+<span class="line" id="L350"><a href="#L350">0350</a>   config.cpc_contrast = params.get('cpc_contrast', 'window')</span>
+<span class="line" id="L351"><a href="#L351">0351</a>   config.cpc_batch_amount = params.get('cpc_batch_amount', 10)</span>
+<span class="line" id="L352"><a href="#L352">0352</a>   config.cpc_time_amount = params.get('cpc_time_amount', 30)</span>
+<span class="line" id="L353"><a href="#L353">0353</a> </span>
+<span class="line" id="L354"><a href="#L354">0354</a>   optimizer_cls = tools.bind(</span>
+<span class="line" id="L355"><a href="#L355">0355</a>       tf.train.AdamOptimizer,</span>
+<span class="line" id="L356"><a href="#L356">0356</a>       epsilon=params.get('optimizer_epsilon', 1e-4))</span>
+<span class="line" id="L357"><a href="#L357">0357</a>   config.optimizers = tools.AttrDict()</span>
+<span class="line" id="L358"><a href="#L358">0358</a>   config.optimizers.default = tools.bind(</span>
+<span class="line" id="L359"><a href="#L359">0359</a>       tools.CustomOptimizer,</span>
+<span class="line" id="L360"><a href="#L360">0360</a>       optimizer_cls=optimizer_cls,</span>
+<span class="line" id="L361"><a href="#L361">0361</a>       # schedule=tools.bind(tools.schedule.linear, ramp=0),</span>
+<span class="line" id="L362"><a href="#L362">0362</a>       learning_rate=params.get('default_lr', 1e-3),</span>
+<span class="line" id="L363"><a href="#L363">0363</a>       clipping=params.get('default_gradient_clipping', 1000.0))</span>
+<span class="line" id="L364"><a href="#L364">0364</a>   config.optimizers.model = config.optimizers.default.copy(</span>
+<span class="line" id="L365"><a href="#L365">0365</a>       learning_rate=params.get('model_lr', 6e-4),</span>
+<span class="line" id="L366"><a href="#L366">0366</a>       clipping=params.get('model_gradient_clipping', 100.0))</span>
+<span class="line" id="L367"><a href="#L367">0367</a>   config.optimizers.value = config.optimizers.default.copy(</span>
+<span class="line" id="L368"><a href="#L368">0368</a>       learning_rate=params.get('value_lr', 8e-5),</span>
+<span class="line" id="L369"><a href="#L369">0369</a>       clipping=params.get('value_gradient_clipping', 100.0))</span>
+<span class="line" id="L370"><a href="#L370">0370</a>   config.optimizers.action = config.optimizers.default.copy(</span>
+<span class="line" id="L371"><a href="#L371">0371</a>       learning_rate=params.get('action_lr', 8e-5),</span>
+<span class="line" id="L372"><a href="#L372">0372</a>       clipping=params.get('action_gradient_clipping', 100.0))</span>
+<span class="line" id="L373"><a href="#L373">0373</a>   return config</span>
+<span class="line" id="L374"><a href="#L374">0374</a> </span>
+<span class="line" id="L375"><a href="#L375">0375</a> </span>
+<span class="line" id="L376"><a href="#L376">0376</a> def _training_schedule(config, params):</span>
+<span class="line" id="L377"><a href="#L377">0377</a>   config.train_steps = int(params.get('train_steps', 50000))</span>
+<span class="line" id="L378"><a href="#L378">0378</a>   config.test_steps = int(params.get('test_steps', config.batch_shape[0]))</span>
+<span class="line" id="L379"><a href="#L379">0379</a>   config.max_steps = int(params.get('max_steps', 5e7))</span>
+<span class="line" id="L380"><a href="#L380">0380</a>   config.train_log_every = params.get('train_log_every', config.train_steps)</span>
+<span class="line" id="L381"><a href="#L381">0381</a>   config.train_checkpoint_every = None</span>
+<span class="line" id="L382"><a href="#L382">0382</a>   config.test_checkpoint_every = int(</span>
+<span class="line" id="L383"><a href="#L383">0383</a>       params.get('checkpoint_every', 10 * config.test_steps))</span>
+<span class="line" id="L384"><a href="#L384">0384</a>   config.checkpoint_to_load = None</span>
+<span class="line" id="L385"><a href="#L385">0385</a>   config.savers = [tools.AttrDict(exclude=(r'.*_temporary.*',))]</span>
+<span class="line" id="L386"><a href="#L386">0386</a>   config.print_metrics_every = config.train_steps // 10</span>
+<span class="line" id="L387"><a href="#L387">0387</a>   config.train_dir = os.path.join(params.logdir, 'train_episodes')</span>
+<span class="line" id="L388"><a href="#L388">0388</a>   config.test_dir = os.path.join(params.logdir, 'test_episodes')</span>
+<span class="line" id="L389"><a href="#L389">0389</a>   config.random_collects = _initial_collection(config, params)</span>
+<span class="line" id="L390"><a href="#L390">0390</a> </span>
+<span class="line" id="L391"><a href="#L391">0391</a>   defaults = tools.AttrDict()</span>
+<span class="line" id="L392"><a href="#L392">0392</a>   defaults.name = 'main'</span>
+<span class="line" id="L393"><a href="#L393">0393</a>   defaults.give_rewards = True</span>
+<span class="line" id="L394"><a href="#L394">0394</a>   defaults.horizon = params.get('planner_horizon', 12)</span>
+<span class="line" id="L395"><a href="#L395">0395</a>   defaults.objective = params.get('planner_objective', 'reward_value')</span>
+<span class="line" id="L396"><a href="#L396">0396</a>   defaults.num_envs = params.get('num_envs', 1)</span>
+<span class="line" id="L397"><a href="#L397">0397</a>   defaults.num_episodes = params.get('collect_episodes', defaults.num_envs)</span>
+<span class="line" id="L398"><a href="#L398">0398</a>   defaults.num_steps = params.get('collect_steps', 500)</span>
+<span class="line" id="L399"><a href="#L399">0399</a>   defaults.steps_after = params.get('collect_every', 5000)</span>
+<span class="line" id="L400"><a href="#L400">0400</a>   defaults.steps_every = params.get('collect_every', 5000)</span>
+<span class="line" id="L401"><a href="#L401">0401</a>   defaults.steps_until = -1</span>
+<span class="line" id="L402"><a href="#L402">0402</a>   defaults.action_noise_type = params.get(</span>
+<span class="line" id="L403"><a href="#L403">0403</a>       'action_noise_type', 'additive_normal')</span>
+<span class="line" id="L404"><a href="#L404">0404</a> </span>
+<span class="line" id="L405"><a href="#L405">0405</a>   train_defaults = defaults.copy(_unlocked=True)</span>
+<span class="line" id="L406"><a href="#L406">0406</a>   train_defaults.prefix = 'train'</span>
+<span class="line" id="L407"><a href="#L407">0407</a>   train_defaults.mode = 'train'</span>
+<span class="line" id="L408"><a href="#L408">0408</a>   train_defaults.save_episode_dir = config.train_dir</span>
+<span class="line" id="L409"><a href="#L409">0409</a>   train_defaults.planner = params.get('train_planner', 'policy_sample')</span>
+<span class="line" id="L410"><a href="#L410">0410</a>   train_defaults.objective = params.get(</span>
+<span class="line" id="L411"><a href="#L411">0411</a>       'train_planner_objective', defaults.objective)</span>
+<span class="line" id="L412"><a href="#L412">0412</a>   train_defaults.action_noise_scale = params.get('train_action_noise', 0.3)</span>
+<span class="line" id="L413"><a href="#L413">0413</a>   train_defaults.action_noise_ramp = params.get('train_action_noise_ramp', 0)</span>
+<span class="line" id="L414"><a href="#L414">0414</a>   train_defaults.action_noise_min = params.get('train_action_noise_min', 0.0)</span>
+<span class="line" id="L415"><a href="#L415">0415</a>   train_defaults.action_noise_factors = params.get(</span>
+<span class="line" id="L416"><a href="#L416">0416</a>       'train_action_noise_factors', [])</span>
+<span class="line" id="L417"><a href="#L417">0417</a>   config.train_collects = _active_collection(</span>
+<span class="line" id="L418"><a href="#L418">0418</a>       config.train_tasks, params.get('train_collects', [{}]), train_defaults,</span>
+<span class="line" id="L419"><a href="#L419">0419</a>       config, params)</span>
+<span class="line" id="L420"><a href="#L420">0420</a> </span>
+<span class="line" id="L421"><a href="#L421">0421</a>   test_defaults = defaults.copy(_unlocked=True)</span>
+<span class="line" id="L422"><a href="#L422">0422</a>   test_defaults.prefix = 'test'</span>
+<span class="line" id="L423"><a href="#L423">0423</a>   test_defaults.mode = 'test'</span>
+<span class="line" id="L424"><a href="#L424">0424</a>   test_defaults.save_episode_dir = config.test_dir</span>
+<span class="line" id="L425"><a href="#L425">0425</a>   test_defaults.planner = params.get('test_planner', 'policy_mode')</span>
+<span class="line" id="L426"><a href="#L426">0426</a>   test_defaults.objective = params.get(</span>
+<span class="line" id="L427"><a href="#L427">0427</a>       'test_planner_objective', defaults.objective)</span>
+<span class="line" id="L428"><a href="#L428">0428</a>   test_defaults.action_noise_scale = params.get('test_action_noise', 0.0)</span>
+<span class="line" id="L429"><a href="#L429">0429</a>   test_defaults.action_noise_ramp = 0</span>
+<span class="line" id="L430"><a href="#L430">0430</a>   test_defaults.action_noise_min = 0.0</span>
+<span class="line" id="L431"><a href="#L431">0431</a>   test_defaults.action_noise_factors = params.get(</span>
+<span class="line" id="L432"><a href="#L432">0432</a>       'train_action_noise_factors', None)</span>
+<span class="line" id="L433"><a href="#L433">0433</a>   config.test_collects = _active_collection(</span>
+<span class="line" id="L434"><a href="#L434">0434</a>       config.test_tasks, params.get('test_collects', [{}]), test_defaults,</span>
+<span class="line" id="L435"><a href="#L435">0435</a>       config, params)</span>
+<span class="line" id="L436"><a href="#L436">0436</a>   return config</span>
+<span class="line" id="L437"><a href="#L437">0437</a> </span>
+<span class="line" id="L438"><a href="#L438">0438</a> </span>
+<span class="line" id="L439"><a href="#L439">0439</a> def _initial_collection(config, params):</span>
+<span class="line" id="L440"><a href="#L440">0440</a>   num_seed_episodes = int(params.get('num_seed_episodes', 5))</span>
+<span class="line" id="L441"><a href="#L441">0441</a>   num_seed_steps = int(params.get('num_seed_steps', 2500))</span>
+<span class="line" id="L442"><a href="#L442">0442</a>   sims = tools.AttrDict()</span>
+<span class="line" id="L443"><a href="#L443">0443</a>   for task in config.train_tasks:</span>
+<span class="line" id="L444"><a href="#L444">0444</a>     sims['train-' + task.name] = tools.AttrDict(</span>
+<span class="line" id="L445"><a href="#L445">0445</a>         task=task,</span>
+<span class="line" id="L446"><a href="#L446">0446</a>         mode='train',</span>
+<span class="line" id="L447"><a href="#L447">0447</a>         save_episode_dir=config.train_dir,</span>
+<span class="line" id="L448"><a href="#L448">0448</a>         num_episodes=num_seed_episodes,</span>
+<span class="line" id="L449"><a href="#L449">0449</a>         num_steps=num_seed_steps,</span>
+<span class="line" id="L450"><a href="#L450">0450</a>         give_rewards=params.get('seed_episode_rewards', True))</span>
+<span class="line" id="L451"><a href="#L451">0451</a>   for task in config.test_tasks:</span>
+<span class="line" id="L452"><a href="#L452">0452</a>     sims['test-' + task.name] = tools.AttrDict(</span>
+<span class="line" id="L453"><a href="#L453">0453</a>         task=task,</span>
+<span class="line" id="L454"><a href="#L454">0454</a>         mode='test',</span>
+<span class="line" id="L455"><a href="#L455">0455</a>         save_episode_dir=config.test_dir,</span>
+<span class="line" id="L456"><a href="#L456">0456</a>         num_episodes=num_seed_episodes,</span>
+<span class="line" id="L457"><a href="#L457">0457</a>         num_steps=num_seed_steps,</span>
+<span class="line" id="L458"><a href="#L458">0458</a>         give_rewards=True)</span>
+<span class="line" id="L459"><a href="#L459">0459</a>   return sims</span>
+<span class="line" id="L460"><a href="#L460">0460</a> </span>
+<span class="line" id="L461"><a href="#L461">0461</a> </span>
+<span class="line" id="L462"><a href="#L462">0462</a> def _active_collection(tasks, collects, defaults, config, params):</span>
+<span class="line" id="L463"><a href="#L463">0463</a>   sims = tools.AttrDict()</span>
+<span class="line" id="L464"><a href="#L464">0464</a>   for task in tasks:</span>
+<span class="line" id="L465"><a href="#L465">0465</a>     for user_collect in collects:</span>
+<span class="line" id="L466"><a href="#L466">0466</a>       for key in user_collect:</span>
+<span class="line" id="L467"><a href="#L467">0467</a>         if key not in defaults:</span>
+<span class="line" id="L468"><a href="#L468">0468</a>           message = 'Invalid key {} in activation collection config.'</span>
+<span class="line" id="L469"><a href="#L469">0469</a>           raise KeyError(message.format(key))</span>
+<span class="line" id="L470"><a href="#L470">0470</a>       collect = tools.AttrDict(defaults, _unlocked=True)</span>
+<span class="line" id="L471"><a href="#L471">0471</a>       collect.update(user_collect)</span>
+<span class="line" id="L472"><a href="#L472">0472</a>       collect.planner = _define_planner(</span>
+<span class="line" id="L473"><a href="#L473">0473</a>           collect.planner, collect.horizon, config, params)</span>
+<span class="line" id="L474"><a href="#L474">0474</a>       collect.objective = tools.bind(</span>
+<span class="line" id="L475"><a href="#L475">0475</a>           getattr(objectives_lib, collect.objective), params=params)</span>
+<span class="line" id="L476"><a href="#L476">0476</a>       if collect.give_rewards:</span>
+<span class="line" id="L477"><a href="#L477">0477</a>         collect.task = task</span>
+<span class="line" id="L478"><a href="#L478">0478</a>       else:</span>
+<span class="line" id="L479"><a href="#L479">0479</a>         env_ctor = tools.bind(</span>
+<span class="line" id="L480"><a href="#L480">0480</a>             lambda ctor: control.wrappers.NoRewardHint(ctor()),</span>
+<span class="line" id="L481"><a href="#L481">0481</a>             task.env_ctor)</span>
+<span class="line" id="L482"><a href="#L482">0482</a>         collect.task = tasks_lib.Task(task.name, env_ctor)</span>
+<span class="line" id="L483"><a href="#L483">0483</a>       collect.exploration = tools.AttrDict(</span>
+<span class="line" id="L484"><a href="#L484">0484</a>           scale=collect.action_noise_scale,</span>
+<span class="line" id="L485"><a href="#L485">0485</a>           type=collect.action_noise_type,</span>
+<span class="line" id="L486"><a href="#L486">0486</a>           schedule=tools.bind(</span>
+<span class="line" id="L487"><a href="#L487">0487</a>               tools.schedule.linear,</span>
+<span class="line" id="L488"><a href="#L488">0488</a>               ramp=collect.action_noise_ramp,</span>
+<span class="line" id="L489"><a href="#L489">0489</a>               min=collect.action_noise_min),</span>
+<span class="line" id="L490"><a href="#L490">0490</a>           factors=collect.action_noise_factors)</span>
+<span class="line" id="L491"><a href="#L491">0491</a>       name = '{}_{}_{}'.format(collect.prefix, collect.name, task.name)</span>
+<span class="line" id="L492"><a href="#L492">0492</a>       assert name not in sims, (set(sims.keys()), name)</span>
+<span class="line" id="L493"><a href="#L493">0493</a>       sims[name] = collect</span>
+<span class="line" id="L494"><a href="#L494">0494</a>   return sims</span>
+<span class="line" id="L495"><a href="#L495">0495</a> </span>
+<span class="line" id="L496"><a href="#L496">0496</a> </span>
+<span class="line" id="L497"><a href="#L497">0497</a> def _define_planner(planner, horizon, config, params):</span>
+<span class="line" id="L498"><a href="#L498">0498</a>   if planner == 'cem':</span>
+<span class="line" id="L499"><a href="#L499">0499</a>     planner_fn = tools.bind(</span>
+<span class="line" id="L500"><a href="#L500">0500</a>         control.planning.cross_entropy_method,</span>
+<span class="line" id="L501"><a href="#L501">0501</a>         beams=params.get('planner_beams', 1000),</span>
+<span class="line" id="L502"><a href="#L502">0502</a>         iterations=params.get('planner_iterations', 10),</span>
+<span class="line" id="L503"><a href="#L503">0503</a>         topk=params.get('planner_topk', 100),</span>
+<span class="line" id="L504"><a href="#L504">0504</a>         horizon=horizon)</span>
+<span class="line" id="L505"><a href="#L505">0505</a>   elif planner == 'policy_sample':</span>
+<span class="line" id="L506"><a href="#L506">0506</a>     planner_fn = tools.bind(</span>
+<span class="line" id="L507"><a href="#L507">0507</a>         control.planning.action_head_policy,</span>
+<span class="line" id="L508"><a href="#L508">0508</a>         strategy='sample',</span>
+<span class="line" id="L509"><a href="#L509">0509</a>         config=config)</span>
+<span class="line" id="L510"><a href="#L510">0510</a>   elif planner == 'policy_mode':</span>
+<span class="line" id="L511"><a href="#L511">0511</a>     planner_fn = tools.bind(</span>
+<span class="line" id="L512"><a href="#L512">0512</a>         control.planning.action_head_policy,</span>
+<span class="line" id="L513"><a href="#L513">0513</a>         strategy='mode',</span>
+<span class="line" id="L514"><a href="#L514">0514</a>         config=config)</span>
+<span class="line" id="L515"><a href="#L515">0515</a>   else:</span>
+<span class="line" id="L516"><a href="#L516">0516</a>     raise NotImplementedError(planner)</span>
+<span class="line" id="L517"><a href="#L517">0517</a>   return planner_fn</span></pre></body></html>

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>S006 固定源码：sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/README.md</title><style>body{max-width:100%;margin:1.2rem;font-family:system-ui,sans-serif}pre{overflow:auto;line-height:1.55}pre span{display:block}pre a{color:#667;text-decoration:none}:target{background:#fff3ba}</style><link href="../../../../../../../../../../../favicon.ico" rel="icon"/></head><body><h1>S006 固定源码：sources/repos/dreamer4-unofficial/snapshot-ghfast/dreamer4-main/README.md</h1><p>源码字节 SHA-256：<code>432e6b5ceb8928e61b2ffdbf9f59e4233adf888f587abad1c8db3aac196d4208</code>。<span data-publication-local-link="true">下载原始源码</span><small data-publication-note="archive-only">（此附件保存在完整本地归档中）</small></p><pre><span id="L1"><a aria-label="第 1 行" href="#L1">   1</a> &lt;h1&gt;Dreamer 4 in PyTorch&lt;/span&gt;&lt;/h1&gt;</span>
+<span id="L2"><a aria-label="第 2 行" href="#L2">   2</a> </span>
+<span id="L3"><a aria-label="第 3 行" href="#L3">   3</a> This is an *unofficial* PyTorch implementation of the Dreamer 4 world model from the paper [*Training Agents Inside of Scalable World Models*](https://arxiv.org/abs/2509.24527) by Danijar Hafner, Wilson Yan, Timothy Lillicrap.</span>
+<span id="L4"><a aria-label="第 4 行" href="#L4">   4</a> </span>
+<span id="L5"><a aria-label="第 5 行" href="#L5">   5</a> Our implementation is not a complete reproduction of the original work, but we believe that it may serve as a good starting point for anyone looking to extend or experiment with the Dreamer 4 architecture. Notably, the original paper applies Dreamer 4 to Minecraft (discrete actions) whereas this implementation applies it to **multi-task DMControl** (continuous actions). We welcome contributions to improve the codebase and bring it closer to the original paper.</span>
+<span id="L6"><a aria-label="第 6 行" href="#L6">   6</a> </span>
+<span id="L7"><a aria-label="第 7 行" href="#L7">   7</a> This PyTorch implementation is loosely based on [Edward Hu](https://github.com/edwhu)'s [JAX implementation](https://github.com/edwhu/dreamer4-jax).</span>
+<span id="L8"><a aria-label="第 8 行" href="#L8">   8</a> </span>
+<span id="L9"><a aria-label="第 9 行" href="#L9">   9</a> ----</span>
+<span id="L10"><a aria-label="第 10 行" href="#L10">  10</a> </span>
+<span id="L11"><a aria-label="第 11 行" href="#L11">  11</a> **[June 2026] Our [Hallucination in World Models is Predictable and Preventable](https://github.com/nicklashansen/mmbench2) code repository is now available. It is a strictly better implementation of Dreamer 4: improved training recipe, larger dataset, and bigger model. Check it out!**</span>
+<span id="L12"><a aria-label="第 12 行" href="#L12">  12</a> </span>
+<span id="L13"><a aria-label="第 13 行" href="#L13">  13</a> ----</span>
+<span id="L14"><a aria-label="第 14 行" href="#L14">  14</a> </span>
+<span id="L15"><a aria-label="第 15 行" href="#L15">  15</a> ![Demo](assets/0.gif)</span>
+<span id="L16"><a aria-label="第 16 行" href="#L16">  16</a> </span>
+<span id="L17"><a aria-label="第 17 行" href="#L17">  17</a> **Try it out!** We provide model checkpoints and a simple web interface for interaction with the world model.</span>
+<span id="L18"><a aria-label="第 18 行" href="#L18">  18</a> </span>
+<span id="L19"><a aria-label="第 19 行" href="#L19">  19</a> ----</span>
+<span id="L20"><a aria-label="第 20 行" href="#L20">  20</a> </span>
+<span id="L21"><a aria-label="第 21 行" href="#L21">  21</a> ## Architecture</span>
+<span id="L22"><a aria-label="第 22 行" href="#L22">  22</a> </span>
+<span id="L23"><a aria-label="第 23 行" href="#L23">  23</a> ![Dreamer 4 Architecture](assets/1.png)</span>
+<span id="L24"><a aria-label="第 24 行" href="#L24">  24</a> </span>
+<span id="L25"><a aria-label="第 25 行" href="#L25">  25</a> Dreamer 4 consists of a causal tokenizer and an interactive dynamics model, which both use the same block-causal transformer architecture. The tokenizer encodes partially masked image patches and latent tokens, squeezes the latents through a low-dimensional projection with tanh activation, and decodes the patches. It uses causal attention to achieve temporal compression while allowing frames to be decoded one by one. The dynamics model operates on the interleaved sequence of actions, shortcut noise levels and step sizes, and tokenizer representations. It denoises representations via a shortcut forcing objective.</span>
+<span id="L26"><a aria-label="第 26 行" href="#L26">  26</a> </span>
+<span id="L27"><a aria-label="第 27 行" href="#L27">  27</a> ----</span>
+<span id="L28"><a aria-label="第 28 行" href="#L28">  28</a> </span>
+<span id="L29"><a aria-label="第 29 行" href="#L29">  29</a> ## Dataset</span>
+<span id="L30"><a aria-label="第 30 行" href="#L30">  30</a> </span>
+<span id="L31"><a aria-label="第 31 行" href="#L31">  31</a> &lt;img src="assets/tasks/walker-run.gif" width="14.28%"&gt;&lt;img src="assets/tasks/finger-spin.gif" width="14.28%"&gt;&lt;img src="assets/tasks/hopper-hop.gif" width="14.28%"&gt;&lt;img src="assets/tasks/jumper-jump.gif" width="14.28%"&gt;&lt;img src="assets/tasks/walker-run-backward.gif" width="14.28%"&gt;&lt;img src="assets/tasks/pendulum-swingup.gif" width="14.28%"&gt;&lt;img src="assets/tasks/reacher-hard.gif" width="14.28%"&gt;&lt;/br&gt;</span>
+<span id="L32"><a aria-label="第 32 行" href="#L32">  32</a> </span>
+<span id="L33"><a aria-label="第 33 行" href="#L33">  33</a> Our dataset is available for download on [https://huggingface.co/datasets/nicklashansen/dreamer4](HuggingFace) and contains 7,200 mixed-quality trajectories (3.6M frames) spanning **30 continuous control tasks** from [DMControl](https://arxiv.org/abs/1801.00690) and [MMBench](https://arxiv.org/abs/2511.19584). To construct the dataset, we collect 240 trajectories per task using expert [TD-MPC2](https://www.tdmpc2.com) agents that were released as part of our [Newt/MMBench](https://www.nicklashansen.com/NewtWM) project. We use a default resolution of 128×128 for training but the dataset supports up to 224×224. We provide:</span>
+<span id="L34"><a aria-label="第 34 行" href="#L34">  34</a> </span>
+<span id="L35"><a aria-label="第 35 行" href="#L35">  35</a> | Directory  |  Description  | Trajs. per task | Total trajs.</span>
+<span id="L36"><a aria-label="第 36 行" href="#L36">  36</a> |--------|---------------|------------|-------|</span>
+<span id="L37"><a aria-label="第 37 行" href="#L37">  37</a> | [expert](https://huggingface.co/datasets/nicklashansen/dreamer4/tree/main/expert) | Expert demos | 20 | 600 |</span>
+<span id="L38"><a aria-label="第 38 行" href="#L38">  38</a> | [mixed-small](https://huggingface.co/datasets/nicklashansen/dreamer4/tree/main/mixed-small) | Mixed quality |  20 | 600 |</span>
+<span id="L39"><a aria-label="第 39 行" href="#L39">  39</a> | [mixed-large](https://huggingface.co/datasets/nicklashansen/dreamer4/tree/main/mixed-large) | Mixed quality |  200 | 6000 |</span>
+<span id="L40"><a aria-label="第 40 行" href="#L40">  40</a> </span>
+<span id="L41"><a aria-label="第 41 行" href="#L41">  41</a> The data generation pipeline used to generate this dataset is similar to that of our [Newt repository](https://github.com/nicklashansen/newt), except in the case of `mixed-small` and `mixed-large` we add diverse noise patterns to actions to increase diversity of behaviors present in the data. Our released model checkpoints were trained on data from **all three directories**. In the following, we will walk you through data preprocessing, training a **single** world model on **all 30 tasks**, as well as how to interact with it via a simple web interface.</span>
+<span id="L42"><a aria-label="第 42 行" href="#L42">  42</a> </span>
+<span id="L43"><a aria-label="第 43 行" href="#L43">  43</a> ----</span>
+<span id="L44"><a aria-label="第 44 行" href="#L44">  44</a> </span>
+<span id="L45"><a aria-label="第 45 行" href="#L45">  45</a> ## Installation</span>
+<span id="L46"><a aria-label="第 46 行" href="#L46">  46</a> </span>
+<span id="L47"><a aria-label="第 47 行" href="#L47">  47</a> You will need a machine with at least one CUDA-enabled GPU for inference. If you wish to train the tokenizer or dynamics model yourself we recommend using a machine with &gt;256 GB RAM and 8 GPUs (&gt;24 GB of memory each). We recommend installing dependencies in a virtual environment. We provide an `environment.yaml` file for easy installation with [Conda](https://docs.conda.io/en/latest/):</span>
+<span id="L48"><a aria-label="第 48 行" href="#L48">  48</a> </span>
+<span id="L49"><a aria-label="第 49 行" href="#L49">  49</a> ```</span>
+<span id="L50"><a aria-label="第 50 行" href="#L50">  50</a> conda env create -f environment.yaml</span>
+<span id="L51"><a aria-label="第 51 行" href="#L51">  51</a> conda activate dreamer4</span>
+<span id="L52"><a aria-label="第 52 行" href="#L52">  52</a> ```</span>
+<span id="L53"><a aria-label="第 53 行" href="#L53">  53</a> </span>
+<span id="L54"><a aria-label="第 54 行" href="#L54">  54</a> This should install all required packages. Dataset and model checkpoints are (depending on your use case) optional and can be downloaded separately. Our data is made available [here](https://huggingface.co/datasets/nicklashansen/dreamer4) and model checkpoints are available [here](https://huggingface.co/nicklashansen/dreamer4).</span>
+<span id="L55"><a aria-label="第 55 行" href="#L55">  55</a> </span>
+<span id="L56"><a aria-label="第 56 行" href="#L56">  56</a> ----</span>
+<span id="L57"><a aria-label="第 57 行" href="#L57">  57</a> </span>
+<span id="L58"><a aria-label="第 58 行" href="#L58">  58</a> ## Data preprocessing</span>
+<span id="L59"><a aria-label="第 59 行" href="#L59">  59</a> </span>
+<span id="L60"><a aria-label="第 60 行" href="#L60">  60</a> Our provided dataset needs to be preprocessed into a sharded data format to ensure efficient data loading during training. Please be aware that the full preprocessed dataset requires approximately **350 GB of disk storage**. To preprocess the data, run the following command:</span>
+<span id="L61"><a aria-label="第 61 行" href="#L61">  61</a> </span>
+<span id="L62"><a aria-label="第 62 行" href="#L62">  62</a> ```</span>
+<span id="L63"><a aria-label="第 63 行" href="#L63">  63</a> python preprocess_data.py</span>
+<span id="L64"><a aria-label="第 64 行" href="#L64">  64</a> ```</span>
+<span id="L65"><a aria-label="第 65 行" href="#L65">  65</a> </span>
+<span id="L66"><a aria-label="第 66 行" href="#L66">  66</a> This will preprocess data located in the `FILEDIR` directory (see code comments in `preprocess_data.py` for details) and save the preprocessed shards to the `OUTDIR` directory. You can change these paths by modifying the respective variables in `preprocess_data.py`. To reproduce the results presented in this repo, you will need to preprocess all three data directories provided. Pleases note that the preprocessing step may take several hours depending on your hardware. After preprocessing, you should see a number of shard files in the output directory; repeat this process for all three data directories (`expert`, `mixed-small`, `mixed-large`) to obtain the full dataset for training.</span>
+<span id="L67"><a aria-label="第 67 行" href="#L67">  67</a> </span>
+<span id="L68"><a aria-label="第 68 行" href="#L68">  68</a> ----</span>
+<span id="L69"><a aria-label="第 69 行" href="#L69">  69</a> </span>
+<span id="L70"><a aria-label="第 70 行" href="#L70">  70</a> ## Training the Tokenizer</span>
+<span id="L71"><a aria-label="第 71 行" href="#L71">  71</a> </span>
+<span id="L72"><a aria-label="第 72 行" href="#L72">  72</a> ![Tokenizer training](assets/2.png)</span>
+<span id="L73"><a aria-label="第 73 行" href="#L73">  73</a> </span>
+<span id="L74"><a aria-label="第 74 行" href="#L74">  74</a> To train the Dreamer 4 tokenizer, first set the ``--data-dirs`` argument in `train_tokenizer.py` to one or more preprocessed data directories, e.g.</span>
+<span id="L75"><a aria-label="第 75 行" href="#L75">  75</a> </span>
+<span id="L76"><a aria-label="第 76 行" href="#L76">  76</a> ```</span>
+<span id="L77"><a aria-label="第 77 行" href="#L77">  77</a> p.add_argument("--data_dirs", type=str, nargs="+", default=[   # paths to preprocessed frames</span>
+<span id="L78"><a aria-label="第 78 行" href="#L78">  78</a>         "/&lt;path&gt;/expert-shards",</span>
+<span id="L79"><a aria-label="第 79 行" href="#L79">  79</a>         "/&lt;path&gt;/mixed-small-shards",</span>
+<span id="L80"><a aria-label="第 80 行" href="#L80">  80</a>         "/&lt;path&gt;/mixed-large-shards",</span>
+<span id="L81"><a aria-label="第 81 行" href="#L81">  81</a>     ])</span>
+<span id="L82"><a aria-label="第 82 行" href="#L82">  82</a> ```</span>
+<span id="L83"><a aria-label="第 83 行" href="#L83">  83</a> </span>
+<span id="L84"><a aria-label="第 84 行" href="#L84">  84</a> and then run the following command:</span>
+<span id="L85"><a aria-label="第 85 行" href="#L85">  85</a> </span>
+<span id="L86"><a aria-label="第 86 行" href="#L86">  86</a> ```</span>
+<span id="L87"><a aria-label="第 87 行" href="#L87">  87</a> torchrun --nproc_per_node=8 train_tokenizer.py</span>
+<span id="L88"><a aria-label="第 88 行" href="#L88">  88</a> ```</span>
+<span id="L89"><a aria-label="第 89 行" href="#L89">  89</a> </span>
+<span id="L90"><a aria-label="第 90 行" href="#L90">  90</a> This will start the training process using 8 GPUs. The tokenizer checkpoints will be saved in the `./logs/tokenizer_ckpts/` directory by default; please check the script for a full list of configurable arguments.</span>
+<span id="L91"><a aria-label="第 91 行" href="#L91">  91</a> </span>
+<span id="L92"><a aria-label="第 92 行" href="#L92">  92</a> You can expect training to take approximately 24 hours on 8× RTX 3090 GPUs, after which you should see curves that look something like this:</span>
+<span id="L93"><a aria-label="第 93 行" href="#L93">  93</a> </span>
+<span id="L94"><a aria-label="第 94 行" href="#L94">  94</a> &lt;img src="assets/tokenizer/psnr.png" width="33.33%"&gt;&lt;img src="assets/tokenizer/loss.png" width="33.33%"&gt;&lt;img src="assets/tokenizer/z_std.png" width="33.33%"&gt;&lt;/br&gt;</span>
+<span id="L95"><a aria-label="第 95 行" href="#L95">  95</a> </span>
+<span id="L96"><a aria-label="第 96 行" href="#L96">  96</a> ----</span>
+<span id="L97"><a aria-label="第 97 行" href="#L97">  97</a> </span>
+<span id="L98"><a aria-label="第 98 行" href="#L98">  98</a> ## Training the World Model</span>
+<span id="L99"><a aria-label="第 99 行" href="#L99">  99</a> </span>
+<span id="L100"><a aria-label="第 100 行" href="#L100"> 100</a> ![Dynamics training](assets/3.png)</span>
+<span id="L101"><a aria-label="第 101 行" href="#L101"> 101</a> </span>
+<span id="L102"><a aria-label="第 102 行" href="#L102"> 102</a> To train the Dreamer 4 dynamics model with action conditioning, first set the `--data-dirs` and `--frame_dirs` arguments in `train_dynamics.py` to one or more unprocessed and preprocessed data directories, respectively, and run the following command:</span>
+<span id="L103"><a aria-label="第 103 行" href="#L103"> 103</a> </span>
+<span id="L104"><a aria-label="第 104 行" href="#L104"> 104</a> ```</span>
+<span id="L105"><a aria-label="第 105 行" href="#L105"> 105</a> torchrun --nproc_per_node=8 train_dynamics.py --use_actions</span>
+<span id="L106"><a aria-label="第 106 行" href="#L106"> 106</a> ```</span>
+<span id="L107"><a aria-label="第 107 行" href="#L107"> 107</a> </span>
+<span id="L108"><a aria-label="第 108 行" href="#L108"> 108</a> This will start the training process using 8 GPUs. Note that this script assumes that you already have a trained tokenizer; if your tokenizer is located at a different path than the default `./logs/tokenizer_ckpts/latest.pt`, you can specify it using the `--tokenizer_ckpt` argument. You can expect training to take approximately 48 hours on 8× RTX 3090 GPUs, after which you should see curves that look something like this:</span>
+<span id="L109"><a aria-label="第 109 行" href="#L109"> 109</a> </span>
+<span id="L110"><a aria-label="第 110 行" href="#L110"> 110</a> &lt;img src="assets/dynamics/action_shuffle_ratio.png" width="33.33%"&gt;&lt;img src="assets/dynamics/loss.png" width="33.33%"&gt;&lt;img src="assets/dynamics/psnr.png" width="33.33%"&gt;&lt;/br&gt;</span>
+<span id="L111"><a aria-label="第 111 行" href="#L111"> 111</a> </span>
+<span id="L112"><a aria-label="第 112 行" href="#L112"> 112</a> ----</span>
+<span id="L113"><a aria-label="第 113 行" href="#L113"> 113</a> </span>
+<span id="L114"><a aria-label="第 114 行" href="#L114"> 114</a> ## Interactive Web Interface</span>
+<span id="L115"><a aria-label="第 115 行" href="#L115"> 115</a> </span>
+<span id="L116"><a aria-label="第 116 行" href="#L116"> 116</a> ![Web interface](assets/4.gif)</span>
+<span id="L117"><a aria-label="第 117 行" href="#L117"> 117</a> </span>
+<span id="L118"><a aria-label="第 118 行" href="#L118"> 118</a> We provide a simple web interface for interaction with the trained world model. The web server runs locally on your machine and requires a CUDA-enabled GPU with at least 2 GB memory. Before starting the web server, verify that all paths in `interactive.py` point to valid directories and checkpoints. You can download our provided checkpoints from [HuggingFace](https://huggingface.co/nicklashansen/dreamer4/tree/main) or train your own. To start the web server, run the following command:</span>
+<span id="L119"><a aria-label="第 119 行" href="#L119"> 119</a> </span>
+<span id="L120"><a aria-label="第 120 行" href="#L120"> 120</a> ```</span>
+<span id="L121"><a aria-label="第 121 行" href="#L121"> 121</a> python interactive.py</span>
+<span id="L122"><a aria-label="第 122 行" href="#L122"> 122</a> ```</span>
+<span id="L123"><a aria-label="第 123 行" href="#L123"> 123</a> </span>
+<span id="L124"><a aria-label="第 124 行" href="#L124"> 124</a> and navigate to `http://localhost:7860` in your web browser (assuming you are running it locally and use the default port `7860`). If you are running the web server on a remote (headless) machine, you should still be able to view it locally in your browser after forwarding via SSH, e.g.</span>
+<span id="L125"><a aria-label="第 125 行" href="#L125"> 125</a> </span>
+<span id="L126"><a aria-label="第 126 行" href="#L126"> 126</a> ```</span>
+<span id="L127"><a aria-label="第 127 行" href="#L127"> 127</a> ssh -L 7860:127.0.0.1:7860 user@remote-machine</span>
+<span id="L128"><a aria-label="第 128 行" href="#L128"> 128</a> ```</span>
+<span id="L129"><a aria-label="第 129 行" href="#L129"> 129</a> </span>
+<span id="L130"><a aria-label="第 130 行" href="#L130"> 130</a> assuming the web server is running on `remote-machine` and you want to forward it to your local port `7860`. You can customize the port using the `--port` argument.</span>
+<span id="L131"><a aria-label="第 131 行" href="#L131"> 131</a> </span>
+<span id="L132"><a aria-label="第 132 行" href="#L132"> 132</a> ----</span>
+<span id="L133"><a aria-label="第 133 行" href="#L133"> 133</a> </span>
+<span id="L134"><a aria-label="第 134 行" href="#L134"> 134</a> ## Checkpoints</span>
+<span id="L135"><a aria-label="第 135 行" href="#L135"> 135</a> </span>
+<span id="L136"><a aria-label="第 136 行" href="#L136"> 136</a> Pre-trained tokenizer and dynamics model checkpoints can be downloaded from [HuggingFace](https://huggingface.co/nicklashansen/dreamer4/tree/main). We provide:</span>
+<span id="L137"><a aria-label="第 137 行" href="#L137"> 137</a> </span>
+<span id="L138"><a aria-label="第 138 行" href="#L138"> 138</a> | Model  |  Description  | Resolution | Tasks |</span>
+<span id="L139"><a aria-label="第 139 行" href="#L139"> 139</a> |--------|---------------|------------|-------|</span>
+<span id="L140"><a aria-label="第 140 行" href="#L140"> 140</a> | [Tokenizer](https://huggingface.co/nicklashansen/dreamer4/resolve/main/tokenizer_ckpt.pt) | Trained for 90k steps | 128×128 | 30 tasks |</span>
+<span id="L141"><a aria-label="第 141 行" href="#L141"> 141</a> | [Dynamics Model](https://huggingface.co/nicklashansen/dreamer4/resolve/main/dynamics_ckpt.pt) | Trained for 40k steps with actions |  128×128 | 30 tasks |</span>
+<span id="L142"><a aria-label="第 142 行" href="#L142"> 142</a> </span>
+<span id="L143"><a aria-label="第 143 行" href="#L143"> 143</a> ----</span>
+<span id="L144"><a aria-label="第 144 行" href="#L144"> 144</a> </span>
+<span id="L145"><a aria-label="第 145 行" href="#L145"> 145</a> ## Citation</span>
+<span id="L146"><a aria-label="第 146 行" href="#L146"> 146</a> </span>
+<span id="L147"><a aria-label="第 147 行" href="#L147"> 147</a> If you use this codebase in your research, please consider citing us as:</span>
+<span id="L148"><a aria-label="第 148 行" href="#L148"> 148</a> </span>
+<span id="L149"><a aria-label="第 149 行" href="#L149"> 149</a> ```</span>
+<span id="L150"><a aria-label="第 150 行" href="#L150"> 150</a> @misc{Hansen2026Dreamer4PyTorch,</span>
+<span id="L151"><a aria-label="第 151 行" href="#L151"> 151</a>     title={Dreamer 4 in PyTorch},</span>
+<span id="L152"><a aria-label="第 152 行" href="#L152"> 152</a>     author={Nicklas Hansen},</span>
+<span id="L153"><a aria-label="第 153 行" href="#L153"> 153</a>     year={2026},</span>
+<span id="L154"><a aria-label="第 154 行" href="#L154"> 154</a>     publisher={GitHub},</span>
+<span id="L155"><a aria-label="第 155 行" href="#L155"> 155</a>     journal={GitHub repository},</span>
+<span id="L156"><a aria-label="第 156 行" href="#L156"> 156</a>     howpublished={\url{https://github.com/nicklashansen/dreamer4}},</span>
+<span id="L157"><a aria-label="第 157 行" href="#L157"> 157</a> }</span>
+<span id="L158"><a aria-label="第 158 行" href="#L158"> 158</a> ```</span>
+<span id="L159"><a aria-label="第 159 行" href="#L159"> 159</a> </span>
+<span id="L160"><a aria-label="第 160 行" href="#L160"> 160</a> as well as the original Dreamer 4 paper:</span>
+<span id="L161"><a aria-label="第 161 行" href="#L161"> 161</a> </span>
+<span id="L162"><a aria-label="第 162 行" href="#L162"> 162</a> ```</span>
+<span id="L163"><a aria-label="第 163 行" href="#L163"> 163</a> @misc{Hafner2025TrainingAgents,</span>
+<span id="L164"><a aria-label="第 164 行" href="#L164"> 164</a>     title={Training Agents Inside of Scalable World Models}, </span>
+<span id="L165"><a aria-label="第 165 行" href="#L165"> 165</a>     author={Danijar Hafner and Wilson Yan and Timothy Lillicrap},</span>
+<span id="L166"><a aria-label="第 166 行" href="#L166"> 166</a>     year={2025},</span>
+<span id="L167"><a aria-label="第 167 行" href="#L167"> 167</a>     eprint={2509.24527},</span>
+<span id="L168"><a aria-label="第 168 行" href="#L168"> 168</a>     archivePrefix={arXiv},</span>
+<span id="L169"><a aria-label="第 169 行" href="#L169"> 169</a>     primaryClass={cs.AI},</span>
+<span id="L170"><a aria-label="第 170 行" href="#L170"> 170</a>     url={https://arxiv.org/abs/2509.24527}, </span>
+<span id="L171"><a aria-label="第 171 行" href="#L171"> 171</a> }</span>
+<span id="L172"><a aria-label="第 172 行" href="#L172"> 172</a> ```</span>
+<span id="L173"><a aria-label="第 173 行" href="#L173"> 173</a> </span>
+<span id="L174"><a aria-label="第 174 行" href="#L174"> 174</a> ----</span>
+<span id="L175"><a aria-label="第 175 行" href="#L175"> 175</a> </span>
+<span id="L176"><a aria-label="第 176 行" href="#L176"> 176</a> ## Contributing</span>
+<span id="L177"><a aria-label="第 177 行" href="#L177"> 177</a> </span>
+<span id="L178"><a aria-label="第 178 行" href="#L178"> 178</a> You are very welcome to contribute to this project! We especially welcome contributions to improve the codebase and bring it closer to the original paper. Feel free to open an issue or pull request if you have any suggestions or bug reports, but please review our [guidelines](CONTRIBUTING.md) first.</span>
+<span id="L179"><a aria-label="第 179 行" href="#L179"> 179</a> </span>
+<span id="L180"><a aria-label="第 180 行" href="#L180"> 180</a> ----</span>
+<span id="L181"><a aria-label="第 181 行" href="#L181"> 181</a> </span>
+<span id="L182"><a aria-label="第 182 行" href="#L182"> 182</a> ## License</span>
+<span id="L183"><a aria-label="第 183 行" href="#L183"> 183</a> </span>
+<span id="L184"><a aria-label="第 184 行" href="#L184"> 184</a> This project is licensed under the MIT License - see the `LICENSE` file for details. Note that the repository relies on third-party code, which is subject to their respective licenses.</span>
+<span id="L185"><a aria-label="第 185 行" href="#L185"> 185</a> </span>
+<span id="L186"><a aria-label="第 186 行" href="#L186"> 186</a> ----</span>
+<span id="L187"><a aria-label="第 187 行" href="#L187"> 187</a> </span>
+<span id="L188"><a aria-label="第 188 行" href="#L188"> 188</a> ## References</span>
+<span id="L189"><a aria-label="第 189 行" href="#L189"> 189</a> </span>
+<span id="L190"><a aria-label="第 190 行" href="#L190"> 190</a> - [Training Agents Inside of Scalable World Models](https://arxiv.org/abs/2509.24527) - Danijar Hafner, Wilson Yan, Timothy Lillicrap</span>
+<span id="L191"><a aria-label="第 191 行" href="#L191"> 191</a> - [Learning Massively Multitask World Models for Continuous Control](https://arxiv.org/abs/2511.19584) - Nicklas Hansen, Hao Su, Xiaolong Wang</span>
+<span id="L192"><a aria-label="第 192 行" href="#L192"> 192</a> - [TD-MPC2: Scalable, Robust World Models for Continuous Control](https://arxiv.org/abs/2310.16828) - Nicklas Hansen, Hao Su, Xiaolong Wang</span>
+<span id="L193"><a aria-label="第 193 行" href="#L193"> 193</a> - [Dreamer4 JAX Implementation](https://github.com/edwhu/dreamer4-jax) - Edward Hu</span></pre></body></html>

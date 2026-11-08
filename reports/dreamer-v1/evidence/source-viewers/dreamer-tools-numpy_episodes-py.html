@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>dreamer/tools/numpy_episodes.py</title><style>body{margin:0;background:#152a2e;color:#e4f3f3;font:13px/1.55 Consolas,monospace}.head{padding:16px;overflow-wrap:anywhere}.code{padding:16px;overflow:auto;white-space:pre}.line{display:block;min-width:max-content}.line:target{background:#665b18}a{color:#b9d9e3}</style><link href="../../../../favicon.ico" rel="icon"/></head><body><div class="head">dreamer/tools/numpy_episodes.py<br/>COMMIT: 0ffec86436239d41cecaff34abcf57dca5539839<br/>SHA-256: b0c1dd09108c963f3198c7d309db563414bd1b7e9f05a3e6175ce6c20fc51853</div><pre class="code"><span class="line" id="L1"><a href="#L1">0001</a> # Copyright 2019 The Dreamer Authors. All rights reserved.</span>
+<span class="line" id="L2"><a href="#L2">0002</a> #</span>
+<span class="line" id="L3"><a href="#L3">0003</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span class="line" id="L4"><a href="#L4">0004</a> # you may not use this file except in compliance with the License.</span>
+<span class="line" id="L5"><a href="#L5">0005</a> # You may obtain a copy of the License at</span>
+<span class="line" id="L6"><a href="#L6">0006</a> #</span>
+<span class="line" id="L7"><a href="#L7">0007</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="line" id="L8"><a href="#L8">0008</a> #</span>
+<span class="line" id="L9"><a href="#L9">0009</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span class="line" id="L10"><a href="#L10">0010</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span class="line" id="L11"><a href="#L11">0011</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="line" id="L12"><a href="#L12">0012</a> # See the License for the specific language governing permissions and</span>
+<span class="line" id="L13"><a href="#L13">0013</a> # limitations under the License.</span>
+<span class="line" id="L14"><a href="#L14">0014</a> </span>
+<span class="line" id="L15"><a href="#L15">0015</a> from __future__ import absolute_import</span>
+<span class="line" id="L16"><a href="#L16">0016</a> from __future__ import division</span>
+<span class="line" id="L17"><a href="#L17">0017</a> from __future__ import print_function</span>
+<span class="line" id="L18"><a href="#L18">0018</a> </span>
+<span class="line" id="L19"><a href="#L19">0019</a> import functools</span>
+<span class="line" id="L20"><a href="#L20">0020</a> import os</span>
+<span class="line" id="L21"><a href="#L21">0021</a> import random</span>
+<span class="line" id="L22"><a href="#L22">0022</a> import time</span>
+<span class="line" id="L23"><a href="#L23">0023</a> </span>
+<span class="line" id="L24"><a href="#L24">0024</a> from scipy.ndimage import interpolation</span>
+<span class="line" id="L25"><a href="#L25">0025</a> import numpy as np</span>
+<span class="line" id="L26"><a href="#L26">0026</a> import tensorflow as tf</span>
+<span class="line" id="L27"><a href="#L27">0027</a> </span>
+<span class="line" id="L28"><a href="#L28">0028</a> from dreamer.tools import attr_dict</span>
+<span class="line" id="L29"><a href="#L29">0029</a> from dreamer.tools import chunk_sequence</span>
+<span class="line" id="L30"><a href="#L30">0030</a> </span>
+<span class="line" id="L31"><a href="#L31">0031</a> </span>
+<span class="line" id="L32"><a href="#L32">0032</a> def numpy_episodes(</span>
+<span class="line" id="L33"><a href="#L33">0033</a>     train_dir, test_dir, shape, reader=None, loader=None, num_chunks=None,</span>
+<span class="line" id="L34"><a href="#L34">0034</a>     preprocess_fn=None, gpu_prefetch=False):</span>
+<span class="line" id="L35"><a href="#L35">0035</a>   reader = reader or episode_reader</span>
+<span class="line" id="L36"><a href="#L36">0036</a>   loader = loader or cache_loader</span>
+<span class="line" id="L37"><a href="#L37">0037</a>   try:</span>
+<span class="line" id="L38"><a href="#L38">0038</a>     dtypes, shapes = _read_spec(reader, train_dir)</span>
+<span class="line" id="L39"><a href="#L39">0039</a>   except ZeroDivisionError:</span>
+<span class="line" id="L40"><a href="#L40">0040</a>     dtypes, shapes = _read_spec(reader, test_dir)</span>
+<span class="line" id="L41"><a href="#L41">0041</a>   train = tf.data.Dataset.from_generator(</span>
+<span class="line" id="L42"><a href="#L42">0042</a>       functools.partial(loader, reader, train_dir),</span>
+<span class="line" id="L43"><a href="#L43">0043</a>       dtypes, shapes)</span>
+<span class="line" id="L44"><a href="#L44">0044</a>   test = tf.data.Dataset.from_generator(</span>
+<span class="line" id="L45"><a href="#L45">0045</a>       functools.partial(cache_loader, reader, test_dir, shape[0]),</span>
+<span class="line" id="L46"><a href="#L46">0046</a>       dtypes, shapes)</span>
+<span class="line" id="L47"><a href="#L47">0047</a>   chunking = lambda x: tf.data.Dataset.from_tensor_slices(</span>
+<span class="line" id="L48"><a href="#L48">0048</a>       chunk_sequence.chunk_sequence(x, shape[1], True, num_chunks))</span>
+<span class="line" id="L49"><a href="#L49">0049</a>   train = train.flat_map(chunking)</span>
+<span class="line" id="L50"><a href="#L50">0050</a>   train = train.batch(shape[0], drop_remainder=True)</span>
+<span class="line" id="L51"><a href="#L51">0051</a>   if preprocess_fn:</span>
+<span class="line" id="L52"><a href="#L52">0052</a>     train = train.map(preprocess_fn, tf.data.experimental.AUTOTUNE)</span>
+<span class="line" id="L53"><a href="#L53">0053</a>   if gpu_prefetch:</span>
+<span class="line" id="L54"><a href="#L54">0054</a>     train = train.apply(tf.data.experimental.copy_to_device('/gpu:0'))</span>
+<span class="line" id="L55"><a href="#L55">0055</a>   train = train.prefetch(tf.data.experimental.AUTOTUNE)</span>
+<span class="line" id="L56"><a href="#L56">0056</a>   test = test.flat_map(chunking)</span>
+<span class="line" id="L57"><a href="#L57">0057</a>   test = test.batch(shape[0], drop_remainder=True)</span>
+<span class="line" id="L58"><a href="#L58">0058</a>   if preprocess_fn:</span>
+<span class="line" id="L59"><a href="#L59">0059</a>     test = test.map(preprocess_fn, tf.data.experimental.AUTOTUNE)</span>
+<span class="line" id="L60"><a href="#L60">0060</a>   if gpu_prefetch:</span>
+<span class="line" id="L61"><a href="#L61">0061</a>     test = test.apply(tf.data.experimental.copy_to_device('/gpu:0'))</span>
+<span class="line" id="L62"><a href="#L62">0062</a>   test = test.prefetch(tf.data.experimental.AUTOTUNE)</span>
+<span class="line" id="L63"><a href="#L63">0063</a>   return attr_dict.AttrDict(train=train, test=test)</span>
+<span class="line" id="L64"><a href="#L64">0064</a> </span>
+<span class="line" id="L65"><a href="#L65">0065</a> </span>
+<span class="line" id="L66"><a href="#L66">0066</a> def cache_loader(reader, directory, every):</span>
+<span class="line" id="L67"><a href="#L67">0067</a>   cache = {}</span>
+<span class="line" id="L68"><a href="#L68">0068</a>   while True:</span>
+<span class="line" id="L69"><a href="#L69">0069</a>     episodes = _sample(cache.values(), every)</span>
+<span class="line" id="L70"><a href="#L70">0070</a>     for episode in _permuted(episodes, every):</span>
+<span class="line" id="L71"><a href="#L71">0071</a>       yield episode</span>
+<span class="line" id="L72"><a href="#L72">0072</a>     filenames = tf.gfile.Glob(os.path.join(directory, '*.npz'))</span>
+<span class="line" id="L73"><a href="#L73">0073</a>     filenames = [filename for filename in filenames if filename not in cache]</span>
+<span class="line" id="L74"><a href="#L74">0074</a>     for filename in filenames:</span>
+<span class="line" id="L75"><a href="#L75">0075</a>       cache[filename] = reader(filename)</span>
+<span class="line" id="L76"><a href="#L76">0076</a> </span>
+<span class="line" id="L77"><a href="#L77">0077</a> </span>
+<span class="line" id="L78"><a href="#L78">0078</a> def recent_loader(reader, directory, every):</span>
+<span class="line" id="L79"><a href="#L79">0079</a>   recent = {}</span>
+<span class="line" id="L80"><a href="#L80">0080</a>   cache = {}</span>
+<span class="line" id="L81"><a href="#L81">0081</a>   while True:</span>
+<span class="line" id="L82"><a href="#L82">0082</a>     episodes = []</span>
+<span class="line" id="L83"><a href="#L83">0083</a>     episodes += _sample(recent.values(), every // 2)</span>
+<span class="line" id="L84"><a href="#L84">0084</a>     episodes += _sample(cache.values(), every // 2)</span>
+<span class="line" id="L85"><a href="#L85">0085</a>     for episode in _permuted(episodes, every):</span>
+<span class="line" id="L86"><a href="#L86">0086</a>       yield episode</span>
+<span class="line" id="L87"><a href="#L87">0087</a>     cache.update(recent)</span>
+<span class="line" id="L88"><a href="#L88">0088</a>     recent = {}</span>
+<span class="line" id="L89"><a href="#L89">0089</a>     filenames = tf.gfile.Glob(os.path.join(directory, '*.npz'))</span>
+<span class="line" id="L90"><a href="#L90">0090</a>     filenames = [filename for filename in filenames if filename not in cache]</span>
+<span class="line" id="L91"><a href="#L91">0091</a>     for filename in filenames:</span>
+<span class="line" id="L92"><a href="#L92">0092</a>       recent[filename] = reader(filename)</span>
+<span class="line" id="L93"><a href="#L93">0093</a> </span>
+<span class="line" id="L94"><a href="#L94">0094</a> </span>
+<span class="line" id="L95"><a href="#L95">0095</a> def window_loader(reader, directory, window, every):</span>
+<span class="line" id="L96"><a href="#L96">0096</a>   cache = {}</span>
+<span class="line" id="L97"><a href="#L97">0097</a>   while True:</span>
+<span class="line" id="L98"><a href="#L98">0098</a>     episodes = _sample(cache.values(), every)</span>
+<span class="line" id="L99"><a href="#L99">0099</a>     for episode in _permuted(episodes, every):</span>
+<span class="line" id="L100"><a href="#L100">0100</a>       yield episode</span>
+<span class="line" id="L101"><a href="#L101">0101</a>     filenames = tf.gfile.Glob(os.path.join(directory, '*.npz'))</span>
+<span class="line" id="L102"><a href="#L102">0102</a>     filenames = sorted(filenames)[-window:]</span>
+<span class="line" id="L103"><a href="#L103">0103</a>     for filename in filenames:</span>
+<span class="line" id="L104"><a href="#L104">0104</a>       if filename not in cache:</span>
+<span class="line" id="L105"><a href="#L105">0105</a>         cache[filename] = reader(filename)</span>
+<span class="line" id="L106"><a href="#L106">0106</a>     for key in list(cache.keys()):</span>
+<span class="line" id="L107"><a href="#L107">0107</a>       if key not in filenames:</span>
+<span class="line" id="L108"><a href="#L108">0108</a>         del cache[key]</span>
+<span class="line" id="L109"><a href="#L109">0109</a> </span>
+<span class="line" id="L110"><a href="#L110">0110</a> </span>
+<span class="line" id="L111"><a href="#L111">0111</a> def reload_loader(reader, directory):</span>
+<span class="line" id="L112"><a href="#L112">0112</a>   directory = os.path.expanduser(directory)</span>
+<span class="line" id="L113"><a href="#L113">0113</a>   while True:</span>
+<span class="line" id="L114"><a href="#L114">0114</a>     filenames = tf.gfile.Glob(os.path.join(directory, '*.npz'))</span>
+<span class="line" id="L115"><a href="#L115">0115</a>     random.shuffle(filenames)</span>
+<span class="line" id="L116"><a href="#L116">0116</a>     for filename in filenames:</span>
+<span class="line" id="L117"><a href="#L117">0117</a>       yield reader(filename)</span>
+<span class="line" id="L118"><a href="#L118">0118</a> </span>
+<span class="line" id="L119"><a href="#L119">0119</a> </span>
+<span class="line" id="L120"><a href="#L120">0120</a> def dummy_loader(reader, directory):</span>
+<span class="line" id="L121"><a href="#L121">0121</a>   random = np.random.RandomState(seed=0)</span>
+<span class="line" id="L122"><a href="#L122">0122</a>   dtypes, shapes, length = _read_spec(reader, directory, True, True)</span>
+<span class="line" id="L123"><a href="#L123">0123</a>   while True:</span>
+<span class="line" id="L124"><a href="#L124">0124</a>     episode = {}</span>
+<span class="line" id="L125"><a href="#L125">0125</a>     for key in dtypes:</span>
+<span class="line" id="L126"><a href="#L126">0126</a>       dtype, shape = dtypes[key], (length,) + shapes[key][1:]</span>
+<span class="line" id="L127"><a href="#L127">0127</a>       if dtype in (np.float32, np.float64):</span>
+<span class="line" id="L128"><a href="#L128">0128</a>         episode[key] = random.uniform(0, 1, shape).astype(dtype)</span>
+<span class="line" id="L129"><a href="#L129">0129</a>       elif dtype in (np.int32, np.int64, np.uint8):</span>
+<span class="line" id="L130"><a href="#L130">0130</a>         episode[key] = random.uniform(0, 255, shape).astype(dtype)</span>
+<span class="line" id="L131"><a href="#L131">0131</a>       else:</span>
+<span class="line" id="L132"><a href="#L132">0132</a>         raise NotImplementedError('Unsupported dtype {}.'.format(dtype))</span>
+<span class="line" id="L133"><a href="#L133">0133</a>     yield episode</span>
+<span class="line" id="L134"><a href="#L134">0134</a> </span>
+<span class="line" id="L135"><a href="#L135">0135</a> </span>
+<span class="line" id="L136"><a href="#L136">0136</a> def episode_reader(</span>
+<span class="line" id="L137"><a href="#L137">0137</a>     filename, resize=None, max_length=None, action_noise=None,</span>
+<span class="line" id="L138"><a href="#L138">0138</a>     clip_rewards=False, pcont_scale=None):</span>
+<span class="line" id="L139"><a href="#L139">0139</a>   try:</span>
+<span class="line" id="L140"><a href="#L140">0140</a>     with tf.gfile.Open(filename, 'rb') as file_:</span>
+<span class="line" id="L141"><a href="#L141">0141</a>       episode = np.load(file_)</span>
+<span class="line" id="L142"><a href="#L142">0142</a>   except (IOError, ValueError):</span>
+<span class="line" id="L143"><a href="#L143">0143</a>     # Try again one second later, in case the file was still being written.</span>
+<span class="line" id="L144"><a href="#L144">0144</a>     time.sleep(1)</span>
+<span class="line" id="L145"><a href="#L145">0145</a>     with tf.gfile.Open(filename, 'rb') as file_:</span>
+<span class="line" id="L146"><a href="#L146">0146</a>       episode = np.load(file_)</span>
+<span class="line" id="L147"><a href="#L147">0147</a>   episode = {key: _convert_type(episode[key]) for key in episode.keys()}</span>
+<span class="line" id="L148"><a href="#L148">0148</a>   episode['return'] = np.cumsum(episode['reward'])</span>
+<span class="line" id="L149"><a href="#L149">0149</a>   if 'reward_mask' not in episode:</span>
+<span class="line" id="L150"><a href="#L150">0150</a>     episode['reward_mask'] = np.ones_like(episode['reward'])[..., None]</span>
+<span class="line" id="L151"><a href="#L151">0151</a>   if max_length:</span>
+<span class="line" id="L152"><a href="#L152">0152</a>     episode = {key: value[:max_length] for key, value in episode.items()}</span>
+<span class="line" id="L153"><a href="#L153">0153</a>   if resize and resize != 1:</span>
+<span class="line" id="L154"><a href="#L154">0154</a>     factors = (1, resize, resize, 1)</span>
+<span class="line" id="L155"><a href="#L155">0155</a>     episode['image'] = interpolation.zoom(episode['image'], factors)</span>
+<span class="line" id="L156"><a href="#L156">0156</a>   if action_noise:</span>
+<span class="line" id="L157"><a href="#L157">0157</a>     seed = np.fromstring(filename, dtype=np.uint8)</span>
+<span class="line" id="L158"><a href="#L158">0158</a>     episode['action'] += np.random.RandomState(seed).normal(</span>
+<span class="line" id="L159"><a href="#L159">0159</a>         0, action_noise, episode['action'].shape)</span>
+<span class="line" id="L160"><a href="#L160">0160</a>   if clip_rewards is False:</span>
+<span class="line" id="L161"><a href="#L161">0161</a>     pass</span>
+<span class="line" id="L162"><a href="#L162">0162</a>   elif clip_rewards == 'sign':</span>
+<span class="line" id="L163"><a href="#L163">0163</a>     episode['reward'] = np.sign(episode['reward'])</span>
+<span class="line" id="L164"><a href="#L164">0164</a>   elif clip_rewards == 'tanh':</span>
+<span class="line" id="L165"><a href="#L165">0165</a>     episode['reward'] = np.tanh(episode['reward'])</span>
+<span class="line" id="L166"><a href="#L166">0166</a>   else:</span>
+<span class="line" id="L167"><a href="#L167">0167</a>     raise NotImplementedError(clip_rewards)</span>
+<span class="line" id="L168"><a href="#L168">0168</a>   if pcont_scale is not None:</span>
+<span class="line" id="L169"><a href="#L169">0169</a>     episode['pcont'] *= pcont_scale</span>
+<span class="line" id="L170"><a href="#L170">0170</a>   return episode</span>
+<span class="line" id="L171"><a href="#L171">0171</a> </span>
+<span class="line" id="L172"><a href="#L172">0172</a> </span>
+<span class="line" id="L173"><a href="#L173">0173</a> def _read_spec(</span>
+<span class="line" id="L174"><a href="#L174">0174</a>     reader, directory, return_length=False, numpy_types=False):</span>
+<span class="line" id="L175"><a href="#L175">0175</a>   episodes = reload_loader(reader, directory)</span>
+<span class="line" id="L176"><a href="#L176">0176</a>   episode = next(episodes)</span>
+<span class="line" id="L177"><a href="#L177">0177</a>   episodes.close()</span>
+<span class="line" id="L178"><a href="#L178">0178</a>   dtypes = {key: value.dtype for key, value in episode.items()}</span>
+<span class="line" id="L179"><a href="#L179">0179</a>   if not numpy_types:</span>
+<span class="line" id="L180"><a href="#L180">0180</a>     dtypes = {key: tf.as_dtype(value) for key, value in dtypes.items()}</span>
+<span class="line" id="L181"><a href="#L181">0181</a>   shapes = {key: value.shape for key, value in episode.items()}</span>
+<span class="line" id="L182"><a href="#L182">0182</a>   shapes = {key: (None,) + shape[1:] for key, shape in shapes.items()}</span>
+<span class="line" id="L183"><a href="#L183">0183</a>   if return_length:</span>
+<span class="line" id="L184"><a href="#L184">0184</a>     length = len(episode[list(shapes.keys())[0]])</span>
+<span class="line" id="L185"><a href="#L185">0185</a>     return dtypes, shapes, length</span>
+<span class="line" id="L186"><a href="#L186">0186</a>   else:</span>
+<span class="line" id="L187"><a href="#L187">0187</a>     return dtypes, shapes</span>
+<span class="line" id="L188"><a href="#L188">0188</a> </span>
+<span class="line" id="L189"><a href="#L189">0189</a> </span>
+<span class="line" id="L190"><a href="#L190">0190</a> def _convert_type(array):</span>
+<span class="line" id="L191"><a href="#L191">0191</a>   if array.dtype == np.float64:</span>
+<span class="line" id="L192"><a href="#L192">0192</a>     return array.astype(np.float32)</span>
+<span class="line" id="L193"><a href="#L193">0193</a>   if array.dtype == np.int64:</span>
+<span class="line" id="L194"><a href="#L194">0194</a>     return array.astype(np.int32)</span>
+<span class="line" id="L195"><a href="#L195">0195</a>   return array</span>
+<span class="line" id="L196"><a href="#L196">0196</a> </span>
+<span class="line" id="L197"><a href="#L197">0197</a> </span>
+<span class="line" id="L198"><a href="#L198">0198</a> def _sample(sequence, amount):</span>
+<span class="line" id="L199"><a href="#L199">0199</a>   sequence = list(sequence)</span>
+<span class="line" id="L200"><a href="#L200">0200</a>   amount = min(amount, len(sequence))</span>
+<span class="line" id="L201"><a href="#L201">0201</a>   return random.sample(sequence, amount)</span>
+<span class="line" id="L202"><a href="#L202">0202</a> </span>
+<span class="line" id="L203"><a href="#L203">0203</a> </span>
+<span class="line" id="L204"><a href="#L204">0204</a> def _permuted(sequence, amount):</span>
+<span class="line" id="L205"><a href="#L205">0205</a>   sequence = list(sequence)</span>
+<span class="line" id="L206"><a href="#L206">0206</a>   if not sequence:</span>
+<span class="line" id="L207"><a href="#L207">0207</a>     return</span>
+<span class="line" id="L208"><a href="#L208">0208</a>   index = 0</span>
+<span class="line" id="L209"><a href="#L209">0209</a>   while True:</span>
+<span class="line" id="L210"><a href="#L210">0210</a>     for element in np.random.permutation(sequence):</span>
+<span class="line" id="L211"><a href="#L211">0211</a>       if index &gt;= amount:</span>
+<span class="line" id="L212"><a href="#L212">0212</a>         return</span>
+<span class="line" id="L213"><a href="#L213">0213</a>       yield element</span>
+<span class="line" id="L214"><a href="#L214">0214</a>       index += 1</span></pre></body></html>

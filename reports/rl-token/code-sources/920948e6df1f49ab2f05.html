@@ -1,0 +1,197 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>robot_env.py</title><style>body{font:14px monospace;padding:24px}pre span{display:block;white-space:pre-wrap}a{color:#667}:target{background:#ffedb1}</style><h1>robot_env.py</h1><pre><span id="L1"><a href="#L1">1</a> &quot;&quot;&quot;Real-robot environment for online RL training.</span>
+<span id="L2"><a href="#L2">2</a> </span>
+<span id="L3"><a href="#L3">3</a> Provides ``RobotEnv``, a chunk-level environment that connects to any</span>
+<span id="L4"><a href="#L4">4</a> robot through three user-supplied callables (``step_fn``, ``reset_fn``,</span>
+<span id="L5"><a href="#L5">5</a> ``get_obs_fn``).  No dependency on any specific robot stack (DROID,</span>
+<span id="L6"><a href="#L6">6</a> polymetis, ROS, etc.) — the wiring happens in the user&#x27;s launch script.</span>
+<span id="L7"><a href="#L7">7</a> </span>
+<span id="L8"><a href="#L8">8</a> Human reward (success/failure) is collected via</span>
+<span id="L9"><a href="#L9">9</a> :class:`~rlt_openpi.rollout.human_reward.HumanReward` using instant</span>
+<span id="L10"><a href="#L10">10</a> keypress detection (no Enter needed) during episodes.</span>
+<span id="L11"><a href="#L11">11</a> </span>
+<span id="L12"><a href="#L12">12</a> Usage (with DROID)::</span>
+<span id="L13"><a href="#L13">13</a> </span>
+<span id="L14"><a href="#L14">14</a>     from droid.robot_env import RobotEnv as DroidEnv</span>
+<span id="L15"><a href="#L15">15</a> </span>
+<span id="L16"><a href="#L16">16</a>     droid = DroidEnv(action_space=&quot;cartesian_velocity&quot;, control_hz=15)</span>
+<span id="L17"><a href="#L17">17</a> </span>
+<span id="L18"><a href="#L18">18</a>     def get_obs():</span>
+<span id="L19"><a href="#L19">19</a>         obs = droid.get_observation()</span>
+<span id="L20"><a href="#L20">20</a>         return {</span>
+<span id="L21"><a href="#L21">21</a>             &quot;observation/joint_position&quot;: np.array(</span>
+<span id="L22"><a href="#L22">22</a>                 obs[&quot;robot_state&quot;][&quot;joint_positions&quot;], dtype=np.float32,</span>
+<span id="L23"><a href="#L23">23</a>             ),</span>
+<span id="L24"><a href="#L24">24</a>             &quot;observation/gripper_position&quot;: np.array(</span>
+<span id="L25"><a href="#L25">25</a>                 [obs[&quot;robot_state&quot;][&quot;gripper_position&quot;]], dtype=np.float32,</span>
+<span id="L26"><a href="#L26">26</a>             ),</span>
+<span id="L27"><a href="#L27">27</a>             &quot;observation/exterior_image_1_left&quot;: obs[&quot;image&quot;][&quot;39790647_left&quot;],</span>
+<span id="L28"><a href="#L28">28</a>             &quot;observation/wrist_image_left&quot;: obs[&quot;image&quot;][&quot;15850436_left&quot;],</span>
+<span id="L29"><a href="#L29">29</a>             &quot;observation/exterior_image_2_left&quot;: obs[&quot;image&quot;][&quot;35840217_left&quot;],</span>
+<span id="L30"><a href="#L30">30</a>             &quot;prompt&quot;: &quot;stack the three blocks on the tray&quot;,</span>
+<span id="L31"><a href="#L31">31</a>         }</span>
+<span id="L32"><a href="#L32">32</a> </span>
+<span id="L33"><a href="#L33">33</a>     env = RobotEnv(</span>
+<span id="L34"><a href="#L34">34</a>         step_fn=droid.step,</span>
+<span id="L35"><a href="#L35">35</a>         reset_fn=droid.reset,</span>
+<span id="L36"><a href="#L36">36</a>         get_obs_fn=get_obs,</span>
+<span id="L37"><a href="#L37">37</a>         action_dim=7,</span>
+<span id="L38"><a href="#L38">38</a>         chunk_length=10,</span>
+<span id="L39"><a href="#L39">39</a>         control_hz=15,</span>
+<span id="L40"><a href="#L40">40</a>     )</span>
+<span id="L41"><a href="#L41">41</a> &quot;&quot;&quot;</span>
+<span id="L42"><a href="#L42">42</a> </span>
+<span id="L43"><a href="#L43">43</a> from __future__ import annotations</span>
+<span id="L44"><a href="#L44">44</a> </span>
+<span id="L45"><a href="#L45">45</a> import logging</span>
+<span id="L46"><a href="#L46">46</a> import time</span>
+<span id="L47"><a href="#L47">47</a> from typing import Any, Callable</span>
+<span id="L48"><a href="#L48">48</a> </span>
+<span id="L49"><a href="#L49">49</a> import numpy as np</span>
+<span id="L50"><a href="#L50">50</a> from numpy.typing import NDArray</span>
+<span id="L51"><a href="#L51">51</a> </span>
+<span id="L52"><a href="#L52">52</a> from rlt_openpi.rollout.reward import HumanReward</span>
+<span id="L53"><a href="#L53">53</a> from rlt_openpi.utils import display</span>
+<span id="L54"><a href="#L54">54</a> </span>
+<span id="L55"><a href="#L55">55</a> logger = logging.getLogger(__name__)</span>
+<span id="L56"><a href="#L56">56</a> </span>
+<span id="L57"><a href="#L57">57</a> </span>
+<span id="L58"><a href="#L58">58</a> class RobotEnv:</span>
+<span id="L59"><a href="#L59">59</a>     &quot;&quot;&quot;Chunk-level environment for real robot online RL.</span>
+<span id="L60"><a href="#L60">60</a> </span>
+<span id="L61"><a href="#L61">61</a>     Robot-agnostic: connects to any robot through three callables.</span>
+<span id="L62"><a href="#L62">62</a>     Provides the same interface as ``SimEnv`` (``reset``, ``step``,</span>
+<span id="L63"><a href="#L63">63</a>     ``action_dim``, ``chunk_length``) so it works with ``RolloutWorker``</span>
+<span id="L64"><a href="#L64">64</a>     and ``OnlineRLTrainer``.</span>
+<span id="L65"><a href="#L65">65</a> </span>
+<span id="L66"><a href="#L66">66</a>     Args:</span>
+<span id="L67"><a href="#L67">67</a>         step_fn: Callable that sends a single action ``[action_dim]`` to</span>
+<span id="L68"><a href="#L68">68</a>             the robot.  Signature: ``step_fn(action: np.ndarray) -&gt; Any``.</span>
+<span id="L69"><a href="#L69">69</a>         reset_fn: Callable that resets the robot to a home pose.</span>
+<span id="L70"><a href="#L70">70</a>             Signature: ``reset_fn() -&gt; Any``.</span>
+<span id="L71"><a href="#L71">71</a>         get_obs_fn: Callable that returns an observation dict with at</span>
+<span id="L72"><a href="#L72">72</a>             least a ``&quot;state&quot;`` key (proprioceptive, ``np.float32``).</span>
+<span id="L73"><a href="#L73">73</a>             Camera images and ``&quot;prompt&quot;`` should also be included for</span>
+<span id="L74"><a href="#L74">74</a>             VLA embedding extraction.</span>
+<span id="L75"><a href="#L75">75</a>             Signature: ``get_obs_fn() -&gt; dict[str, Any]``.</span>
+<span id="L76"><a href="#L76">76</a>         action_dim: Dimension of a single-step action (e.g. 7 for</span>
+<span id="L77"><a href="#L77">77</a>             cartesian velocity + gripper).</span>
+<span id="L78"><a href="#L78">78</a>         chunk_length: C, number of single-step actions per chunk.</span>
+<span id="L79"><a href="#L79">79</a>         control_hz: Robot control frequency in Hz.</span>
+<span id="L80"><a href="#L80">80</a>         max_episode_chunks: Maximum chunks per episode before forced</span>
+<span id="L81"><a href="#L81">81</a>             termination.</span>
+<span id="L82"><a href="#L82">82</a>     &quot;&quot;&quot;</span>
+<span id="L83"><a href="#L83">83</a> </span>
+<span id="L84"><a href="#L84">84</a>     def __init__(</span>
+<span id="L85"><a href="#L85">85</a>         self,</span>
+<span id="L86"><a href="#L86">86</a>         step_fn: Callable[[NDArray], Any],</span>
+<span id="L87"><a href="#L87">87</a>         reset_fn: Callable[[], Any],</span>
+<span id="L88"><a href="#L88">88</a>         get_obs_fn: Callable[[], dict[str, Any]],</span>
+<span id="L89"><a href="#L89">89</a>         action_dim: int = 7,</span>
+<span id="L90"><a href="#L90">90</a>         chunk_length: int = 10,</span>
+<span id="L91"><a href="#L91">91</a>         control_hz: int = 15,</span>
+<span id="L92"><a href="#L92">92</a>         max_episode_chunks: int = 50,</span>
+<span id="L93"><a href="#L93">93</a>     ) -&gt; None:</span>
+<span id="L94"><a href="#L94">94</a>         self._step_fn = step_fn</span>
+<span id="L95"><a href="#L95">95</a>         self._reset_fn = reset_fn</span>
+<span id="L96"><a href="#L96">96</a>         self._get_obs_fn = get_obs_fn</span>
+<span id="L97"><a href="#L97">97</a>         self._action_dim = action_dim</span>
+<span id="L98"><a href="#L98">98</a>         self._chunk_length = chunk_length</span>
+<span id="L99"><a href="#L99">99</a>         self._control_period = 1.0 / control_hz</span>
+<span id="L100"><a href="#L100">100</a>         self._max_episode_chunks = max_episode_chunks</span>
+<span id="L101"><a href="#L101">101</a> </span>
+<span id="L102"><a href="#L102">102</a>         self._chunk_count = 0</span>
+<span id="L103"><a href="#L103">103</a>         self._feedback = HumanReward()</span>
+<span id="L104"><a href="#L104">104</a>         self._display_episode_num: int = 0</span>
+<span id="L105"><a href="#L105">105</a> </span>
+<span id="L106"><a href="#L106">106</a>     @property</span>
+<span id="L107"><a href="#L107">107</a>     def action_dim(self) -&gt; int:</span>
+<span id="L108"><a href="#L108">108</a>         return self._action_dim</span>
+<span id="L109"><a href="#L109">109</a> </span>
+<span id="L110"><a href="#L110">110</a>     @property</span>
+<span id="L111"><a href="#L111">111</a>     def chunk_length(self) -&gt; int:</span>
+<span id="L112"><a href="#L112">112</a>         return self._chunk_length</span>
+<span id="L113"><a href="#L113">113</a> </span>
+<span id="L114"><a href="#L114">114</a>     def reset(self, **kwargs: Any) -&gt; dict[str, Any]:</span>
+<span id="L115"><a href="#L115">115</a>         &quot;&quot;&quot;Reset robot to home position and wait for scene setup.</span>
+<span id="L116"><a href="#L116">116</a> </span>
+<span id="L117"><a href="#L117">117</a>         Returns:</span>
+<span id="L118"><a href="#L118">118</a>             Observation dict with ``&quot;state&quot;``, camera images, and ``&quot;prompt&quot;``.</span>
+<span id="L119"><a href="#L119">119</a>         &quot;&quot;&quot;</span>
+<span id="L120"><a href="#L120">120</a>         self._feedback.stop()</span>
+<span id="L121"><a href="#L121">121</a>         self._reset_fn()</span>
+<span id="L122"><a href="#L122">122</a>         self._chunk_count = 0</span>
+<span id="L123"><a href="#L123">123</a> </span>
+<span id="L124"><a href="#L124">124</a>         display.episode_reset(self._display_episode_num)</span>
+<span id="L125"><a href="#L125">125</a>         input(&quot;&quot;)</span>
+<span id="L126"><a href="#L126">126</a> </span>
+<span id="L127"><a href="#L127">127</a>         self._feedback.start()</span>
+<span id="L128"><a href="#L128">128</a>         display.episode_running(self._display_episode_num)</span>
+<span id="L129"><a href="#L129">129</a> </span>
+<span id="L130"><a href="#L130">130</a>         return self._get_obs_fn()</span>
+<span id="L131"><a href="#L131">131</a> </span>
+<span id="L132"><a href="#L132">132</a>     def step(</span>
+<span id="L133"><a href="#L133">133</a>         self, action_chunk: NDArray</span>
+<span id="L134"><a href="#L134">134</a>     ) -&gt; tuple[dict[str, Any], NDArray, bool, dict[str, Any]]:</span>
+<span id="L135"><a href="#L135">135</a>         &quot;&quot;&quot;Execute C single-step actions on the robot.</span>
+<span id="L136"><a href="#L136">136</a> </span>
+<span id="L137"><a href="#L137">137</a>         Args:</span>
+<span id="L138"><a href="#L138">138</a>             action_chunk: Actions to execute, shape ``[C, action_dim]``.</span>
+<span id="L139"><a href="#L139">139</a> </span>
+<span id="L140"><a href="#L140">140</a>         Returns:</span>
+<span id="L141"><a href="#L141">141</a>             next_obs: Observation dict after the last step.</span>
+<span id="L142"><a href="#L142">142</a>             rewards: Per-step rewards ``[C]``.  Terminal success gives +1;</span>
+<span id="L143"><a href="#L143">143</a>                 progress keypresses (``p``) give +0.5 without ending</span>
+<span id="L144"><a href="#L144">144</a>                 the episode.</span>
+<span id="L145"><a href="#L145">145</a>             done: Whether the episode ended.</span>
+<span id="L146"><a href="#L146">146</a>             info: Contains ``&quot;success&quot;`` key on termination.</span>
+<span id="L147"><a href="#L147">147</a>         &quot;&quot;&quot;</span>
+<span id="L148"><a href="#L148">148</a>         C = self._chunk_length</span>
+<span id="L149"><a href="#L149">149</a>         rewards = np.zeros(C, dtype=np.float32)</span>
+<span id="L150"><a href="#L150">150</a>         done = False</span>
+<span id="L151"><a href="#L151">151</a>         info: dict[str, Any] = {}</span>
+<span id="L152"><a href="#L152">152</a> </span>
+<span id="L153"><a href="#L153">153</a>         for k in range(C):</span>
+<span id="L154"><a href="#L154">154</a>             t_start = time.time()</span>
+<span id="L155"><a href="#L155">155</a> </span>
+<span id="L156"><a href="#L156">156</a>             self._step_fn(action_chunk[k])</span>
+<span id="L157"><a href="#L157">157</a> </span>
+<span id="L158"><a href="#L158">158</a>             # Check for human signal between steps</span>
+<span id="L159"><a href="#L159">159</a>             signal = self._feedback.check()</span>
+<span id="L160"><a href="#L160">160</a>             if signal is not None:</span>
+<span id="L161"><a href="#L161">161</a>                 if signal == &quot;s&quot;:</span>
+<span id="L162"><a href="#L162">162</a>                     rewards[k] = 1.0</span>
+<span id="L163"><a href="#L163">163</a>                     done = True</span>
+<span id="L164"><a href="#L164">164</a>                     info[&quot;success&quot;] = True</span>
+<span id="L165"><a href="#L165">165</a>                     logger.info(&quot;Human signal: SUCCESS&quot;)</span>
+<span id="L166"><a href="#L166">166</a>                 elif signal == &quot;f&quot;:</span>
+<span id="L167"><a href="#L167">167</a>                     done = True</span>
+<span id="L168"><a href="#L168">168</a>                     info[&quot;success&quot;] = False</span>
+<span id="L169"><a href="#L169">169</a>                     logger.info(&quot;Human signal: FAILURE&quot;)</span>
+<span id="L170"><a href="#L170">170</a>                 elif signal == &quot;p&quot;:</span>
+<span id="L171"><a href="#L171">171</a>                     rewards[k] = self._feedback.progress_reward</span>
+<span id="L172"><a href="#L172">172</a>                     logger.info(&quot;Human signal: PROGRESS (+%.2f)&quot;, self._feedback.progress_reward)</span>
+<span id="L173"><a href="#L173">173</a>                 if done:</span>
+<span id="L174"><a href="#L174">174</a>                     break</span>
+<span id="L175"><a href="#L175">175</a> </span>
+<span id="L176"><a href="#L176">176</a>             # Enforce control frequency</span>
+<span id="L177"><a href="#L177">177</a>             elapsed = time.time() - t_start</span>
+<span id="L178"><a href="#L178">178</a>             sleep_time = self._control_period - elapsed</span>
+<span id="L179"><a href="#L179">179</a>             if sleep_time &gt; 0:</span>
+<span id="L180"><a href="#L180">180</a>                 time.sleep(sleep_time)</span>
+<span id="L181"><a href="#L181">181</a> </span>
+<span id="L182"><a href="#L182">182</a>         info[&quot;steps_executed&quot;] = k + 1</span>
+<span id="L183"><a href="#L183">183</a>         self._chunk_count += 1</span>
+<span id="L184"><a href="#L184">184</a> </span>
+<span id="L185"><a href="#L185">185</a>         # Timeout: force episode end after max chunks</span>
+<span id="L186"><a href="#L186">186</a>         if not done and self._chunk_count &gt;= self._max_episode_chunks:</span>
+<span id="L187"><a href="#L187">187</a>             done = True</span>
+<span id="L188"><a href="#L188">188</a>             info[&quot;success&quot;] = False</span>
+<span id="L189"><a href="#L189">189</a>             info[&quot;timeout&quot;] = True</span>
+<span id="L190"><a href="#L190">190</a>             logger.info(&quot;Episode timed out after %d chunks&quot;, self._chunk_count)</span>
+<span id="L191"><a href="#L191">191</a> </span>
+<span id="L192"><a href="#L192">192</a>         # Restore terminal when episode ends</span>
+<span id="L193"><a href="#L193">193</a>         if done:</span>
+<span id="L194"><a href="#L194">194</a>             self._feedback.stop()</span>
+<span id="L195"><a href="#L195">195</a> </span>
+<span id="L196"><a href="#L196">196</a>         obs = self._get_obs_fn()</span>
+<span id="L197"><a href="#L197">197</a>         return obs, rewards, done, info</span></pre></html>

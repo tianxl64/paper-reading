@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>dreamer/control/wrappers.py</title><style>body{margin:0;background:#152a2e;color:#e4f3f3;font:13px/1.55 Consolas,monospace}.head{padding:16px;overflow-wrap:anywhere}.code{padding:16px;overflow:auto;white-space:pre}.line{display:block;min-width:max-content}.line:target{background:#665b18}a{color:#b9d9e3}</style><link href="../../../../favicon.ico" rel="icon"/></head><body><div class="head">dreamer/control/wrappers.py<br/>COMMIT: 0ffec86436239d41cecaff34abcf57dca5539839<br/>SHA-256: 0b0f8c81293dbfc830588c96dac91541c59a19055dbe29ac7067395c1fa0d3fa</div><pre class="code"><span class="line" id="L1"><a href="#L1">0001</a> # Copyright 2019 The Dreamer Authors. All rights reserved.</span>
+<span class="line" id="L2"><a href="#L2">0002</a> #</span>
+<span class="line" id="L3"><a href="#L3">0003</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span class="line" id="L4"><a href="#L4">0004</a> # you may not use this file except in compliance with the License.</span>
+<span class="line" id="L5"><a href="#L5">0005</a> # You may obtain a copy of the License at</span>
+<span class="line" id="L6"><a href="#L6">0006</a> #</span>
+<span class="line" id="L7"><a href="#L7">0007</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="line" id="L8"><a href="#L8">0008</a> #</span>
+<span class="line" id="L9"><a href="#L9">0009</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span class="line" id="L10"><a href="#L10">0010</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span class="line" id="L11"><a href="#L11">0011</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="line" id="L12"><a href="#L12">0012</a> # See the License for the specific language governing permissions and</span>
+<span class="line" id="L13"><a href="#L13">0013</a> # limitations under the License.</span>
+<span class="line" id="L14"><a href="#L14">0014</a> </span>
+<span class="line" id="L15"><a href="#L15">0015</a> from __future__ import absolute_import</span>
+<span class="line" id="L16"><a href="#L16">0016</a> from __future__ import division</span>
+<span class="line" id="L17"><a href="#L17">0017</a> from __future__ import print_function</span>
+<span class="line" id="L18"><a href="#L18">0018</a> </span>
+<span class="line" id="L19"><a href="#L19">0019</a> import atexit</span>
+<span class="line" id="L20"><a href="#L20">0020</a> import datetime</span>
+<span class="line" id="L21"><a href="#L21">0021</a> import io</span>
+<span class="line" id="L22"><a href="#L22">0022</a> import os</span>
+<span class="line" id="L23"><a href="#L23">0023</a> import sys</span>
+<span class="line" id="L24"><a href="#L24">0024</a> import threading</span>
+<span class="line" id="L25"><a href="#L25">0025</a> import traceback</span>
+<span class="line" id="L26"><a href="#L26">0026</a> import uuid</span>
+<span class="line" id="L27"><a href="#L27">0027</a> </span>
+<span class="line" id="L28"><a href="#L28">0028</a> import gym</span>
+<span class="line" id="L29"><a href="#L29">0029</a> import gym.spaces</span>
+<span class="line" id="L30"><a href="#L30">0030</a> import numpy as np</span>
+<span class="line" id="L31"><a href="#L31">0031</a> import skimage.transform</span>
+<span class="line" id="L32"><a href="#L32">0032</a> import tensorflow as tf</span>
+<span class="line" id="L33"><a href="#L33">0033</a> </span>
+<span class="line" id="L34"><a href="#L34">0034</a> from dreamer import tools</span>
+<span class="line" id="L35"><a href="#L35">0035</a> </span>
+<span class="line" id="L36"><a href="#L36">0036</a> </span>
+<span class="line" id="L37"><a href="#L37">0037</a> class ObservationDict(object):</span>
+<span class="line" id="L38"><a href="#L38">0038</a> </span>
+<span class="line" id="L39"><a href="#L39">0039</a>   def __init__(self, env, key='observ'):</span>
+<span class="line" id="L40"><a href="#L40">0040</a>     self._env = env</span>
+<span class="line" id="L41"><a href="#L41">0041</a>     self._key = key</span>
+<span class="line" id="L42"><a href="#L42">0042</a> </span>
+<span class="line" id="L43"><a href="#L43">0043</a>   def __getattr__(self, name):</span>
+<span class="line" id="L44"><a href="#L44">0044</a>     return getattr(self._env, name)</span>
+<span class="line" id="L45"><a href="#L45">0045</a> </span>
+<span class="line" id="L46"><a href="#L46">0046</a>   @property</span>
+<span class="line" id="L47"><a href="#L47">0047</a>   def observation_space(self):</span>
+<span class="line" id="L48"><a href="#L48">0048</a>     spaces = {self._key: self._env.observation_space}</span>
+<span class="line" id="L49"><a href="#L49">0049</a>     return gym.spaces.Dict(spaces)</span>
+<span class="line" id="L50"><a href="#L50">0050</a> </span>
+<span class="line" id="L51"><a href="#L51">0051</a>   @property</span>
+<span class="line" id="L52"><a href="#L52">0052</a>   def action_space(self):</span>
+<span class="line" id="L53"><a href="#L53">0053</a>     return self._env.action_space</span>
+<span class="line" id="L54"><a href="#L54">0054</a> </span>
+<span class="line" id="L55"><a href="#L55">0055</a>   def step(self, action):</span>
+<span class="line" id="L56"><a href="#L56">0056</a>     obs, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L57"><a href="#L57">0057</a>     obs = {self._key: np.array(obs)}</span>
+<span class="line" id="L58"><a href="#L58">0058</a>     return obs, reward, done, info</span>
+<span class="line" id="L59"><a href="#L59">0059</a> </span>
+<span class="line" id="L60"><a href="#L60">0060</a>   def reset(self):</span>
+<span class="line" id="L61"><a href="#L61">0061</a>     obs = self._env.reset()</span>
+<span class="line" id="L62"><a href="#L62">0062</a>     obs = {self._key: np.array(obs)}</span>
+<span class="line" id="L63"><a href="#L63">0063</a>     return obs</span>
+<span class="line" id="L64"><a href="#L64">0064</a> </span>
+<span class="line" id="L65"><a href="#L65">0065</a> </span>
+<span class="line" id="L66"><a href="#L66">0066</a> class ConcatObservation(object):</span>
+<span class="line" id="L67"><a href="#L67">0067</a> </span>
+<span class="line" id="L68"><a href="#L68">0068</a>   def __init__(self, env, keys):</span>
+<span class="line" id="L69"><a href="#L69">0069</a>     self._env = env</span>
+<span class="line" id="L70"><a href="#L70">0070</a>     self._keys = keys</span>
+<span class="line" id="L71"><a href="#L71">0071</a> </span>
+<span class="line" id="L72"><a href="#L72">0072</a>   def __getattr__(self, name):</span>
+<span class="line" id="L73"><a href="#L73">0073</a>     return getattr(self._env, name)</span>
+<span class="line" id="L74"><a href="#L74">0074</a> </span>
+<span class="line" id="L75"><a href="#L75">0075</a>   @property</span>
+<span class="line" id="L76"><a href="#L76">0076</a>   def observation_space(self):</span>
+<span class="line" id="L77"><a href="#L77">0077</a>     spaces = self._env.observation_space.spaces</span>
+<span class="line" id="L78"><a href="#L78">0078</a>     spaces = [spaces[key] for key in self._keys]</span>
+<span class="line" id="L79"><a href="#L79">0079</a>     low = np.concatenate([space.low for space in spaces], 0)</span>
+<span class="line" id="L80"><a href="#L80">0080</a>     high = np.concatenate([space.high for space in spaces], 0)</span>
+<span class="line" id="L81"><a href="#L81">0081</a>     dtypes = [space.dtype for space in spaces]</span>
+<span class="line" id="L82"><a href="#L82">0082</a>     if not all(dtype == dtypes[0] for dtype in dtypes):</span>
+<span class="line" id="L83"><a href="#L83">0083</a>       message = 'Spaces must have the same data type; are {}.'</span>
+<span class="line" id="L84"><a href="#L84">0084</a>       raise KeyError(message.format(', '.join(str(x) for x in dtypes)))</span>
+<span class="line" id="L85"><a href="#L85">0085</a>     return gym.spaces.Box(low, high, dtype=dtypes[0])</span>
+<span class="line" id="L86"><a href="#L86">0086</a> </span>
+<span class="line" id="L87"><a href="#L87">0087</a>   def step(self, action):</span>
+<span class="line" id="L88"><a href="#L88">0088</a>     obs, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L89"><a href="#L89">0089</a>     obs = self._select_keys(obs)</span>
+<span class="line" id="L90"><a href="#L90">0090</a>     return obs, reward, done, info</span>
+<span class="line" id="L91"><a href="#L91">0091</a> </span>
+<span class="line" id="L92"><a href="#L92">0092</a>   def reset(self):</span>
+<span class="line" id="L93"><a href="#L93">0093</a>     obs = self._env.reset()</span>
+<span class="line" id="L94"><a href="#L94">0094</a>     obs = self._select_keys(obs)</span>
+<span class="line" id="L95"><a href="#L95">0095</a>     return obs</span>
+<span class="line" id="L96"><a href="#L96">0096</a> </span>
+<span class="line" id="L97"><a href="#L97">0097</a>   def _select_keys(self, obs):</span>
+<span class="line" id="L98"><a href="#L98">0098</a>     return np.concatenate([obs[key] for key in self._keys], 0)</span>
+<span class="line" id="L99"><a href="#L99">0099</a> </span>
+<span class="line" id="L100"><a href="#L100">0100</a> </span>
+<span class="line" id="L101"><a href="#L101">0101</a> class SelectObservations(object):</span>
+<span class="line" id="L102"><a href="#L102">0102</a> </span>
+<span class="line" id="L103"><a href="#L103">0103</a>   def __init__(self, env, keys):</span>
+<span class="line" id="L104"><a href="#L104">0104</a>     self._env = env</span>
+<span class="line" id="L105"><a href="#L105">0105</a>     self._keys = keys</span>
+<span class="line" id="L106"><a href="#L106">0106</a> </span>
+<span class="line" id="L107"><a href="#L107">0107</a>   def __getattr__(self, name):</span>
+<span class="line" id="L108"><a href="#L108">0108</a>     return getattr(self._env, name)</span>
+<span class="line" id="L109"><a href="#L109">0109</a> </span>
+<span class="line" id="L110"><a href="#L110">0110</a>   @property</span>
+<span class="line" id="L111"><a href="#L111">0111</a>   def observation_space(self):</span>
+<span class="line" id="L112"><a href="#L112">0112</a>     spaces = self._env.observation_space.spaces</span>
+<span class="line" id="L113"><a href="#L113">0113</a>     return gym.spaces.Dict({key: spaces[key] for key in self._keys})</span>
+<span class="line" id="L114"><a href="#L114">0114</a> </span>
+<span class="line" id="L115"><a href="#L115">0115</a>   @property</span>
+<span class="line" id="L116"><a href="#L116">0116</a>   def action_space(self):</span>
+<span class="line" id="L117"><a href="#L117">0117</a>     return self._env.action_space</span>
+<span class="line" id="L118"><a href="#L118">0118</a> </span>
+<span class="line" id="L119"><a href="#L119">0119</a>   def step(self, action, *args, **kwargs):</span>
+<span class="line" id="L120"><a href="#L120">0120</a>     obs, reward, done, info = self._env.step(action, *args, **kwargs)</span>
+<span class="line" id="L121"><a href="#L121">0121</a>     obs = {key: obs[key] for key in self._keys}</span>
+<span class="line" id="L122"><a href="#L122">0122</a>     return obs, reward, done, info</span>
+<span class="line" id="L123"><a href="#L123">0123</a> </span>
+<span class="line" id="L124"><a href="#L124">0124</a>   def reset(self, *args, **kwargs):</span>
+<span class="line" id="L125"><a href="#L125">0125</a>     obs = self._env.reset(*args, **kwargs)</span>
+<span class="line" id="L126"><a href="#L126">0126</a>     obs = {key: obs[key] for key in self._keys}</span>
+<span class="line" id="L127"><a href="#L127">0127</a>     return obs</span>
+<span class="line" id="L128"><a href="#L128">0128</a> </span>
+<span class="line" id="L129"><a href="#L129">0129</a> </span>
+<span class="line" id="L130"><a href="#L130">0130</a> class PixelObservations(object):</span>
+<span class="line" id="L131"><a href="#L131">0131</a> </span>
+<span class="line" id="L132"><a href="#L132">0132</a>   def __init__(</span>
+<span class="line" id="L133"><a href="#L133">0133</a>       self, env, size=(64, 64), dtype=np.uint8, key='image',</span>
+<span class="line" id="L134"><a href="#L134">0134</a>       render_mode='rgb_array'):</span>
+<span class="line" id="L135"><a href="#L135">0135</a>     assert isinstance(env.observation_space, gym.spaces.Dict)</span>
+<span class="line" id="L136"><a href="#L136">0136</a>     self._env = env</span>
+<span class="line" id="L137"><a href="#L137">0137</a>     self._size = size</span>
+<span class="line" id="L138"><a href="#L138">0138</a>     self._dtype = dtype</span>
+<span class="line" id="L139"><a href="#L139">0139</a>     self._key = key</span>
+<span class="line" id="L140"><a href="#L140">0140</a>     self._render_mode = render_mode</span>
+<span class="line" id="L141"><a href="#L141">0141</a> </span>
+<span class="line" id="L142"><a href="#L142">0142</a>   def __getattr__(self, name):</span>
+<span class="line" id="L143"><a href="#L143">0143</a>     return getattr(self._env, name)</span>
+<span class="line" id="L144"><a href="#L144">0144</a> </span>
+<span class="line" id="L145"><a href="#L145">0145</a>   @property</span>
+<span class="line" id="L146"><a href="#L146">0146</a>   def observation_space(self):</span>
+<span class="line" id="L147"><a href="#L147">0147</a>     high = {np.uint8: 255, np.float: 1.0}[self._dtype]</span>
+<span class="line" id="L148"><a href="#L148">0148</a>     image = gym.spaces.Box(0, high, self._size + (3,), dtype=self._dtype)</span>
+<span class="line" id="L149"><a href="#L149">0149</a>     spaces = self._env.observation_space.spaces.copy()</span>
+<span class="line" id="L150"><a href="#L150">0150</a>     assert self._key not in spaces</span>
+<span class="line" id="L151"><a href="#L151">0151</a>     spaces[self._key] = image</span>
+<span class="line" id="L152"><a href="#L152">0152</a>     return gym.spaces.Dict(spaces)</span>
+<span class="line" id="L153"><a href="#L153">0153</a> </span>
+<span class="line" id="L154"><a href="#L154">0154</a>   @property</span>
+<span class="line" id="L155"><a href="#L155">0155</a>   def action_space(self):</span>
+<span class="line" id="L156"><a href="#L156">0156</a>     return self._env.action_space</span>
+<span class="line" id="L157"><a href="#L157">0157</a> </span>
+<span class="line" id="L158"><a href="#L158">0158</a>   def step(self, action):</span>
+<span class="line" id="L159"><a href="#L159">0159</a>     obs, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L160"><a href="#L160">0160</a>     obs[self._key] = self._render_image()</span>
+<span class="line" id="L161"><a href="#L161">0161</a>     return obs, reward, done, info</span>
+<span class="line" id="L162"><a href="#L162">0162</a> </span>
+<span class="line" id="L163"><a href="#L163">0163</a>   def reset(self):</span>
+<span class="line" id="L164"><a href="#L164">0164</a>     obs = self._env.reset()</span>
+<span class="line" id="L165"><a href="#L165">0165</a>     obs[self._key] = self._render_image()</span>
+<span class="line" id="L166"><a href="#L166">0166</a>     return obs</span>
+<span class="line" id="L167"><a href="#L167">0167</a> </span>
+<span class="line" id="L168"><a href="#L168">0168</a>   def _render_image(self):</span>
+<span class="line" id="L169"><a href="#L169">0169</a>     image = self._env.render(self._render_mode)</span>
+<span class="line" id="L170"><a href="#L170">0170</a>     if image.shape[:2] != self._size:</span>
+<span class="line" id="L171"><a href="#L171">0171</a>       kwargs = dict(</span>
+<span class="line" id="L172"><a href="#L172">0172</a>           output_shape=self._size, mode='edge', order=1, preserve_range=True)</span>
+<span class="line" id="L173"><a href="#L173">0173</a>       image = skimage.transform.resize(image, **kwargs).astype(image.dtype)</span>
+<span class="line" id="L174"><a href="#L174">0174</a>     if self._dtype and image.dtype != self._dtype:</span>
+<span class="line" id="L175"><a href="#L175">0175</a>       if image.dtype in (np.float32, np.float64) and self._dtype == np.uint8:</span>
+<span class="line" id="L176"><a href="#L176">0176</a>         image = (image * 255).astype(self._dtype)</span>
+<span class="line" id="L177"><a href="#L177">0177</a>       elif image.dtype == np.uint8 and self._dtype in (np.float32, np.float64):</span>
+<span class="line" id="L178"><a href="#L178">0178</a>         image = image.astype(self._dtype) / 255</span>
+<span class="line" id="L179"><a href="#L179">0179</a>       else:</span>
+<span class="line" id="L180"><a href="#L180">0180</a>         message = 'Cannot convert observations from {} to {}.'</span>
+<span class="line" id="L181"><a href="#L181">0181</a>         raise NotImplementedError(message.format(image.dtype, self._dtype))</span>
+<span class="line" id="L182"><a href="#L182">0182</a>     return image</span>
+<span class="line" id="L183"><a href="#L183">0183</a> </span>
+<span class="line" id="L184"><a href="#L184">0184</a> </span>
+<span class="line" id="L185"><a href="#L185">0185</a> class ObservationToRender(object):</span>
+<span class="line" id="L186"><a href="#L186">0186</a> </span>
+<span class="line" id="L187"><a href="#L187">0187</a>   def __init__(self, env, key='image'):</span>
+<span class="line" id="L188"><a href="#L188">0188</a>     self._env = env</span>
+<span class="line" id="L189"><a href="#L189">0189</a>     self._key = key</span>
+<span class="line" id="L190"><a href="#L190">0190</a>     self._image = None</span>
+<span class="line" id="L191"><a href="#L191">0191</a> </span>
+<span class="line" id="L192"><a href="#L192">0192</a>   def __getattr__(self, name):</span>
+<span class="line" id="L193"><a href="#L193">0193</a>     return getattr(self._env, name)</span>
+<span class="line" id="L194"><a href="#L194">0194</a> </span>
+<span class="line" id="L195"><a href="#L195">0195</a>   @property</span>
+<span class="line" id="L196"><a href="#L196">0196</a>   def observation_space(self):</span>
+<span class="line" id="L197"><a href="#L197">0197</a>     return gym.spaces.Dict({})</span>
+<span class="line" id="L198"><a href="#L198">0198</a> </span>
+<span class="line" id="L199"><a href="#L199">0199</a>   def step(self, action):</span>
+<span class="line" id="L200"><a href="#L200">0200</a>     obs, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L201"><a href="#L201">0201</a>     self._image = obs.pop(self._key)</span>
+<span class="line" id="L202"><a href="#L202">0202</a>     return obs, reward, done, info</span>
+<span class="line" id="L203"><a href="#L203">0203</a> </span>
+<span class="line" id="L204"><a href="#L204">0204</a>   def reset(self):</span>
+<span class="line" id="L205"><a href="#L205">0205</a>     obs = self._env.reset()</span>
+<span class="line" id="L206"><a href="#L206">0206</a>     self._image = obs.pop(self._key)</span>
+<span class="line" id="L207"><a href="#L207">0207</a>     return obs</span>
+<span class="line" id="L208"><a href="#L208">0208</a> </span>
+<span class="line" id="L209"><a href="#L209">0209</a>   def render(self, *args, **kwargs):</span>
+<span class="line" id="L210"><a href="#L210">0210</a>     return self._image</span>
+<span class="line" id="L211"><a href="#L211">0211</a> </span>
+<span class="line" id="L212"><a href="#L212">0212</a> </span>
+<span class="line" id="L213"><a href="#L213">0213</a> class OverwriteRender(object):</span>
+<span class="line" id="L214"><a href="#L214">0214</a> </span>
+<span class="line" id="L215"><a href="#L215">0215</a>   def __init__(self, env, render_fn):</span>
+<span class="line" id="L216"><a href="#L216">0216</a>     self._env = env</span>
+<span class="line" id="L217"><a href="#L217">0217</a>     self._render_fn = render_fn</span>
+<span class="line" id="L218"><a href="#L218">0218</a>     self._env.render('rgb_array')  # Set up viewer.</span>
+<span class="line" id="L219"><a href="#L219">0219</a> </span>
+<span class="line" id="L220"><a href="#L220">0220</a>   def __getattr__(self, name):</span>
+<span class="line" id="L221"><a href="#L221">0221</a>     return getattr(self._env, name)</span>
+<span class="line" id="L222"><a href="#L222">0222</a> </span>
+<span class="line" id="L223"><a href="#L223">0223</a>   def render(self, *args, **kwargs):</span>
+<span class="line" id="L224"><a href="#L224">0224</a>     return self._render_fn(self._env, *args, **kwargs)</span>
+<span class="line" id="L225"><a href="#L225">0225</a> </span>
+<span class="line" id="L226"><a href="#L226">0226</a> </span>
+<span class="line" id="L227"><a href="#L227">0227</a> class ActionRepeat(object):</span>
+<span class="line" id="L228"><a href="#L228">0228</a> </span>
+<span class="line" id="L229"><a href="#L229">0229</a>   def __init__(self, env, amount):</span>
+<span class="line" id="L230"><a href="#L230">0230</a>     self._env = env</span>
+<span class="line" id="L231"><a href="#L231">0231</a>     self._amount = amount</span>
+<span class="line" id="L232"><a href="#L232">0232</a> </span>
+<span class="line" id="L233"><a href="#L233">0233</a>   def __getattr__(self, name):</span>
+<span class="line" id="L234"><a href="#L234">0234</a>     return getattr(self._env, name)</span>
+<span class="line" id="L235"><a href="#L235">0235</a> </span>
+<span class="line" id="L236"><a href="#L236">0236</a>   def step(self, action):</span>
+<span class="line" id="L237"><a href="#L237">0237</a>     done = False</span>
+<span class="line" id="L238"><a href="#L238">0238</a>     total_reward = 0</span>
+<span class="line" id="L239"><a href="#L239">0239</a>     current_step = 0</span>
+<span class="line" id="L240"><a href="#L240">0240</a>     while current_step &lt; self._amount and not done:</span>
+<span class="line" id="L241"><a href="#L241">0241</a>       observ, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L242"><a href="#L242">0242</a>       total_reward += reward</span>
+<span class="line" id="L243"><a href="#L243">0243</a>       current_step += 1</span>
+<span class="line" id="L244"><a href="#L244">0244</a>     return observ, total_reward, done, info</span>
+<span class="line" id="L245"><a href="#L245">0245</a> </span>
+<span class="line" id="L246"><a href="#L246">0246</a> </span>
+<span class="line" id="L247"><a href="#L247">0247</a> class NormalizeActions(object):</span>
+<span class="line" id="L248"><a href="#L248">0248</a> </span>
+<span class="line" id="L249"><a href="#L249">0249</a>   def __init__(self, env):</span>
+<span class="line" id="L250"><a href="#L250">0250</a>     self._env = env</span>
+<span class="line" id="L251"><a href="#L251">0251</a>     low, high = env.action_space.low, env.action_space.high</span>
+<span class="line" id="L252"><a href="#L252">0252</a>     self._enabled = np.logical_and(np.isfinite(low), np.isfinite(high))</span>
+<span class="line" id="L253"><a href="#L253">0253</a>     self._low = np.where(self._enabled, low, -np.ones_like(low))</span>
+<span class="line" id="L254"><a href="#L254">0254</a>     self._high = np.where(self._enabled, high, np.ones_like(low))</span>
+<span class="line" id="L255"><a href="#L255">0255</a> </span>
+<span class="line" id="L256"><a href="#L256">0256</a>   def __getattr__(self, name):</span>
+<span class="line" id="L257"><a href="#L257">0257</a>     return getattr(self._env, name)</span>
+<span class="line" id="L258"><a href="#L258">0258</a> </span>
+<span class="line" id="L259"><a href="#L259">0259</a>   @property</span>
+<span class="line" id="L260"><a href="#L260">0260</a>   def action_space(self):</span>
+<span class="line" id="L261"><a href="#L261">0261</a>     space = self._env.action_space</span>
+<span class="line" id="L262"><a href="#L262">0262</a>     low = np.where(self._enabled, -np.ones_like(space.low), space.low)</span>
+<span class="line" id="L263"><a href="#L263">0263</a>     high = np.where(self._enabled, np.ones_like(space.high), space.high)</span>
+<span class="line" id="L264"><a href="#L264">0264</a>     return gym.spaces.Box(low, high, dtype=space.dtype)</span>
+<span class="line" id="L265"><a href="#L265">0265</a> </span>
+<span class="line" id="L266"><a href="#L266">0266</a>   def step(self, action):</span>
+<span class="line" id="L267"><a href="#L267">0267</a>     action = (action + 1) / 2 * (self._high - self._low) + self._low</span>
+<span class="line" id="L268"><a href="#L268">0268</a>     return self._env.step(action)</span>
+<span class="line" id="L269"><a href="#L269">0269</a> </span>
+<span class="line" id="L270"><a href="#L270">0270</a> </span>
+<span class="line" id="L271"><a href="#L271">0271</a> class DeepMindControl(object):</span>
+<span class="line" id="L272"><a href="#L272">0272</a> </span>
+<span class="line" id="L273"><a href="#L273">0273</a>   metadata = {'render.modes': ['rgb_array']}</span>
+<span class="line" id="L274"><a href="#L274">0274</a>   reward_range = (-np.inf, np.inf)</span>
+<span class="line" id="L275"><a href="#L275">0275</a> </span>
+<span class="line" id="L276"><a href="#L276">0276</a>   def __init__(self, domain, task, render_size=(64, 64), camera_id=0):</span>
+<span class="line" id="L277"><a href="#L277">0277</a>     if isinstance(domain, str):</span>
+<span class="line" id="L278"><a href="#L278">0278</a>       from dm_control import suite</span>
+<span class="line" id="L279"><a href="#L279">0279</a>       self._env = suite.load(domain, task)</span>
+<span class="line" id="L280"><a href="#L280">0280</a>     else:</span>
+<span class="line" id="L281"><a href="#L281">0281</a>       assert task is None</span>
+<span class="line" id="L282"><a href="#L282">0282</a>       self._env = domain()</span>
+<span class="line" id="L283"><a href="#L283">0283</a>     self._render_size = render_size</span>
+<span class="line" id="L284"><a href="#L284">0284</a>     self._camera_id = camera_id</span>
+<span class="line" id="L285"><a href="#L285">0285</a> </span>
+<span class="line" id="L286"><a href="#L286">0286</a>   @property</span>
+<span class="line" id="L287"><a href="#L287">0287</a>   def observation_space(self):</span>
+<span class="line" id="L288"><a href="#L288">0288</a>     components = {}</span>
+<span class="line" id="L289"><a href="#L289">0289</a>     for key, value in self._env.observation_spec().items():</span>
+<span class="line" id="L290"><a href="#L290">0290</a>       components[key] = gym.spaces.Box(</span>
+<span class="line" id="L291"><a href="#L291">0291</a>           -np.inf, np.inf, value.shape, dtype=np.float32)</span>
+<span class="line" id="L292"><a href="#L292">0292</a>     return gym.spaces.Dict(components)</span>
+<span class="line" id="L293"><a href="#L293">0293</a> </span>
+<span class="line" id="L294"><a href="#L294">0294</a>   @property</span>
+<span class="line" id="L295"><a href="#L295">0295</a>   def action_space(self):</span>
+<span class="line" id="L296"><a href="#L296">0296</a>     action_spec = self._env.action_spec()</span>
+<span class="line" id="L297"><a href="#L297">0297</a>     return gym.spaces.Box(</span>
+<span class="line" id="L298"><a href="#L298">0298</a>         action_spec.minimum, action_spec.maximum, dtype=np.float32)</span>
+<span class="line" id="L299"><a href="#L299">0299</a> </span>
+<span class="line" id="L300"><a href="#L300">0300</a>   def step(self, action):</span>
+<span class="line" id="L301"><a href="#L301">0301</a>     time_step = self._env.step(action)</span>
+<span class="line" id="L302"><a href="#L302">0302</a>     obs = dict(time_step.observation)</span>
+<span class="line" id="L303"><a href="#L303">0303</a>     reward = time_step.reward or 0</span>
+<span class="line" id="L304"><a href="#L304">0304</a>     done = time_step.last()</span>
+<span class="line" id="L305"><a href="#L305">0305</a>     info = {'discount': time_step.discount}</span>
+<span class="line" id="L306"><a href="#L306">0306</a>     if done:</span>
+<span class="line" id="L307"><a href="#L307">0307</a>       info['done_reason'] = 'timeout'</span>
+<span class="line" id="L308"><a href="#L308">0308</a>     return obs, reward, done, info</span>
+<span class="line" id="L309"><a href="#L309">0309</a> </span>
+<span class="line" id="L310"><a href="#L310">0310</a>   def reset(self):</span>
+<span class="line" id="L311"><a href="#L311">0311</a>     time_step = self._env.reset()</span>
+<span class="line" id="L312"><a href="#L312">0312</a>     return dict(time_step.observation)</span>
+<span class="line" id="L313"><a href="#L313">0313</a> </span>
+<span class="line" id="L314"><a href="#L314">0314</a>   def render(self, *args, **kwargs):</span>
+<span class="line" id="L315"><a href="#L315">0315</a>     if kwargs.get('mode', 'rgb_array') != 'rgb_array':</span>
+<span class="line" id="L316"><a href="#L316">0316</a>       raise ValueError("Only render mode 'rgb_array' is supported.")</span>
+<span class="line" id="L317"><a href="#L317">0317</a>     del args  # Unused</span>
+<span class="line" id="L318"><a href="#L318">0318</a>     del kwargs  # Unused</span>
+<span class="line" id="L319"><a href="#L319">0319</a>     return self._env.physics.render(</span>
+<span class="line" id="L320"><a href="#L320">0320</a>         *self._render_size, camera_id=self._camera_id)</span>
+<span class="line" id="L321"><a href="#L321">0321</a> </span>
+<span class="line" id="L322"><a href="#L322">0322</a> </span>
+<span class="line" id="L323"><a href="#L323">0323</a> class DeepMindLabyrinth(object):</span>
+<span class="line" id="L324"><a href="#L324">0324</a> </span>
+<span class="line" id="L325"><a href="#L325">0325</a>   ACTION_SET_DEFAULT = (</span>
+<span class="line" id="L326"><a href="#L326">0326</a>       (0, 0, 0, 1, 0, 0, 0),    # Forward</span>
+<span class="line" id="L327"><a href="#L327">0327</a>       (0, 0, 0, -1, 0, 0, 0),   # Backward</span>
+<span class="line" id="L328"><a href="#L328">0328</a>       (0, 0, -1, 0, 0, 0, 0),   # Strafe Left</span>
+<span class="line" id="L329"><a href="#L329">0329</a>       (0, 0, 1, 0, 0, 0, 0),    # Strafe Right</span>
+<span class="line" id="L330"><a href="#L330">0330</a>       (-20, 0, 0, 0, 0, 0, 0),  # Look Left</span>
+<span class="line" id="L331"><a href="#L331">0331</a>       (20, 0, 0, 0, 0, 0, 0),   # Look Right</span>
+<span class="line" id="L332"><a href="#L332">0332</a>       (-20, 0, 0, 1, 0, 0, 0),  # Look Left + Forward</span>
+<span class="line" id="L333"><a href="#L333">0333</a>       (20, 0, 0, 1, 0, 0, 0),   # Look Right + Forward</span>
+<span class="line" id="L334"><a href="#L334">0334</a>       (0, 0, 0, 0, 1, 0, 0),    # Fire</span>
+<span class="line" id="L335"><a href="#L335">0335</a>   )</span>
+<span class="line" id="L336"><a href="#L336">0336</a> </span>
+<span class="line" id="L337"><a href="#L337">0337</a>   ACTION_SET_MEDIUM = (</span>
+<span class="line" id="L338"><a href="#L338">0338</a>       (0, 0, 0, 1, 0, 0, 0),    # Forward</span>
+<span class="line" id="L339"><a href="#L339">0339</a>       (0, 0, 0, -1, 0, 0, 0),   # Backward</span>
+<span class="line" id="L340"><a href="#L340">0340</a>       (0, 0, -1, 0, 0, 0, 0),   # Strafe Left</span>
+<span class="line" id="L341"><a href="#L341">0341</a>       (0, 0, 1, 0, 0, 0, 0),    # Strafe Right</span>
+<span class="line" id="L342"><a href="#L342">0342</a>       (-20, 0, 0, 0, 0, 0, 0),  # Look Left</span>
+<span class="line" id="L343"><a href="#L343">0343</a>       (20, 0, 0, 0, 0, 0, 0),   # Look Right</span>
+<span class="line" id="L344"><a href="#L344">0344</a>       (0, 0, 0, 0, 0, 0, 0),    # Idle.</span>
+<span class="line" id="L345"><a href="#L345">0345</a>   )</span>
+<span class="line" id="L346"><a href="#L346">0346</a> </span>
+<span class="line" id="L347"><a href="#L347">0347</a>   ACTION_SET_SMALL = (</span>
+<span class="line" id="L348"><a href="#L348">0348</a>       (0, 0, 0, 1, 0, 0, 0),    # Forward</span>
+<span class="line" id="L349"><a href="#L349">0349</a>       (-20, 0, 0, 0, 0, 0, 0),  # Look Left</span>
+<span class="line" id="L350"><a href="#L350">0350</a>       (20, 0, 0, 0, 0, 0, 0),   # Look Right</span>
+<span class="line" id="L351"><a href="#L351">0351</a>   )</span>
+<span class="line" id="L352"><a href="#L352">0352</a> </span>
+<span class="line" id="L353"><a href="#L353">0353</a>   def __init__(</span>
+<span class="line" id="L354"><a href="#L354">0354</a>       self, level, mode, render_size=(64, 64), action_repeat=4,</span>
+<span class="line" id="L355"><a href="#L355">0355</a>       action_set=ACTION_SET_DEFAULT, level_cache=None, seed=None,</span>
+<span class="line" id="L356"><a href="#L356">0356</a>       runfiles_path=None):</span>
+<span class="line" id="L357"><a href="#L357">0357</a>     assert mode in ('train', 'test')</span>
+<span class="line" id="L358"><a href="#L358">0358</a>     import deepmind_lab</span>
+<span class="line" id="L359"><a href="#L359">0359</a>     if runfiles_path:</span>
+<span class="line" id="L360"><a href="#L360">0360</a>       print('Setting DMLab runfiles path:', runfiles_path)</span>
+<span class="line" id="L361"><a href="#L361">0361</a>       deepmind_lab.set_runfiles_path(runfiles_path)</span>
+<span class="line" id="L362"><a href="#L362">0362</a>     self._config = {}</span>
+<span class="line" id="L363"><a href="#L363">0363</a>     self._config['width'] = render_size[0]</span>
+<span class="line" id="L364"><a href="#L364">0364</a>     self._config['height'] = render_size[1]</span>
+<span class="line" id="L365"><a href="#L365">0365</a>     self._config['logLevel'] = 'WARN'</span>
+<span class="line" id="L366"><a href="#L366">0366</a>     if mode == 'test':</span>
+<span class="line" id="L367"><a href="#L367">0367</a>       self._config['allowHoldOutLevels'] = 'true'</span>
+<span class="line" id="L368"><a href="#L368">0368</a>       self._config['mixerSeed'] = 0x600D5EED</span>
+<span class="line" id="L369"><a href="#L369">0369</a>     self._action_repeat = action_repeat</span>
+<span class="line" id="L370"><a href="#L370">0370</a>     self._random = np.random.RandomState(seed)</span>
+<span class="line" id="L371"><a href="#L371">0371</a>     self._env = deepmind_lab.Lab(</span>
+<span class="line" id="L372"><a href="#L372">0372</a>         level=level,</span>
+<span class="line" id="L373"><a href="#L373">0373</a>         observations=['RGB_INTERLEAVED'],</span>
+<span class="line" id="L374"><a href="#L374">0374</a>         config={k: str(v) for k, v in self._config.items()},</span>
+<span class="line" id="L375"><a href="#L375">0375</a>         level_cache=level_cache)</span>
+<span class="line" id="L376"><a href="#L376">0376</a>     self._action_set = action_set</span>
+<span class="line" id="L377"><a href="#L377">0377</a>     self._last_image = None</span>
+<span class="line" id="L378"><a href="#L378">0378</a>     self._done = True</span>
+<span class="line" id="L379"><a href="#L379">0379</a> </span>
+<span class="line" id="L380"><a href="#L380">0380</a>   @property</span>
+<span class="line" id="L381"><a href="#L381">0381</a>   def observation_space(self):</span>
+<span class="line" id="L382"><a href="#L382">0382</a>     shape = (self._config['height'], self._config['width'], 3)</span>
+<span class="line" id="L383"><a href="#L383">0383</a>     space = gym.spaces.Box(low=0, high=255, shape=shape, dtype=np.uint8)</span>
+<span class="line" id="L384"><a href="#L384">0384</a>     return gym.spaces.Dict({'image': space})</span>
+<span class="line" id="L385"><a href="#L385">0385</a> </span>
+<span class="line" id="L386"><a href="#L386">0386</a>   @property</span>
+<span class="line" id="L387"><a href="#L387">0387</a>   def action_space(self):</span>
+<span class="line" id="L388"><a href="#L388">0388</a>     return gym.spaces.Discrete(len(self._action_set))</span>
+<span class="line" id="L389"><a href="#L389">0389</a> </span>
+<span class="line" id="L390"><a href="#L390">0390</a>   def reset(self):</span>
+<span class="line" id="L391"><a href="#L391">0391</a>     self._done = False</span>
+<span class="line" id="L392"><a href="#L392">0392</a>     self._env.reset(seed=self._random.randint(0, 2 ** 31 - 1))</span>
+<span class="line" id="L393"><a href="#L393">0393</a>     obs = self._get_obs()</span>
+<span class="line" id="L394"><a href="#L394">0394</a>     return obs</span>
+<span class="line" id="L395"><a href="#L395">0395</a> </span>
+<span class="line" id="L396"><a href="#L396">0396</a>   def step(self, action):</span>
+<span class="line" id="L397"><a href="#L397">0397</a>     raw_action = np.array(self._action_set[action], np.intc)</span>
+<span class="line" id="L398"><a href="#L398">0398</a>     reward = self._env.step(raw_action, num_steps=self._action_repeat)</span>
+<span class="line" id="L399"><a href="#L399">0399</a>     self._done = not self._env.is_running()</span>
+<span class="line" id="L400"><a href="#L400">0400</a>     obs = self._get_obs()</span>
+<span class="line" id="L401"><a href="#L401">0401</a>     return obs, reward, self._done, {}</span>
+<span class="line" id="L402"><a href="#L402">0402</a> </span>
+<span class="line" id="L403"><a href="#L403">0403</a>   def render(self, *args, **kwargs):</span>
+<span class="line" id="L404"><a href="#L404">0404</a>     if kwargs.get('mode', 'rgb_array') != 'rgb_array':</span>
+<span class="line" id="L405"><a href="#L405">0405</a>       raise ValueError("Only render mode 'rgb_array' is supported.")</span>
+<span class="line" id="L406"><a href="#L406">0406</a>     del args  # Unused</span>
+<span class="line" id="L407"><a href="#L407">0407</a>     del kwargs  # Unused</span>
+<span class="line" id="L408"><a href="#L408">0408</a>     return self._last_image</span>
+<span class="line" id="L409"><a href="#L409">0409</a> </span>
+<span class="line" id="L410"><a href="#L410">0410</a>   def close(self):</span>
+<span class="line" id="L411"><a href="#L411">0411</a>     self._env.close()</span>
+<span class="line" id="L412"><a href="#L412">0412</a> </span>
+<span class="line" id="L413"><a href="#L413">0413</a>   def _get_obs(self):</span>
+<span class="line" id="L414"><a href="#L414">0414</a>     if self._done:</span>
+<span class="line" id="L415"><a href="#L415">0415</a>       image = 0 * self._last_image</span>
+<span class="line" id="L416"><a href="#L416">0416</a>     else:</span>
+<span class="line" id="L417"><a href="#L417">0417</a>       image = self._env.observations()['RGB_INTERLEAVED']</span>
+<span class="line" id="L418"><a href="#L418">0418</a>     self._last_image = image</span>
+<span class="line" id="L419"><a href="#L419">0419</a>     return {'image': image}</span>
+<span class="line" id="L420"><a href="#L420">0420</a> </span>
+<span class="line" id="L421"><a href="#L421">0421</a> </span>
+<span class="line" id="L422"><a href="#L422">0422</a> class LocalLevelCache(object):</span>
+<span class="line" id="L423"><a href="#L423">0423</a> </span>
+<span class="line" id="L424"><a href="#L424">0424</a>   def __init__(self, cache_dir='/tmp/level_cache'):</span>
+<span class="line" id="L425"><a href="#L425">0425</a>     self._cache_dir = cache_dir</span>
+<span class="line" id="L426"><a href="#L426">0426</a>     tf.gfile.MakeDirs(cache_dir)</span>
+<span class="line" id="L427"><a href="#L427">0427</a> </span>
+<span class="line" id="L428"><a href="#L428">0428</a>   def fetch(self, key, pk3_path):</span>
+<span class="line" id="L429"><a href="#L429">0429</a>     path = os.path.join(self._cache_dir, key)</span>
+<span class="line" id="L430"><a href="#L430">0430</a>     if tf.gfile.Exists(path):</span>
+<span class="line" id="L431"><a href="#L431">0431</a>       tf.gfile.Copy(path, pk3_path, overwrite=True)</span>
+<span class="line" id="L432"><a href="#L432">0432</a>       return True</span>
+<span class="line" id="L433"><a href="#L433">0433</a>     return False</span>
+<span class="line" id="L434"><a href="#L434">0434</a> </span>
+<span class="line" id="L435"><a href="#L435">0435</a>   def write(self, key, pk3_path):</span>
+<span class="line" id="L436"><a href="#L436">0436</a>     path = os.path.join(self._cache_dir, key)</span>
+<span class="line" id="L437"><a href="#L437">0437</a>     if not tf.gfile.Exists(path):</span>
+<span class="line" id="L438"><a href="#L438">0438</a>       tf.gfile.Copy(pk3_path, path)</span>
+<span class="line" id="L439"><a href="#L439">0439</a> </span>
+<span class="line" id="L440"><a href="#L440">0440</a> </span>
+<span class="line" id="L441"><a href="#L441">0441</a> class Atari(object):</span>
+<span class="line" id="L442"><a href="#L442">0442</a> </span>
+<span class="line" id="L443"><a href="#L443">0443</a>   # LOCK = multiprocessing.Lock()</span>
+<span class="line" id="L444"><a href="#L444">0444</a>   LOCK = threading.Lock()</span>
+<span class="line" id="L445"><a href="#L445">0445</a> </span>
+<span class="line" id="L446"><a href="#L446">0446</a>   def __init__(</span>
+<span class="line" id="L447"><a href="#L447">0447</a>       self, name, action_repeat=4, size=(84, 84), grayscale=True, noops=30,</span>
+<span class="line" id="L448"><a href="#L448">0448</a>       life_done=False, sticky_actions=True):</span>
+<span class="line" id="L449"><a href="#L449">0449</a>     import gym</span>
+<span class="line" id="L450"><a href="#L450">0450</a>     version = 0 if sticky_actions else 4</span>
+<span class="line" id="L451"><a href="#L451">0451</a>     with self.LOCK:</span>
+<span class="line" id="L452"><a href="#L452">0452</a>       self._env = gym.make('{}NoFrameskip-v{}'.format(name, version))</span>
+<span class="line" id="L453"><a href="#L453">0453</a>     self._action_repeat = action_repeat</span>
+<span class="line" id="L454"><a href="#L454">0454</a>     self._size = size</span>
+<span class="line" id="L455"><a href="#L455">0455</a>     self._grayscale = grayscale</span>
+<span class="line" id="L456"><a href="#L456">0456</a>     self._noops = noops</span>
+<span class="line" id="L457"><a href="#L457">0457</a>     self._life_done = life_done</span>
+<span class="line" id="L458"><a href="#L458">0458</a>     self._lives = None</span>
+<span class="line" id="L459"><a href="#L459">0459</a>     shape = self._env.observation_space.shape[:2] + (() if grayscale else (3,))</span>
+<span class="line" id="L460"><a href="#L460">0460</a>     self._buffers = [np.empty(shape, dtype=np.uint8) for _ in range(2)]</span>
+<span class="line" id="L461"><a href="#L461">0461</a>     self._random = np.random.RandomState(seed=None)</span>
+<span class="line" id="L462"><a href="#L462">0462</a> </span>
+<span class="line" id="L463"><a href="#L463">0463</a>   @property</span>
+<span class="line" id="L464"><a href="#L464">0464</a>   def observation_space(self):</span>
+<span class="line" id="L465"><a href="#L465">0465</a>     shape = self._size + (1 if self._grayscale else 3,)</span>
+<span class="line" id="L466"><a href="#L466">0466</a>     space = gym.spaces.Box(low=0, high=255, shape=shape, dtype=np.uint8)</span>
+<span class="line" id="L467"><a href="#L467">0467</a>     return gym.spaces.Dict({'image': space})</span>
+<span class="line" id="L468"><a href="#L468">0468</a> </span>
+<span class="line" id="L469"><a href="#L469">0469</a>   @property</span>
+<span class="line" id="L470"><a href="#L470">0470</a>   def action_space(self):</span>
+<span class="line" id="L471"><a href="#L471">0471</a>     return self._env.action_space</span>
+<span class="line" id="L472"><a href="#L472">0472</a> </span>
+<span class="line" id="L473"><a href="#L473">0473</a>   def close(self):</span>
+<span class="line" id="L474"><a href="#L474">0474</a>     return self._env.close()</span>
+<span class="line" id="L475"><a href="#L475">0475</a> </span>
+<span class="line" id="L476"><a href="#L476">0476</a>   def reset(self):</span>
+<span class="line" id="L477"><a href="#L477">0477</a>     with self.LOCK:</span>
+<span class="line" id="L478"><a href="#L478">0478</a>       self._env.reset()</span>
+<span class="line" id="L479"><a href="#L479">0479</a>     # Use at least one no-op.</span>
+<span class="line" id="L480"><a href="#L480">0480</a>     noops = self._random.randint(1, self._noops) if self._noops &gt; 1 else 1</span>
+<span class="line" id="L481"><a href="#L481">0481</a>     for _ in range(noops):</span>
+<span class="line" id="L482"><a href="#L482">0482</a>       done = self._env.step(0)[2]</span>
+<span class="line" id="L483"><a href="#L483">0483</a>       if done:</span>
+<span class="line" id="L484"><a href="#L484">0484</a>         with self.LOCK:</span>
+<span class="line" id="L485"><a href="#L485">0485</a>           self._env.reset()</span>
+<span class="line" id="L486"><a href="#L486">0486</a>     self._lives = self._env.ale.lives()</span>
+<span class="line" id="L487"><a href="#L487">0487</a>     if self._grayscale:</span>
+<span class="line" id="L488"><a href="#L488">0488</a>       self._env.ale.getScreenGrayscale(self._buffers[0])</span>
+<span class="line" id="L489"><a href="#L489">0489</a>     else:</span>
+<span class="line" id="L490"><a href="#L490">0490</a>       self._env.ale.getScreenRGB2(self._buffers[0])</span>
+<span class="line" id="L491"><a href="#L491">0491</a>     self._buffers[1].fill(0)</span>
+<span class="line" id="L492"><a href="#L492">0492</a>     return self._get_obs()</span>
+<span class="line" id="L493"><a href="#L493">0493</a> </span>
+<span class="line" id="L494"><a href="#L494">0494</a>   def step(self, action):</span>
+<span class="line" id="L495"><a href="#L495">0495</a>     total_reward = 0.0</span>
+<span class="line" id="L496"><a href="#L496">0496</a>     for step in range(self._action_repeat):</span>
+<span class="line" id="L497"><a href="#L497">0497</a>       _, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L498"><a href="#L498">0498</a>       total_reward += reward</span>
+<span class="line" id="L499"><a href="#L499">0499</a>       if self._life_done:</span>
+<span class="line" id="L500"><a href="#L500">0500</a>         lives = self._env.ale.lives()</span>
+<span class="line" id="L501"><a href="#L501">0501</a>         done = done or lives &lt; self._lives</span>
+<span class="line" id="L502"><a href="#L502">0502</a>         self._lives = lives</span>
+<span class="line" id="L503"><a href="#L503">0503</a>       if done:</span>
+<span class="line" id="L504"><a href="#L504">0504</a>         # In principle, the loop could exit before two valid frames have been</span>
+<span class="line" id="L505"><a href="#L505">0505</a>         # rendered.</span>
+<span class="line" id="L506"><a href="#L506">0506</a>         break</span>
+<span class="line" id="L507"><a href="#L507">0507</a>       elif step &gt;= self._action_repeat - 2:</span>
+<span class="line" id="L508"><a href="#L508">0508</a>         index = step - (self._action_repeat - 2)</span>
+<span class="line" id="L509"><a href="#L509">0509</a>         if self._grayscale:</span>
+<span class="line" id="L510"><a href="#L510">0510</a>           self._env.ale.getScreenGrayscale(self._buffers[index])</span>
+<span class="line" id="L511"><a href="#L511">0511</a>         else:</span>
+<span class="line" id="L512"><a href="#L512">0512</a>           self._env.ale.getScreenRGB2(self._buffers[index])</span>
+<span class="line" id="L513"><a href="#L513">0513</a>     obs = self._get_obs()</span>
+<span class="line" id="L514"><a href="#L514">0514</a>     return obs, total_reward, done, info</span>
+<span class="line" id="L515"><a href="#L515">0515</a> </span>
+<span class="line" id="L516"><a href="#L516">0516</a>   def render(self, mode):</span>
+<span class="line" id="L517"><a href="#L517">0517</a>     return self._env.render(mode)</span>
+<span class="line" id="L518"><a href="#L518">0518</a> </span>
+<span class="line" id="L519"><a href="#L519">0519</a>   def _get_obs(self):</span>
+<span class="line" id="L520"><a href="#L520">0520</a>     if self._action_repeat &gt; 1:</span>
+<span class="line" id="L521"><a href="#L521">0521</a>       np.maximum(self._buffers[0], self._buffers[1], out=self._buffers[0])</span>
+<span class="line" id="L522"><a href="#L522">0522</a>     image = skimage.transform.resize(</span>
+<span class="line" id="L523"><a href="#L523">0523</a>         self._buffers[0], output_shape=self._size, mode='edge', order=1,</span>
+<span class="line" id="L524"><a href="#L524">0524</a>         preserve_range=True)</span>
+<span class="line" id="L525"><a href="#L525">0525</a>     image = np.clip(image, 0, 255).astype(np.uint8)</span>
+<span class="line" id="L526"><a href="#L526">0526</a>     image = image[:, :, None] if self._grayscale else image</span>
+<span class="line" id="L527"><a href="#L527">0527</a>     return {'image': image}</span>
+<span class="line" id="L528"><a href="#L528">0528</a> </span>
+<span class="line" id="L529"><a href="#L529">0529</a> </span>
+<span class="line" id="L530"><a href="#L530">0530</a> class OneHotAction(object):</span>
+<span class="line" id="L531"><a href="#L531">0531</a> </span>
+<span class="line" id="L532"><a href="#L532">0532</a>   def __init__(self, env, strict=True):</span>
+<span class="line" id="L533"><a href="#L533">0533</a>     assert isinstance(env.action_space, gym.spaces.Discrete)</span>
+<span class="line" id="L534"><a href="#L534">0534</a>     self._env = env</span>
+<span class="line" id="L535"><a href="#L535">0535</a>     self._strict = strict</span>
+<span class="line" id="L536"><a href="#L536">0536</a> </span>
+<span class="line" id="L537"><a href="#L537">0537</a>   def __getattr__(self, name):</span>
+<span class="line" id="L538"><a href="#L538">0538</a>     return getattr(self._env, name)</span>
+<span class="line" id="L539"><a href="#L539">0539</a> </span>
+<span class="line" id="L540"><a href="#L540">0540</a>   @property</span>
+<span class="line" id="L541"><a href="#L541">0541</a>   def action_space(self):</span>
+<span class="line" id="L542"><a href="#L542">0542</a>     shape = (self._env.action_space.n,)</span>
+<span class="line" id="L543"><a href="#L543">0543</a>     return gym.spaces.Box(low=0, high=1, shape=shape, dtype=np.float32)</span>
+<span class="line" id="L544"><a href="#L544">0544</a> </span>
+<span class="line" id="L545"><a href="#L545">0545</a>   def step(self, action):</span>
+<span class="line" id="L546"><a href="#L546">0546</a>     index = np.argmax(action).astype(int)</span>
+<span class="line" id="L547"><a href="#L547">0547</a>     if self._strict:</span>
+<span class="line" id="L548"><a href="#L548">0548</a>       reference = np.zeros_like(action)</span>
+<span class="line" id="L549"><a href="#L549">0549</a>       reference[index] = 1</span>
+<span class="line" id="L550"><a href="#L550">0550</a>       assert np.allclose(reference, action), action</span>
+<span class="line" id="L551"><a href="#L551">0551</a>     return self._env.step(index)</span>
+<span class="line" id="L552"><a href="#L552">0552</a> </span>
+<span class="line" id="L553"><a href="#L553">0553</a>   def reset(self):</span>
+<span class="line" id="L554"><a href="#L554">0554</a>     return self._env.reset()</span>
+<span class="line" id="L555"><a href="#L555">0555</a> </span>
+<span class="line" id="L556"><a href="#L556">0556</a> </span>
+<span class="line" id="L557"><a href="#L557">0557</a> class MaximumDuration(object):</span>
+<span class="line" id="L558"><a href="#L558">0558</a> </span>
+<span class="line" id="L559"><a href="#L559">0559</a>   def __init__(self, env, duration):</span>
+<span class="line" id="L560"><a href="#L560">0560</a>     self._env = env</span>
+<span class="line" id="L561"><a href="#L561">0561</a>     self._duration = duration</span>
+<span class="line" id="L562"><a href="#L562">0562</a>     self._step = None</span>
+<span class="line" id="L563"><a href="#L563">0563</a> </span>
+<span class="line" id="L564"><a href="#L564">0564</a>   def __getattr__(self, name):</span>
+<span class="line" id="L565"><a href="#L565">0565</a>     return getattr(self._env, name)</span>
+<span class="line" id="L566"><a href="#L566">0566</a> </span>
+<span class="line" id="L567"><a href="#L567">0567</a>   def step(self, action):</span>
+<span class="line" id="L568"><a href="#L568">0568</a>     if self._step is None:</span>
+<span class="line" id="L569"><a href="#L569">0569</a>       raise RuntimeError('Must reset environment.')</span>
+<span class="line" id="L570"><a href="#L570">0570</a>     observ, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L571"><a href="#L571">0571</a>     self._step += 1</span>
+<span class="line" id="L572"><a href="#L572">0572</a>     if self._step &gt;= self._duration:</span>
+<span class="line" id="L573"><a href="#L573">0573</a>       done = True</span>
+<span class="line" id="L574"><a href="#L574">0574</a>       self._step = None</span>
+<span class="line" id="L575"><a href="#L575">0575</a>       if 'done_reason' not in info:</span>
+<span class="line" id="L576"><a href="#L576">0576</a>         info['done_reason'] = 'timeout'</span>
+<span class="line" id="L577"><a href="#L577">0577</a>     return observ, reward, done, info</span>
+<span class="line" id="L578"><a href="#L578">0578</a> </span>
+<span class="line" id="L579"><a href="#L579">0579</a>   def reset(self):</span>
+<span class="line" id="L580"><a href="#L580">0580</a>     self._step = 0</span>
+<span class="line" id="L581"><a href="#L581">0581</a>     return self._env.reset()</span>
+<span class="line" id="L582"><a href="#L582">0582</a> </span>
+<span class="line" id="L583"><a href="#L583">0583</a> </span>
+<span class="line" id="L584"><a href="#L584">0584</a> class MinimumDuration(object):</span>
+<span class="line" id="L585"><a href="#L585">0585</a> </span>
+<span class="line" id="L586"><a href="#L586">0586</a>   def __init__(self, env, duration):</span>
+<span class="line" id="L587"><a href="#L587">0587</a>     self._env = env</span>
+<span class="line" id="L588"><a href="#L588">0588</a>     self._duration = duration</span>
+<span class="line" id="L589"><a href="#L589">0589</a>     self._step = None</span>
+<span class="line" id="L590"><a href="#L590">0590</a> </span>
+<span class="line" id="L591"><a href="#L591">0591</a>   def __getattr__(self, name):</span>
+<span class="line" id="L592"><a href="#L592">0592</a>     return getattr(self._env, name)</span>
+<span class="line" id="L593"><a href="#L593">0593</a> </span>
+<span class="line" id="L594"><a href="#L594">0594</a>   def step(self, action):</span>
+<span class="line" id="L595"><a href="#L595">0595</a>     observ, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L596"><a href="#L596">0596</a>     self._step += 1</span>
+<span class="line" id="L597"><a href="#L597">0597</a>     if self._step &lt; self._duration:</span>
+<span class="line" id="L598"><a href="#L598">0598</a>       done = False</span>
+<span class="line" id="L599"><a href="#L599">0599</a>     return observ, reward, done, info</span>
+<span class="line" id="L600"><a href="#L600">0600</a> </span>
+<span class="line" id="L601"><a href="#L601">0601</a>   def reset(self):</span>
+<span class="line" id="L602"><a href="#L602">0602</a>     self._step = 0</span>
+<span class="line" id="L603"><a href="#L603">0603</a>     return self._env.reset()</span>
+<span class="line" id="L604"><a href="#L604">0604</a> </span>
+<span class="line" id="L605"><a href="#L605">0605</a> </span>
+<span class="line" id="L606"><a href="#L606">0606</a> class ProcessObservation(object):</span>
+<span class="line" id="L607"><a href="#L607">0607</a> </span>
+<span class="line" id="L608"><a href="#L608">0608</a>   def __init__(self, env, process_fn):</span>
+<span class="line" id="L609"><a href="#L609">0609</a>     self._env = env</span>
+<span class="line" id="L610"><a href="#L610">0610</a>     self._process_fn = process_fn</span>
+<span class="line" id="L611"><a href="#L611">0611</a> </span>
+<span class="line" id="L612"><a href="#L612">0612</a>   def __getattr__(self, name):</span>
+<span class="line" id="L613"><a href="#L613">0613</a>     return getattr(self._env, name)</span>
+<span class="line" id="L614"><a href="#L614">0614</a> </span>
+<span class="line" id="L615"><a href="#L615">0615</a>   @property</span>
+<span class="line" id="L616"><a href="#L616">0616</a>   def observation_space(self):</span>
+<span class="line" id="L617"><a href="#L617">0617</a>     return tools.nested.map(</span>
+<span class="line" id="L618"><a href="#L618">0618</a>         lambda box: gym.spaces.Box(</span>
+<span class="line" id="L619"><a href="#L619">0619</a>             self._process_fn(box.low),</span>
+<span class="line" id="L620"><a href="#L620">0620</a>             self._process_fn(box.high),</span>
+<span class="line" id="L621"><a href="#L621">0621</a>             dtype=self._process_fn(box.low).dtype),</span>
+<span class="line" id="L622"><a href="#L622">0622</a>         self._env.observation_space)</span>
+<span class="line" id="L623"><a href="#L623">0623</a> </span>
+<span class="line" id="L624"><a href="#L624">0624</a>   def step(self, action):</span>
+<span class="line" id="L625"><a href="#L625">0625</a>     observ, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L626"><a href="#L626">0626</a>     observ = self._process_fn(observ)</span>
+<span class="line" id="L627"><a href="#L627">0627</a>     return observ, reward, done, info</span>
+<span class="line" id="L628"><a href="#L628">0628</a> </span>
+<span class="line" id="L629"><a href="#L629">0629</a>   def reset(self):</span>
+<span class="line" id="L630"><a href="#L630">0630</a>     observ = self._env.reset()</span>
+<span class="line" id="L631"><a href="#L631">0631</a>     observ = self._process_fn(observ)</span>
+<span class="line" id="L632"><a href="#L632">0632</a>     return observ</span>
+<span class="line" id="L633"><a href="#L633">0633</a> </span>
+<span class="line" id="L634"><a href="#L634">0634</a> </span>
+<span class="line" id="L635"><a href="#L635">0635</a> class PadActions(object):</span>
+<span class="line" id="L636"><a href="#L636">0636</a> </span>
+<span class="line" id="L637"><a href="#L637">0637</a>   def __init__(self, env, spaces):</span>
+<span class="line" id="L638"><a href="#L638">0638</a>     self._env = env</span>
+<span class="line" id="L639"><a href="#L639">0639</a>     self._action_space = self._pad_box_space(spaces)</span>
+<span class="line" id="L640"><a href="#L640">0640</a> </span>
+<span class="line" id="L641"><a href="#L641">0641</a>   def __getattr__(self, name):</span>
+<span class="line" id="L642"><a href="#L642">0642</a>     return getattr(self._env, name)</span>
+<span class="line" id="L643"><a href="#L643">0643</a> </span>
+<span class="line" id="L644"><a href="#L644">0644</a>   def step(self, action, *args, **kwargs):</span>
+<span class="line" id="L645"><a href="#L645">0645</a>     action = action[:len(self._env.action_space.low)]</span>
+<span class="line" id="L646"><a href="#L646">0646</a>     return self._env.step(action, *args, **kwargs)</span>
+<span class="line" id="L647"><a href="#L647">0647</a> </span>
+<span class="line" id="L648"><a href="#L648">0648</a>   def reset(self, *args, **kwargs):</span>
+<span class="line" id="L649"><a href="#L649">0649</a>     return self._env.reset(*args, **kwargs)</span>
+<span class="line" id="L650"><a href="#L650">0650</a> </span>
+<span class="line" id="L651"><a href="#L651">0651</a>   def _pad_box_space(self, spaces):</span>
+<span class="line" id="L652"><a href="#L652">0652</a>     assert all(len(space.low.shape) == 1 for space in spaces)</span>
+<span class="line" id="L653"><a href="#L653">0653</a>     length = max(len(space.low) for space in spaces)</span>
+<span class="line" id="L654"><a href="#L654">0654</a>     low, high = np.inf * np.ones(length), -np.inf * np.ones(length)</span>
+<span class="line" id="L655"><a href="#L655">0655</a>     for space in spaces:</span>
+<span class="line" id="L656"><a href="#L656">0656</a>       low[:len(space.low)] = np.minimum(space.low, low[:len(space.low)])</span>
+<span class="line" id="L657"><a href="#L657">0657</a>       high[:len(space.high)] = np.maximum(space.high, high[:len(space.high)])</span>
+<span class="line" id="L658"><a href="#L658">0658</a>     return gym.spaces.Box(low, high, dtype=np.float32)</span>
+<span class="line" id="L659"><a href="#L659">0659</a> </span>
+<span class="line" id="L660"><a href="#L660">0660</a> </span>
+<span class="line" id="L661"><a href="#L661">0661</a> class ObservationDropout(object):</span>
+<span class="line" id="L662"><a href="#L662">0662</a> </span>
+<span class="line" id="L663"><a href="#L663">0663</a>   def __init__(self, env, key, prob):</span>
+<span class="line" id="L664"><a href="#L664">0664</a>     self._env = env</span>
+<span class="line" id="L665"><a href="#L665">0665</a>     self._key = key</span>
+<span class="line" id="L666"><a href="#L666">0666</a>     self._prob = prob</span>
+<span class="line" id="L667"><a href="#L667">0667</a>     self._random = np.random.RandomState(seed=0)</span>
+<span class="line" id="L668"><a href="#L668">0668</a> </span>
+<span class="line" id="L669"><a href="#L669">0669</a>   def __getattr__(self, name):</span>
+<span class="line" id="L670"><a href="#L670">0670</a>     return getattr(self._env, name)</span>
+<span class="line" id="L671"><a href="#L671">0671</a> </span>
+<span class="line" id="L672"><a href="#L672">0672</a>   def step(self, action):</span>
+<span class="line" id="L673"><a href="#L673">0673</a>     observ, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L674"><a href="#L674">0674</a>     observ = self._process_fn(observ)</span>
+<span class="line" id="L675"><a href="#L675">0675</a>     return observ, reward, done, info</span>
+<span class="line" id="L676"><a href="#L676">0676</a> </span>
+<span class="line" id="L677"><a href="#L677">0677</a>   def reset(self):</span>
+<span class="line" id="L678"><a href="#L678">0678</a>     observ = self._env.reset()</span>
+<span class="line" id="L679"><a href="#L679">0679</a>     observ = self._process_fn(observ)</span>
+<span class="line" id="L680"><a href="#L680">0680</a>     return observ</span>
+<span class="line" id="L681"><a href="#L681">0681</a> </span>
+<span class="line" id="L682"><a href="#L682">0682</a>   def _process_fn(self, observ):</span>
+<span class="line" id="L683"><a href="#L683">0683</a>     if self._random.uniform(0, 1) &lt; self._prob:</span>
+<span class="line" id="L684"><a href="#L684">0684</a>       observ[self._key] *= 0</span>
+<span class="line" id="L685"><a href="#L685">0685</a>     return observ</span>
+<span class="line" id="L686"><a href="#L686">0686</a> </span>
+<span class="line" id="L687"><a href="#L687">0687</a> </span>
+<span class="line" id="L688"><a href="#L688">0688</a> class CollectDataset(object):</span>
+<span class="line" id="L689"><a href="#L689">0689</a> </span>
+<span class="line" id="L690"><a href="#L690">0690</a>   def __init__(self, env, outdir):</span>
+<span class="line" id="L691"><a href="#L691">0691</a>     self._env = env</span>
+<span class="line" id="L692"><a href="#L692">0692</a>     self._outdir = outdir and os.path.expanduser(outdir)</span>
+<span class="line" id="L693"><a href="#L693">0693</a>     self._episode = None</span>
+<span class="line" id="L694"><a href="#L694">0694</a> </span>
+<span class="line" id="L695"><a href="#L695">0695</a>   def __getattr__(self, name):</span>
+<span class="line" id="L696"><a href="#L696">0696</a>     return getattr(self._env, name)</span>
+<span class="line" id="L697"><a href="#L697">0697</a> </span>
+<span class="line" id="L698"><a href="#L698">0698</a>   def step(self, action, *args, **kwargs):</span>
+<span class="line" id="L699"><a href="#L699">0699</a>     if kwargs.get('blocking', True):</span>
+<span class="line" id="L700"><a href="#L700">0700</a>       transition = self._env.step(action, *args, **kwargs)</span>
+<span class="line" id="L701"><a href="#L701">0701</a>       return self._process_step(action, *transition)</span>
+<span class="line" id="L702"><a href="#L702">0702</a>     else:</span>
+<span class="line" id="L703"><a href="#L703">0703</a>       future = self._env.step(action, *args, **kwargs)</span>
+<span class="line" id="L704"><a href="#L704">0704</a>       return lambda: self._process_step(action, *future())</span>
+<span class="line" id="L705"><a href="#L705">0705</a> </span>
+<span class="line" id="L706"><a href="#L706">0706</a>   def reset(self, *args, **kwargs):</span>
+<span class="line" id="L707"><a href="#L707">0707</a>     if kwargs.get('blocking', True):</span>
+<span class="line" id="L708"><a href="#L708">0708</a>       observ = self._env.reset(*args, **kwargs)</span>
+<span class="line" id="L709"><a href="#L709">0709</a>       return self._process_reset(observ)</span>
+<span class="line" id="L710"><a href="#L710">0710</a>     else:</span>
+<span class="line" id="L711"><a href="#L711">0711</a>       future = self._env.reset(*args, **kwargs)</span>
+<span class="line" id="L712"><a href="#L712">0712</a>       return lambda: self._process_reset(future())</span>
+<span class="line" id="L713"><a href="#L713">0713</a> </span>
+<span class="line" id="L714"><a href="#L714">0714</a>   def _process_step(self, action, observ, reward, done, info):</span>
+<span class="line" id="L715"><a href="#L715">0715</a>     transition = self._process_observ(observ).copy()</span>
+<span class="line" id="L716"><a href="#L716">0716</a>     transition['action'] = action</span>
+<span class="line" id="L717"><a href="#L717">0717</a>     transition['reward'] = reward</span>
+<span class="line" id="L718"><a href="#L718">0718</a>     if done:</span>
+<span class="line" id="L719"><a href="#L719">0719</a>       reason = info.get('done_reason', 'termination')</span>
+<span class="line" id="L720"><a href="#L720">0720</a>       transition['pcont'] = dict(termination=0.0, timeout=1.0)[reason]</span>
+<span class="line" id="L721"><a href="#L721">0721</a>     else:</span>
+<span class="line" id="L722"><a href="#L722">0722</a>       transition['pcont'] = 1.0</span>
+<span class="line" id="L723"><a href="#L723">0723</a>     self._episode.append(transition)</span>
+<span class="line" id="L724"><a href="#L724">0724</a>     if done:</span>
+<span class="line" id="L725"><a href="#L725">0725</a>       episode = self._get_episode()</span>
+<span class="line" id="L726"><a href="#L726">0726</a>       if self._outdir:</span>
+<span class="line" id="L727"><a href="#L727">0727</a>         filename = self._get_filename(episode)</span>
+<span class="line" id="L728"><a href="#L728">0728</a>         self._write(episode, filename)</span>
+<span class="line" id="L729"><a href="#L729">0729</a>     return observ, reward, done, info</span>
+<span class="line" id="L730"><a href="#L730">0730</a> </span>
+<span class="line" id="L731"><a href="#L731">0731</a>   def _process_reset(self, observ):</span>
+<span class="line" id="L732"><a href="#L732">0732</a>     # Resetting the environment provides the observation for time step zero.</span>
+<span class="line" id="L733"><a href="#L733">0733</a>     # The action and reward are not known for this time step, so we zero them.</span>
+<span class="line" id="L734"><a href="#L734">0734</a>     transition = self._process_observ(observ).copy()</span>
+<span class="line" id="L735"><a href="#L735">0735</a>     transition['action'] = np.zeros_like(self.action_space.low)</span>
+<span class="line" id="L736"><a href="#L736">0736</a>     transition['reward'] = 0.0</span>
+<span class="line" id="L737"><a href="#L737">0737</a>     transition['pcont'] = 1.0</span>
+<span class="line" id="L738"><a href="#L738">0738</a>     self._episode = [transition]</span>
+<span class="line" id="L739"><a href="#L739">0739</a>     return observ</span>
+<span class="line" id="L740"><a href="#L740">0740</a> </span>
+<span class="line" id="L741"><a href="#L741">0741</a>   def _process_observ(self, observ):</span>
+<span class="line" id="L742"><a href="#L742">0742</a>     if not isinstance(observ, dict):</span>
+<span class="line" id="L743"><a href="#L743">0743</a>       observ = {'observ': observ}</span>
+<span class="line" id="L744"><a href="#L744">0744</a>     return observ</span>
+<span class="line" id="L745"><a href="#L745">0745</a> </span>
+<span class="line" id="L746"><a href="#L746">0746</a>   def _get_filename(self, episode):</span>
+<span class="line" id="L747"><a href="#L747">0747</a>     timestamp = datetime.datetime.now().strftime('%Y%m%dT%H%M%S')</span>
+<span class="line" id="L748"><a href="#L748">0748</a>     identifier = str(uuid.uuid4().hex)</span>
+<span class="line" id="L749"><a href="#L749">0749</a>     length = len(episode['reward'])</span>
+<span class="line" id="L750"><a href="#L750">0750</a>     filename = '{}-{}-{}.npz'.format(timestamp, identifier, length)</span>
+<span class="line" id="L751"><a href="#L751">0751</a>     filename = os.path.join(self._outdir, filename)</span>
+<span class="line" id="L752"><a href="#L752">0752</a>     return filename</span>
+<span class="line" id="L753"><a href="#L753">0753</a> </span>
+<span class="line" id="L754"><a href="#L754">0754</a>   def _get_episode(self):</span>
+<span class="line" id="L755"><a href="#L755">0755</a>     episode = {k: [t[k] for t in self._episode] for k in self._episode[0]}</span>
+<span class="line" id="L756"><a href="#L756">0756</a>     episode = {k: np.array(v) for k, v in episode.items()}</span>
+<span class="line" id="L757"><a href="#L757">0757</a>     for key, sequence in episode.items():</span>
+<span class="line" id="L758"><a href="#L758">0758</a>       if sequence.dtype not in (np.uint8, np.float32, np.float64, np.bool):</span>
+<span class="line" id="L759"><a href="#L759">0759</a>         message = "Sequence for key {} is of unexpected type {}:\n{}"</span>
+<span class="line" id="L760"><a href="#L760">0760</a>         raise RuntimeError(message.format(key, sequence.dtype, sequence))</span>
+<span class="line" id="L761"><a href="#L761">0761</a>     return episode</span>
+<span class="line" id="L762"><a href="#L762">0762</a> </span>
+<span class="line" id="L763"><a href="#L763">0763</a>   def _write(self, episode, filename):</span>
+<span class="line" id="L764"><a href="#L764">0764</a>     if not tf.gfile.Exists(self._outdir):</span>
+<span class="line" id="L765"><a href="#L765">0765</a>       tf.gfile.MakeDirs(self._outdir)</span>
+<span class="line" id="L766"><a href="#L766">0766</a>     with io.BytesIO() as file_:</span>
+<span class="line" id="L767"><a href="#L767">0767</a>       np.savez_compressed(file_, **episode)</span>
+<span class="line" id="L768"><a href="#L768">0768</a>       file_.seek(0)</span>
+<span class="line" id="L769"><a href="#L769">0769</a>       with tf.gfile.Open(filename, 'w') as ff:</span>
+<span class="line" id="L770"><a href="#L770">0770</a>         ff.write(file_.read())</span>
+<span class="line" id="L771"><a href="#L771">0771</a>     folder = os.path.basename(self._outdir)</span>
+<span class="line" id="L772"><a href="#L772">0772</a>     name = os.path.splitext(os.path.basename(filename))[0]</span>
+<span class="line" id="L773"><a href="#L773">0773</a>     word = 'with' if np.sum(episode.get('reward_mask', 1)) &gt; 0 else 'without'</span>
+<span class="line" id="L774"><a href="#L774">0774</a>     score = episode['reward'].sum()</span>
+<span class="line" id="L775"><a href="#L775">0775</a>     message = 'Recorded episode {} of length {} {} score of {:.1f} to {}.'</span>
+<span class="line" id="L776"><a href="#L776">0776</a>     print(message.format(name, len(episode['action']), word, score, folder))</span>
+<span class="line" id="L777"><a href="#L777">0777</a> </span>
+<span class="line" id="L778"><a href="#L778">0778</a> </span>
+<span class="line" id="L779"><a href="#L779">0779</a> class NoRewardHint(object):</span>
+<span class="line" id="L780"><a href="#L780">0780</a> </span>
+<span class="line" id="L781"><a href="#L781">0781</a>   def __init__(self, env):</span>
+<span class="line" id="L782"><a href="#L782">0782</a>     self._env = env</span>
+<span class="line" id="L783"><a href="#L783">0783</a> </span>
+<span class="line" id="L784"><a href="#L784">0784</a>   def __getattr__(self, name):</span>
+<span class="line" id="L785"><a href="#L785">0785</a>     return getattr(self._env, name)</span>
+<span class="line" id="L786"><a href="#L786">0786</a> </span>
+<span class="line" id="L787"><a href="#L787">0787</a>   @property</span>
+<span class="line" id="L788"><a href="#L788">0788</a>   def observation_space(self):</span>
+<span class="line" id="L789"><a href="#L789">0789</a>     spaces = self._env.observation_space.spaces.copy()</span>
+<span class="line" id="L790"><a href="#L790">0790</a>     low = np.zeros(1, dtype=np.float32)</span>
+<span class="line" id="L791"><a href="#L791">0791</a>     high = np.ones(1, dtype=np.float32)</span>
+<span class="line" id="L792"><a href="#L792">0792</a>     spaces['reward_mask'] = gym.spaces.Box(low, high)</span>
+<span class="line" id="L793"><a href="#L793">0793</a>     return gym.spaces.Dict(spaces)</span>
+<span class="line" id="L794"><a href="#L794">0794</a> </span>
+<span class="line" id="L795"><a href="#L795">0795</a>   def step(self, action):</span>
+<span class="line" id="L796"><a href="#L796">0796</a>     obs, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L797"><a href="#L797">0797</a>     obs['reward_mask'] = np.zeros(1, dtype=np.float32)</span>
+<span class="line" id="L798"><a href="#L798">0798</a>     return obs, reward, done, info</span>
+<span class="line" id="L799"><a href="#L799">0799</a> </span>
+<span class="line" id="L800"><a href="#L800">0800</a>   def reset(self):</span>
+<span class="line" id="L801"><a href="#L801">0801</a>     obs = self._env.reset()</span>
+<span class="line" id="L802"><a href="#L802">0802</a>     obs['reward_mask'] = np.zeros(1, dtype=np.float32)</span>
+<span class="line" id="L803"><a href="#L803">0803</a>     return obs</span>
+<span class="line" id="L804"><a href="#L804">0804</a> </span>
+<span class="line" id="L805"><a href="#L805">0805</a> </span>
+<span class="line" id="L806"><a href="#L806">0806</a> class ConvertTo32Bit(object):</span>
+<span class="line" id="L807"><a href="#L807">0807</a> </span>
+<span class="line" id="L808"><a href="#L808">0808</a>   def __init__(self, env):</span>
+<span class="line" id="L809"><a href="#L809">0809</a>     self._env = env</span>
+<span class="line" id="L810"><a href="#L810">0810</a> </span>
+<span class="line" id="L811"><a href="#L811">0811</a>   def __getattr__(self, name):</span>
+<span class="line" id="L812"><a href="#L812">0812</a>     return getattr(self._env, name)</span>
+<span class="line" id="L813"><a href="#L813">0813</a> </span>
+<span class="line" id="L814"><a href="#L814">0814</a>   def step(self, action):</span>
+<span class="line" id="L815"><a href="#L815">0815</a>     observ, reward, done, info = self._env.step(action)</span>
+<span class="line" id="L816"><a href="#L816">0816</a>     observ = tools.nested.map(self._convert_observ, observ)</span>
+<span class="line" id="L817"><a href="#L817">0817</a>     reward = self._convert_reward(reward)</span>
+<span class="line" id="L818"><a href="#L818">0818</a>     return observ, reward, done, info</span>
+<span class="line" id="L819"><a href="#L819">0819</a> </span>
+<span class="line" id="L820"><a href="#L820">0820</a>   def reset(self):</span>
+<span class="line" id="L821"><a href="#L821">0821</a>     observ = self._env.reset()</span>
+<span class="line" id="L822"><a href="#L822">0822</a>     observ = tools.nested.map(self._convert_observ, observ)</span>
+<span class="line" id="L823"><a href="#L823">0823</a>     return observ</span>
+<span class="line" id="L824"><a href="#L824">0824</a> </span>
+<span class="line" id="L825"><a href="#L825">0825</a>   def _convert_observ(self, observ):</span>
+<span class="line" id="L826"><a href="#L826">0826</a>     if not np.isfinite(observ).all():</span>
+<span class="line" id="L827"><a href="#L827">0827</a>       raise ValueError('Infinite observation encountered.')</span>
+<span class="line" id="L828"><a href="#L828">0828</a>     if observ.dtype == np.float64:</span>
+<span class="line" id="L829"><a href="#L829">0829</a>       return observ.astype(np.float32)</span>
+<span class="line" id="L830"><a href="#L830">0830</a>     if observ.dtype == np.int64:</span>
+<span class="line" id="L831"><a href="#L831">0831</a>       return observ.astype(np.int32)</span>
+<span class="line" id="L832"><a href="#L832">0832</a>     return observ</span>
+<span class="line" id="L833"><a href="#L833">0833</a> </span>
+<span class="line" id="L834"><a href="#L834">0834</a>   def _convert_reward(self, reward):</span>
+<span class="line" id="L835"><a href="#L835">0835</a>     if not np.isfinite(reward).all():</span>
+<span class="line" id="L836"><a href="#L836">0836</a>       raise ValueError('Infinite reward encountered.')</span>
+<span class="line" id="L837"><a href="#L837">0837</a>     return np.array(reward, dtype=np.float32)</span>
+<span class="line" id="L838"><a href="#L838">0838</a> </span>
+<span class="line" id="L839"><a href="#L839">0839</a> </span>
+<span class="line" id="L840"><a href="#L840">0840</a> class Async(object):</span>
+<span class="line" id="L841"><a href="#L841">0841</a> </span>
+<span class="line" id="L842"><a href="#L842">0842</a>   # Message types for communication via the pipe.</span>
+<span class="line" id="L843"><a href="#L843">0843</a>   _ACCESS = 1</span>
+<span class="line" id="L844"><a href="#L844">0844</a>   _CALL = 2</span>
+<span class="line" id="L845"><a href="#L845">0845</a>   _RESULT = 3</span>
+<span class="line" id="L846"><a href="#L846">0846</a>   _EXCEPTION = 4</span>
+<span class="line" id="L847"><a href="#L847">0847</a>   _CLOSE = 5</span>
+<span class="line" id="L848"><a href="#L848">0848</a> </span>
+<span class="line" id="L849"><a href="#L849">0849</a>   def __init__(self, constructor, strategy='thread'):</span>
+<span class="line" id="L850"><a href="#L850">0850</a>     if strategy == 'thread':</span>
+<span class="line" id="L851"><a href="#L851">0851</a>       import multiprocessing.dummy as mp</span>
+<span class="line" id="L852"><a href="#L852">0852</a>     elif strategy == 'process':</span>
+<span class="line" id="L853"><a href="#L853">0853</a>       import multiprocessing as mp</span>
+<span class="line" id="L854"><a href="#L854">0854</a>     else:</span>
+<span class="line" id="L855"><a href="#L855">0855</a>       raise NotImplementedError(strategy)</span>
+<span class="line" id="L856"><a href="#L856">0856</a>     self._strategy = strategy</span>
+<span class="line" id="L857"><a href="#L857">0857</a>     self._conn, conn = mp.Pipe()</span>
+<span class="line" id="L858"><a href="#L858">0858</a>     self._process = mp.Process(target=self._worker, args=(constructor, conn))</span>
+<span class="line" id="L859"><a href="#L859">0859</a>     atexit.register(self.close)</span>
+<span class="line" id="L860"><a href="#L860">0860</a>     self._process.start()</span>
+<span class="line" id="L861"><a href="#L861">0861</a>     self._observ_space = None</span>
+<span class="line" id="L862"><a href="#L862">0862</a>     self._action_space = None</span>
+<span class="line" id="L863"><a href="#L863">0863</a> </span>
+<span class="line" id="L864"><a href="#L864">0864</a>   @property</span>
+<span class="line" id="L865"><a href="#L865">0865</a>   def observation_space(self):</span>
+<span class="line" id="L866"><a href="#L866">0866</a>     if not self._observ_space:</span>
+<span class="line" id="L867"><a href="#L867">0867</a>       self._observ_space = self.__getattr__('observation_space')</span>
+<span class="line" id="L868"><a href="#L868">0868</a>     return self._observ_space</span>
+<span class="line" id="L869"><a href="#L869">0869</a> </span>
+<span class="line" id="L870"><a href="#L870">0870</a>   @property</span>
+<span class="line" id="L871"><a href="#L871">0871</a>   def action_space(self):</span>
+<span class="line" id="L872"><a href="#L872">0872</a>     if not self._action_space:</span>
+<span class="line" id="L873"><a href="#L873">0873</a>       self._action_space = self.__getattr__('action_space')</span>
+<span class="line" id="L874"><a href="#L874">0874</a>     return self._action_space</span>
+<span class="line" id="L875"><a href="#L875">0875</a> </span>
+<span class="line" id="L876"><a href="#L876">0876</a>   def __getattr__(self, name):</span>
+<span class="line" id="L877"><a href="#L877">0877</a>     self._conn.send((self._ACCESS, name))</span>
+<span class="line" id="L878"><a href="#L878">0878</a>     return self._receive()</span>
+<span class="line" id="L879"><a href="#L879">0879</a> </span>
+<span class="line" id="L880"><a href="#L880">0880</a>   def call(self, name, *args, **kwargs):</span>
+<span class="line" id="L881"><a href="#L881">0881</a>     payload = name, args, kwargs</span>
+<span class="line" id="L882"><a href="#L882">0882</a>     self._conn.send((self._CALL, payload))</span>
+<span class="line" id="L883"><a href="#L883">0883</a>     return self._receive</span>
+<span class="line" id="L884"><a href="#L884">0884</a> </span>
+<span class="line" id="L885"><a href="#L885">0885</a>   def close(self):</span>
+<span class="line" id="L886"><a href="#L886">0886</a>     try:</span>
+<span class="line" id="L887"><a href="#L887">0887</a>       self._conn.send((self._CLOSE, None))</span>
+<span class="line" id="L888"><a href="#L888">0888</a>       self._conn.close()</span>
+<span class="line" id="L889"><a href="#L889">0889</a>     except IOError:</span>
+<span class="line" id="L890"><a href="#L890">0890</a>       # The connection was already closed.</span>
+<span class="line" id="L891"><a href="#L891">0891</a>       pass</span>
+<span class="line" id="L892"><a href="#L892">0892</a>     self._process.join()</span>
+<span class="line" id="L893"><a href="#L893">0893</a> </span>
+<span class="line" id="L894"><a href="#L894">0894</a>   def step(self, action, blocking=True):</span>
+<span class="line" id="L895"><a href="#L895">0895</a>     promise = self.call('step', action)</span>
+<span class="line" id="L896"><a href="#L896">0896</a>     if blocking:</span>
+<span class="line" id="L897"><a href="#L897">0897</a>       return promise()</span>
+<span class="line" id="L898"><a href="#L898">0898</a>     else:</span>
+<span class="line" id="L899"><a href="#L899">0899</a>       return promise</span>
+<span class="line" id="L900"><a href="#L900">0900</a> </span>
+<span class="line" id="L901"><a href="#L901">0901</a>   def reset(self, blocking=True):</span>
+<span class="line" id="L902"><a href="#L902">0902</a>     promise = self.call('reset')</span>
+<span class="line" id="L903"><a href="#L903">0903</a>     if blocking:</span>
+<span class="line" id="L904"><a href="#L904">0904</a>       return promise()</span>
+<span class="line" id="L905"><a href="#L905">0905</a>     else:</span>
+<span class="line" id="L906"><a href="#L906">0906</a>       return promise</span>
+<span class="line" id="L907"><a href="#L907">0907</a> </span>
+<span class="line" id="L908"><a href="#L908">0908</a>   def _receive(self):</span>
+<span class="line" id="L909"><a href="#L909">0909</a>     try:</span>
+<span class="line" id="L910"><a href="#L910">0910</a>       message, payload = self._conn.recv()</span>
+<span class="line" id="L911"><a href="#L911">0911</a>     except (OSError, EOFError):</span>
+<span class="line" id="L912"><a href="#L912">0912</a>       raise RuntimeError('Lost connection to environment worker.')</span>
+<span class="line" id="L913"><a href="#L913">0913</a>     # Re-raise exceptions in the main process.</span>
+<span class="line" id="L914"><a href="#L914">0914</a>     if message == self._EXCEPTION:</span>
+<span class="line" id="L915"><a href="#L915">0915</a>       stacktrace = payload</span>
+<span class="line" id="L916"><a href="#L916">0916</a>       raise Exception(stacktrace)</span>
+<span class="line" id="L917"><a href="#L917">0917</a>     if message == self._RESULT:</span>
+<span class="line" id="L918"><a href="#L918">0918</a>       return payload</span>
+<span class="line" id="L919"><a href="#L919">0919</a>     raise KeyError('Received message of unexpected type {}'.format(message))</span>
+<span class="line" id="L920"><a href="#L920">0920</a> </span>
+<span class="line" id="L921"><a href="#L921">0921</a>   def _worker(self, constructor, conn):</span>
+<span class="line" id="L922"><a href="#L922">0922</a>     try:</span>
+<span class="line" id="L923"><a href="#L923">0923</a>       env = constructor()</span>
+<span class="line" id="L924"><a href="#L924">0924</a>       while True:</span>
+<span class="line" id="L925"><a href="#L925">0925</a>         try:</span>
+<span class="line" id="L926"><a href="#L926">0926</a>           # Only block for short times to have keyboard exceptions be raised.</span>
+<span class="line" id="L927"><a href="#L927">0927</a>           if not conn.poll(0.1):</span>
+<span class="line" id="L928"><a href="#L928">0928</a>             continue</span>
+<span class="line" id="L929"><a href="#L929">0929</a>           message, payload = conn.recv()</span>
+<span class="line" id="L930"><a href="#L930">0930</a>         except (EOFError, KeyboardInterrupt):</span>
+<span class="line" id="L931"><a href="#L931">0931</a>           break</span>
+<span class="line" id="L932"><a href="#L932">0932</a>         if message == self._ACCESS:</span>
+<span class="line" id="L933"><a href="#L933">0933</a>           name = payload</span>
+<span class="line" id="L934"><a href="#L934">0934</a>           result = getattr(env, name)</span>
+<span class="line" id="L935"><a href="#L935">0935</a>           conn.send((self._RESULT, result))</span>
+<span class="line" id="L936"><a href="#L936">0936</a>           continue</span>
+<span class="line" id="L937"><a href="#L937">0937</a>         if message == self._CALL:</span>
+<span class="line" id="L938"><a href="#L938">0938</a>           name, args, kwargs = payload</span>
+<span class="line" id="L939"><a href="#L939">0939</a>           result = getattr(env, name)(*args, **kwargs)</span>
+<span class="line" id="L940"><a href="#L940">0940</a>           conn.send((self._RESULT, result))</span>
+<span class="line" id="L941"><a href="#L941">0941</a>           continue</span>
+<span class="line" id="L942"><a href="#L942">0942</a>         if message == self._CLOSE:</span>
+<span class="line" id="L943"><a href="#L943">0943</a>           assert payload is None</span>
+<span class="line" id="L944"><a href="#L944">0944</a>           break</span>
+<span class="line" id="L945"><a href="#L945">0945</a>         raise KeyError('Received message of unknown type {}'.format(message))</span>
+<span class="line" id="L946"><a href="#L946">0946</a>     except Exception:</span>
+<span class="line" id="L947"><a href="#L947">0947</a>       stacktrace = ''.join(traceback.format_exception(*sys.exc_info()))</span>
+<span class="line" id="L948"><a href="#L948">0948</a>       print('Error in environment process: {}'.format(stacktrace))</span>
+<span class="line" id="L949"><a href="#L949">0949</a>       try:</span>
+<span class="line" id="L950"><a href="#L950">0950</a>         conn.send((self._EXCEPTION, stacktrace))</span>
+<span class="line" id="L951"><a href="#L951">0951</a>       except Exception:</span>
+<span class="line" id="L952"><a href="#L952">0952</a>         print('Failed to send exception back to main process.')</span>
+<span class="line" id="L953"><a href="#L953">0953</a>     try:</span>
+<span class="line" id="L954"><a href="#L954">0954</a>       conn.close()</span>
+<span class="line" id="L955"><a href="#L955">0955</a>     except Exception:</span>
+<span class="line" id="L956"><a href="#L956">0956</a>       print('Failed to properly close connection.')</span></pre></body></html>

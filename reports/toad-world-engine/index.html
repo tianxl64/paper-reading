@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>近期 Paper Reading 深度分析 - TOAD 与 World Engine</title>
+<style>
+    :root {
+      --bg: #f6f7f8;
+      --paper: #ffffff;
+      --ink: #202326;
+      --muted: #66707a;
+      --line: #d9dee3;
+      --teal: #0b7f79;
+      --blue: #235f9c;
+      --amber: #9a6400;
+      --coral: #b54436;
+      --green: #28724f;
+      --code-bg: #f0f3f5;
+      --toc-w: 300px;
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.72;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: var(--toc-w) minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      border-right: 1px solid var(--line);
+      background: #f9fafb;
+      overflow-y: auto;
+      padding: 18px 16px 24px;
+    }
+
+    .toc-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0;
+      margin: 0 0 10px;
+    }
+
+    .toc-note {
+      color: var(--muted);
+      font-size: 12px;
+      margin: 0 0 14px;
+      line-height: 1.55;
+    }
+
+    nav a {
+      display: block;
+      padding: 5px 8px;
+      border-left: 3px solid transparent;
+      color: #38414a;
+      font-size: 13px;
+      border-radius: 0 6px 6px 0;
+    }
+    nav a.h2 { font-weight: 700; margin-top: 7px; }
+    nav a.h3 { padding-left: 20px; color: #53606b; }
+    nav a.active {
+      border-left-color: var(--teal);
+      background: #e7f3f1;
+      color: #064f4b;
+      text-decoration: none;
+    }
+
+    main {
+      width: min(1120px, calc(100vw - var(--toc-w)));
+      margin: 0 auto;
+      padding: 34px 42px 80px;
+    }
+
+    article {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 34px 42px 56px;
+    }
+
+    .doc-kicker {
+      color: var(--teal);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, h4 {
+      line-height: 1.28;
+      letter-spacing: 0;
+      scroll-margin-top: 22px;
+    }
+
+    h1 {
+      margin: 8px 0 14px;
+      font-size: clamp(30px, 4.5vw, 48px);
+      max-width: 900px;
+    }
+
+    h2 {
+      margin: 48px 0 16px;
+      padding-top: 10px;
+      font-size: 28px;
+      border-top: 1px solid var(--line);
+    }
+
+    h3 {
+      margin: 30px 0 12px;
+      font-size: 21px;
+    }
+
+    h4 {
+      margin: 20px 0 8px;
+      font-size: 17px;
+    }
+
+    p { margin: 10px 0; }
+    strong { font-weight: 700; }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 22px 0;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px;
+      background: #fbfcfd;
+      min-height: 90px;
+    }
+    .metric b {
+      display: block;
+      font-size: 18px;
+      line-height: 1.25;
+      color: #111820;
+    }
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .callout {
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--teal);
+      border-radius: var(--radius);
+      background: #f4faf9;
+      padding: 14px 16px;
+      margin: 18px 0;
+    }
+    .callout.warning {
+      border-left-color: var(--amber);
+      background: #fff9ec;
+    }
+    .callout.risk {
+      border-left-color: var(--coral);
+      background: #fff4f2;
+    }
+    .callout.ok {
+      border-left-color: var(--green);
+      background: #f3faf6;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin: 16px 0;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 16px 0;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fbfcfd;
+      padding: 14px;
+    }
+    .panel h4 { margin-top: 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 22px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      vertical-align: top;
+    }
+    th {
+      background: #eef3f5;
+      text-align: left;
+      font-weight: 700;
+    }
+    tbody tr:nth-child(even) { background: #fbfcfd; }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+    code {
+      background: var(--code-bg);
+      padding: 1px 4px;
+      border-radius: 4px;
+      font-size: .92em;
+    }
+    pre {
+      background: #111820;
+      color: #edf2f5;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      overflow-x: auto;
+      line-height: 1.55;
+      font-size: 13px;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+
+    figure {
+      margin: 20px 0 26px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+    }
+    figure img, figure svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      cursor: zoom-in;
+    }
+    figcaption {
+      border-top: 1px solid var(--line);
+      background: #f8fafb;
+      color: #4b5661;
+      padding: 9px 12px;
+      font-size: 13px;
+    }
+
+    .svg-figure svg text {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    .qa-entry {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      margin: 14px 0;
+      overflow: hidden;
+    }
+    .qa-entry .q, .qa-entry .a {
+      padding: 12px 14px;
+    }
+    .qa-entry .q {
+      background: #eef3f5;
+      font-weight: 700;
+    }
+    .qa-entry .a {
+      background: #fff;
+    }
+
+    .source-list li { margin: 8px 0; }
+
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(17, 24, 32, .82);
+      z-index: 1000;
+      padding: 32px;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox-inner {
+      max-width: 95vw;
+      max-height: 90vh;
+      background: #fff;
+      border-radius: var(--radius);
+      overflow: auto;
+      box-shadow: 0 20px 80px rgba(0, 0, 0, .35);
+      position: relative;
+    }
+    .lightbox-inner img, .lightbox-inner svg {
+      display: block;
+      max-width: 92vw;
+      max-height: 84vh;
+      width: auto;
+      height: auto;
+      cursor: zoom-out;
+    }
+    .lightbox-close {
+      position: fixed;
+      top: 18px;
+      right: 24px;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.6);
+      background: rgba(0,0,0,.25);
+      border-radius: 6px;
+      padding: 7px 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .layout { display: block; }
+      aside {
+        position: relative;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      main {
+        width: 100%;
+        padding: 18px 14px 50px;
+      }
+      article { padding: 22px 18px 40px; }
+      .meta-grid, .two-col, .three-col { grid-template-columns: 1fr; }
+      nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 2px;
+      }
+      nav a.h3 { padding-left: 8px; }
+    }
+  </style>
+<link href="../../favicon.ico" rel="icon"/></head>
+<body>
+<div class="layout">
+<aside>
+<p class="toc-title">目录</p>
+<p class="toc-note">左侧目录会随右侧正文滚动更新。点击标题可跳转到对应正文。所有图表均可点击放大查看。</p>
+<nav id="toc"></nav>
+</aside>
+<main>
+<article>
+<div class="doc-kicker">Recent Paper Reading · 2026-06-29</div>
+<h1 id="top">TOAD 与 World Engine 深度分析：从“测试时搜索”到“长尾后训练”</h1>
+<p>
+          本报告基于飞书文档《近期paper reading》中的两篇论文做扩展分析：
+          <strong>Test-Time Trajectory Optimization for Autonomous Driving</strong>（TOAD）和
+          <strong>World Engine: Towards the Era of Post-Training for Autonomous Driving</strong>。
+          目标不是复述摘要，而是用白话把两篇论文的<strong>核心思想、创新边界、方法机制、实验含义、风险点</strong>讲清楚。
+        </p>
+<div class="meta-grid">
+<div class="metric"><b>TOAD</b><span>冻结 planner 和 scorer，只在测试时用 CEM 搜轨迹。</span></div>
+<div class="metric"><b>World Engine</b><span>发现长尾失败、重建世界、生成交互、RL 后训练。</span></div>
+<div class="metric"><b>报告形态</b><span>本地 HTML，含 TOC、滚动高亮、图片灯箱、问答日志。</span></div>
+<div class="metric"><b>证据状态</b><span>arXiv / 项目页 / GitHub / 飞书原文；Semantic Scholar API 被限流。</span></div>
+</div>
+<div class="callout">
+<strong>一句话总览：</strong>
+<strong>TOAD</strong>解决的是“候选轨迹生成完以后，scorer 只能排序、不能创造更好轨迹”的问题；
+          <strong>World Engine</strong>解决的是“真实数据里最危险、最有训练价值的长尾事件天然太少”的问题。
+          前者偏<strong>轻量测试时优化</strong>，后者偏<strong>重型数据与后训练系统</strong>。
+        </div>
+<h2 id="current-note">0. 原飞书文档中的已有分析</h2>
+<p>
+          原飞书文档已经抓住了两篇论文的关键直觉：
+          <strong>TOAD</strong>强调 scorer 不能只在候选集生成之后“事后排序”，否则候选集整体差时再强的 scorer 也受限；
+          <strong>World Engine</strong>强调真实驾驶日志中的长尾安全事件稀缺，需要主动构造安全关键交互。
+        </p>
+<p>
+          本报告在此基础上继续展开三层内容：
+        </p>
+<ul>
+<li><strong>机制层：</strong>每个模块到底做什么，输入输出是什么，为什么这样设计。</li>
+<li><strong>创新层：</strong>哪些是真创新，哪些是已有技术的重新组合，创新边界在哪里。</li>
+<li><strong>工程层：</strong>什么时候有效、什么时候会崩、对自动驾驶系统落地意味着什么。</li>
+</ul>
+<h2 id="toad-overview">1. TOAD：把 scorer 从“裁判”变成“搜索目标”</h2>
+<h3 id="toad-problem">1.1 它真正解决的问题是什么</h3>
+<p>
+          大量端到端规划器的流程是：先生成一批候选轨迹，再用 scorer 给这些轨迹打分，最后选最高分。
+          这套流程的问题在于，<strong>scorer 只影响选择，不影响候选集本身</strong>。如果候选轨迹全部都比较差，
+          scorer 只能从差轨迹里挑一个相对不差的，不能凭空造出更安全、更顺、更接近目标的轨迹。
+        </p>
+<p>
+          论文把这个问题说得很清楚：scorer 本质上已经学到了一个“轨迹级 reward”，但当前 planner 只把它当排序器使用。
+          TOAD 的核心反转是：既然 scorer 像 reward，就直接把它当<strong>优化目标</strong>，在测试时搜索更高 reward 的轨迹。
+        </p>
+<figure>
+<img alt="TOAD pipeline" class="zoomable" src="../../assets/media/835be3181f4b28d72edfecd95aad1747074fd200650f8ce0c1d0044a3400a1b2.webp"/>
+<figcaption>TOAD 官方流程图：base planner 给 anchor，CEM 在控制空间采样、rollout、scorer+regularizer 打分、elite 重新拟合高斯。</figcaption>
+</figure>
+<h3 id="toad-core">1.2 核心思想白话版</h3>
+<div class="two-col">
+<div class="panel">
+<h4>传统 planner</h4>
+<ul>
+<li><strong>生成：</strong>一次性产出候选轨迹。</li>
+<li><strong>评分：</strong>scorer 只对已有轨迹排序。</li>
+<li><strong>短板：</strong>候选集没有好轨迹时，只能“矮子里拔高个”。</li>
+</ul>
+</div>
+<div class="panel">
+<h4>TOAD</h4>
+<ul>
+<li><strong>生成：</strong>从 base trajectory 附近持续采样新轨迹。</li>
+<li><strong>评分：</strong>scorer 变成搜索 reward。</li>
+<li><strong>优势：</strong>可以在候选集之外找更好轨迹，但仍受 trust region 约束。</li>
+</ul>
+</div>
+</div>
+<p>
+          可以把 TOAD 理解成一个<strong>测试时轨迹修图器</strong>：base planner 先画一条大致可行的路，
+          TOAD 不重新训练模型，而是在这条路附近试很多微调版本，让 scorer 挑出更安全、更舒适、更有进展的版本。
+        </p>
+<h3 id="toad-method">1.3 方法拆解：四个设计缺一不可</h3>
+<table>
+<thead>
+<tr><th>设计</th><th>论文做法</th><th>为什么重要</th><th>潜在风险</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>scorer as reward</strong></td>
+<td>把冻结 scorer 看成完整轨迹到标量分数的函数。</td>
+<td>把“排序”变成“可优化目标”，让 scorer 参与生成。</td>
+<td>如果 scorer 离开训练分布后不准，会 reward hacking。</td>
+</tr>
+<tr>
+<td><strong>控制空间搜索</strong></td>
+<td>在加速度和 yaw rate 序列上采样，再用 bicycle model rollout。</td>
+<td>轨迹天然更平滑，更符合车辆动力学，comfort 约束也更直接。</td>
+<td>动力学模型过简化时，可能限制复杂机动动作。</td>
+</tr>
+<tr>
+<td><strong>planner trust region</strong></td>
+<td>以 base planner 选中的轨迹作为 anchor，限制偏离。</td>
+<td>搜索不至于跑到 scorer 从没见过的离谱区域。</td>
+<td>anchor 本身很差时，过强 trust region 会束缚搜索。</td>
+</tr>
+<tr>
+<td><strong>CEM elite refit</strong></td>
+<td>采样一批控制序列，保留 top-k elite，重新拟合高斯分布。</td>
+<td>不需要梯度，不改模型，能包在任意 planner 外面。</td>
+<td>采样数、迭代数、噪声尺度会影响速度与稳定性。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="toad-formula">1.4 目标函数和 CEM 推导</h3>
+<p>
+          TOAD 的目标函数可以用下面的白话公式理解：
+        </p>
+<pre><code>J(u) = S(BM(u, v0); o, g)
+       - lambda_anchor * C_anchor(u)
+       - lambda_comfort * C_comfort(u)</code></pre>
+<ul>
+<li><strong>u：</strong>未来一段时间的控制序列，包括加速度和 yaw rate。</li>
+<li><strong>BM(u, v0)：</strong>bicycle model，把控制量 rollout 成轨迹。</li>
+<li><strong>S：</strong>冻结 scorer，对完整轨迹打分。</li>
+<li><strong>C_anchor：</strong>限制搜索离 base trajectory 太远。</li>
+<li><strong>C_comfort：</strong>惩罚加速度、jerk、yaw rate 等舒适性违规。</li>
+</ul>
+<p>
+          CEM 的推导不复杂，但它的工程含义很关键：
+        </p>
+<ol>
+<li><strong>先有一个分布：</strong>令控制序列从高斯分布 <code>N(mu, sigma)</code> 里采样，初始均值 <code>mu</code> 来自 base trajectory 的逆 bicycle model。</li>
+<li><strong>采样候选：</strong>每轮采样多条控制序列，rollout 成轨迹。</li>
+<li><strong>用 reward 排序：</strong>用上面的 <code>J(u)</code> 打分，选最高的一小批 elite。</li>
+<li><strong>重拟合分布：</strong>把 elite 的均值和方差作为下一轮采样分布。</li>
+<li><strong>防止退化：</strong>最后比较优化轨迹和原始 base trajectory，选择目标函数更高的一条。</li>
+</ol>
+<div class="callout warning">
+<strong>关键点：</strong>TOAD 的“不会比原始轨迹更差”不是按真实驾驶安全保证，而是按它自己的目标函数保证。
+          如果 scorer 或 regularizer 本身误导，TOAD 仍然可能把轨迹推向错误方向；官方项目页也展示了 off-road failure 例子。
+        </div>
+<h3 id="toad-innovation">1.5 创新之处与边界</h3>
+<table>
+<thead>
+<tr><th>组件</th><th>新颖性</th><th>说明</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>测试时用 CEM 搜轨迹</td>
+<td><strong>已有优化方法的新组合</strong></td>
+<td>CEM 和 sampling-based control 本身不新，创新在于把它包到冻结 E2E planner/scorer 外面。</td>
+</tr>
+<tr>
+<td>scorer 当 reward</td>
+<td><strong>核心机制创新</strong></td>
+<td>把规划器内部训练好的 scorer 变成可优化 reward，突破固定候选集。</td>
+</tr>
+<tr>
+<td>planner-based trust region</td>
+<td><strong>关键工程约束</strong></td>
+<td>解决 learned reward 离分布后容易失真的问题，是 TOAD 能稳定工作的安全带。</td>
+</tr>
+<tr>
+<td>generalizing scorer 判据</td>
+<td><strong>很重要的发现</strong></td>
+<td>论文显示固定 vocabulary scorer 在搜索时可能崩，这暴露了传统 ranking evaluation 看不见的问题。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="toad-results">1.6 实验到底说明了什么</h3>
+<p>
+          TOAD 的实验最好不要只看“分数提升”，而要看三组因果证据：
+        </p>
+<table>
+<thead>
+<tr><th>问题</th><th>证据</th><th>解释</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>TOAD 是否普适？</td>
+<td>六个 base planners 在 NAVSIM-v1 / v2 上都有提升，NAVSIM-v2 DrivoR + TOAD 到 56.3 EPDMS。</td>
+<td>作为 plug-and-play wrapper，它不是只对单个 planner 有效。</td>
+</tr>
+<tr>
+<td>提升是否来自 smoothing？</td>
+<td>BM smoothing 对 iPad 仅小幅提升，对 Hydra-MDP 还下降。</td>
+<td>平滑不是主要来源，核心是搜索到了新轨迹。</td>
+</tr>
+<tr>
+<td>重排序是否足够？</td>
+<td>DrivoR scorer re-scoring 对 iPad 提升，但对 Hydra-MDP 下降。</td>
+<td>候选集质量决定 re-scoring 上限；TOAD 的价值在候选集之外。</td>
+</tr>
+<tr>
+<td>任意 scorer 都能当 reward 吗？</td>
+<td>GTRS / SparseDriveV2 scorer 用于搜索时明显退化。</td>
+<td>scorer 必须能评估 off-proposal 轨迹，否则搜索会放大 scorer 的盲区。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="toad-limit">1.7 TOAD 的局限与质疑</h3>
+<ul>
+<li><strong>scorer 泛化是硬前提：</strong>论文最重要的限制就是“不是所有 scorer 都能当 reward”。固定 vocabulary scorer 训练时没有见过候选集外轨迹，搜索会把它推到盲区。</li>
+<li><strong>目标函数不等于真实安全：</strong>TOAD 优化的是 learned scorer + regularizer，不是物理世界的完美安全函数。</li>
+<li><strong>闭环验证仍有限：</strong>HUGSIM 是重要补充，但真实道路多车博弈、感知误差、控制误差和乘客舒适之间仍有 gap。</li>
+<li><strong>强 planner 的边际收益较小：</strong>DrivoR 已经很强时，TOAD 只增加小幅收益；这说明它更像“低成本补强器”，不是彻底替换 planner 的范式。</li>
+<li><strong>部署延迟依赖 scorer 集成方式：</strong>如果 scorer 和 planner 不共享 backbone，额外感知前向会让延迟上升；论文也强调最好把泛化 scorer 内建进 planner。</li>
+</ul>
+<h2 id="world-overview">2. World Engine：把自动驾驶带入“后训练时代”</h2>
+<h3 id="world-problem">2.1 它真正解决的问题是什么</h3>
+<p>
+          World Engine 讨论的不是“planner 架构再改一个模块”，而是<strong>学习范式</strong>。
+          现代端到端驾驶模型已经能处理大量日常场景，但真正决定安全下限的是长尾事件：
+          行人突然横穿、危险 cut-in、复杂路口博弈、弱势交通参与者互动。
+        </p>
+<p>
+          这些事件有两个矛盾：
+        </p>
+<ul>
+<li><strong>最重要：</strong>它们决定系统安全边界。</li>
+<li><strong>最稀缺：</strong>真实车队日志里发生概率低，且不能为了采数据故意制造危险。</li>
+</ul>
+<p>
+          World Engine 的核心判断是：继续堆普通里程会遇到边际收益递减；要让模型变安全，需要把失败边界变成可重复、可编辑、可训练的经验。
+        </p>
+<figure>
+<img alt="World Engine pipeline" class="zoomable" src="../../assets/media/acf33e601fca35bb11b1b70ba18ff46af346abee7f2671619717414efa6183fa.webp"/>
+<figcaption>World Engine 官方 pipeline：发现失败场景、重建可交互世界、合成安全关键变化、用 RL 后训练更新策略。</figcaption>
+</figure>
+<h3 id="world-core">2.2 核心思想白话版</h3>
+<p>
+          如果说普通预训练像“看几千万小时正常驾驶录像学开车”，World Engine 更像“把考试中最容易挂科的危险题型拿出来，做成可反复练习的交互考场”。
+        </p>
+<div class="three-col">
+<div class="panel">
+<h4>找题</h4>
+<p>让 base model 在真实日志上试一遍，撞了、偏离道路了，就说明这里是能力边界。</p>
+</div>
+<div class="panel">
+<h4>造考场</h4>
+<p>用 3DGS 把这个真实场景重建成可渲染、可编辑、可交互的世界。</p>
+</div>
+<div class="panel">
+<h4>反复练</h4>
+<p>用行为世界模型生成更多 cut-in、博弈、逼近碰撞但仍合理的变体，再用 RL 后训练。</p>
+</div>
+</div>
+<h3 id="world-pipeline">2.3 四阶段 pipeline</h3>
+<table>
+<thead>
+<tr><th>阶段</th><th>做什么</th><th>核心价值</th><th>风险点</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Discover</strong></td>
+<td>用预训练 agent 在真实日志中 non-reactive rollout，找碰撞/出界场景。</td>
+<td>长尾子集由模型自己的失败定义，直接对准当前能力边界。</td>
+<td>只能发现日志里已经出现过的失败类型。</td>
+</tr>
+<tr>
+<td><strong>Reconstruct</strong></td>
+<td>用 3DGS 和 scene graph 重建静态背景与动态对象。</td>
+<td>把一次真实危险片段变成可编辑的神经仿真环境。</td>
+<td>离原始轨迹太远时，3DGS 渲染质量可能下降。</td>
+</tr>
+<tr>
+<td><strong>Synthesize</strong></td>
+<td>用 Behaviour World Model 生成多 agent 未来轨迹和安全关键变化。</td>
+<td>把稀有事件扩展成密集可学习分布。</td>
+<td>行为模型可能还不能覆盖所有真实交互模式，尤其行人/骑行者。</td>
+</tr>
+<tr>
+<td><strong>Train</strong></td>
+<td>混合真实日志与仿真 rollout，用 reward shaping + KL regularization 后训练。</td>
+<td>提升长尾安全，同时用真实数据和 KL 防止常规驾驶能力退化。</td>
+<td>reward 设计和仿真真实性决定迁移上限。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="world-sim">2.4 Simulation Engine：为什么 3DGS 是核心</h3>
+<p>
+          World Engine 的仿真不是普通 3D 框模拟。它需要让端到端模型看到接近真实的多摄像头图像，所以要把真实日志重建成 photorealistic sensor simulation。
+          论文用的是<strong>3D Gaussian Splatting</strong>加<strong>scene graph</strong>：
+        </p>
+<ul>
+<li><strong>静态背景：</strong>道路、建筑、植被等作为 static nodes。</li>
+<li><strong>动态对象：</strong>车辆、行人、骑行者等作为 dynamic nodes，可独立移动、删除、重排。</li>
+<li><strong>可自由视角渲染：</strong>ego 不再必须沿原日志轨迹行驶，闭环 rollout 中新轨迹也能渲染。</li>
+<li><strong>工程处理：</strong>3 秒历史 + 8 秒未来，10Hz 采样，轨迹不足 50m 则延长片段；图像畸变先用 OpenCV 去畸变，推理再映射回原始畸变空间。</li>
+</ul>
+<div class="callout">
+<strong>白话理解：</strong>3DGS 在这里不是为了做漂亮视频，而是为了让“危险场景”可编辑、可重放、可闭环训练。
+          没有这个仿真层，World Engine 就只剩“找失败日志然后 fine-tune”，无法生成足够多的反事实交互经验。
+        </div>
+<h3 id="world-bwm">2.5 Behaviour World Model：让周围车“活起来”</h3>
+<p>
+          只重建视觉世界还不够，因为闭环驾驶中周围车会响应 ego 的行为。
+          <strong>Behaviour World Model</strong>负责生成其他交通参与者的未来轨迹。它用向量化 agent token 和 map tensor 表示场景，再用 DiT / diffusion 形式生成 agent futures。
+        </p>
+<table>
+<thead>
+<tr><th>机制</th><th>作用</th><th>直觉解释</th></tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Goal conditioning</strong></td>
+<td>给某些 agent 指定目标点或途经点。</td>
+<td>可以把场景“掰”成想要的交互结构，例如更近的 cut-in。</td>
+</tr>
+<tr>
+<td><strong>Classifier guidance</strong></td>
+<td>采样时施加碰撞距离、车道约束、平滑等引导。</td>
+<td>不重训模型，只在生成阶段把轨迹推向危险但合理的区域。</td>
+</tr>
+<tr>
+<td><strong>多模式 traffic modelling</strong></td>
+<td>支持 diffusion、log replay、IDM 混用。</td>
+<td>不同 agent 可用不同动态模型，兼顾真实性、可控性和反应性。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="world-rl">2.6 RL Post-training：不是普通 fine-tune</h3>
+<p>
+          World Engine 的后训练目标不是“在合成数据上监督学习一遍”，而是把驾驶建模成 POMDP，
+          在仿真 rollout 中用 reward shaping 学会更安全的动作，同时用 KL 约束把新策略绑在预训练策略附近。
+        </p>
+<pre><code>max_pi E[sum_t r(s_t, a_t)]
+      - beta * KL(pi(.|o_t) || pi_pre(.|o_t))</code></pre>
+<ul>
+<li><strong>reward shaping：</strong>碰撞、可行驶区域、路线进展、TTC、舒适性一起构成反馈。</li>
+<li><strong>experience mixing：</strong>真实日志保住常规场景覆盖，仿真 rollout 填补长尾区域。</li>
+<li><strong>hard experience mining：</strong>优先保留接近失败、明显偏离人类驾驶或高风险的片段。</li>
+<li><strong>KL regularization：</strong>避免为了长尾场景把日常驾驶能力学坏。</li>
+</ul>
+<figure>
+<img alt="World Engine data scaling" class="zoomable" src="../../assets/remote/7f1adc18ef30d95dfc07f87d.jpg"/>
+<figcaption>World Engine 官方数据缩放图：普通预训练数据在 rare closed-loop 上趋于饱和，针对长尾的后训练带来更大收益。</figcaption>
+</figure>
+<h3 id="world-results">2.7 实验结果怎么读</h3>
+<p>
+          World Engine 的实验有两条主线：公开 nuPlan 体系上的可复现实验，以及生产级 ADAS 系统验证。
+        </p>
+<table>
+<thead>
+<tr><th>方法</th><th>Common PDMS</th><th>Rare PDMS</th><th>Rare SR</th><th>Rare PDMS*</th><th>解释</th></tr>
+</thead>
+<tbody>
+<tr><td>Base model</td><td>85.64</td><td>47.14</td><td>73.66</td><td>60.98</td><td>强 baseline，但长尾闭环仍弱。</td></tr>
+<tr><td>Common logs post-training</td><td>87.69</td><td>49.36</td><td>69.63</td><td>60.21</td><td>普通数据能涨 common，却不解决 rare 交互。</td></tr>
+<tr><td>Rare logs post-training</td><td>88.51</td><td>59.20</td><td>73.35</td><td>62.78</td><td>固定 rare logs 改善 open-loop，但闭环有限。</td></tr>
+<tr><td>Rare synthetic replays</td><td>82.61</td><td>62.69</td><td>87.20</td><td>63.22</td><td>成功率高，但 common 和 progress 受损。</td></tr>
+<tr><td>Rare rollouts w/o BWM</td><td>88.53</td><td>61.88</td><td>77.96</td><td>67.33</td><td>闭环经验比固定 replay 更有价值。</td></tr>
+<tr><td><strong>World Engine</strong></td><td><strong>88.95</strong></td><td>59.83</td><td><strong>88.89</strong></td><td><strong>70.12</strong></td><td>交互 rollout + BWM 交通增强取得最好闭环安全质量。</td></tr>
+</tbody>
+</table>
+<p>
+          最重要的结论不是“某个单项最高”，而是：<strong>rare logs、synthetic replay、closed-loop rollout、BWM traffic augmentation</strong>
+          这几种训练信号在结果上被区分开了。World Engine 的强处在于它不是只生成静态长尾样本，而是构造能让 policy 在交互里犯错、修正、再学习的经验。
+        </p>
+<h3 id="world-production">2.8 生产级验证的价值与保留意见</h3>
+<p>
+          论文在 Huawei ADS 上报告了更强的工业验证：base model 用约 <strong>80,000 小时</strong>真实驾驶数据预训练，
+          后训练混入 <strong>100 万条 World Engine 合成 clip</strong>和 <strong>500 万条常规 clip</strong>；
+          在 HIL 闭环仿真中约 <strong>3,000 km</strong>事件型驾驶，rare cut-in 碰撞下降最高 <strong>45.5%</strong>；
+          实车 200 km 测试报告 <strong>0 disengagement</strong>。
+        </p>
+<div class="callout warning">
+<strong>保留意见：</strong>生产级结果很有价值，但也最难外部复核。
+          内部数据、HIL 平台、路线选择、模型细节、route-level 去重都不是完全公开变量。
+          因此它更像“范式可规模化”的工业信号，而不是可完全复现实验。
+        </div>
+<h3 id="world-innovation">2.9 World Engine 的创新边界</h3>
+<table>
+<thead>
+<tr><th>组件</th><th>新颖性</th><th>边界判断</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>长尾事件发现</td>
+<td><strong>工程闭环创新</strong></td>
+<td>用当前 base agent 自己的失败定义训练重点，比人工列危险场景更贴近模型短板。</td>
+</tr>
+<tr>
+<td>3DGS simulation engine</td>
+<td><strong>已有渲染技术的新系统化应用</strong></td>
+<td>3DGS 不新，但用 scene graph 拆静态/动态并服务闭环后训练是关键组合。</td>
+</tr>
+<tr>
+<td>Behaviour World Model</td>
+<td><strong>核心生成模块</strong></td>
+<td>把多 agent 未来交互变成 diffusion 生成问题，并用 guidance 构造安全关键变化。</td>
+</tr>
+<tr>
+<td>KL-regularized RL post-training</td>
+<td><strong>范式迁移</strong></td>
+<td>借鉴 LLM 后训练/对齐思想，但迁移到不可乱探索的物理驾驶场景。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="world-limit">2.10 World Engine 的局限与质疑</h3>
+<ul>
+<li><strong>发现边界受日志限制：</strong>如果某类危险场景从未被日志记录，当前 discovery 阶段无法凭空发现。</li>
+<li><strong>仿真 fidelity 是上限：</strong>3DGS 在离原始轨迹太远时会出现视觉伪影，BWM 对行人、骑行者、非结构化道路的 fidelity 仍可能不足。</li>
+<li><strong>reward 设计会塑造行为：</strong>collision、TTC、comfort、progress 的权重选择会改变策略偏好；论文公开了方向，但工业 stack 的细节仍不可完全复核。</li>
+<li><strong>闭环 benchmark 构造本身有偏：</strong>选择 4 秒 failure-prone clip 能集中测安全边界，但也可能弱化长时任务、导航一致性和多阶段交互。</li>
+<li><strong>系统复杂度很高：</strong>World Engine 是数据、渲染、生成、RL、HIL 的系统工程，复现门槛远高于普通 planner 论文。</li>
+</ul>
+<h2 id="cross-compare">3. 两篇论文放在一起看：共同趋势与关键差异</h2>
+<h3 id="shared-pattern">3.1 共同趋势：从一次性预测走向优化闭环</h3>
+<p>
+          两篇论文看似一个轻量、一个重型，但都在反对“模型一次 forward 就结束”的范式。
+        </p>
+<table>
+<thead>
+<tr><th>维度</th><th>TOAD</th><th>World Engine</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>要突破的瓶颈</td>
+<td>固定候选集限制 scorer 发挥。</td>
+<td>真实长尾事件太稀缺，预训练数据扩展收益变低。</td>
+</tr>
+<tr>
+<td>优化发生在哪里</td>
+<td>测试时，每个场景内搜索控制序列。</td>
+<td>训练后，构造长尾交互经验更新策略。</td>
+</tr>
+<tr>
+<td>是否更新模型权重</td>
+<td>不更新，planner 和 scorer 冻结。</td>
+<td>更新，通过 RL post-training 改策略。</td>
+</tr>
+<tr>
+<td>核心依赖</td>
+<td>能泛化到候选集外的 scorer。</td>
+<td>高 fidelity 仿真、行为世界模型、reward 与 KL 设计。</td>
+</tr>
+<tr>
+<td>工程成本</td>
+<td>低到中，主要是推理延迟和 scorer 集成。</td>
+<td>很高，涉及场景重建、生成、RL、HIL、数据治理。</td>
+</tr>
+<tr>
+<td>最像什么</td>
+<td>“推理时多想几步”。</td>
+<td>“给自动驾驶做长尾 RLHF / post-training”。</td>
+</tr>
+</tbody>
+</table>
+<figure class="svg-figure">
+<svg aria-label="TOAD and World Engine comparison diagram" class="zoomable" role="img" viewbox="0 0 980 430">
+<rect fill="#ffffff" height="430" width="980" x="0" y="0"></rect>
+<text fill="#202326" font-size="24" font-weight="700" x="34" y="42">两篇论文的互补位置</text>
+<line stroke="#3c4852" stroke-width="2" x1="80" x2="900" y1="350" y2="350"></line>
+<line stroke="#3c4852" stroke-width="2" x1="120" x2="120" y1="370" y2="72"></line>
+<text fill="#3c4852" font-size="15" x="700" y="388">系统投入 / 数据工程复杂度</text>
+<text fill="#3c4852" font-size="15" transform="rotate(-90 24 92)" x="24" y="92">学习闭环强度</text>
+<rect fill="#e7f3f1" height="72" rx="8" stroke="#0b7f79" width="250" x="210" y="245"></rect>
+<text fill="#064f4b" font-size="20" font-weight="700" x="236" y="278">TOAD</text>
+<text fill="#064f4b" font-size="14" x="236" y="303">测试时搜索，不改权重</text>
+<rect fill="#fff4f2" height="86" rx="8" stroke="#b54436" width="285" x="610" y="120"></rect>
+<text fill="#8b2d24" font-size="20" font-weight="700" x="636" y="154">World Engine</text>
+<text fill="#8b2d24" font-size="14" x="636" y="180">重建世界 + 合成长尾 + RL 后训练</text>
+<path d="M445 250 C540 226 590 197 641 174" fill="none" marker-end="url(#arrow)" stroke="#9a6400" stroke-width="3"></path>
+<text fill="#8a5a00" font-size="14" x="468" y="222">从轻量推理优化到重型经验生成</text>
+<defs>
+<marker id="arrow" markerheight="10" markerwidth="10" orient="auto" refx="8" refy="3">
+<path d="M0,0 L0,6 L9,3 z" fill="#9a6400"></path>
+</marker>
+</defs>
+</svg>
+<figcaption>自绘定位图：TOAD 更像低成本 inference-time improvement；World Engine 是完整的数据与后训练体系。</figcaption>
+</figure>
+<h3 id="practical">3.2 对后续自动驾驶研究的启发</h3>
+<ul>
+<li><strong>scorer / reward 质量会变成核心资产：</strong>TOAD 和 World Engine 都把“评价函数”放到中心位置。一个是 scorer reward，一个是 RL shaped reward。</li>
+<li><strong>固定候选集不够：</strong>只做 proposal generation + ranking 的 planner 会被候选质量卡住，未来会更多引入搜索、优化或生成闭环。</li>
+<li><strong>长尾需要主动构造：</strong>真实数据规模再大，也可能对低概率高风险事件覆盖不足；数据 flywheel 必须转向 failure-driven mining。</li>
+<li><strong>仿真不只是评测工具：</strong>World Engine 把仿真从“验证模型”升级为“制造训练经验”。</li>
+<li><strong>轻重方案可以互补：</strong>World Engine 后训练出更好的 base planner/scorer，TOAD 又可以在部署时对单场景做轻量搜索补强。</li>
+</ul>
+<h2 id="source-evidence">4. 证据与可复现状态</h2>
+<h3 id="source-table">4.1 使用的主要来源</h3>
+<ul class="source-list">
+<li><a href="https://arxiv.org/abs/2606.07170">TOAD arXiv 摘要页</a>：标题、作者、摘要、代码状态、NAVSIM/HUGSIM 总结果。</li>
+<li><a href="https://arxiv.org/html/2606.07170v1">TOAD arXiv HTML</a>：方法、CEM、目标函数、实验表、scorer generalization 证据。</li>
+<li><a href="https://valeoai.github.io/publications/TOAD/">TOAD Valeo 项目页</a>：官方 pipeline 图、指标摘要、成功/失败示例、代码链接状态。</li>
+<li><a href="https://arxiv.org/abs/2606.19836">World Engine arXiv 摘要页</a>：摘要、作者、代码公开声明、发布时间。</li>
+<li><a href="https://arxiv.org/html/2606.19836v1">World Engine arXiv HTML</a>：方法细节、3DGS、BWM、RL 后训练、实验和局限。</li>
+<li><a href="https://opendrivelab.com/WorldEngine/">World Engine 官方项目页</a>：pipeline、项目定位、工业验证、开放数据/代码入口。</li>
+<li><a href="https://github.com/OpenDriveLab/WorldEngine">OpenDriveLab/WorldEngine GitHub</a>：README、benchmark 表、系统模块和 roadmap。</li>
+<li>原始飞书文档：<a href="https://mi.feishu.cn/wiki/TylhwE5NoizMLDk5ZkLcZUWGnte">近期paper reading</a>。</li>
+</ul>
+<h3 id="code-status">4.2 代码与复现状态</h3>
+<table>
+<thead>
+<tr><th>论文</th><th>当前公开状态</th><th>证据</th><th>解读</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>TOAD</td>
+<td>项目页有 Code 链接，但 GitHub 目标当前返回 404。</td>
+<td>Valeo 项目页列出 Code；点击 GitHub 链接返回 404。</td>
+<td>应按“声明将开源/入口存在但当前不可用”处理，不能伪造代码分析。</td>
+</tr>
+<tr>
+<td>World Engine</td>
+<td>GitHub 仓库存在，README 声明 dataset / code / early models roadmap。</td>
+<td>官方项目页和 GitHub README 均给出开放入口；README 也标注 stable ckpts coming soon。</td>
+<td>可作为系统复现入口，但稳定 checkpoint 和完整训练产物仍需按 repo 最新状态核查。</td>
+</tr>
+</tbody>
+</table>
+<div class="callout warning">
+<strong>Semantic Scholar 状态：</strong>本次尝试调用 Semantic Scholar Graph API 返回 429 Too Many Requests。
+          因两篇论文均为 2026 年 6 月新论文，引用图谱本身也可能尚不稳定；报告保留该负证据，不用虚构 citation graph。
+        </div>
+<h2 id="qa-log">5. 本次及后续问答记录</h2>
+<p>
+          用户要求后续每次问答的<strong>问题和详细全面回答</strong>都记录在 HTML 中。
+          当前报告已记录本轮已有三次关键输入；后续若继续提问，应追加新的 <code>.qa-entry</code> 到本节。
+        </p>
+<div class="qa-entry">
+<div class="q">Q1：用户请求</div>
+<div class="a">
+<p>“https://mi.feishu.cn/wiki/TylhwE5NoizMLDk5ZkLcZUWGnte 文档中是两篇论文的简单分析，帮我深入分析下，并用白话详细的全面的展开两篇论文的特点，创新之处和核心思想”</p>
+<p><strong>处理记录：</strong>已读取飞书文档，确认两篇论文为 TOAD 与 World Engine；随后基于 arXiv、项目页、GitHub/代码状态信息进行扩展分析，形成当前 HTML 报告。</p>
+</div>
+</div>
+<div class="qa-entry">
+<div class="q">Q2：用户追加交付要求</div>
+<div class="a">
+<p>“注意将结果汇总到html文件中，并将后面的每次问答，问题和详细全面的回答内容，记录在html中，需要保证：左侧目录栏记录关键目录，能够随右侧正文内容滚动更新，并且点击目录栏的标题，支持直接跳转相应正文部分，支持正文内容居中，且图片点击放大查看功能”</p>
+<p><strong>落实情况：</strong>当前 HTML 已实现固定左侧目录、目录点击跳转、IntersectionObserver 滚动高亮、居中正文容器、图片/图表点击灯箱放大，以及问答日志区。</p>
+</div>
+</div>
+<div class="qa-entry">
+<div class="q">Q3：用户指出流式输出异常并要求修改处理方式</div>
+<div class="a">
+<p>“Stream disconnected before completion: stream closed before response.completed异常卡死， 修改处理方式，避开这个问题”</p>
+<p><strong>处理方式调整：</strong>后续不再把长篇论文分析、长表格或完整 HTML 更新依赖一次聊天流式输出完成。所有长内容优先写入本地 HTML 和断点文件；每完成一个章节就做文件存在性、文件长度、关键标记和 HTML 结构验证。聊天窗口只输出短状态、文件路径、验证摘要和下一步，避免长流式响应在 <code>response.completed</code> 前断开导致任务状态不清。</p>
+<p><strong>恢复原则：</strong>如果再次出现 stream 断开，默认从本地 artifact 恢复，而不是重跑全部工作。恢复顺序是先检查 <code>index.html</code> 的最后更新时间、问答条目数量、目标章节 id、关键 sentinel；再继续追加缺失章节。断流本身只视为传输层异常，不视为本地任务失败。</p>
+</div>
+</div>
+<h2 id="stream-recovery">6. 断流恢复与增量执行协议</h2>
+<div class="callout ok">
+<strong>新的默认执行方式：</strong>从本条开始，本任务采用 artifact-first 模式。长内容先落盘到 HTML，再用短消息反馈进度；不在对话窗口一次性输出大段正文。
+        </div>
+<table>
+<thead>
+<tr><th>场景</th><th>旧风险</th><th>新处理方式</th><th>完成判据</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>长篇论文分析</td>
+<td>响应过长，流在完成事件前断开。</td>
+<td>按章节写入 HTML，每章写完立刻验证。</td>
+<td>章节 id 存在、文件长度增长、目录自动出现。</td>
+</tr>
+<tr>
+<td>后续问答记录</td>
+<td>问答只在聊天里，断流后丢失上下文。</td>
+<td>每次问答追加到 <code>#qa-log</code> 的 <code>.qa-entry</code>。</td>
+<td><code>.qa-entry</code> 数量增加，用户原问题可检索。</td>
+</tr>
+<tr>
+<td>功能修改</td>
+<td>只口头承诺“已修改”，无法确认。</td>
+<td>修改 HTML/CSS/JS 后 grep 关键选择器和章节 id。</td>
+<td>本地文件路径、关键匹配项、更新时间可查。</td>
+</tr>
+<tr>
+<td>再次断流</td>
+<td>误判为任务卡死或需要从头开始。</td>
+<td>先读本地文件状态，再从最后一个完整章节继续。</td>
+<td>已有内容不重写、不重复追加、不丢问答记录。</td>
+</tr>
+</tbody>
+</table>
+<h2 id="handoff">7. 后续维护说明</h2>
+<ul>
+<li><strong>追加问答：</strong>在 <code>#qa-log</code> 节末尾新增 <code>&lt;div class="qa-entry"&gt;</code>，并写入用户原问题与回答摘要/完整回答。</li>
+<li><strong>追加新图片：</strong>用 <code>&lt;img class="zoomable"&gt;</code> 或 <code>&lt;svg class="zoomable"&gt;</code>，灯箱会自动生效。</li>
+<li><strong>追加目录项：</strong>新增 <code>h2</code> 或 <code>h3</code> 且包含唯一 <code>id</code>，脚本会自动写入左侧目录。</li>
+<li><strong>保持证据链：</strong>新增论文结论时应同步在“证据与可复现状态”中补来源链接，避免无来源扩展。</li>
+</ul>
+</article>
+</main>
+</div>
+<div aria-hidden="true" class="lightbox" id="lightbox">
+<button class="lightbox-close" id="lightboxClose" type="button">关闭</button>
+<div class="lightbox-inner" id="lightboxInner"></div>
+</div>
+<script>
+    const toc = document.getElementById('toc');
+    const headings = [...document.querySelectorAll('article h2, article h3')];
+    const linkById = new Map();
+
+    headings.forEach((h) => {
+      if (!h.id) return;
+      const a = document.createElement('a');
+      a.href = `#${h.id}`;
+      a.textContent = h.textContent;
+      a.className = h.tagName.toLowerCase();
+      a.addEventListener('click', () => {
+        setTimeout(() => setActive(h.id), 80);
+      });
+      toc.appendChild(a);
+      linkById.set(h.id, a);
+    });
+
+    function setActive(id) {
+      linkById.forEach((link) => link.classList.remove('active'));
+      const active = linkById.get(id);
+      if (active) {
+        active.classList.add('active');
+        active.scrollIntoView({ block: 'nearest' });
+      }
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      if (visible.length) setActive(visible[0].target.id);
+    }, {
+      root: null,
+      rootMargin: '0px 0px -72% 0px',
+      threshold: [0, 1]
+    });
+
+    headings.forEach((h) => observer.observe(h));
+    if (headings[0]) setActive(headings[0].id);
+
+    const lightbox = document.getElementById('lightbox');
+    const lightboxInner = document.getElementById('lightboxInner');
+    const closeBtn = document.getElementById('lightboxClose');
+
+    function openLightbox(node) {
+      lightboxInner.innerHTML = '';
+      const clone = node.cloneNode(true);
+      clone.classList.remove('zoomable');
+      clone.removeAttribute('style');
+      lightboxInner.appendChild(clone);
+      lightbox.classList.add('open');
+      lightbox.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      lightboxInner.innerHTML = '';
+    }
+
+    document.querySelectorAll('.zoomable').forEach((node) => {
+      node.addEventListener('click', () => openLightbox(node));
+    });
+
+    closeBtn.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (event) => {
+      if (event.target === lightbox || event.target === lightboxInner.firstElementChild) closeLightbox();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeLightbox();
+    });
+  </script>
+</body>
+</html>

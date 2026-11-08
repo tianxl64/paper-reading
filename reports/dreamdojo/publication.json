@@ -1,0 +1,96 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "dreamdojo",
+  "published_at": "2026-11-08T04:18:33+00:00",
+  "complete": true,
+  "source_relative_html": "analysis/DreamDojo-academic-reading.html",
+  "source_html_sha256": "6fb60ef1c86bbed86d0fface0ae8da26d189edb5b3578ec16a586246b11b5496",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "a0a6a60631bea892d028b04b62374e74d76a0f94a0259190fcaf3d665f1f0164",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 37,
+      "original_static_math": 0,
+      "added_static_math": 36
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 36,
+    "documents": 1
+  },
+  "source_math_recovery": [
+    {
+      "raw_source_fragment": "$$\n\\hat{\\mathbf{o}}<em>{t+1:t+T}=\\mathcal{W}(\\mathbf{o}</em>{\\le t},\\mathbf{a}_{t:t+T-1}),\n$$",
+      "recovered_tex_fragment": "$$\n\\hat{\\mathbf{o}}_{t+1:t+T}=\\mathcal{W}(\\mathbf{o}_{\\le t},\\mathbf{a}_{t:t+T-1}),\n$$",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    },
+    {
+      "raw_source_fragment": "$p(\\mathbf{o}<em>{t+1:t+T}\\mid \\mathbf{o}</em>{\\le t})$",
+      "recovered_tex_fragment": "$p(\\mathbf{o}_{t+1:t+T}\\mid \\mathbf{o}_{\\le t})$",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    },
+    {
+      "raw_source_fragment": "$p(\\mathbf{o}<em>{t+1:t+T}\\mid \\mathbf{o}</em>{\\le t},\\mathbf{a}_{t:t+T-1})$",
+      "recovered_tex_fragment": "$p(\\mathbf{o}_{t+1:t+T}\\mid \\mathbf{o}_{\\le t},\\mathbf{a}_{t:t+T-1})$",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    },
+    {
+      "raw_source_fragment": "$$\n\\mathcal{L}<em>{\\mathrm{flow}}(\\theta)=\\mathbb{E}</em>{\\mathbf{x}_0,\\epsilon,t}\\left[\\left|\\mathbf{u}(\\mathbf{x}_t,t,\\mathbf{c};\\theta)-\\mathbf{v}_t\\right|_2^2\\right].\n$$",
+      "recovered_tex_fragment": "$$\n\\mathcal{L}_{\\mathrm{flow}}(\\theta)=\\mathbb{E}_{\\mathbf{x}_0,\\epsilon,t}\\left[\\left|\\mathbf{u}(\\mathbf{x}_t,t,\\mathbf{c};\\theta)-\\mathbf{v}_t\\right|_2^2\\right].\n$$",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    },
+    {
+      "raw_source_fragment": "$$\n\\mathcal{L}^{\\mathrm{pred}}<em>{\\theta,\\phi}(f^{t+1})=\n\\mathbb{E}</em>{q_\\phi(\\hat a\\mid f^{t:t+1})}\\log p_\\theta(f^{t+1}\\mid \\hat a,f^t)\n-\\beta D_{\\mathrm{KL}}\\big(q_\\phi(\\hat a\\mid f^{t:t+1})|p(\\hat a)\\big).\n$$",
+      "recovered_tex_fragment": "$$\n\\mathcal{L}^{\\mathrm{pred}}_{\\theta,\\phi}(f^{t+1})=\n\\mathbb{E}_{q_\\phi(\\hat a\\mid f^{t:t+1})}\\log p_\\theta(f^{t+1}\\mid \\hat a,f^t)\n-\\beta D_{\\mathrm{KL}}\\big(q_\\phi(\\hat a\\mid f^{t:t+1})|p(\\hat a)\\big).\n$$",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    },
+    {
+      "raw_source_fragment": "$$\n\\mathbf{A}^{(i)}=[\\mathbf{a}<em>{4i},\\mathbf{a}</em>{4i+1},\\mathbf{a}<em>{4i+2},\\mathbf{a}</em>{4i+3}],\n\\qquad\n\\mathbf{e}^{(i)}_a=\\mathrm{MLP}(\\mathrm{vec}(\\mathbf{A}^{(i)})).\n$$",
+      "recovered_tex_fragment": "$$\n\\mathbf{A}^{(i)}=[\\mathbf{a}_{4i},\\mathbf{a}_{4i+1},\\mathbf{a}_{4i+2},\\mathbf{a}_{4i+3}],\n\\qquad\n\\mathbf{e}^{(i)}_a=\\mathrm{MLP}(\\mathrm{vec}(\\mathbf{A}^{(i)})).\n$$",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    },
+    {
+      "raw_source_fragment": "$$\n\\mathcal{L}<em>{\\mathrm{temporal}}(\\theta)=\n\\mathbb{E}\\left[\n\\sum</em>{i=1}^{K-1}\n\\left|(z^{i+1}-z^i)-(v^{i+1}-v^i)\\right|_2^2\n\\right].\n$$",
+      "recovered_tex_fragment": "$$\n\\mathcal{L}_{\\mathrm{temporal}}(\\theta)=\n\\mathbb{E}\\left[\n\\sum_{i=1}^{K-1}\n\\left|(z^{i+1}-z^i)-(v^{i+1}-v^i)\\right|_2^2\n\\right].\n$$",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    },
+    {
+      "raw_source_fragment": "$$\n\\mathcal{L}<em>{\\mathrm{final}}(\\theta)=\n\\mathcal{L}</em>{\\mathrm{flow}}(\\theta)+0.1\\,\\mathcal{L}_{\\mathrm{temporal}}(\\theta).\n$$",
+      "recovered_tex_fragment": "$$\n\\mathcal{L}_{\\mathrm{final}}(\\theta)=\n\\mathcal{L}_{\\mathrm{flow}}(\\theta)+0.1\\,\\mathcal{L}_{\\mathrm{temporal}}(\\theta).\n$$",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    },
+    {
+      "raw_source_fragment": "$$\n\\mathcal{L}<em>{\\mathrm{warmup}}=\n\\mathbb{E}</em>{x,t}\\left|G_{\\mathrm{student}}(x_t,t)-x_0\\right|_2^2.\n$$",
+      "recovered_tex_fragment": "$$\n\\mathcal{L}_{\\mathrm{warmup}}=\n\\mathbb{E}_{x,t}\\left|G_{\\mathrm{student}}(x_t,t)-x_0\\right|_2^2.\n$$",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    },
+    {
+      "raw_source_fragment": "$$\n\\mathcal{L}<em>{\\mathrm{distill}}=D</em>{\\mathrm{KL}}(p_{\\mathrm{teacher}}|p_{\\mathrm{student}}),\n$$",
+      "recovered_tex_fragment": "$$\n\\mathcal{L}_{\\mathrm{distill}}=D_{\\mathrm{KL}}(p_{\\mathrm{teacher}}|p_{\\mathrm{student}}),\n$$",
+      "reason": "escape TeX comparisons before HTML parsing; restore Markdown underscore emphasis"
+    }
+  ],
+  "resources": [
+    {
+      "path": "index.html",
+      "source_sha256": "6fb60ef1c86bbed86d0fface0ae8da26d189edb5b3578ec16a586246b11b5496",
+      "sha256": "a0a6a60631bea892d028b04b62374e74d76a0f94a0259190fcaf3d665f1f0164",
+      "bytes": 6389220
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

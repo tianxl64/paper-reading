@@ -1,0 +1,44 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "diffusiondrivev2-qa",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "DiffusionDriveV2_QA.html",
+  "source_html_sha256": "4ab9bb84399ad436fd9cd69a43fdffc310352768bba023977306f5683aa6ecd5",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "2a91710b76c8b03f2e6a69fa64d2f6d8a8da88b4fbcc48b7ece85baf5f3f85f8",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 202,
+      "original_static_math": 0,
+      "added_static_math": 0
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 0,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "index.html",
+      "source_sha256": "4ab9bb84399ad436fd9cd69a43fdffc310352768bba023977306f5683aa6ecd5",
+      "sha256": "2a91710b76c8b03f2e6a69fa64d2f6d8a8da88b4fbcc48b7ece85baf5f3f85f8",
+      "bytes": 245734
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

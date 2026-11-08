@@ -1,0 +1,342 @@
+\section{Algorithm}
+\begin{algorithm}[] 
+   \caption{\texttt{PLD} with base-policy initialization}
+   \label{alg: pipeline}
+\begin{algorithmic}
+   \REQUIRE $\pi_b$, $\pi_\delta$, $Q_\phi$, $Q_{\phi '}$, $\alpha$, $\gamma$, $\mathcal{B}_\text{offline}$, $\mathcal{B}_\text{online}$
+    % \ENSURE Optimized parameters $\theta$, $\phi_1'$, $\phi_2'$
+    %\FOR{each seed step}
+    %    \STATE Uniformly sample actions to initialize buffer $\mathcal{B}$
+    %\ENDFOR
+    \STATE \textbf{\# Initialization}
+    \STATE Collect $n$ successful trials of $\pi_b$: $\mathcal{D}_{offline} = \{\tau_1, \tau_2, \dots\, \tau_n\}$
+    \STATE Initialize online buffer $\mathcal{D}_{online} = \varnothing$
+    \STATE Initialize the critic network $Q_\phi, Q_{\phi'}$ with Cal-QL on $\mathcal{D}_{offline}$
+    \STATE Randomly initialize delta policy network $\pi_\delta$
+    \STATE \textbf{\# RL training}
+    \STATE Freeze $\pi_b$, denote $\bar\pi(\cdot|s) = \pi_b(\cdot|s)\pi_\delta(\cdot | s, a_b)$
+    \FOR{each RL step}
+        \IF{collect data}
+            \IF{Warm up step}
+                \STATE base model rollout $ a \sim \pi_{base}(\cdot | s)$
+            \ELSE
+                \STATE sample action $\bar{a} \sim \bar\pi(\cdot | s)$
+            \ENDIF
+            \STATE Environment step: $r, s', done = env.step(\bar{a})$
+            \STATE Add $(s, a, \mu, r, s')$ to buffer $\mathcal{D}_{online}$.
+        \ENDIF
+        \STATE Equally sample data from online and offline buffer: $b \sim \mathcal{D}_{online} \cup \mathcal{D}_{offline}$
+        \STATE Calculate TD target by bootstrapping $\bar{\pi}$
+        \STATE Update $Q_\phi$ by~\Cref{eqn: Q def}
+        \STATE Update $\pi_{\delta}$ by maximizing the SAC target
+        \STATE \textbf{Polyak update} $\phi'=\rho\phi' + (1-\rho)\phi$
+    \ENDFOR
+    \STATE \textbf{\#Base policy SFT}
+    \STATE For each task, we collect hybrid behavior dataset $\mathcal{D}_{SFT}$: \[
+                \pi(s_t) =
+                \begin{cases} 
+                a_{base}, & t < T_{base} \\ 
+                a_{base} + a_{\delta} , & t \geq T_{base}
+                \end{cases}
+                \]
+    \FOR{each SFT step}
+        \STATE update $\pi_b$ by BC objective.
+    \ENDFOR
+    \STATE Return $\pi_b$
+\end{algorithmic}
+\end{algorithm}
+
+
+
+\begin{table}[h]
+\centering
+\caption{LIBERO-90 Success rate for $\pi_0$ SFT with different dataset.}
+\label{tab:libero-90-seen-to-unseen}
+\setlength{\tabcolsep}{4pt} % tighter column spacing
+\renewcommand{\arraystretch}{1.1}
+
+\begin{minipage}{0.31\linewidth}
+\centering
+PLD Data\\
+\scriptsize
+\begin{tabular}{ccc}
+\toprule
+Ratio & Overall SR & Seen/Unseen \\
+\midrule
+0.1 & 0.314 & \su{0.941}{0.244} \\
+0.3 & 0.470 & \su{0.968}{0.259} \\
+0.6 & 0.637 & \su{0.872}{0.283} \\
+0.8 & 0.745 & \su{0.864}{0.268} \\
+1.0 & 0.871 & \su{0.871}{N/A} \\
+\bottomrule
+\end{tabular}
+\end{minipage}\hspace{0.01\linewidth}
+\begin{minipage}{0.31\linewidth}
+\centering
+Base Policy Rollout Data\\
+\scriptsize
+\begin{tabular}{ccc}
+\toprule
+Ratio & Overall SR & Seen/Unseen \\
+\midrule
+0.1 & 0.103 & \su{0.523}{0.056} \\
+0.3 & 0.068 & \su{0.198}{0.015} \\
+0.6 & 0.328 & \su{0.506}{0.062} \\
+0.8 & 0.344 & \su{0.423}{0.031} \\
+1.0 & 0.488 & \su{0.488}{N/A} \\
+\bottomrule
+\end{tabular}
+\end{minipage}\hspace{0.01\linewidth}
+\begin{minipage}{0.31\linewidth}
+\centering
+Human Data\\
+\scriptsize
+\begin{tabular}{ccc}
+\toprule
+Ratio & Overall SR & Seen/Unseen \\
+\midrule
+0.1 & 0.272 & \su{0.796}{0.214} \\
+0.3 & 0.419 & \su{0.829}{0.240} \\
+0.6 & 0.611 & \su{0.829}{0.286} \\
+0.8 & 0.694 & \su{0.803}{0.256} \\
+1.0 & 0.815 & \su{0.815}{N/A} \\
+\bottomrule
+\end{tabular}
+\end{minipage}
+
+\end{table}
+
+
+
+
+\input{asset/tables/task_description}
+
+\section{Implementation}
+
+\subsection{RL Baselines}
+\label{sec: RL baselines mod}
+To ensure an apple-to-apple comparison in~\Cref{subsec: RL exp}, we implement these baselines based on the SERL~\cite{luo2024serl} framework and adapt them to fit in the settings of our study. We provide a detailed explanation of baseline formulation and our implementation.
+
+
+
+
+\paragraph{RLPD}
+RLPD~\citep{RLPD} proposed a hybrid RL pipeline that leverages offline data to foster learning in challenging sparse reward settings. During training, it equally draws samples from both the online and offline buffer. It also uses LayerNorm to deal with the Q-value blow-ups common when querying OOD actions under a high update-to-data (UTD) ratio. We refer to the implementation in the SERL software for both simulation and real deployment. 
+
+
+
+\paragraph{WSRL} 
+In the original paper~\citep{WSRL}, WSRL uses Cal-QL~\citep{cal-QL} to pre-train both the action and critic during the offline phase. For the online phase, it discards offline data and warms up the replay buffer with 50k steps of pre-trained policy rollouts.
+We did not provide a large, diverse dataset like D4RL~\citep{fu2020d4rl} benchmark. Rather, we use the same procedure as \method to collect successful trajectories from the base model. We implement WSRL under the SERL framework, as the UTD is no longer fixed to 4. This baseline can be considered as an ablation of the residual policy and offline data replay. We use the WSRL baseline as an ablation study of the warm-up online exploration using the base policy, and offline data retention through hybrid data replay.
+
+\paragraph{JSRL}
+Jump-start RL~\citep{JSRL} is a meta-algorithm using an existing guide policy to “rolling-in”. The key mechanism is to shape the initial-state distribution for the learner: JSRL repeatedly resets episodes from states that the guide visits (a curriculum from easy/near-goal states to harder/far-from-goal states), making difficult tasks learnable with fewer trials. It leverages the guide policy for data collection, without directly imitating its actions. JSRL is agnostic to the underlying RL backbone. In practice, we choose SAC to learn the exploration policy. Since JSRL only leverages the policy prior (VLA policy in practice) to warm-up exploration during online interaction, we use it as an ablation of the hybrid experience replay mechanism. 
+
+\paragraph{Cal-QL}
+Calibrated Q-learning~\citep{cal-QL} addresses the underestimation issue of CQL~\citep{CQL}, thereby significantly improving fine-tuning performance in the offline-to-online setting. It learns a conservative value function that underestimates the value of OOD actions, while ensuring the values are within a reasonable scale. In practice, it under-bounds the conservative Q function by the value of the behavior policy $\mu$ (policy corresponds to the offline dataset $\mathcal{D}$). The modified Q-learning objective is the following:
+\[
+    \min_{\theta} \alpha \left( \mathbb{E}_{s\sim \mathcal{D}, a \sim \pi}[\max(Q_\theta (s, a), V^\mu(s))] \right) - \frac{1}{2} \mathbb{E}_{s, a \sim \mathcal{D}} \left[ (Q_\theta(s, a) - \mathcal{B}^\pi \bar{Q}(s, a))^2 \right],
+\]
+where $\bar{Q}$ is the target Q-value function and the second term corresponds to minimizing TD-error~\cite{lillicrap2015continuous}. 
+
+
+\paragraph{Implicit Q-Learning (IQL).}
+IQL is an in-sample offline RL method that avoids querying $Q$ on out-of-distribution actions while still improving over the behavior policy~\citep{IQL}. The key step is to fit a \emph{state value} $V_\psi$ by \emph{expectile regression} over the actions of the dataset and then bootstrap $Q_\theta$ toward this value. Let $\delta(s,a)=Q_\theta(s,a)-V_\psi(s)$ and define the expectile loss
+$\mathcal{L}_\eta(\delta)=\lvert \eta-\mathbf{1}\{\delta<0\}\rvert\,\delta^2$ with $\eta\in(0.5,1)$.
+IQL alternates
+\begin{align}
+\text{(V)}\quad
+&\min_{\psi}\ \mathbb{E}_{(s,a)\sim\mathcal{D}}\big[\mathcal{L}_\eta\!\big(Q_\theta(s,a)-V_\psi(s)\big)\big],\\
+\text{(Q)}\quad
+&\min_{\theta}\ \mathbb{E}_{(s,a,s')\sim\mathcal{D}}\Big[\big(Q_\theta(s,a)-\big(r+\gamma V_\psi(s')\big)\big)^2\Big],\\
+\text{(policy)}\quad
+&\max_{\phi}\ \mathbb{E}_{(s,a)\sim\mathcal{D}}\!\Big[\exp\!\big(\tfrac{Q_\theta(s,a)-V_\psi(s)}{\beta}\big)\,\log \pi_\phi(a\mid s)\Big],
+\end{align}
+which realizes policy improvement without out-of-distribution action queries (the policy step reduces to advantage-weighted regression)~\citep{IQL}.
+In our comparison to \emph{Cal-QL}~\citep{cal-QL} as a critic-initialization baseline, we consider a simplified version of IQL that \emph{directly} regresses $Q_\theta$ toward an $n$-step return
+$R_t=\sum_{i=t}^{t+n-1}\gamma^{\,i-t}r_i+\gamma^{\,n}V_\psi(s_{t+n})$
+using expectile regression:
+\[
+\min_{\theta}\ \mathbb{E}_{(s_t,a_t)\sim\mathcal{D}}\!\left[\mathcal{L}_\eta\!\big(Q_\theta(s_t,a_t)-R_t\big)\right].
+\]
+Unless otherwise noted, we set $\eta=0.7$, a value shown to propagate high-value signals effectively in the IQL paper. 
+
+
+
+
+
+\subsection{Design Choices of \method}
+\label{sec: RL design}
+% \input{asset/tables/task_description}
+
+In this section, we provide a detailed study of design choices that make \method data efficient and achieve high convergence performance. We evaluate all algorithms on the selected 8 LIBERO-90 tasks.
+
+
+\label{subsec: appendix-real}
+
+
+
+\paragraph{Reward shaping}
+We empirically analyze the impact of naive reward shaping. Specifically, we consider a step-wise \emph{survival cost} as reward bias as in prior works~\cite{luo2024serl}. As shown in~\Cref{fig:reward-shaping}, adding a slight reward bias has little impact, but it could increase convergence speed in 2 out of 8 tasks; However, A large bias could significantly hinder performance. For the major results reported in the main paper, we do not apply reward shaping. 
+
+
+
+
+\paragraph{Action scale}
+One core component of residential policies is the scale of exploration. To avoid unlearning results from diverging too far from the base policy, delta actions are usually scaled down and bounded within a range of \([-\xi, \xi]\)~\citep{ankile2025imitation, dong2025expo}. \Cref{fig: ablation action scale} compares different residual action scales. Setting \(\xi\) too large at the start can degrade early performance: updates deviate excessively from the base policy, inducing unstable exploration, while a small \(\xi\) will lead to insufficient exploration and lower asymptotic performance. We argue that \(\xi\) needs to be carefully tuned to enable exploration while minimizing performance drop. For single-arm manipulation, we suggest \(\xi=0.5\) a good choice for LIBERO and \(\xi=0.1\) for SimplerEnv.
+
+
+\paragraph{Critic pre-training}
+While warm-start through pre-training the critic is beneficial to asymptotic performance and prevents initial performance drop, the careful selection of the pre-training method could be important as well. We compare using CQL, Cal-QL, and IQL to the pre-training method. We consider using only 50 trajectories of successful trials of the base policy, while the standard offline RL benchmark tends to have far larger data volume~\citep{fu2020d4rl}. In \Cref{fig: exp_ablation_diff_q}, online performance using the Cal-QL pre-trained critic is consistently better and is robust to the conservative coefficients \(\alpha\). CQL demonstrates the worst performance with a severe forgetting issue, which aligns with the previous study~\citep{cal-QL}.
+
+\begin{figure}
+    \label{fig: ablation reward shaping}
+    \centering
+    \includegraphics[width=0.85\linewidth]{asset/figure/ablation_reward_bias.pdf}
+    \vspace{-20mm}
+    \caption{\textbf{Reward bias ablation.} Mean and 95\% CIs of rollout performance across 3 seeds.}
+    \label{fig:reward-shaping}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.85\linewidth]{asset/figure/rl_exp_action_scale.pdf}
+    \caption{\textbf{Action scale ablation} Mean and 95\% CIs of rollout performance across 3 seeds.}
+    \label{fig: ablation action scale}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.85\linewidth]{asset/figure/exp_ablation_diff_q.pdf}
+    \vspace{-20mm}
+    \caption{\textbf{Offline pre-training ablation. } Mean and 95\% CIs of rollout performance across 3 seeds.}
+    \label{fig: exp_ablation_diff_q}
+\end{figure}
+
+
+\paragraph{Update frequency}
+In the SERL pipeline, data collection and policy learning run asynchronously and periodically exchange network parameters and online data. We ablate the \emph{update frequency}—the number of gradient steps performed by the learner between parameter synchronizations with the data-collection actor—sweeping from 1 to 500. As shown in~\Cref{fig:rl-ablation-update-freq}, overall performance is largely insensitive to this hyperparameter, indicating robustness across a wide range of synchronization cadences.
+
+
+
+
+\paragraph{On-the-Fly Policy}
+On-the-fly (OTF) policy is introduced in~\citep{dong2025expo} to more effectively maximize the value function. It samples multiple actions and backs up the maximum Q value during TD learning. We adopt OTF to \method while only sampling multiple actions from the residual policy $\pi_\delta$ and conditioned on a fixed base action. We compare different sample sizes in~\Cref{fig:on-the-fly}. We found that OTF can improve sample efficiency, and a larger sample size ($> 20$) shows significant performance gain. But empirically, the asymptotic performance will eventually be similar. We use OTF$=1$ by default.
+
+
+
+\paragraph{JSRL}
+We further provide results, including JSRL~\cite{JSRL} in~\Cref{fig:jsrl}. We modify the original implementation by opting for a linear scheduler. JSRL demonstrates high data efficiency in general, but could fail to converge on some tasks. While \method can reliably provide solutions for all tasks.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.85\linewidth]{asset/figure/rl_exp_update_frequency.pdf}
+    \caption{\textbf{Update frequency ablation.} Mean and 95\% CIs of rollout performance across 3 seeds.}
+    \label{fig:rl-ablation-update-freq}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.85\linewidth]{asset/figure/rl_exp_on_the_fly.pdf}
+    \caption{\textbf{On-the-fly Policy Ablation.} Mean and 95\% CIs of rollout performance across 3 seeds.}
+    \label{fig:on-the-fly}
+\end{figure}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.85\linewidth]{asset/figure/PLD_JSRL_compare.pdf}
+    \caption{\textbf{Compared with JSRL.} Mean and 95\% CIs of rollout performance across 3 seeds.}
+    \label{fig:jsrl}
+\end{figure}
+
+
+
+\section{Implementation Details}
+\subsection{RL Algorithm}
+To ensure apples-to-apples comparisons, all baselines in~\Cref{subsec: RL exp} and~\Cref{sec: RL design} use the same network architecture—an \emph{3-layer MLP Gaussian policy} and \emph{Clipped Double Q-networks (CDQ)}~\cite{fujimoto2018td3} with \emph{LayerNorm}~\citep{ba2016ln}. Both actor and critic use a pre-trained ResNetV1-10 encoder to extract visual information. We present a detailed hyperparameter setting in~\Cref{tab: hyperparams}.
+
+\begin{table}[h]
+\caption{RL hyperparameter settings. We share the same setting across all tasks.}
+\label{tab: hyperparams}
+\vskip 0.15in
+\begin{center}
+\begin{small}
+\begin{tabular}{l|c}
+\toprule
+\textbf{Hyperparameter}       & \textbf{Value}   \\ 
+\midrule
+\multicolumn{2}{l}{\textbf{Training}} \\ \midrule
+Batch size                    & 256 \\
+Buffer capacity               & 250000  \\
+Discount factor ($\gamma$)    & 0.99    \\
+Gradient clipping norm        & 1.0     \\
+Learning rate                 & $3 \times 10^{-4}$  \\
+Optimizer                     & AdamW  \\
+Reward bias                   & 0.0  \\
+Warmup episodes               & 100  \\
+Critic to actor ratio         & 2  \\
+On-the-fly ratio              & 1  \\
+
+\midrule
+\multicolumn{2}{l}{\textbf{Residual Policy}} \\ \midrule
+Target entropy                & \(-\frac{act\_dim}{2}\)  \\
+Initial temperature ($\tau$)  & 1.0 \\    
+Action scale ($\xi$)          & 0.5 \\
+
+
+\midrule
+\multicolumn{2}{l}{\textbf{Critic}} \\ \midrule
+Q functions ensemble           & 2   \\
+Target update rate            & 0.005   \\
+
+
+\midrule
+\multicolumn{2}{l}{\textbf{Architecture}} \\ \midrule
+Visual Encoder                & ResNetv1-10 \\
+Hidden layer dimension        & 256 \\
+Latent space dimension        & 256 \\
+Q function dropout           & 0.0 \\
+Activation                    & Tanh \\
+Normalization                 & LayerNorm \\
+\bottomrule
+\end{tabular}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\subsection{SFT}
+For fine-tuning either OpenVLA or $\pi_0$, we employ 8 $\times$ NVIDIA L40 GPU for LoRA~\citep{hu2021loralowrankadaptationlarge} fine-tuning with rank 32. For both $\pi_0$, and OpenVLA-OFT, we use the default hyperparameters from their open-source codebase.
+
+\section{Real-world Experiments}
+\label{sec:appendix-real-world-exp}
+
+\subsection{Experiment Setup}
+\label{sec:real-world-setup}
+We deploy \method on a 7-DoF Franka Emika Panda with end-effector delta pose control at 20~Hz. The robot is equipped with one wrist-mounted camera, one side-view camera, and proprioceptive sensing as inputs. For each task, we pretrain an independent binary reward classifier by collecting a small-scale dataset of success and failure states. The model structure follows the setup in~\citep{luo2025hilserl}, which use a pretrained ResNet-10 and a 3-layer MLP model. We ensure the trained classifier using augmented false positive samples until it achieves 99\% success rate for each task. Due to the 3D printed desk, we don't need to reset the environment for the pick-cube task. \method performs auto-reset, residual RL training, and SFT automatically without human supervision. For the peg-insertion task (depicted in~\Cref{fig:real-world-generalization}), human supervisors need to randomly move the position of the hole to increase diversity.
+
+\subsection{Generalization Performance}
+\label{sec: generalization}
+We perform SFT of $\pi_0$ on \textit{Pick Up Blue Cube (Clean Env)} and \textit{Peg Insertion} data, and evaluate the fine-tuned policy on \textit{Pick Up Blue Cube (Cluttered Env)} and \textit{Pick Up Red Cube (Cluttered Env)} tasks. The results in~\Cref{tab:real-world-generalize} show that VLA SFT on \method data achieves better generalization performance compared to human teleoperation data.
+
+\begin{table}[h]
+\centering
+\caption{Comparison of PLD vs Human Data on real-world unseen tasks (success rate).}
+\label{tab:real-world-generalize}
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lcc}
+\toprule
+\textbf{SR \ Dataset} & \textbf{PLD Data} & \textbf{Human Data} \\
+\midrule
+Pick Up Blue Cube (cluttered Env) & 28/30 (93.3\%) & 12/30 (40.0\%) \\
+Pick Up Red Cube (cluttered Env) & 20/30 (66.7\%) & 10/30 (33.3\%) \\
+Peg Insertion & 30/30 (100.0\%) & 30/30 (100.0\%) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+

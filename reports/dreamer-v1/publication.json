@@ -1,0 +1,1551 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "dreamer-v1",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "11_html/report.html",
+  "source_html_sha256": "79a9c124ae02196d6865e964f6f906739cfdf1d3d21e964e2628569d509fc5b3",
+  "selection_reason": "final_publication hash and passed gate",
+  "public_html_sha256": "eafed58316e00f0e9431f694941544d877a6246ff32076c957887efc3d62f0e1",
+  "content_preservation": [
+    {
+      "document": "evidence/source-viewers/dreamer-models-base-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-models-rssm-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-training-utility-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-control-temporal_difference-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-networks-conv-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-unroll-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-networks-basic-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-distributions-tanh_normal-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-control-simulate-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-control-planning-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-scripts-train-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-scripts-configs-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-training-define_model-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-training-define_summaries-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-control-mpc_agent-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-custom_optimizer-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-filter_variables_lib-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-training-trainer-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-control-batch_env-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-control-wrappers-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-numpy_episodes-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-chunk_sequence-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-distributions-one_hot-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-scripts-objectives-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-attr_dict-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-nested-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-schedule-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-mask-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-shape-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-reshape_as-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-preprocess-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-tools-overshooting-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/tests-test_dreamer-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/dreamer-training-running-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/tests-test_running-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/setup-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "evidence/source-viewers/tests-test_isolate_envs-py.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 0,
+      "original_static_math": 0,
+      "added_static_math": 0
+    },
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 852,
+      "original_static_math": 389,
+      "added_static_math": 0
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 0,
+    "documents": 38
+  },
+  "resources": [
+    {
+      "path": "assets/report.css",
+      "source_sha256": "5f229ac6dcd19bfb63cc80377680a24f152cd8cae537040327c4dc08ffcf48f6",
+      "sha256": "926f0d571a1565a93892e2c4567fffa3ffa8a80630bddc456a029dc612ae31f5",
+      "bytes": 7466
+    },
+    {
+      "path": "../../assets/fonts/0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308.woff2",
+      "source_sha256": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308",
+      "sha256": "0cdd387c9590a1a9f9794560022dbb59654a7d86f187aa0c81495ad42d3a7308",
+      "bytes": 28076
+    },
+    {
+      "path": "../../assets/fonts/30da91e84c893f875e252689faebdc590b2871145e8adc7f9a9d4dbd8ce0b251.woff",
+      "source_sha256": "30da91e84c893f875e252689faebdc590b2871145e8adc7f9a9d4dbd8ce0b251",
+      "sha256": "30da91e84c893f875e252689faebdc590b2871145e8adc7f9a9d4dbd8ce0b251",
+      "bytes": 33516
+    },
+    {
+      "path": "../../assets/fonts/68534840bcfdd2bffb6f0e8deb48684dd01e7f04ea2813267577afb906de1d13.ttf",
+      "source_sha256": "68534840bcfdd2bffb6f0e8deb48684dd01e7f04ea2813267577afb906de1d13",
+      "sha256": "68534840bcfdd2bffb6f0e8deb48684dd01e7f04ea2813267577afb906de1d13",
+      "bytes": 63632
+    },
+    {
+      "path": "../../assets/fonts/de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c.woff2",
+      "source_sha256": "de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c",
+      "sha256": "de7701e42cf1f4cf0b766c03fb27977207eee2f4fd5d76fa82188406da43ea4c",
+      "bytes": 6912
+    },
+    {
+      "path": "../../assets/fonts/1ae6bd7475590e97e7f145a89e09ccde322f7a6bc0b91607b1c8b8ee28290fed.woff",
+      "source_sha256": "1ae6bd7475590e97e7f145a89e09ccde322f7a6bc0b91607b1c8b8ee28290fed",
+      "sha256": "1ae6bd7475590e97e7f145a89e09ccde322f7a6bc0b91607b1c8b8ee28290fed",
+      "bytes": 7716
+    },
+    {
+      "path": "../../assets/fonts/07d8e303ce4fc12b4bb54f1004170dd190a1f3db45d400fe68060df3e0897268.ttf",
+      "source_sha256": "07d8e303ce4fc12b4bb54f1004170dd190a1f3db45d400fe68060df3e0897268",
+      "sha256": "07d8e303ce4fc12b4bb54f1004170dd190a1f3db45d400fe68060df3e0897268",
+      "bytes": 12368
+    },
+    {
+      "path": "../../assets/fonts/5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b.woff2",
+      "source_sha256": "5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b",
+      "sha256": "5d53e70ad607c2352162dec9e0923fb54ecdafaccbf604cd8dcf7d00facb989b",
+      "bytes": 6908
+    },
+    {
+      "path": "../../assets/fonts/3398dd02302557a793f2863f88e02d96ce10df2abffa07c8e9fa90775116e65c.woff",
+      "source_sha256": "3398dd02302557a793f2863f88e02d96ce10df2abffa07c8e9fa90775116e65c",
+      "sha256": "3398dd02302557a793f2863f88e02d96ce10df2abffa07c8e9fa90775116e65c",
+      "bytes": 7656
+    },
+    {
+      "path": "../../assets/fonts/ed0b74372feefcbb9c0666b2e210da37b7e49fa7fbbf3eeb11db5f693dacfbb7.ttf",
+      "source_sha256": "ed0b74372feefcbb9c0666b2e210da37b7e49fa7fbbf3eeb11db5f693dacfbb7",
+      "sha256": "ed0b74372feefcbb9c0666b2e210da37b7e49fa7fbbf3eeb11db5f693dacfbb7",
+      "bytes": 12344
+    },
+    {
+      "path": "../../assets/fonts/74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f.woff2",
+      "source_sha256": "74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f",
+      "sha256": "74444efd593c005e3f4573b44524704c0af0a937fe911cca9e94068d0d140d3f",
+      "bytes": 11348
+    },
+    {
+      "path": "../../assets/fonts/9be7ceb88004ab8ad124082246fbfcca4091e36385d4ec6ed1df67375dad50fb.woff",
+      "source_sha256": "9be7ceb88004ab8ad124082246fbfcca4091e36385d4ec6ed1df67375dad50fb",
+      "sha256": "9be7ceb88004ab8ad124082246fbfcca4091e36385d4ec6ed1df67375dad50fb",
+      "bytes": 13296
+    },
+    {
+      "path": "../../assets/fonts/9163df9c7122432e6495b4229fa9071cf9ae86a758ae5efc4924ec2e1a6dbce1.ttf",
+      "source_sha256": "9163df9c7122432e6495b4229fa9071cf9ae86a758ae5efc4924ec2e1a6dbce1",
+      "sha256": "9163df9c7122432e6495b4229fa9071cf9ae86a758ae5efc4924ec2e1a6dbce1",
+      "bytes": 19584
+    },
+    {
+      "path": "../../assets/fonts/51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc.woff2",
+      "source_sha256": "51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc",
+      "sha256": "51814d270d06ff0255dba0799994fa4d8c84d11f09951d47595f4abb1f3602dc",
+      "bytes": 11316
+    },
+    {
+      "path": "../../assets/fonts/5e28753be717dac97f559f49bc10be9cf3c124ddcabda6659d11cb68febc6463.woff",
+      "source_sha256": "5e28753be717dac97f559f49bc10be9cf3c124ddcabda6659d11cb68febc6463",
+      "sha256": "5e28753be717dac97f559f49bc10be9cf3c124ddcabda6659d11cb68febc6463",
+      "bytes": 13208
+    },
+    {
+      "path": "../../assets/fonts/1e6f9579e90e2cac37f8f60a597c436e075c114385652b7cbeb0dec0421291b3.ttf",
+      "source_sha256": "1e6f9579e90e2cac37f8f60a597c436e075c114385652b7cbeb0dec0421291b3",
+      "sha256": "1e6f9579e90e2cac37f8f60a597c436e075c114385652b7cbeb0dec0421291b3",
+      "bytes": 19572
+    },
+    {
+      "path": "../../assets/fonts/0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021.woff2",
+      "source_sha256": "0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021",
+      "sha256": "0f60d1b897938ec918c8ce073092411baf9438f6739465693ff18b0f9d20b021",
+      "bytes": 25324
+    },
+    {
+      "path": "../../assets/fonts/c76c5d696297d51b9cb1639c7da4334f0e7dec81b42b11213b5e25ef671bb822.woff",
+      "source_sha256": "c76c5d696297d51b9cb1639c7da4334f0e7dec81b42b11213b5e25ef671bb822",
+      "sha256": "c76c5d696297d51b9cb1639c7da4334f0e7dec81b42b11213b5e25ef671bb822",
+      "bytes": 29912
+    },
+    {
+      "path": "../../assets/fonts/138ac28d1663b3037e9c5f52371fa5c63d8324f4a38d22cd573e6ea3a3fd0cf8.ttf",
+      "source_sha256": "138ac28d1663b3037e9c5f52371fa5c63d8324f4a38d22cd573e6ea3a3fd0cf8",
+      "sha256": "138ac28d1663b3037e9c5f52371fa5c63d8324f4a38d22cd573e6ea3a3fd0cf8",
+      "bytes": 51336
+    },
+    {
+      "path": "../../assets/fonts/99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b.woff2",
+      "source_sha256": "99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b",
+      "sha256": "99cd42a3c072d918f2f44984a807cf7aa16e13545fd0875fc07c6c65f99e715b",
+      "bytes": 16780
+    },
+    {
+      "path": "../../assets/fonts/a6f7ec0d846ac7ad975adb8959c37ed49b94acbc4ae436db9ce9e20287e4a64c.woff",
+      "source_sha256": "a6f7ec0d846ac7ad975adb8959c37ed49b94acbc4ae436db9ce9e20287e4a64c",
+      "sha256": "a6f7ec0d846ac7ad975adb8959c37ed49b94acbc4ae436db9ce9e20287e4a64c",
+      "bytes": 19412
+    },
+    {
+      "path": "../../assets/fonts/70ee1f64a20f2048c21940ef46d0144fd215baa953ca69afd1e31e98544f708f.ttf",
+      "source_sha256": "70ee1f64a20f2048c21940ef46d0144fd215baa953ca69afd1e31e98544f708f",
+      "sha256": "70ee1f64a20f2048c21940ef46d0144fd215baa953ca69afd1e31e98544f708f",
+      "bytes": 32968
+    },
+    {
+      "path": "../../assets/fonts/97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267.woff2",
+      "source_sha256": "97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267",
+      "sha256": "97479ca6cce906abc961ecac96faa5f9ca2e61b8e7670d475826bcdee9a7c267",
+      "bytes": 16988
+    },
+    {
+      "path": "../../assets/fonts/f1d6ef86f3b11a528bd5185199bd2443ecb2b0dead96d88674b5a2c12be24bdf.woff",
+      "source_sha256": "f1d6ef86f3b11a528bd5185199bd2443ecb2b0dead96d88674b5a2c12be24bdf",
+      "sha256": "f1d6ef86f3b11a528bd5185199bd2443ecb2b0dead96d88674b5a2c12be24bdf",
+      "bytes": 19676
+    },
+    {
+      "path": "../../assets/fonts/0d85ae7cc30f23790a7f1a58c4a112fdca8aae769b6ba11429af1d98b1b6cb3a.ttf",
+      "source_sha256": "0d85ae7cc30f23790a7f1a58c4a112fdca8aae769b6ba11429af1d98b1b6cb3a",
+      "sha256": "0d85ae7cc30f23790a7f1a58c4a112fdca8aae769b6ba11429af1d98b1b6cb3a",
+      "bytes": 33580
+    },
+    {
+      "path": "../../assets/fonts/c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866.woff2",
+      "source_sha256": "c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866",
+      "sha256": "c2342cd8b869e01752a9321dc17213fc40d4d04c79688c1d43f2cf316abd7866",
+      "bytes": 26272
+    },
+    {
+      "path": "../../assets/fonts/c6368d87e8a1a3a5d337623d83d8dc4b868f242a9ad476237d6f8d1e0f168cdc.woff",
+      "source_sha256": "c6368d87e8a1a3a5d337623d83d8dc4b868f242a9ad476237d6f8d1e0f168cdc",
+      "sha256": "c6368d87e8a1a3a5d337623d83d8dc4b868f242a9ad476237d6f8d1e0f168cdc",
+      "bytes": 30772
+    },
+    {
+      "path": "../../assets/fonts/d0332f52868370fd83ae7fa46470f90c8f2eab2fcf12bc4f88080b340c95a830.ttf",
+      "source_sha256": "d0332f52868370fd83ae7fa46470f90c8f2eab2fcf12bc4f88080b340c95a830",
+      "sha256": "d0332f52868370fd83ae7fa46470f90c8f2eab2fcf12bc4f88080b340c95a830",
+      "bytes": 53580
+    },
+    {
+      "path": "../../assets/fonts/dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1.woff2",
+      "source_sha256": "dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1",
+      "sha256": "dc47344dbb6cb5b655c8460d561f4df5f501b90c804ad3c6cec65fe322351ab1",
+      "bytes": 16400
+    },
+    {
+      "path": "../../assets/fonts/850c0af5c2238497febaf5e461d880bf458c341f42f4f330f1b1ab5698b1998e.woff",
+      "source_sha256": "850c0af5c2238497febaf5e461d880bf458c341f42f4f330f1b1ab5698b1998e",
+      "sha256": "850c0af5c2238497febaf5e461d880bf458c341f42f4f330f1b1ab5698b1998e",
+      "bytes": 18668
+    },
+    {
+      "path": "../../assets/fonts/f9377ab0271cda59af24bcffbd46a4d0c8a3572ffafdbb38de2ad5ea7b0d5ee5.ttf",
+      "source_sha256": "f9377ab0271cda59af24bcffbd46a4d0c8a3572ffafdbb38de2ad5ea7b0d5ee5",
+      "sha256": "f9377ab0271cda59af24bcffbd46a4d0c8a3572ffafdbb38de2ad5ea7b0d5ee5",
+      "bytes": 31196
+    },
+    {
+      "path": "../../assets/fonts/7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264.woff2",
+      "source_sha256": "7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264",
+      "sha256": "7af58c5ec8f132a2ddde9027c6d7814decce4d3b822a11192a42a20e2e973264",
+      "bytes": 16440
+    },
+    {
+      "path": "../../assets/fonts/8a8d244581371912b8f3f5a23e2437cb2a59cd9bcaebb0346e722c05737a2571.woff",
+      "source_sha256": "8a8d244581371912b8f3f5a23e2437cb2a59cd9bcaebb0346e722c05737a2571",
+      "sha256": "8a8d244581371912b8f3f5a23e2437cb2a59cd9bcaebb0346e722c05737a2571",
+      "bytes": 18748
+    },
+    {
+      "path": "../../assets/fonts/08ce98e51b04d58945a301e639e02b6998af29fdfd61a7b8afdd07bbfc479d4a.ttf",
+      "source_sha256": "08ce98e51b04d58945a301e639e02b6998af29fdfd61a7b8afdd07bbfc479d4a",
+      "sha256": "08ce98e51b04d58945a301e639e02b6998af29fdfd61a7b8afdd07bbfc479d4a",
+      "bytes": 31308
+    },
+    {
+      "path": "../../assets/fonts/e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62.woff2",
+      "source_sha256": "e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62",
+      "sha256": "e99ae51144bf1232efcc1bfe5add36262c6866b0faab24fa75740e1b98577a62",
+      "bytes": 12216
+    },
+    {
+      "path": "../../assets/fonts/ece03cfd83e22c212cdef66feb8442d25a083beb988db3f1883f3f9738d750ba.woff",
+      "source_sha256": "ece03cfd83e22c212cdef66feb8442d25a083beb988db3f1883f3f9738d750ba",
+      "sha256": "ece03cfd83e22c212cdef66feb8442d25a083beb988db3f1883f3f9738d750ba",
+      "bytes": 14408
+    },
+    {
+      "path": "../../assets/fonts/1ece03f79f95277d57dc7f6b435a74e1379b0d46104a8530286b60ff49369ea0.ttf",
+      "source_sha256": "1ece03f79f95277d57dc7f6b435a74e1379b0d46104a8530286b60ff49369ea0",
+      "sha256": "1ece03f79f95277d57dc7f6b435a74e1379b0d46104a8530286b60ff49369ea0",
+      "bytes": 24504
+    },
+    {
+      "path": "../../assets/fonts/00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a.woff2",
+      "source_sha256": "00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a",
+      "sha256": "00b26ac825e2095056396e0553b8ac26d3f8ad158c3826e28b4c45b385c4714a",
+      "bytes": 12028
+    },
+    {
+      "path": "../../assets/fonts/91ee67500cc0129aa0ace3ac5c61ff1692102f0f31d02b69347fba35dcb75bf2.woff",
+      "source_sha256": "91ee67500cc0129aa0ace3ac5c61ff1692102f0f31d02b69347fba35dcb75bf2",
+      "sha256": "91ee67500cc0129aa0ace3ac5c61ff1692102f0f31d02b69347fba35dcb75bf2",
+      "bytes": 14112
+    },
+    {
+      "path": "../../assets/fonts/3931dd81faed86ba021bb2bbdc36f5bed9a38d6b4f4077aca59b265aa1b02083.ttf",
+      "source_sha256": "3931dd81faed86ba021bb2bbdc36f5bed9a38d6b4f4077aca59b265aa1b02083",
+      "sha256": "3931dd81faed86ba021bb2bbdc36f5bed9a38d6b4f4077aca59b265aa1b02083",
+      "bytes": 22364
+    },
+    {
+      "path": "../../assets/fonts/68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342.woff2",
+      "source_sha256": "68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342",
+      "sha256": "68e8c73ef42afd3ccec58bf0fba302cce448938e7fc020a5e31f8a952eee1342",
+      "bytes": 10344
+    },
+    {
+      "path": "../../assets/fonts/11e4dc8a6471ff6d6ee561d53d10fde8f7489e798257ff449c5d37c197435605.woff",
+      "source_sha256": "11e4dc8a6471ff6d6ee561d53d10fde8f7489e798257ff449c5d37c197435605",
+      "sha256": "11e4dc8a6471ff6d6ee561d53d10fde8f7489e798257ff449c5d37c197435605",
+      "bytes": 12316
+    },
+    {
+      "path": "../../assets/fonts/f36ea897e19f4a2e571d1e900e4e3710e438deb05a842486045ba0a3e616a4ad.ttf",
+      "source_sha256": "f36ea897e19f4a2e571d1e900e4e3710e438deb05a842486045ba0a3e616a4ad",
+      "sha256": "f36ea897e19f4a2e571d1e900e4e3710e438deb05a842486045ba0a3e616a4ad",
+      "bytes": 19436
+    },
+    {
+      "path": "../../assets/fonts/036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b.woff2",
+      "source_sha256": "036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b",
+      "sha256": "036d4e95149b69ff9bcc0cd55771efeb25ffa3947293e69acd78d5ac328c684b",
+      "bytes": 9644
+    },
+    {
+      "path": "../../assets/fonts/d96cdf2b3bdd4d64a8fd5f74a4c467f123a8a73931cd435889f08ffaf9bf947a.woff",
+      "source_sha256": "d96cdf2b3bdd4d64a8fd5f74a4c467f123a8a73931cd435889f08ffaf9bf947a",
+      "sha256": "d96cdf2b3bdd4d64a8fd5f74a4c467f123a8a73931cd435889f08ffaf9bf947a",
+      "bytes": 10588
+    },
+    {
+      "path": "../../assets/fonts/1c67f068fea8bb09bf099c088b1cf64bd27516a6e07f4684344873564bb66a67.ttf",
+      "source_sha256": "1c67f068fea8bb09bf099c088b1cf64bd27516a6e07f4684344873564bb66a67",
+      "sha256": "1c67f068fea8bb09bf099c088b1cf64bd27516a6e07f4684344873564bb66a67",
+      "bytes": 16648
+    },
+    {
+      "path": "../../assets/fonts/6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe.woff2",
+      "source_sha256": "6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe",
+      "sha256": "6b47c40166b6dbe21a5dfca7718413f2147fd2399be1ba605d8ad39cedf25dfe",
+      "bytes": 5468
+    },
+    {
+      "path": "../../assets/fonts/c943cc986384f59e86bea5fd7dc50a9c4dfe567a7c05eb40d6790720dead97c9.woff",
+      "source_sha256": "c943cc986384f59e86bea5fd7dc50a9c4dfe567a7c05eb40d6790720dead97c9",
+      "sha256": "c943cc986384f59e86bea5fd7dc50a9c4dfe567a7c05eb40d6790720dead97c9",
+      "bytes": 6496
+    },
+    {
+      "path": "../../assets/fonts/95b6d2f1a50173bfedb8c63e1d1c99b10427d0a4df4201cb44513b226951a22b.ttf",
+      "source_sha256": "95b6d2f1a50173bfedb8c63e1d1c99b10427d0a4df4201cb44513b226951a22b",
+      "sha256": "95b6d2f1a50173bfedb8c63e1d1c99b10427d0a4df4201cb44513b226951a22b",
+      "bytes": 12228
+    },
+    {
+      "path": "../../assets/fonts/d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd.woff2",
+      "source_sha256": "d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd",
+      "sha256": "d04c54219f9eaec6d4d4fd42dfb28785975a4794d6b2fc71e566b9cd6db842dd",
+      "bytes": 5208
+    },
+    {
+      "path": "../../assets/fonts/2014c523c3210bcc166648c4d4cc57f05b747df07a24277bf71c51e67dc79e3d.woff",
+      "source_sha256": "2014c523c3210bcc166648c4d4cc57f05b747df07a24277bf71c51e67dc79e3d",
+      "sha256": "2014c523c3210bcc166648c4d4cc57f05b747df07a24277bf71c51e67dc79e3d",
+      "bytes": 6188
+    },
+    {
+      "path": "../../assets/fonts/a6b2099fb555c60e3a0db3a08842ebf1d732c6eb4e4bf44913613bed4fc4e39b.ttf",
+      "source_sha256": "a6b2099fb555c60e3a0db3a08842ebf1d732c6eb4e4bf44913613bed4fc4e39b",
+      "sha256": "a6b2099fb555c60e3a0db3a08842ebf1d732c6eb4e4bf44913613bed4fc4e39b",
+      "bytes": 11508
+    },
+    {
+      "path": "../../assets/fonts/73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995.woff2",
+      "source_sha256": "73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995",
+      "sha256": "73d591271b1604960cb10bb90fee021670af7297017e0e98480b332d11f51995",
+      "bytes": 3624
+    },
+    {
+      "path": "../../assets/fonts/6ab6b62e9b62dae2c00dd90f791bd10950be0ecc3490d7d6045f51c2e8fe0949.woff",
+      "source_sha256": "6ab6b62e9b62dae2c00dd90f791bd10950be0ecc3490d7d6045f51c2e8fe0949",
+      "sha256": "6ab6b62e9b62dae2c00dd90f791bd10950be0ecc3490d7d6045f51c2e8fe0949",
+      "bytes": 4420
+    },
+    {
+      "path": "../../assets/fonts/500e04d54f0d51666332c9d2089aa803be22aa878eca539e59fa53c6e522b082.ttf",
+      "source_sha256": "500e04d54f0d51666332c9d2089aa803be22aa878eca539e59fa53c6e522b082",
+      "sha256": "500e04d54f0d51666332c9d2089aa803be22aa878eca539e59fa53c6e522b082",
+      "bytes": 7588
+    },
+    {
+      "path": "../../assets/fonts/a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0.woff2",
+      "source_sha256": "a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0",
+      "sha256": "a4af7d414440a1c1790825cfb700cf9cf43b0f2c4b04f0ebc523011ad9853ec0",
+      "bytes": 4928
+    },
+    {
+      "path": "../../assets/fonts/99f9c6750b489c9462bf04900bd3f939df9b829339daaaaa99ef5495cdddea58.woff",
+      "source_sha256": "99f9c6750b489c9462bf04900bd3f939df9b829339daaaaa99ef5495cdddea58",
+      "sha256": "99f9c6750b489c9462bf04900bd3f939df9b829339daaaaa99ef5495cdddea58",
+      "bytes": 5980
+    },
+    {
+      "path": "../../assets/fonts/c647367d1dd4e162468717d020e1fc0f1dc5c26ebfdffbe55261713bf88c5877.ttf",
+      "source_sha256": "c647367d1dd4e162468717d020e1fc0f1dc5c26ebfdffbe55261713bf88c5877",
+      "sha256": "c647367d1dd4e162468717d020e1fc0f1dc5c26ebfdffbe55261713bf88c5877",
+      "bytes": 10364
+    },
+    {
+      "path": "../../assets/fonts/71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b.woff2",
+      "source_sha256": "71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b",
+      "sha256": "71d517d67827787cfabdf186914cc3358eda539e37931941f2b2fd4a21f68c0b",
+      "bytes": 13568
+    },
+    {
+      "path": "../../assets/fonts/e14fed02b1aba7ce9f5afd5844b5d0321b22351febc720e0de8b8723527609f7.woff",
+      "source_sha256": "e14fed02b1aba7ce9f5afd5844b5d0321b22351febc720e0de8b8723527609f7",
+      "sha256": "e14fed02b1aba7ce9f5afd5844b5d0321b22351febc720e0de8b8723527609f7",
+      "bytes": 16028
+    },
+    {
+      "path": "../../assets/fonts/f01f3e87d9c6a61c0c081ceb577abd864eb00a612f7ac1620dd6915fad2ef5aa.ttf",
+      "source_sha256": "f01f3e87d9c6a61c0c081ceb577abd864eb00a612f7ac1620dd6915fad2ef5aa",
+      "sha256": "f01f3e87d9c6a61c0c081ceb577abd864eb00a612f7ac1620dd6915fad2ef5aa",
+      "bytes": 27556
+    },
+    {
+      "path": "assets/katex/katex.min.css",
+      "source_sha256": "717bc9ae7853b61f0f76455dddf0ecd4f527a783f42de2ac24684899c1c46258",
+      "sha256": "a67b09a3d0ae6eab813a2019c80d553ea8beab70a36e78fd50036d708f6234fc",
+      "bytes": 27244
+    },
+    {
+      "path": "../../assets/media/db2cc1e03ed701af70555fc4604d137a72ca14290fa1744194dc09ddeb6131b4.webp",
+      "source_sha256": "db2cc1e03ed701af70555fc4604d137a72ca14290fa1744194dc09ddeb6131b4",
+      "sha256": "3d1e9abc9fd788c67c9727d8b3a7de2fae704df46225d2855591494fdb986284",
+      "bytes": 1169064,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-models-base-py.html",
+      "source_sha256": "0ecf90574e17c718117691e244aefaffa40fcf0f357439e6aeedea12cba5d0ad",
+      "sha256": "c6585dd582070466060026e377268f51d486d1a9fc27184cdf748c1e192e1916",
+      "bytes": 7870
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-models-rssm-py.html",
+      "source_sha256": "877e06ac99a424c8a9a5758dc9b3535aa68d4bdc93509b4ae79bfa129cf9cbf3",
+      "sha256": "113c91f1fed66f44ee05693f9b16f2f893f291f0d9615ee940212fc38ffea9d2",
+      "bytes": 11930
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-training-utility-py.html",
+      "source_sha256": "34c74f7ea1157bef020a18fe757805c6f67497809d502144144ac6323a1739a5",
+      "sha256": "46e856179c482edaf255e1eb52049d3ffd9cd2d661edd58faa81f3acb212c2a2",
+      "bytes": 56168
+    },
+    {
+      "path": "../../assets/media/2f69e4d4d4762a96a65196768e7e71c06c95c7352cda56c78d2f8c19693e1b7a.webp",
+      "source_sha256": "2f69e4d4d4762a96a65196768e7e71c06c95c7352cda56c78d2f8c19693e1b7a",
+      "sha256": "4a97ab230ff167422e318647e3537295cc17a79782e9b6ccd16a3717d16b6ff3",
+      "bytes": 1168214,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/a241452295d4ccc7572340eee6ce49fa30b8e0179db5d43b066d5d54e98b4f4b.webp",
+      "source_sha256": "a241452295d4ccc7572340eee6ce49fa30b8e0179db5d43b066d5d54e98b4f4b",
+      "sha256": "d3b55a7813f5d1f53c616d7a27b49d96858550cf40ebe903575cad343711c9ea",
+      "bytes": 36174,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/e1e15e0e6a6b94c9ce901500e226dc16418b522e13e0c1ff07dc119bee68828b.webp",
+      "source_sha256": "e1e15e0e6a6b94c9ce901500e226dc16418b522e13e0c1ff07dc119bee68828b",
+      "sha256": "a6d598119e6782da3c129d4777e0087b7e4c02a871e9803be690972c9798f52b",
+      "bytes": 17190,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/e145a75333f6d915919e10f63cf9542ef19473b7a9bffb2352d5dbfd1e19393b.webp",
+      "source_sha256": "e145a75333f6d915919e10f63cf9542ef19473b7a9bffb2352d5dbfd1e19393b",
+      "sha256": "bfcdb6245bc0c88c524726b7c29b75da9722797c61662c6224523ef213cf215c",
+      "bytes": 12608,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/4f99446c5e878228ed9184b2b801646b6bd8cc40acf1898b699e960f86806578.webp",
+      "source_sha256": "4f99446c5e878228ed9184b2b801646b6bd8cc40acf1898b699e960f86806578",
+      "sha256": "75f614585519710ac02330a887d0d3310b6da58fe1475cf0ce74eefdcc21e9f3",
+      "bytes": 50526,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/105d1539bae3ee9a1c7d1dbdf187602769295303a8e7ee337f3e7aa540cdaec2.webp",
+      "source_sha256": "105d1539bae3ee9a1c7d1dbdf187602769295303a8e7ee337f3e7aa540cdaec2",
+      "sha256": "eac1b7826f10887379fea0064fae4ba83005b4fb863a0cf86001a87c8ed80237",
+      "bytes": 54240,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/498c949305e45ecba47193c1473954aab288cd077a1ecf8dcd7f3479d14e34b8.webp",
+      "source_sha256": "498c949305e45ecba47193c1473954aab288cd077a1ecf8dcd7f3479d14e34b8",
+      "sha256": "9f86045f908cbaed8e0f78924346f377820ef7938ec1ac28f758c945444fa773",
+      "bytes": 143474,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/bb5e8f1adb30ae8f3eaea1214c9030c5c3d0a95e77e9cee7f52474baf423648f.webp",
+      "source_sha256": "bb5e8f1adb30ae8f3eaea1214c9030c5c3d0a95e77e9cee7f52474baf423648f",
+      "sha256": "d7c3ff893a1031b235944b4ab336dbce0f70796f54cdded82d5a821c60b9196b",
+      "bytes": 68192,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/c8201cec8b1d1f8cbbaec9891cbdaf3471a9203a55bcbfb29540148069afc3bb.webp",
+      "source_sha256": "c8201cec8b1d1f8cbbaec9891cbdaf3471a9203a55bcbfb29540148069afc3bb",
+      "sha256": "fbf30d8e1edd20d9b39446bd841fc3a17c51a179f23af5774b3fdcaa6b7b008c",
+      "bytes": 69142,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/b4a745b86bb47c7fca200ca859c418a05e56b765ff42ec5f9fcf5bb1c40c87b9.webp",
+      "source_sha256": "b4a745b86bb47c7fca200ca859c418a05e56b765ff42ec5f9fcf5bb1c40c87b9",
+      "sha256": "c47b6518fe4258aa77f267f1cd0507dddafbb105aa852d735986f46888eb79a8",
+      "bytes": 32046,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/7f0adca1850828afab276af0f31736ddf325d6d31bba41b74c93d71d2419aa6f.webp",
+      "source_sha256": "7f0adca1850828afab276af0f31736ddf325d6d31bba41b74c93d71d2419aa6f",
+      "sha256": "9264de0487180e90884154f5bff4baa7149aa6d21b205d715e89fba9272940f1",
+      "bytes": 41748,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/518f145d7281d7699e32383351e10bbdf7e1d5e601b70f119ddd0f9a6b6bce0e.webp",
+      "source_sha256": "518f145d7281d7699e32383351e10bbdf7e1d5e601b70f119ddd0f9a6b6bce0e",
+      "sha256": "b6d9c5978be367f5b4175443c037b41c16d1133379c3ce8579db0830cc117daa",
+      "bytes": 41260,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/37cacfd6f42ffdac660e81c576391d04a22f9fdfb9df6ab6352e22b1caef1988.webp",
+      "source_sha256": "37cacfd6f42ffdac660e81c576391d04a22f9fdfb9df6ab6352e22b1caef1988",
+      "sha256": "f70f8c8513f53de0ac0a13e9a16fca2e7cdc8fbaf6b7655cefbef2ca96615e76",
+      "bytes": 147502,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/f9a5e44dc64187920850f0544fbfc93325c975f87f5394010bbd4839e56a0179.webp",
+      "source_sha256": "f9a5e44dc64187920850f0544fbfc93325c975f87f5394010bbd4839e56a0179",
+      "sha256": "68e2ee040f5bf4e4d9bc25278a366f914448c1de3e1a7b0b9c00badf54105372",
+      "bytes": 39348,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/a224f8a35fde59712f81842193dc1db1a5764f9c946a5f519e6ea1f1b3f0ba50.webp",
+      "source_sha256": "a224f8a35fde59712f81842193dc1db1a5764f9c946a5f519e6ea1f1b3f0ba50",
+      "sha256": "9919644d256c357b0b8fa1ea3c46d1670e15fa7740bd05e358f2c0e926bd98ec",
+      "bytes": 129314,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/e7e0f990a1d470d9c73edf287fba159f9a52964026e76106e7ce46c640e40fd1.webp",
+      "source_sha256": "e7e0f990a1d470d9c73edf287fba159f9a52964026e76106e7ce46c640e40fd1",
+      "sha256": "a6788e9d9680c44469155597c22531d9865ff7f78057cf63b4f7a888ddb7aea6",
+      "bytes": 108858,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/bfb6f964de708b92b2b2a8c9030a93d5fd2d1a3575d3c60eea511d9b7488093d.webp",
+      "source_sha256": "bfb6f964de708b92b2b2a8c9030a93d5fd2d1a3575d3c60eea511d9b7488093d",
+      "sha256": "45dfb5388cc53c36d34ede4ec223574a19a043780d9b7a523c55b2f198453d4b",
+      "bytes": 15908,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/1c6d9712e7ca20e8bdd42ffe62a7ab8e9a1fc0d68176b989336de4eb1b675e2e.webp",
+      "source_sha256": "1c6d9712e7ca20e8bdd42ffe62a7ab8e9a1fc0d68176b989336de4eb1b675e2e",
+      "sha256": "7c29355c680b67df4a5822dfdc46be5340ef7f71a4fa3e48e0ba7c1c6ac27f4d",
+      "bytes": 76100,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/53568dfff881758320d3eb6a1bea84a9b98b762e8ce1581528b852fce0a84fcb.webp",
+      "source_sha256": "53568dfff881758320d3eb6a1bea84a9b98b762e8ce1581528b852fce0a84fcb",
+      "sha256": "bf8927c7845ac725e982b6c380a3b4168a4248dac1ecdd3eba0d934a451db7ab",
+      "bytes": 228928,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/b7b31d263fb07ef7df92611b2062490dbd309d1cada005b943710e2492564f7a.webp",
+      "source_sha256": "b7b31d263fb07ef7df92611b2062490dbd309d1cada005b943710e2492564f7a",
+      "sha256": "bd43ada752292bd4f8ceab060c75f5a8a9e76bc5362f06a551ee312edb78030e",
+      "bytes": 108808,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/da795d4781b09b31f65883a0a64e04fd1c4b74b00ced66ded541d927d30dd09c.webp",
+      "source_sha256": "da795d4781b09b31f65883a0a64e04fd1c4b74b00ced66ded541d927d30dd09c",
+      "sha256": "6ebd8750eefbf0041c6632b8ee01ad05c03f8a25792ff316694b0cb4e28b9d16",
+      "bytes": 78100,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/c0239c250d18cbedac2ead21c5e681bdba08949abdea388eb19bde5131d138dd.webp",
+      "source_sha256": "c0239c250d18cbedac2ead21c5e681bdba08949abdea388eb19bde5131d138dd",
+      "sha256": "9adeb9c31b04504941dff566f1364c9887fce22a39363a43dbed9ae08631c5c7",
+      "bytes": 37176,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/13e258b36e458e9ff55e5f4a113cc91f1c6f2227eeeef0fa27e4f63673e00204.webp",
+      "source_sha256": "13e258b36e458e9ff55e5f4a113cc91f1c6f2227eeeef0fa27e4f63673e00204",
+      "sha256": "7f6efc8b29a73add884bc45caa72cf465d0aa9dc4da3412bf696673f25456f17",
+      "bytes": 91934,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/1b0bc711af3b2cf3be08b971fd0db0be32f73c27ba3be53140a98cf84d0a37ce.webp",
+      "source_sha256": "1b0bc711af3b2cf3be08b971fd0db0be32f73c27ba3be53140a98cf84d0a37ce",
+      "sha256": "5757082d9e512616ece65f2c48bb80262b5d8076ed37220537bf6873664394c8",
+      "bytes": 31554,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/fe79da923854ffe496f307dbcaa3ad68dd2aeac1740cd069767ca998e68521b7.webp",
+      "source_sha256": "fe79da923854ffe496f307dbcaa3ad68dd2aeac1740cd069767ca998e68521b7",
+      "sha256": "a4e024ba078a14ac84f27b23249d31e8929c3fb52d82269856313b6a01f3c1e7",
+      "bytes": 137122,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/21a43a9c9712d052fd828a0fcb9d4d5bd79dc040a4c3e6707afea4e17de4cce4.webp",
+      "source_sha256": "21a43a9c9712d052fd828a0fcb9d4d5bd79dc040a4c3e6707afea4e17de4cce4",
+      "sha256": "8ce759a005604fdfa5325825dd037c63c04becfa4a8c05621cc4901f93b72aba",
+      "bytes": 1245236,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/b7a844e19301e7b9a0687e0b849fc7ffd290d9b84bfb9050ea85364f8343e11d.webp",
+      "source_sha256": "b7a844e19301e7b9a0687e0b849fc7ffd290d9b84bfb9050ea85364f8343e11d",
+      "sha256": "4f76233e7f3b42012791a8d86a775efcba00b8ab941c076fc9cd664cca439770",
+      "bytes": 88292,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/34027d394d62d6b463d14cb3701b4504248403df6f6aabcb7859aa1fb4c43cf8.webp",
+      "source_sha256": "34027d394d62d6b463d14cb3701b4504248403df6f6aabcb7859aa1fb4c43cf8",
+      "sha256": "1001703bbf2d95e421f34b1458f18486e4c2dfe6efd80ffe3d247a1fbb5d9b1a",
+      "bytes": 44826,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/18a99cbc80e886a65a8c1f66bcfb2e863a62253483d04b97db506d3d75b22957.webp",
+      "source_sha256": "18a99cbc80e886a65a8c1f66bcfb2e863a62253483d04b97db506d3d75b22957",
+      "sha256": "47d5d94fc34447f50c6bef1d61204704d7c5704f3ceecda303df83ac4ffb4208",
+      "bytes": 1212924,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-control-temporal_difference-py.html",
+      "source_sha256": "451c2cadac054eb2b399c33a4a67284a6479a4d355ecc29caa34e9b2de9c026f",
+      "sha256": "a0bbd03fdc47555bfee4ec62425248d506b5e64314b9da603132426d58284d4e",
+      "bytes": 9767
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-networks-conv-py.html",
+      "source_sha256": "ecf881e8177ba181150f8483605b9957a4d6f139aecf625ac6d00ac64f0d37b2",
+      "sha256": "14689fb73f3da9a770e7b389b4c11d54b6fc1a698c154c484447e192ef8af62a",
+      "bytes": 5757
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-unroll-py.html",
+      "source_sha256": "b3c964831ae91d2593fd6dcf7ee5328fdb9266d32961fc4afce2191eb946a8cf",
+      "sha256": "5f7f929d6d1b0b1e329ed42ef25d58678943d9dab3debff3dd921f26f57aed88",
+      "bytes": 8170
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-networks-basic-py.html",
+      "source_sha256": "07e0aae603bf47c7676b6466d28f0faeba143287dea8e51504d4a429e9ac87e3",
+      "sha256": "ab69084970735b88b9374dce9afb13a8336cadc905a60a7e62bf1cbd21578b12",
+      "bytes": 7694
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-distributions-tanh_normal-py.html",
+      "source_sha256": "edfcbe515bee219a5c996503eeff39f228e6d3ea27e71b1ab5e492678029eac6",
+      "sha256": "3b9dfaabdbb41243b88a9e7beedc2c099b9158d7f7d214064276825bdc9c26b7",
+      "bytes": 8156
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-control-simulate-py.html",
+      "source_sha256": "dea1c5c989e8a3808b6e68e4fe19eadb277f6bdb7ab0ff90a087af38363c4843",
+      "sha256": "c208019b8925dcf4c31826766665fefe5894340b10b40fa26f9c535f968c078c",
+      "bytes": 13798
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-control-planning-py.html",
+      "source_sha256": "96c1d3100b37b288ce3f68ffe2ad2a2699d0450b6b2f882c25240b4e8c0291de",
+      "sha256": "a66cb53914319ac7314d7d359c570fbdb549c8405da549317733c6ee5e066273",
+      "bytes": 7989
+    },
+    {
+      "path": "../../assets/media/88cb4480f437ae0961c35476e7be047dac68f31dac40466699d05cca52716cae.webp",
+      "source_sha256": "88cb4480f437ae0961c35476e7be047dac68f31dac40466699d05cca52716cae",
+      "sha256": "bd79c592fecfb66092bf7fcd71fccec3810e410c82e618307262f16259f5d1eb",
+      "bytes": 1443480,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-scripts-train-py.html",
+      "source_sha256": "5e7b1e8a01f990d848147f54798e111efec99282629166ac0b06795d1f45c32d",
+      "sha256": "5c9274c31dfa7002728cfffa99f6ac4dd98975507709d25124360e2dffca668e",
+      "bytes": 8878
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-scripts-configs-py.html",
+      "source_sha256": "1e951b7783ac4fcb825a3d3096d45a3dd38ed087a92672f73199125f17fbc3fd",
+      "sha256": "6d4a18874f7e4b823d316a95f076660a6707cbc2fd78b7721cd23cb7540af0db",
+      "bytes": 52487
+    },
+    {
+      "path": "../../assets/media/0b84fa872efbe00755627dcafed7d053051d9cdda17a16ee468a4754967db89f.webp",
+      "source_sha256": "0b84fa872efbe00755627dcafed7d053051d9cdda17a16ee468a4754967db89f",
+      "sha256": "a98a92c157a78f4246f4a7073d158caa989d13206d773ede06220e44085e42e3",
+      "bytes": 1167086,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-training-define_model-py.html",
+      "source_sha256": "5983a5d4673aabb02be42e8d26eafedb8badf1f0af07949d49de803341070b3a",
+      "sha256": "e8d95866e4c6fb61091a7f3d470dec6a2849c6ddf328909f43f9de5ffa5d760f",
+      "bytes": 13760
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-training-define_summaries-py.html",
+      "source_sha256": "82006b51aa36c1b34a7ffae2fa344d92442d902d7387c8b8579f7d5b191a14b8",
+      "sha256": "9d4d1b8be82d58beb7b1806a3ac1ac57061d6154ca02b6398c86c7f3e1d3f8c6",
+      "bytes": 12702
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-control-mpc_agent-py.html",
+      "source_sha256": "9c8429603c8411c592347077529508f460e65b3603eb0023c3d0b63a173dc1d4",
+      "sha256": "044f0c67691cd1fe928f67a8015a31e864c94f668a82be4cb31b34150d66a62f",
+      "bytes": 10592
+    },
+    {
+      "path": "../../assets/media/56112f2a0c0c0ee0d9e5d075fadaed03b2226ae3436d7e2992f0648d8f338adc.webp",
+      "source_sha256": "56112f2a0c0c0ee0d9e5d075fadaed03b2226ae3436d7e2992f0648d8f338adc",
+      "sha256": "89eb0aadf169d4b6c2f5b45e70a57c62bff0d143fee32b04c49775892b50fcce",
+      "bytes": 1345772,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-custom_optimizer-py.html",
+      "source_sha256": "adbbc5da29f67fdf17dfbd643219d8740a6dcc12ab6ad13b25ed5c8902d54588",
+      "sha256": "248ae38c469a8d4a341b9f093567d7cd66607b714529482d93442f4b45b80a6b",
+      "bytes": 9267
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-filter_variables_lib-py.html",
+      "source_sha256": "9128554387e29c1406fbde515797694595c62ae217255a48a4e36cd91bf0cfbe",
+      "sha256": "241b05febf9480b90263da14559a329e25dcd04cb33deebe080352053fda7bd1",
+      "bytes": 6518
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-training-trainer-py.html",
+      "source_sha256": "0ec76bab4bbade654be48e46950607e6bf203364fdb20064286c9538ec535fd4",
+      "sha256": "6c583b64de2df66e674d9e8bf94eaeff470fda3ceb1927159f144cdf4d7cd3da",
+      "bytes": 21775
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-control-batch_env-py.html",
+      "source_sha256": "3778a23a9a1e7d6729d484c4827735ba851e4f0c7d6ae57755dc96ba342e7f56",
+      "sha256": "a0ec295a7a847164bab844a064b618d5a258e70cabea5814d9166ae92ef32375",
+      "bytes": 14841
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-control-wrappers-py.html",
+      "source_sha256": "523911e0d8b09bf10dec3492c72aa2f4c8dd4dc90874189124a62edd386da60d",
+      "sha256": "c4ca365704730a7feaabeccc62b62b415dbcd76dbdade7de9cc894f36a6c61b6",
+      "bytes": 87012
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-numpy_episodes-py.html",
+      "source_sha256": "548fb44baf7c1b46aac2885f4850dca1698ec105d4a1b2028fbd50c81ab3084b",
+      "sha256": "289130965ba207c03e3ad2bdbd1534dd86ed97ff7a253849ff76016de39ebaa4",
+      "bytes": 20761
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-chunk_sequence-py.html",
+      "source_sha256": "a235322025bbdd53bc5760121125af9a7992c2e05291dad91d1518961d49c476",
+      "sha256": "06957cacdf088f716ef17ab2cc5b646422eb71f6cffd9cda575d272afd281860",
+      "bytes": 5463
+    },
+    {
+      "path": "../../assets/media/7fac42c1d2e4fc71a071d82bfd91cd4e81c5f000b3ad751df337b038855c054e.webp",
+      "source_sha256": "7fac42c1d2e4fc71a071d82bfd91cd4e81c5f000b3ad751df337b038855c054e",
+      "sha256": "7f676253e4174f40d24e84aa0b9f88942fb146bd3040cdbf05b0f4f672bf215a",
+      "bytes": 1261210,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-distributions-one_hot-py.html",
+      "source_sha256": "c8caf0c0731a3ed9988bee1b5bb0ed999355fca6c981a941339f92d8c7a3a71c",
+      "sha256": "e8b5ab09c93eb9ff8be79202a1d0997912de396cd0c1a84b3b1b156c55352834",
+      "bytes": 6928
+    },
+    {
+      "path": "../../assets/media/d42d0839ae8fefc8913f0f31828ecbae9a581efd9a04cbb94ad130feaf79f45b.webp",
+      "source_sha256": "d42d0839ae8fefc8913f0f31828ecbae9a581efd9a04cbb94ad130feaf79f45b",
+      "sha256": "dc54d051ad8a2c4e9015b760d771a9e9103c036fc966e353704fbf8bada80123",
+      "bytes": 1232076,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/71e7803cd2ad1f2a90d4734b516e42ebe923db790de972c7c61265eea442d89b.webp",
+      "source_sha256": "71e7803cd2ad1f2a90d4734b516e42ebe923db790de972c7c61265eea442d89b",
+      "sha256": "e9f4fe719e2d46db5e2850fa06bf09ff0cd296e1a732d3e4a181e168747f70bf",
+      "bytes": 1125176,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-scripts-objectives-py.html",
+      "source_sha256": "f2c3d05c696125ed59f79b2fd2a1eca64e96c7f5ce355dd6fd012dad9a636fb8",
+      "sha256": "5a16a79234259486f28c2f3e90841db2ef2c0ff36886b568f77ff4c26acc1723",
+      "bytes": 4663
+    },
+    {
+      "path": "../../assets/media/b22c14c9b446eb8686b7a770f6a27010222dd7b99469f7671d4b393af4ba6436.webp",
+      "source_sha256": "b22c14c9b446eb8686b7a770f6a27010222dd7b99469f7671d4b393af4ba6436",
+      "sha256": "a596a0763fe536d24a21104e3d41ae2bc427e7b0d31594efcbb03e5c2e49b65f",
+      "bytes": 1247236,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/1f24c246911374b227d5781cf90eb95d13e5e55c79e532b58f920ce6e0344905.webp",
+      "source_sha256": "1f24c246911374b227d5781cf90eb95d13e5e55c79e532b58f920ce6e0344905",
+      "sha256": "480db9e02689b19785921dfeec8e19ecb60da61542c74d650450f7d53835618c",
+      "bytes": 1127744,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-attr_dict-py.html",
+      "source_sha256": "99fb3024ffc8e945af107cd1eee2c761151081540e7483326b25910b81ad7680",
+      "sha256": "b42a5b9f9897d0a2b54ea0a46e4ad7bad42fcb533a963543b147b34ee8f5e861",
+      "bytes": 14164
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-nested-py.html",
+      "source_sha256": "287b58f7152b5d5437bde647b96d601d61c950d068cf2c2f83e89c5bf65b2088",
+      "sha256": "745732a0738f794838cee1a90e498150c99571eb24024b7d19f57465ede73458",
+      "bytes": 13316
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-schedule-py.html",
+      "source_sha256": "f7f558d8ca7ac814a3c4f7146d6284f610218c9456d683600e9220a7e7cf536c",
+      "sha256": "a9837734ae2b60216972a038db193e31d4ce80e12593efbdc75a3d90422d5de8",
+      "bytes": 10696
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-mask-py.html",
+      "source_sha256": "e9faaa855e121b12833a08ab4037ea18f5c68e2a993d849a8bfb57d3e52ee685",
+      "sha256": "71d236bded74be123e5aca16dbb8d9b4f533f6deccad2950d5c784cfb2401b21",
+      "bytes": 4340
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-shape-py.html",
+      "source_sha256": "689ad86e99c27fb9e1d920b57c13d8bca02bcf548a8a1db05721a994bfa7cca3",
+      "sha256": "6dde79fc6b9a4a999777782d802075702b21aa9e448179db25166518637b55fc",
+      "bytes": 3262
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-reshape_as-py.html",
+      "source_sha256": "f3c68996b38c776c3752649096c9e8784d0064d6289bb244cfd72607c71726ef",
+      "sha256": "e6344884893dcb0173414bac46529602a03c83d1f1d943de76785f3bcb83b63f",
+      "bytes": 3948
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-preprocess-py.html",
+      "source_sha256": "2a0fa8394be2e39eac0df87933cc2a1b6ded83021cb090e56e0de012f4af3cd7",
+      "sha256": "baabf10a98bd8e1561956ca4d29b9d74bb95bb784ae82db4926316aedccac393",
+      "bytes": 4911
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-tools-overshooting-py.html",
+      "source_sha256": "5a9de36411614cf75d0c3018d056dce4b9f7941335652a9c85493cf61be103dc",
+      "sha256": "010166735039b7ff8c28020562cf767ca35409683e249ec6a4c7879b1aa59750",
+      "bytes": 13605
+    },
+    {
+      "path": "evidence/source-viewers/tests-test_dreamer-py.html",
+      "source_sha256": "85731b2f4e6cf75342c4f4ef6456095c21f9cf3a61786d398680b02aabb6cd4f",
+      "sha256": "a10b31c3f2b399c0a760399854092831438039593d4080df7d3a49e76afd32b1",
+      "bytes": 11447
+    },
+    {
+      "path": "evidence/source-viewers/dreamer-training-running-py.html",
+      "source_sha256": "5a1b70e5584d8e282a4176319055ebb905611d23bdf1c11a9bbbcd33b20a8581",
+      "sha256": "c3951b5e517760586789cdc9a48f3ed198d5fcf0172456b74ae858006225c5a3",
+      "bytes": 24677
+    },
+    {
+      "path": "evidence/source-viewers/tests-test_running-py.html",
+      "source_sha256": "ea7ab19177f508c7785c8f8f7c1a179189cb79b715bbf0781c5409c7ee23f3e2",
+      "sha256": "33e9d90e005c47f4a8e9ba5807152861eb15d76abcfb88a9519969e3cd845126",
+      "bytes": 14866
+    },
+    {
+      "path": "evidence/source-viewers/setup-py.html",
+      "source_sha256": "52b99c3b1f9793f9508703606f39ede23c94c06e479a3c241e5ebb026e97012d",
+      "sha256": "66c61450bd65ae5e193097f2840135e2bb9471f932a8c39977d5ae952fe9c49e",
+      "bytes": 4875
+    },
+    {
+      "path": "evidence/source-viewers/tests-test_isolate_envs-py.html",
+      "source_sha256": "cdee670dad28ad4d698f48473519448b137a7f91e2e427a3161b6e8e007d8546",
+      "sha256": "c996806d7860f9896da82c566da6b7e2846b336005fe4c8af4b3f35f7c811bd5",
+      "bytes": 8573
+    },
+    {
+      "path": "../../assets/media/129b6fb32f793252d7630db767410d5c27d11f945184528d264a5b6b07159996.webp",
+      "source_sha256": "129b6fb32f793252d7630db767410d5c27d11f945184528d264a5b6b07159996",
+      "sha256": "055346274feb1417268cd4a66fddc2be0061b0e58701005f0a5941f6d510b220",
+      "bytes": 1220094,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/71b1cb73a068396e6fbb7e174ead3ec488378700129f766cf6b324971d8a6398.webp",
+      "source_sha256": "71b1cb73a068396e6fbb7e174ead3ec488378700129f766cf6b324971d8a6398",
+      "sha256": "27c177a134170a1572d628e63cc179b18ad70fa6667fabddb296bb43b1b0eb44",
+      "bytes": 61210,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/7a16e294d7e0ae0b8ad384ed2cae2c370615a6372ffe04b342a600e1b33eb941.webp",
+      "source_sha256": "7a16e294d7e0ae0b8ad384ed2cae2c370615a6372ffe04b342a600e1b33eb941",
+      "sha256": "b2b9040d2599d1b9d6fb7667b1ad833e96c118a743adc32f39b8eb68abbed9e6",
+      "bytes": 35378,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/7917b03533df922ccd211fd9f1abd1af270b542872a6da88c6d70e6109e8c491.webp",
+      "source_sha256": "7917b03533df922ccd211fd9f1abd1af270b542872a6da88c6d70e6109e8c491",
+      "sha256": "7db8944fcd320af1c7a95abf9985aef1e818fe57a1f6946014621d56de5bea22",
+      "bytes": 107092,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/dca6a3068c1871aac26a4103711843b5523df11e665575e8c90949072a5334f3.webp",
+      "source_sha256": "dca6a3068c1871aac26a4103711843b5523df11e665575e8c90949072a5334f3",
+      "sha256": "6ce0f577b99f9026e850c3122b3adc31981a4b12b1abfb75a81650e8e4f871bc",
+      "bytes": 1267064,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/fa8822307f00c3d2102fc269f1fa1dc891ee477d50ba6293e88b0ebe3c9357cd.webp",
+      "source_sha256": "fa8822307f00c3d2102fc269f1fa1dc891ee477d50ba6293e88b0ebe3c9357cd",
+      "sha256": "495f4c02c754a13dd664fa87086b3b411a60b6a02c735d7bc93511aedb9c0d82",
+      "bytes": 33292,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "assets/report.js",
+      "source_sha256": "e902ff01b032bddc107d5b9187d6e8c2b8023d070a753cc66c453f7ad3acc41c",
+      "sha256": "e902ff01b032bddc107d5b9187d6e8c2b8023d070a753cc66c453f7ad3acc41c",
+      "bytes": 9378
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "79a9c124ae02196d6865e964f6f906739cfdf1d3d21e964e2628569d509fc5b3",
+      "sha256": "eafed58316e00f0e9431f694941544d877a6246ff32076c957887efc3d62f0e1",
+      "bytes": 2364541
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

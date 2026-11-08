@@ -1,0 +1,68 @@
+\section{Preliminaries}
+\label{sec: preliminaries}
+
+\subsection{Task formulation}
+We study language-conditioned manipulation with \emph{sparse binary rewards} using \emph{Vision--Language--Action} (VLA) models as the base policy class. We assume a partially observed control process with horizon $T$, where an episode terminates and resets on task success with a restricted time limit. After each episode, a reward $r\in\{0,1\}$ is assigned. Let $g$ denote the language prompt of goal specification, and let $o_t$ denote partial observations comprising robot proprioception (\eg joint angle) and RGB images input. The policy consumes $(o_t,g)$ and outputs a 7-DoF action (6-DoF delta pose and 1-DoF continuous gripper command), which we express as $a_t \;=\; D_\phi\!\big(h_\theta(o_t,g)\big)$, 
+where $h_\theta$ is a vision--language backbone and $D_\phi$ is an action head. Consistent with recent VLA models, $D_\phi$ is instantiated by one of three common families: (i) a \emph{diffusion} or \emph{flow-based} action head for continuous control~\citep{team2024octo, black2024pi0}, or (ii) a \emph{discrete action tokenizer} for autoregressive decoding~\citep{kim2024openvla, pertsch2025fast}. We aim to maximize success rate $\bar{\Sigma r}$ by tuning $\phi$ and $\theta$. %This interface captures standard VLA post-training practice while preserving a sparse, success-driven objective and explicit episode termination.
+
+\subsection{Supervised Fine-Tuning}
+Given a VLA policy and a demonstration dataset
+$\mathcal{D}=\{(o_t,g_t,a_t)\}$ of observations $o_t$,
+goal specifications $g_t$, and expert actions $a_t$, SFT adapts the policy by maximizing the conditional action likelihood. Letting $x_t=(o_t,g_t)$, the canonical objective is the behavior cloning (BC) loss.
+In contemporary VLA systems, the loss instantiation depends on the action head architecture. Auto-regressive/token heads~\citep{kim2024openvla, pertsch2025fast} train with sequence NLL over
+action tokens $u_{1:K}$:
+\[
+\mathcal{L}_{\text{AR}}(\theta)
+= - \,\mathbb{E}_{k \sim [K]}\!\left[\log p_{\theta}\!\big(u_k \mid u_{<k}, x\big)\right],
+\]
+
+With recent work improving efficiency via action chunking and parallel decoding, and a continuous action parameterization trained by an $\ell_1$ regression
+objective~\citep{openvla-oft}. 
+Diffusion heads model a conditional denoising
+process for actions and train via score-matching MSE:
+\[
+\mathcal{L}_{\text{diff}}(\theta)
+= \mathbb{E}_{t,\epsilon,(x,a)}\!\left[\big\|\epsilon - \epsilon_{\theta}(a_t^{(\text{noisy})}, x, t)\big\|_2^2\right],
+\]
+enabling iterative sampling at inference~\citep{team2024octo,chi2024diffusionpolicy}. 
+Flow-matching heads learn a continuous velocity field to
+transport a prior to the action distribution, trained with an $L_2$ flow-matching loss,
+and are often paired with VLM backbones for semantically grounded control~\citep{black2024pi0, intelligence2025pi05}. 
+Across these heads, SFT remains the standard mechanism to specialize a generalist
+policies to new embodiments and tasks using modest labeled robot data~\citep{kim2024openvla, openvla-oft}.
+
+
+\subsection{Goal-Conditioned RL}
+We model continuous control as an MDP~\citep{bellman1957MDP}
+$\mathcal{M}=(\mathcal{S},\mathcal{A},\rho,\rho_0,r,\gamma)$ with state space
+$\mathcal{S}$, action space $\mathcal{A}$, transition dynamics
+$\rho(s'\mid s,a)$, initial-state distribution $\rho_0$, reward function $r$,
+and discount $\gamma\in(0,1]$. In \emph{goal-conditioned} settings, each task
+is specified by a goal variable $g\in\mathcal{G}$ drawn from $p(g)$; the reward
+becomes goal-dependent $r:\mathcal{S}\times\mathcal{A}\times\mathcal{G}\to\mathbb{R}$,
+and the policy is $\pi:\mathcal{S}\times\mathcal{G}\to\Delta(\mathcal{A})$,
+written $\pi(a\mid s,g)$. It is convenient to view GCRL as an augmented MDP on
+$\mathcal{S}\times\mathcal{G}$ with stationary goals:
+\[
+\tilde{\rho}\big((s',g)\mid(s,g),a\big)=\rho(s'\mid s,a)\cdot \mathbf{1}\{g'=g\}.
+\]
+Under the infinite-horizon setting, the RL objective is
+\begin{equation}
+\label{eq:gcrl-objective}
+J(\pi)
+= \mathbb{E}_{g \sim p(g)}\;
+  \mathbb{E}_{s_0 \sim \rho_0,\;
+             a_t \sim \pi(\cdot \mid s_t,g),\;
+             s_{t+1} \sim \rho(\cdot \mid s_t,a_t)}
+  [\sum\nolimits_{t=0}^{\infty}
+ \gamma^t\, r(s_t,a_t,g)].
+\end{equation}
+
+In this paper, we consider a sparse binary reward setting, \ie $r(s,a,g)=\mathbf{1}\!\left[d\big(\phi(s),g\big)\le \varepsilon\right]$ defined via a success
+predicate over a goal-relevant representation $\phi(s)$, a metric $d$, and tolerance $\varepsilon>0$.
+
+
+
+
+
+

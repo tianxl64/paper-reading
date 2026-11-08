@@ -1,0 +1,82 @@
+{
+  "schema": "paper-reading-publication.v2",
+  "builder_revision": 2,
+  "slug": "vlm-cot-rl",
+  "published_at": "2026-11-08T03:49:27+00:00",
+  "complete": true,
+  "source_relative_html": "index.html",
+  "source_html_sha256": "908f9d0d5f19351601ae4f5d4686080d15b8a1296de0173ab50c239c31469328",
+  "selection_reason": "legacy canonical reader; source and resources audited before publication",
+  "public_html_sha256": "5b97c19a0fb743d93c09dc53a3f19ba4e8c052352cd71113c2a3fa01130b5900",
+  "content_preservation": [
+    {
+      "document": "index.html",
+      "checks": {
+        "main_text": true,
+        "headings": true,
+        "existing_math": true,
+        "captions": true,
+        "links": true,
+        "inline_scripts": true,
+        "code_blocks": true
+      },
+      "headings": 286,
+      "original_static_math": 0,
+      "added_static_math": 9
+    }
+  ],
+  "offline_static_rendering": {
+    "new_formulas": 9,
+    "documents": 1
+  },
+  "resources": [
+    {
+      "path": "vendor/mathjax/tex-chtml.js",
+      "source_sha256": "0a6ded5abbce13331658dd239f34382abd06492c74b71b61e8caa8112ec55fa5",
+      "sha256": "0a6ded5abbce13331658dd239f34382abd06492c74b71b61e8caa8112ec55fa5",
+      "bytes": 1160989
+    },
+    {
+      "path": "../../assets/media/3b645f75d4473fb283a4dc9038f1a5c83bba1a69d37008aee0056e276993f960.webp",
+      "source_sha256": "3b645f75d4473fb283a4dc9038f1a5c83bba1a69d37008aee0056e276993f960",
+      "sha256": "cd258a2240b6a84efd4c2316779fedc3c93359f63a1125c12d3ce1e4ea828f68",
+      "bytes": 902386,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/b1a20651722134513ac837b5e58caf5a55aac3f881126886bed6f5611ce24c24.webp",
+      "source_sha256": "b1a20651722134513ac837b5e58caf5a55aac3f881126886bed6f5611ce24c24",
+      "sha256": "00a338b9b2356dc5d8350de1a6251653f469943c62d0f8b4ef47b8ebe7673511",
+      "bytes": 841168,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/6b017a62e55802f0e3477d94fa5ceede1cd19f9823c6163d5ce4e730dc29c4b7.webp",
+      "source_sha256": "6b017a62e55802f0e3477d94fa5ceede1cd19f9823c6163d5ce4e730dc29c4b7",
+      "sha256": "39721237682f58c0a92cb91627a6203796d065958f10ab0725a1e2ac55dd53cb",
+      "bytes": 859562,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "../../assets/media/70d4820d116fec56d518e6e0dba60c2a47031019bd0db2b6d1522c19fac59b66.webp",
+      "source_sha256": "70d4820d116fec56d518e6e0dba60c2a47031019bd0db2b6d1522c19fac59b66",
+      "sha256": "2850bdf035fff4b4334a6e65736800d24ec3458eed1b34a644e603609cc29e70",
+      "bytes": 966808,
+      "source_encoding": "PNG",
+      "public_encoding": "WebP lossless"
+    },
+    {
+      "path": "index.html",
+      "source_sha256": "908f9d0d5f19351601ae4f5d4686080d15b8a1296de0173ab50c239c31469328",
+      "sha256": "5b97c19a0fb743d93c09dc53a3f19ba4e8c052352cd71113c2a3fa01130b5900",
+      "bytes": 610685
+    }
+  ],
+  "lossless_image_encoding": {
+    "pixel_equality_verified": true,
+    "originals_preserved_in_local_archive": true
+  }
+}

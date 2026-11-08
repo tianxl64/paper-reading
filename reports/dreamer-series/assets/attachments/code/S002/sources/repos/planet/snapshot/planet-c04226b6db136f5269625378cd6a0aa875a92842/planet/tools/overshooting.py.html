@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>S002 固定源码：sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/tools/overshooting.py</title><style>body{max-width:100%;margin:1.2rem;font-family:system-ui,sans-serif}pre{overflow:auto;line-height:1.55}pre span{display:block}pre a{color:#667;text-decoration:none}:target{background:#fff3ba}</style><link href="../../../../../../../../../../../../../favicon.ico" rel="icon"/></head><body><h1>S002 固定源码：sources/repos/planet/snapshot/planet-c04226b6db136f5269625378cd6a0aa875a92842/planet/tools/overshooting.py</h1><p>源码字节 SHA-256：<code>c87beb84bc4304a26af833f4e39b692c1b37e632bce63f1ec6405dfa2a5b1358</code>。<a download="" href="overshooting.py">下载原始源码</a></p><pre><span id="L1"><a aria-label="第 1 行" href="#L1">   1</a> # Copyright 2019 The PlaNet Authors. All rights reserved.</span>
+<span id="L2"><a aria-label="第 2 行" href="#L2">   2</a> #</span>
+<span id="L3"><a aria-label="第 3 行" href="#L3">   3</a> # Licensed under the Apache License, Version 2.0 (the "License");</span>
+<span id="L4"><a aria-label="第 4 行" href="#L4">   4</a> # you may not use this file except in compliance with the License.</span>
+<span id="L5"><a aria-label="第 5 行" href="#L5">   5</a> # You may obtain a copy of the License at</span>
+<span id="L6"><a aria-label="第 6 行" href="#L6">   6</a> #</span>
+<span id="L7"><a aria-label="第 7 行" href="#L7">   7</a> #      http://www.apache.org/licenses/LICENSE-2.0</span>
+<span id="L8"><a aria-label="第 8 行" href="#L8">   8</a> #</span>
+<span id="L9"><a aria-label="第 9 行" href="#L9">   9</a> # Unless required by applicable law or agreed to in writing, software</span>
+<span id="L10"><a aria-label="第 10 行" href="#L10">  10</a> # distributed under the License is distributed on an "AS IS" BASIS,</span>
+<span id="L11"><a aria-label="第 11 行" href="#L11">  11</a> # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span id="L12"><a aria-label="第 12 行" href="#L12">  12</a> # See the License for the specific language governing permissions and</span>
+<span id="L13"><a aria-label="第 13 行" href="#L13">  13</a> # limitations under the License.</span>
+<span id="L14"><a aria-label="第 14 行" href="#L14">  14</a> </span>
+<span id="L15"><a aria-label="第 15 行" href="#L15">  15</a> from __future__ import absolute_import</span>
+<span id="L16"><a aria-label="第 16 行" href="#L16">  16</a> from __future__ import division</span>
+<span id="L17"><a aria-label="第 17 行" href="#L17">  17</a> from __future__ import print_function</span>
+<span id="L18"><a aria-label="第 18 行" href="#L18">  18</a> </span>
+<span id="L19"><a aria-label="第 19 行" href="#L19">  19</a> import functools</span>
+<span id="L20"><a aria-label="第 20 行" href="#L20">  20</a> </span>
+<span id="L21"><a aria-label="第 21 行" href="#L21">  21</a> import numpy as np</span>
+<span id="L22"><a aria-label="第 22 行" href="#L22">  22</a> import tensorflow as tf</span>
+<span id="L23"><a aria-label="第 23 行" href="#L23">  23</a> </span>
+<span id="L24"><a aria-label="第 24 行" href="#L24">  24</a> from planet.tools import nested</span>
+<span id="L25"><a aria-label="第 25 行" href="#L25">  25</a> from planet.tools import shape</span>
+<span id="L26"><a aria-label="第 26 行" href="#L26">  26</a> </span>
+<span id="L27"><a aria-label="第 27 行" href="#L27">  27</a> </span>
+<span id="L28"><a aria-label="第 28 行" href="#L28">  28</a> def overshooting(</span>
+<span id="L29"><a aria-label="第 29 行" href="#L29">  29</a>     cell, target, embedded, prev_action, length, amount, posterior=None,</span>
+<span id="L30"><a aria-label="第 30 行" href="#L30">  30</a>     ignore_input=False):</span>
+<span id="L31"><a aria-label="第 31 行" href="#L31">  31</a>   """Perform open loop rollouts from the posteriors at every step.</span>
+<span id="L32"><a aria-label="第 32 行" href="#L32">  32</a> </span>
+<span id="L33"><a aria-label="第 33 行" href="#L33">  33</a>   First, we apply the encoder to embed raw inputs and apply the model to obtain</span>
+<span id="L34"><a aria-label="第 34 行" href="#L34">  34</a>   posterior states for every time step. Then, we perform `amount` long open</span>
+<span id="L35"><a aria-label="第 35 行" href="#L35">  35</a>   loop rollouts from these posteriors.</span>
+<span id="L36"><a aria-label="第 36 行" href="#L36">  36</a> </span>
+<span id="L37"><a aria-label="第 37 行" href="#L37">  37</a>   Note that the actions should be those leading to the current time step. So</span>
+<span id="L38"><a aria-label="第 38 行" href="#L38">  38</a>   under common convention, it contains the last actions while observations are</span>
+<span id="L39"><a aria-label="第 39 行" href="#L39">  39</a>   the current ones.</span>
+<span id="L40"><a aria-label="第 40 行" href="#L40">  40</a> </span>
+<span id="L41"><a aria-label="第 41 行" href="#L41">  41</a>   Input:</span>
+<span id="L42"><a aria-label="第 42 行" href="#L42">  42</a> </span>
+<span id="L43"><a aria-label="第 43 行" href="#L43">  43</a>     target, embedded:</span>
+<span id="L44"><a aria-label="第 44 行" href="#L44">  44</a>       [A B C D E F] [A B C D E  ]</span>
+<span id="L45"><a aria-label="第 45 行" href="#L45">  45</a> </span>
+<span id="L46"><a aria-label="第 46 行" href="#L46">  46</a>     prev_action:</span>
+<span id="L47"><a aria-label="第 47 行" href="#L47">  47</a>       [0 A B C D E] [0 A B C D  ]</span>
+<span id="L48"><a aria-label="第 48 行" href="#L48">  48</a> </span>
+<span id="L49"><a aria-label="第 49 行" href="#L49">  49</a>     length:</span>
+<span id="L50"><a aria-label="第 50 行" href="#L50">  50</a>       [6 5]</span>
+<span id="L51"><a aria-label="第 51 行" href="#L51">  51</a> </span>
+<span id="L52"><a aria-label="第 52 行" href="#L52">  52</a>     amount:</span>
+<span id="L53"><a aria-label="第 53 行" href="#L53">  53</a>       3</span>
+<span id="L54"><a aria-label="第 54 行" href="#L54">  54</a> </span>
+<span id="L55"><a aria-label="第 55 行" href="#L55">  55</a>   Output:</span>
+<span id="L56"><a aria-label="第 56 行" href="#L56">  56</a> </span>
+<span id="L57"><a aria-label="第 57 行" href="#L57">  57</a>     prior, posterior, target:</span>
+<span id="L58"><a aria-label="第 58 行" href="#L58">  58</a>       [A B C D E F] [A B C D E  ]</span>
+<span id="L59"><a aria-label="第 59 行" href="#L59">  59</a>       [B C D E F  ] [B C D E    ]</span>
+<span id="L60"><a aria-label="第 60 行" href="#L60">  60</a>       [C D E F    ] [C D E      ]</span>
+<span id="L61"><a aria-label="第 61 行" href="#L61">  61</a>       [D E F      ] [D E        ]</span>
+<span id="L62"><a aria-label="第 62 行" href="#L62">  62</a> </span>
+<span id="L63"><a aria-label="第 63 行" href="#L63">  63</a>     mask:</span>
+<span id="L64"><a aria-label="第 64 行" href="#L64">  64</a>       [1 1 1 1 1 1] [1 1 1 1 1 0]</span>
+<span id="L65"><a aria-label="第 65 行" href="#L65">  65</a>       [1 1 1 1 1 0] [1 1 1 1 0 0]</span>
+<span id="L66"><a aria-label="第 66 行" href="#L66">  66</a>       [1 1 1 1 0 0] [1 1 1 0 0 0]</span>
+<span id="L67"><a aria-label="第 67 行" href="#L67">  67</a>       [1 1 1 0 0 0] [1 1 0 0 0 0]</span>
+<span id="L68"><a aria-label="第 68 行" href="#L68">  68</a> </span>
+<span id="L69"><a aria-label="第 69 行" href="#L69">  69</a>   """</span>
+<span id="L70"><a aria-label="第 70 行" href="#L70">  70</a>   # Closed loop unroll to get posterior states, which are the starting points</span>
+<span id="L71"><a aria-label="第 71 行" href="#L71">  71</a>   # for open loop unrolls. We don't need the last time step, since we have no</span>
+<span id="L72"><a aria-label="第 72 行" href="#L72">  72</a>   # targets for unrolls from it.</span>
+<span id="L73"><a aria-label="第 73 行" href="#L73">  73</a>   if posterior is None:</span>
+<span id="L74"><a aria-label="第 74 行" href="#L74">  74</a>     use_obs = tf.ones(tf.shape(</span>
+<span id="L75"><a aria-label="第 75 行" href="#L75">  75</a>         nested.flatten(embedded)[0][:, :, :1])[:3], tf.bool)</span>
+<span id="L76"><a aria-label="第 76 行" href="#L76">  76</a>     use_obs = tf.cond(</span>
+<span id="L77"><a aria-label="第 77 行" href="#L77">  77</a>         tf.convert_to_tensor(ignore_input),</span>
+<span id="L78"><a aria-label="第 78 行" href="#L78">  78</a>         lambda: tf.zeros_like(use_obs, tf.bool),</span>
+<span id="L79"><a aria-label="第 79 行" href="#L79">  79</a>         lambda: use_obs)</span>
+<span id="L80"><a aria-label="第 80 行" href="#L80">  80</a>     (_, posterior), _ = tf.nn.dynamic_rnn(</span>
+<span id="L81"><a aria-label="第 81 行" href="#L81">  81</a>         cell, (embedded, prev_action, use_obs), length, dtype=tf.float32,</span>
+<span id="L82"><a aria-label="第 82 行" href="#L82">  82</a>         swap_memory=True)</span>
+<span id="L83"><a aria-label="第 83 行" href="#L83">  83</a> </span>
+<span id="L84"><a aria-label="第 84 行" href="#L84">  84</a>   # Arrange inputs for every iteration in the open loop unroll. Every loop</span>
+<span id="L85"><a aria-label="第 85 行" href="#L85">  85</a>   # iteration below corresponds to one row in the docstring illustration.</span>
+<span id="L86"><a aria-label="第 86 行" href="#L86">  86</a>   max_length = shape.shape(nested.flatten(embedded)[0])[1]</span>
+<span id="L87"><a aria-label="第 87 行" href="#L87">  87</a>   first_output = {</span>
+<span id="L88"><a aria-label="第 88 行" href="#L88">  88</a>       # 'observ': embedded,</span>
+<span id="L89"><a aria-label="第 89 行" href="#L89">  89</a>       'prev_action': prev_action,</span>
+<span id="L90"><a aria-label="第 90 行" href="#L90">  90</a>       'posterior': posterior,</span>
+<span id="L91"><a aria-label="第 91 行" href="#L91">  91</a>       'target': target,</span>
+<span id="L92"><a aria-label="第 92 行" href="#L92">  92</a>       'mask': tf.sequence_mask(length, max_length, tf.int32),</span>
+<span id="L93"><a aria-label="第 93 行" href="#L93">  93</a>   }</span>
+<span id="L94"><a aria-label="第 94 行" href="#L94">  94</a> </span>
+<span id="L95"><a aria-label="第 95 行" href="#L95">  95</a>   progress_fn = lambda tensor: tf.concat([tensor[:, 1:], 0 * tensor[:, :1]], 1)</span>
+<span id="L96"><a aria-label="第 96 行" href="#L96">  96</a>   other_outputs = tf.scan(</span>
+<span id="L97"><a aria-label="第 97 行" href="#L97">  97</a>       lambda past_output, _: nested.map(progress_fn, past_output),</span>
+<span id="L98"><a aria-label="第 98 行" href="#L98">  98</a>       tf.range(amount), first_output)</span>
+<span id="L99"><a aria-label="第 99 行" href="#L99">  99</a>   sequences = nested.map(</span>
+<span id="L100"><a aria-label="第 100 行" href="#L100"> 100</a>       lambda lhs, rhs: tf.concat([lhs[None], rhs], 0),</span>
+<span id="L101"><a aria-label="第 101 行" href="#L101"> 101</a>       first_output, other_outputs)</span>
+<span id="L102"><a aria-label="第 102 行" href="#L102"> 102</a> </span>
+<span id="L103"><a aria-label="第 103 行" href="#L103"> 103</a>   # Merge batch and time dimensions of steps to compute unrolls from every</span>
+<span id="L104"><a aria-label="第 104 行" href="#L104"> 104</a>   # time step as one batch. The time dimension becomes the number of</span>
+<span id="L105"><a aria-label="第 105 行" href="#L105"> 105</a>   # overshooting distances.</span>
+<span id="L106"><a aria-label="第 106 行" href="#L106"> 106</a>   sequences = nested.map(</span>
+<span id="L107"><a aria-label="第 107 行" href="#L107"> 107</a>       lambda tensor: _merge_dims(tensor, [1, 2]),</span>
+<span id="L108"><a aria-label="第 108 行" href="#L108"> 108</a>       sequences)</span>
+<span id="L109"><a aria-label="第 109 行" href="#L109"> 109</a>   sequences = nested.map(</span>
+<span id="L110"><a aria-label="第 110 行" href="#L110"> 110</a>       lambda tensor: tf.transpose(</span>
+<span id="L111"><a aria-label="第 111 行" href="#L111"> 111</a>           tensor, [1, 0] + list(range(2, tensor.shape.ndims))),</span>
+<span id="L112"><a aria-label="第 112 行" href="#L112"> 112</a>       sequences)</span>
+<span id="L113"><a aria-label="第 113 行" href="#L113"> 113</a>   merged_length = tf.reduce_sum(sequences['mask'], 1)</span>
+<span id="L114"><a aria-label="第 114 行" href="#L114"> 114</a> </span>
+<span id="L115"><a aria-label="第 115 行" href="#L115"> 115</a>   # Mask out padding frames; unnecessary if the input is already masked.</span>
+<span id="L116"><a aria-label="第 116 行" href="#L116"> 116</a>   sequences = nested.map(</span>
+<span id="L117"><a aria-label="第 117 行" href="#L117"> 117</a>       lambda tensor: tensor * tf.cast(</span>
+<span id="L118"><a aria-label="第 118 行" href="#L118"> 118</a>           _pad_dims(sequences['mask'], tensor.shape.ndims),</span>
+<span id="L119"><a aria-label="第 119 行" href="#L119"> 119</a>           tensor.dtype),</span>
+<span id="L120"><a aria-label="第 120 行" href="#L120"> 120</a>       sequences)</span>
+<span id="L121"><a aria-label="第 121 行" href="#L121"> 121</a> </span>
+<span id="L122"><a aria-label="第 122 行" href="#L122"> 122</a>   # Compute open loop rollouts.</span>
+<span id="L123"><a aria-label="第 123 行" href="#L123"> 123</a>   use_obs = tf.zeros(tf.shape(sequences['mask']), tf.bool)[..., None]</span>
+<span id="L124"><a aria-label="第 124 行" href="#L124"> 124</a>   embed_size = nested.flatten(embedded)[0].shape[2].value</span>
+<span id="L125"><a aria-label="第 125 行" href="#L125"> 125</a>   obs = tf.zeros(shape.shape(sequences['mask']) + [embed_size])</span>
+<span id="L126"><a aria-label="第 126 行" href="#L126"> 126</a>   prev_state = nested.map(</span>
+<span id="L127"><a aria-label="第 127 行" href="#L127"> 127</a>       lambda tensor: tf.concat([0 * tensor[:, :1], tensor[:, :-1]], 1),</span>
+<span id="L128"><a aria-label="第 128 行" href="#L128"> 128</a>       posterior)</span>
+<span id="L129"><a aria-label="第 129 行" href="#L129"> 129</a>   prev_state = nested.map(</span>
+<span id="L130"><a aria-label="第 130 行" href="#L130"> 130</a>       lambda tensor: _merge_dims(tensor, [0, 1]), prev_state)</span>
+<span id="L131"><a aria-label="第 131 行" href="#L131"> 131</a>   (priors, _), _ = tf.nn.dynamic_rnn(</span>
+<span id="L132"><a aria-label="第 132 行" href="#L132"> 132</a>       cell, (obs, sequences['prev_action'], use_obs),</span>
+<span id="L133"><a aria-label="第 133 行" href="#L133"> 133</a>       merged_length,</span>
+<span id="L134"><a aria-label="第 134 行" href="#L134"> 134</a>       prev_state)</span>
+<span id="L135"><a aria-label="第 135 行" href="#L135"> 135</a> </span>
+<span id="L136"><a aria-label="第 136 行" href="#L136"> 136</a>   # Restore batch dimension.</span>
+<span id="L137"><a aria-label="第 137 行" href="#L137"> 137</a>   target, prior, posterior, mask = nested.map(</span>
+<span id="L138"><a aria-label="第 138 行" href="#L138"> 138</a>       functools.partial(_restore_batch_dim, batch_size=shape.shape(length)[0]),</span>
+<span id="L139"><a aria-label="第 139 行" href="#L139"> 139</a>       (sequences['target'], priors, sequences['posterior'], sequences['mask']))</span>
+<span id="L140"><a aria-label="第 140 行" href="#L140"> 140</a> </span>
+<span id="L141"><a aria-label="第 141 行" href="#L141"> 141</a>   mask = tf.cast(mask, tf.bool)</span>
+<span id="L142"><a aria-label="第 142 行" href="#L142"> 142</a>   return target, prior, posterior, mask</span>
+<span id="L143"><a aria-label="第 143 行" href="#L143"> 143</a> </span>
+<span id="L144"><a aria-label="第 144 行" href="#L144"> 144</a> </span>
+<span id="L145"><a aria-label="第 145 行" href="#L145"> 145</a> def _merge_dims(tensor, dims):</span>
+<span id="L146"><a aria-label="第 146 行" href="#L146"> 146</a>   """Flatten consecutive axes of a tensor trying to preserve static shapes."""</span>
+<span id="L147"><a aria-label="第 147 行" href="#L147"> 147</a>   if isinstance(tensor, (list, tuple, dict)):</span>
+<span id="L148"><a aria-label="第 148 行" href="#L148"> 148</a>     return nested.map(tensor, lambda x: _merge_dims(x, dims))</span>
+<span id="L149"><a aria-label="第 149 行" href="#L149"> 149</a>   tensor = tf.convert_to_tensor(tensor)</span>
+<span id="L150"><a aria-label="第 150 行" href="#L150"> 150</a>   if (np.array(dims) - min(dims) != np.arange(len(dims))).all():</span>
+<span id="L151"><a aria-label="第 151 行" href="#L151"> 151</a>     raise ValueError('Dimensions to merge must all follow each other.')</span>
+<span id="L152"><a aria-label="第 152 行" href="#L152"> 152</a>   start, end = dims[0], dims[-1]</span>
+<span id="L153"><a aria-label="第 153 行" href="#L153"> 153</a>   output = tf.reshape(tensor, tf.concat([</span>
+<span id="L154"><a aria-label="第 154 行" href="#L154"> 154</a>       tf.shape(tensor)[:start],</span>
+<span id="L155"><a aria-label="第 155 行" href="#L155"> 155</a>       [tf.reduce_prod(tf.shape(tensor)[start: end + 1])],</span>
+<span id="L156"><a aria-label="第 156 行" href="#L156"> 156</a>       tf.shape(tensor)[end + 1:]], axis=0))</span>
+<span id="L157"><a aria-label="第 157 行" href="#L157"> 157</a>   merged = tensor.shape[start: end + 1].as_list()</span>
+<span id="L158"><a aria-label="第 158 行" href="#L158"> 158</a>   output.set_shape(</span>
+<span id="L159"><a aria-label="第 159 行" href="#L159"> 159</a>       tensor.shape[:start].as_list() +</span>
+<span id="L160"><a aria-label="第 160 行" href="#L160"> 160</a>       [None if None in merged else np.prod(merged)] +</span>
+<span id="L161"><a aria-label="第 161 行" href="#L161"> 161</a>       tensor.shape[end + 1:].as_list())</span>
+<span id="L162"><a aria-label="第 162 行" href="#L162"> 162</a>   return output</span>
+<span id="L163"><a aria-label="第 163 行" href="#L163"> 163</a> </span>
+<span id="L164"><a aria-label="第 164 行" href="#L164"> 164</a> </span>
+<span id="L165"><a aria-label="第 165 行" href="#L165"> 165</a> def _pad_dims(tensor, rank):</span>
+<span id="L166"><a aria-label="第 166 行" href="#L166"> 166</a>   """Append empty dimensions to the tensor until it is of the given rank."""</span>
+<span id="L167"><a aria-label="第 167 行" href="#L167"> 167</a>   for _ in range(rank - tensor.shape.ndims):</span>
+<span id="L168"><a aria-label="第 168 行" href="#L168"> 168</a>     tensor = tensor[..., None]</span>
+<span id="L169"><a aria-label="第 169 行" href="#L169"> 169</a>   return tensor</span>
+<span id="L170"><a aria-label="第 170 行" href="#L170"> 170</a> </span>
+<span id="L171"><a aria-label="第 171 行" href="#L171"> 171</a> </span>
+<span id="L172"><a aria-label="第 172 行" href="#L172"> 172</a> def _restore_batch_dim(tensor, batch_size):</span>
+<span id="L173"><a aria-label="第 173 行" href="#L173"> 173</a>   """Split batch dimension out of the first dimension of a tensor."""</span>
+<span id="L174"><a aria-label="第 174 行" href="#L174"> 174</a>   initial = shape.shape(tensor)</span>
+<span id="L175"><a aria-label="第 175 行" href="#L175"> 175</a>   desired = [batch_size, initial[0] // batch_size] + initial[1:]</span>
+<span id="L176"><a aria-label="第 176 行" href="#L176"> 176</a>   return tf.reshape(tensor, desired)</span></pre></body></html>
