@@ -966,7 +966,8 @@
   ],
   "lossless_image_encoding": {
     "pixel_equality_verified": true,
-    "originals_preserved_in_local_archive": true
+    "originals_preserved_in_local_archive": true,
+    "higher_channel_depth_sources_preserved_as_original_png": true
   },
   "local_only_historical_attachments": [
     "_source/10_figures/rejected/superseded-fastwam-v29/F-fast-wam-cache-v26.details.md.superseded"

@@ -7,7 +7,7 @@
   "source_relative_html": "dreamzero_context_autoregression_qa.html",
   "source_html_sha256": "62ba5c031493ba64fd330613cd3aa5ff8fd6fc6291c7de5c81324d7cccb90d43",
   "selection_reason": "legacy canonical reader; source and resources audited before publication",
-  "public_html_sha256": "d93a3516ed365384068fa3c5a71d117e33f1c67a58aaa6664511ee9be5713e41",
+  "public_html_sha256": "2fbc13c7a0afaf61162edd8c67e757e01ba57a384f770bef9fd95efea7d965e8",
   "content_preservation": [
     {
       "document": "index.html",
@@ -74,12 +74,12 @@
       "bytes": 9507
     },
     {
-      "path": "../../assets/media/5b2c8e6e653e1136fd1675a035bec5513ee5b42e3b2383ac81fb5ba8d5adb097.webp",
+      "path": "../../assets/source-png/5b2c8e6e653e1136fd1675a035bec5513ee5b42e3b2383ac81fb5ba8d5adb097.png",
       "source_sha256": "5b2c8e6e653e1136fd1675a035bec5513ee5b42e3b2383ac81fb5ba8d5adb097",
-      "sha256": "f1ea6a94a62ae2e26e6460127586432468b62a2b141b85fef058f7f7206274e7",
-      "bytes": 5142,
+      "sha256": "5b2c8e6e653e1136fd1675a035bec5513ee5b42e3b2383ac81fb5ba8d5adb097",
+      "bytes": 25697,
       "source_encoding": "PNG",
-      "public_encoding": "WebP lossless"
+      "public_encoding": "PNG original 16-bit channels"
     },
     {
       "path": "../../assets/media/709510625af90bad3f9509c8c9bb6dc779576cd7f80b9bc95d75fe33f2755079.webp",
@@ -556,6 +556,7 @@
   ],
   "lossless_image_encoding": {
     "pixel_equality_verified": true,
-    "originals_preserved_in_local_archive": true
+    "originals_preserved_in_local_archive": true,
+    "higher_channel_depth_sources_preserved_as_original_png": true
   }
 }

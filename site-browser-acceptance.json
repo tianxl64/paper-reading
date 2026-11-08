@@ -24,5 +24,8 @@
   ],
   "lossless_source_images": 1186,
   "pixel_equality_verified": true,
-  "temporary_server_closed": true
+  "temporary_server_closed": true,
+  "lossless_webp_images": 1174,
+  "original_high_bit_depth_pngs": 12,
+  "original_channel_depth_preserved": true
 }

@@ -32,7 +32,7 @@
 <h3 id="sec-010">白话解释</h3>
 <p>难点不是“机器人能不能完成一次任务”，而是“怎样反复、便宜、安全地知道它在哪些情况下会失败”。这篇论文想造的不是完美复制现实的世界，而是一套能快速出题、让多个策略考试、并能用少量实机抽查答案的系统。</p>
 <h2 id="sec-011">4. 核心主张：论文实际证明到哪一层</h2>
-<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/b563613aa355d07ce38be7dff45a70b76848219ee9a2a5fedc55c76f3f48cc94.webp" type="button"><img alt="论文图1：重点看上半部分如何把名义评价、分布外评价和安全红队统一到视频预测系统中；下半部分展示世界模型如何提前暴露潜在危险行为。" loading="eager" src="../../assets/media/b563613aa355d07ce38be7dff45a70b76848219ee9a2a5fedc55c76f3f48cc94.webp"/></button><figcaption>论文图1：重点看上半部分如何把名义评价、分布外评价和安全红队统一到视频预测系统中；下半部分展示世界模型如何提前暴露潜在危险行为。</figcaption></figure>
+<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/b563613aa355d07ce38be7dff45a70b76848219ee9a2a5fedc55c76f3f48cc94.png" type="button"><img alt="论文图1：重点看上半部分如何把名义评价、分布外评价和安全红队统一到视频预测系统中；下半部分展示世界模型如何提前暴露潜在危险行为。" loading="eager" src="../../assets/source-png/b563613aa355d07ce38be7dff45a70b76848219ee9a2a5fedc55c76f3f48cc94.png"/></button><figcaption>论文图1：重点看上半部分如何把名义评价、分布外评价和安全红队统一到视频预测系统中；下半部分展示世界模型如何提前暴露潜在危险行为。</figcaption></figure>
 <figure class="paper-figure custom-figure"><button aria-label="custom-image" class="image-button" data-image="../../assets/media/2ece3bf039d464cbedf20f027cc3dd8b2d1e87103ebf436a8c420c2633700720.webp" type="button"><img alt="一次评测如何从初始四视角观测经过策略动作与视频生成，形成虚拟评分和实机证据闭环？ 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。" loading="eager" src="../../assets/media/2ece3bf039d464cbedf20f027cc3dd8b2d1e87103ebf436a8c420c2633700720.webp"/></button><figcaption>一次评测如何从初始四视角观测经过策略动作与视频生成，形成虚拟评分和实机证据闭环？ 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。</figcaption></figure>
 <h3 id="sec-012">问题</h3>
 <p>需要区分作者直接陈述的主张、由方法与结果支持的隐含主张，以及证据尚不能支持的强外推。</p>
@@ -61,7 +61,7 @@
 <h3 id="sec-024">白话解释</h3>
 <p>Veo 先学会“世界视频通常怎么变化”，机器人微调再教它“机械臂这样动时，画面大概怎样变”。优点是不用给每个物体写物理参数；代价是它学到的是统计规律，不是带守恒定律保证的物理引擎。</p>
 <h2 id="sec-025">6. 机制二：机器人动作条件化与闭环交互</h2>
-<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/376c5296d156be019a937aad37120f6b8b664c30e5ff5d33e0894377305fb1d3.webp" type="button"><img alt="论文图2上半部分：重点看未来机器人位姿如何叠加到动作条件视频生成中。" loading="eager" src="../../assets/media/376c5296d156be019a937aad37120f6b8b664c30e5ff5d33e0894377305fb1d3.webp"/></button><figcaption>论文图2上半部分：重点看未来机器人位姿如何叠加到动作条件视频生成中。</figcaption></figure>
+<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/376c5296d156be019a937aad37120f6b8b664c30e5ff5d33e0894377305fb1d3.png" type="button"><img alt="论文图2上半部分：重点看未来机器人位姿如何叠加到动作条件视频生成中。" loading="eager" src="../../assets/source-png/376c5296d156be019a937aad37120f6b8b664c30e5ff5d33e0894377305fb1d3.png"/></button><figcaption>论文图2上半部分：重点看未来机器人位姿如何叠加到动作条件视频生成中。</figcaption></figure>
 <figure class="paper-figure custom-figure"><button aria-label="custom-image" class="image-button" data-image="../../assets/media/04feaebdcc4be76c6249738324f183bd494005f0271b35bec30fe9cdfb3ba44e.webp" type="button"><img alt=" 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。" loading="eager" src="../../assets/media/04feaebdcc4be76c6249738324f183bd494005f0271b35bec30fe9cdfb3ba44e.webp"/></button><figcaption> 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。</figcaption></figure>
 <h3 id="sec-026">问题</h3>
 <p>只根据语言生成一段机器人视频，无法评价一个真实策略。评测必须让策略每一步输出的动作改变后续观测，否则不同策略可能看到同一段预制影片，根本无法比较控制质量。</p>
@@ -84,7 +84,7 @@
 <h3 id="sec-031">白话解释</h3>
 <p>这不是让策略看一段电影，而是让策略在“模型生成的世界”里边看边动。问题在于，这个世界既可能越滚越偏，也可能太会讲顺故事，把本来会失败的动作画成成功。</p>
 <h2 id="sec-032">7. 机制三：四视角联合生成</h2>
-<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/8e6f2541e77c4b6a5dfab740864f58b9bdb70987e10e27064908356ad73902a2.webp" type="button"><img alt="论文图2下半部分：重点看顶视、侧视和双腕视如何被联合生成，而不是分别独立预测。" loading="eager" src="../../assets/media/8e6f2541e77c4b6a5dfab740864f58b9bdb70987e10e27064908356ad73902a2.webp"/></button><figcaption>论文图2下半部分：重点看顶视、侧视和双腕视如何被联合生成，而不是分别独立预测。</figcaption></figure>
+<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/8e6f2541e77c4b6a5dfab740864f58b9bdb70987e10e27064908356ad73902a2.png" type="button"><img alt="论文图2下半部分：重点看顶视、侧视和双腕视如何被联合生成，而不是分别独立预测。" loading="eager" src="../../assets/source-png/8e6f2541e77c4b6a5dfab740864f58b9bdb70987e10e27064908356ad73902a2.png"/></button><figcaption>论文图2下半部分：重点看顶视、侧视和双腕视如何被联合生成，而不是分别独立预测。</figcaption></figure>
 <figure class="paper-figure custom-figure"><button aria-label="custom-image" class="image-button" data-image="../../assets/media/a278553de7cdf62784713d45a74968a1454fca60d2e14bebfe6f6150af628308.webp" type="button"><img alt="四视角联合生成解决部分观测还是几何一致，二者差别是什么？ 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。" loading="eager" src="../../assets/media/a278553de7cdf62784713d45a74968a1454fca60d2e14bebfe6f6150af628308.webp"/></button><figcaption>四视角联合生成解决部分观测还是几何一致，二者差别是什么？ 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。</figcaption></figure>
 <h3 id="sec-033">问题</h3>
 <p>ALOHA 2 的策略依赖顶视、侧视和左右腕部相机。单视角生成容易因遮挡丢失抓取点，也可能让不同相机中的物体位置相互矛盾，导致策略输入分布与真实系统不同。</p>
@@ -99,7 +99,7 @@
 <h3 id="sec-038">白话解释</h3>
 <p>把四个相机拼在一起生成，像让同一个画家同时画四个机位，通常比四个画家各画各的更统一；但画家可能四张都画错，所以“一致”不等于“真实”。</p>
 <h2 id="sec-039">8. 机制四：生成式场景编辑构造分布外条件</h2>
-<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/8a92e1ebc31c0509fb07f595a1b24163da7fd3a769df1c9261f22290e5e7cfc2.webp" type="button"><img alt="论文图5：重点看名义顶视图被编辑为新对象场景，同时语言指令也随操作目标改变。" loading="eager" src="../../assets/media/8a92e1ebc31c0509fb07f595a1b24163da7fd3a769df1c9261f22290e5e7cfc2.webp"/></button><figcaption>论文图5：重点看名义顶视图被编辑为新对象场景，同时语言指令也随操作目标改变。</figcaption></figure>
+<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/8a92e1ebc31c0509fb07f595a1b24163da7fd3a769df1c9261f22290e5e7cfc2.png" type="button"><img alt="论文图5：重点看名义顶视图被编辑为新对象场景，同时语言指令也随操作目标改变。" loading="eager" src="../../assets/source-png/8a92e1ebc31c0509fb07f595a1b24163da7fd3a769df1c9261f22290e5e7cfc2.png"/></button><figcaption>论文图5：重点看名义顶视图被编辑为新对象场景，同时语言指令也随操作目标改变。</figcaption></figure>
 <figure class="paper-figure custom-figure"><button aria-label="custom-image" class="image-button" data-image="../../assets/media/953ffe55e12cf4b32478f0d7a18bf482656ae5f023fbd0426046d7f31e6a44e9.webp" type="button"><img alt="一张被编辑的顶视图如何成为四相机 OOD 场景，混杂从哪里进入？ 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。" loading="eager" src="../../assets/media/953ffe55e12cf4b32478f0d7a18bf482656ae5f023fbd0426046d7f31e6a44e9.webp"/></button><figcaption>一张被编辑的顶视图如何成为四相机 OOD 场景，混杂从哪里进入？ 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。</figcaption></figure>
 <h3 id="sec-040">问题</h3>
 <p>要测试背景、干扰物、新对象和危险元素，真实搭景需要采购、摆放和安全防护，覆盖面受限。论文需要一种可扩展的初始条件生成方式。</p>
@@ -114,7 +114,7 @@
 <h3 id="sec-045">白话解释</h3>
 <p>它像用修图快速出考题：把桌布换色、放进陌生玩具、把香蕉换成刷子。好处是快；风险是修图痕迹本身也可能变成考题的一部分。</p>
 <h2 id="sec-046">9. 机制五：单视角到多视角补全</h2>
-<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/f227114bb4180b54242d05b63e58678bf081b3e3ada0978bf8a856eea4119f65.webp" type="button"><img alt="论文图7：重点看仅从编辑后的顶视图补出三个额外相机视角；这些视角是生成推断，不是真实观测。" loading="eager" src="../../assets/media/f227114bb4180b54242d05b63e58678bf081b3e3ada0978bf8a856eea4119f65.webp"/></button><figcaption>论文图7：重点看仅从编辑后的顶视图补出三个额外相机视角；这些视角是生成推断，不是真实观测。</figcaption></figure>
+<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/f227114bb4180b54242d05b63e58678bf081b3e3ada0978bf8a856eea4119f65.png" type="button"><img alt="论文图7：重点看仅从编辑后的顶视图补出三个额外相机视角；这些视角是生成推断，不是真实观测。" loading="eager" src="../../assets/source-png/f227114bb4180b54242d05b63e58678bf081b3e3ada0978bf8a856eea4119f65.png"/></button><figcaption>论文图7：重点看仅从编辑后的顶视图补出三个额外相机视角；这些视角是生成推断，不是真实观测。</figcaption></figure>
 <h3 id="sec-047">问题</h3>
 <p>生成式编辑只修改顶视图，但被评估策略需要四路相机。若另外三路仍是名义场景，策略会收到互相矛盾的观测。</p>
 <h3 id="sec-048">机制</h3>
@@ -142,7 +142,7 @@
 <h3 id="sec-059">白话解释</h3>
 <p>作者不是只看视频像不像，而是让同一批策略在虚拟和真实环境都考试，再看名次是否一致。结果是名次大多对，但虚拟考官打分更严。</p>
 <h2 id="sec-060">11. 名义场景：强排序信号与明显校准偏差</h2>
-<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/4accd019a890104071ec6c17fed99a9609c47fc657babca91831d26da285a1f4.webp" type="button"><img alt="论文图4：重点同时看高相关和系统低估。MMRV 为 0.03、Pearson 为 0.88，但横轴预测成功率整体显著低于纵轴真实成功率。" loading="eager" src="../../assets/media/4accd019a890104071ec6c17fed99a9609c47fc657babca91831d26da285a1f4.webp"/></button><figcaption>论文图4：重点同时看高相关和系统低估。MMRV 为 0.03、Pearson 为 0.88，但横轴预测成功率整体显著低于纵轴真实成功率。</figcaption></figure>
+<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/4accd019a890104071ec6c17fed99a9609c47fc657babca91831d26da285a1f4.png" type="button"><img alt="论文图4：重点同时看高相关和系统低估。MMRV 为 0.03、Pearson 为 0.88，但横轴预测成功率整体显著低于纵轴真实成功率。" loading="eager" src="../../assets/source-png/4accd019a890104071ec6c17fed99a9609c47fc657babca91831d26da285a1f4.png"/></button><figcaption>论文图4：重点同时看高相关和系统低估。MMRV 为 0.03、Pearson 为 0.88，但横轴预测成功率整体显著低于纵轴真实成功率。</figcaption></figure>
 <h3 id="sec-061">问题</h3>
 <p>在训练分布附近，视频世界模型能否区分 8 个策略检查点的强弱？</p>
 <h3 id="sec-062">机制</h3>
@@ -156,7 +156,7 @@
 <h3 id="sec-066">白话解释</h3>
 <p>这张图像一把刻度不准但顺序基本正确的尺子：量出来的厘米数偏小，可是通常还能判断谁更长。</p>
 <h2 id="sec-067">12. OOD 场景：比较同一策略对不同变化的脆弱性</h2>
-<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/8d204b661745c110f6e37cbe9776d0cb21bc3edbeb86d451ab43194431c082b7.webp" type="button"><img alt="论文图8：固定 Policy A 比较不同分布变化轴。重点看新操作对象最难，以及所有预测值整体偏低。" loading="eager" src="../../assets/media/8d204b661745c110f6e37cbe9776d0cb21bc3edbeb86d451ab43194431c082b7.webp"/></button><figcaption>论文图8：固定 Policy A 比较不同分布变化轴。重点看新操作对象最难，以及所有预测值整体偏低。</figcaption></figure>
+<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/8d204b661745c110f6e37cbe9776d0cb21bc3edbeb86d451ab43194431c082b7.png" type="button"><img alt="论文图8：固定 Policy A 比较不同分布变化轴。重点看新操作对象最难，以及所有预测值整体偏低。" loading="eager" src="../../assets/source-png/8d204b661745c110f6e37cbe9776d0cb21bc3edbeb86d451ab43194431c082b7.png"/></button><figcaption>论文图8：固定 Policy A 比较不同分布变化轴。重点看新操作对象最难，以及所有预测值整体偏低。</figcaption></figure>
 <figure class="paper-figure custom-figure"><button aria-label="custom-image" class="image-button" data-image="../../assets/media/9b2a7c466677cc3bc7e0d6b6d1d6114766e1ebc987e77464821117a25b093b49.webp" type="button"><img alt="为什么背景变化、干扰物和新操纵物体构成递增但非严格因果标尺的视觉、语义与操作泛化组合？ 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。" loading="eager" src="../../assets/media/9b2a7c466677cc3bc7e0d6b6d1d6114766e1ebc987e77464821117a25b093b49.webp"/></button><figcaption>为什么背景变化、干扰物和新操纵物体构成递增但非严格因果标尺的视觉、语义与操作泛化组合？ 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。</figcaption></figure>
 <h3 id="sec-068">问题</h3>
 <p>对最强的 策略 A，背景变化、大小干扰物和新操作对象分别会造成多大退化？视频模型能否预测这种相对难度？</p>
@@ -171,7 +171,7 @@
 <h3 id="sec-073">白话解释</h3>
 <p>系统能看出“旁边多一个玩具”通常没那么严重，“让机器人抓一个从没见过的东西”最难；但它仍会把所有场景估得过于悲观。</p>
 <h2 id="sec-074">13. OOD 场景：在每个变化轴上比较多个策略</h2>
-<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/e37c1c3378802234438da115d68ebfbba2bff9aa95dcce44a1e0ca0040317e90.webp" type="button"><img alt="论文图9：四个分布外轴分别比较多个策略。重点看背景轴相关性最高，新对象轴 Pearson 仅 0.56。" loading="eager" src="../../assets/media/e37c1c3378802234438da115d68ebfbba2bff9aa95dcce44a1e0ca0040317e90.webp"/></button><figcaption>论文图9：四个分布外轴分别比较多个策略。重点看背景轴相关性最高，新对象轴 Pearson 仅 0.56。</figcaption></figure>
+<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/e37c1c3378802234438da115d68ebfbba2bff9aa95dcce44a1e0ca0040317e90.png" type="button"><img alt="论文图9：四个分布外轴分别比较多个策略。重点看背景轴相关性最高，新对象轴 Pearson 仅 0.56。" loading="eager" src="../../assets/source-png/e37c1c3378802234438da115d68ebfbba2bff9aa95dcce44a1e0ca0040317e90.png"/></button><figcaption>论文图9：四个分布外轴分别比较多个策略。重点看背景轴相关性最高，新对象轴 Pearson 仅 0.56。</figcaption></figure>
 <h3 id="sec-075">问题</h3>
 <p>当场景已经分布外时，世界模型还能否在五个策略检查点之间保持排序？</p>
 <h3 id="sec-076">机制</h3>
@@ -234,7 +234,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 <p><strong>边界：</strong>二元标签不能表达安全、效率、轨迹质量、部分完成和恢复能力；人工评分标准与一致性未报告。未来若换成视觉语言模型自动评分，还会引入新的模型偏差。</p>
 <p><strong>白话解释：</strong>最终只记“做成没做成”，过程里差一点、很危险或动作很笨拙都可能被压成同一个数字。</p>
 <h2 id="sec-085">15. 安全红队：闭环后果发现，而非总体安全认证</h2>
-<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/811b56eb793c41b667ce6c7274da91091d544c3e616901ab3e94f53f0a4c5777.webp" type="button"><img alt="论文图10左侧案例：重点看策略为抓红色方块而接近人的手，危险取决于闭环轨迹。" loading="eager" src="../../assets/media/811b56eb793c41b667ce6c7274da91091d544c3e616901ab3e94f53f0a4c5777.webp"/></button><figcaption>论文图10左侧案例：重点看策略为抓红色方块而接近人的手，危险取决于闭环轨迹。</figcaption></figure><figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/3a8e031e67b23aeaf66215bbba8a984fb090a87edd998159f953fb76082cd11f.webp" type="button"><img alt="论文图10右侧案例：重点看策略在剪刀未移开时合上笔记本，任务动作与环境危险发生冲突。" loading="eager" src="../../assets/media/3a8e031e67b23aeaf66215bbba8a984fb090a87edd998159f953fb76082cd11f.webp"/></button><figcaption>论文图10右侧案例：重点看策略在剪刀未移开时合上笔记本，任务动作与环境危险发生冲突。</figcaption></figure>
+<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/811b56eb793c41b667ce6c7274da91091d544c3e616901ab3e94f53f0a4c5777.png" type="button"><img alt="论文图10左侧案例：重点看策略为抓红色方块而接近人的手，危险取决于闭环轨迹。" loading="eager" src="../../assets/source-png/811b56eb793c41b667ce6c7274da91091d544c3e616901ab3e94f53f0a4c5777.png"/></button><figcaption>论文图10左侧案例：重点看策略为抓红色方块而接近人的手，危险取决于闭环轨迹。</figcaption></figure><figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/3a8e031e67b23aeaf66215bbba8a984fb090a87edd998159f953fb76082cd11f.png" type="button"><img alt="论文图10右侧案例：重点看策略在剪刀未移开时合上笔记本，任务动作与环境危险发生冲突。" loading="eager" src="../../assets/source-png/3a8e031e67b23aeaf66215bbba8a984fb090a87edd998159f953fb76082cd11f.png"/></button><figcaption>论文图10右侧案例：重点看策略在剪刀未移开时合上笔记本，任务动作与环境危险发生冲突。</figcaption></figure>
 <figure class="paper-figure custom-figure"><button aria-label="custom-image" class="image-button" data-image="../../assets/media/221c9208aa1437da5ffa7a1d187c81c7df4b28347d6568861f528b6157555438.webp" type="button"><img alt="哪些安全问题必须观察策略动作后果，证据链支持到发现案例还是安全认证？ 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。" loading="eager" src="../../assets/media/221c9208aa1437da5ffa7a1d187c81c7df4b28347d6568861f528b6157555438.webp"/></button><figcaption>哪些安全问题必须观察策略动作后果，证据链支持到发现案例还是安全认证？ 证据与边界：图只补充理解，不替代正文；详细数值、未披露项和外推禁区以正文为准。</figcaption></figure>
 <h3 id="sec-086">问题</h3>
 <p>有些危险从初始图像和指令就能直接判断，例如“把漂白剂倒在电子设备上”，可由策略无关的安全层拦截；更困难的是危险取决于机器人选择哪个物体、从哪里抓、沿什么轨迹移动，以及动作后果如何累积。</p>
@@ -304,7 +304,7 @@ M1001 80h400000v40h-400000z"></path></svg></span></span></span><span class="vlis
 <p><strong>失败条件：</strong>多步骤整理、工具使用、导航、人与机器人协作、失败恢复和延迟后果型安全风险。</p>
 <p><strong>直接证据：</strong>P055 将 1 分钟以上多视角一致生成列为未来关键里程碑。</p>
 <h3 id="sec-105">18.6 反驳六：接触幻觉会把策略失败与模拟器失败混淆</h3>
-<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/media/88d309d224766cc99c4f51d89f86cc27cfd337b6ac51c1cbef9601e5981f34e6.webp" type="button"><img alt="论文图11：重点看抓取交互中凭空出现新物体的生成幻觉；这会混淆策略失败与模拟器失败。" loading="eager" src="../../assets/media/88d309d224766cc99c4f51d89f86cc27cfd337b6ac51c1cbef9601e5981f34e6.webp"/></button><figcaption>论文图11：重点看抓取交互中凭空出现新物体的生成幻觉；这会混淆策略失败与模拟器失败。</figcaption></figure>
+<figure class="paper-figure source-figure"><button aria-label="source-image" class="image-button" data-image="../../assets/source-png/88d309d224766cc99c4f51d89f86cc27cfd337b6ac51c1cbef9601e5981f34e6.png" type="button"><img alt="论文图11：重点看抓取交互中凭空出现新物体的生成幻觉；这会混淆策略失败与模拟器失败。" loading="eager" src="../../assets/source-png/88d309d224766cc99c4f51d89f86cc27cfd337b6ac51c1cbef9601e5981f34e6.png"/></button><figcaption>论文图11：重点看抓取交互中凭空出现新物体的生成幻觉；这会混淆策略失败与模拟器失败。</figcaption></figure>
 <p><strong>被质疑的 主张：</strong>生成轨迹中的失败可归因于策略。</p>
 <p><strong>论文证据：</strong>多数评价与真实结果相关，图11主动展示生成伪影。</p>
 <p><strong>不足：</strong>图11中抓取交互时凭空出现新物体，说明生成器会改写场景状态。小物体接触恰好是抓放成功的核心。</p>

@@ -87,6 +87,7 @@
   ],
   "lossless_image_encoding": {
     "pixel_equality_verified": true,
-    "originals_preserved_in_local_archive": true
+    "originals_preserved_in_local_archive": true,
+    "higher_channel_depth_sources_preserved_as_original_png": true
   }
 }
